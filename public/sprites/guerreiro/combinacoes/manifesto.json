@@ -1,0 +1,284 @@
+{
+  "tamanho": [
+    1632,
+    2176
+  ],
+  "ordem_camadas": [
+    "capa_inicial",
+    "capa_real",
+    "capa_arcano",
+    "corpo",
+    "armadura_cavaleiro",
+    "armadura_negra",
+    "capacete",
+    "escudo_inicial",
+    "escudo_ferro",
+    "escudo_ouro",
+    "escudo_cristal",
+    "espada_inicial",
+    "espada_classica",
+    "espada_chama",
+    "espada_sombra"
+  ],
+  "sprites": [
+    {
+      "arquivo": "01_guerreiro_corpo.png",
+      "camadas": [
+        "corpo"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "02_guerreiro_completo_inicial.png",
+      "camadas": [
+        "capa_inicial",
+        "corpo",
+        "capacete",
+        "escudo_inicial",
+        "espada_inicial"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "03_guerreiro_capa_real.png",
+      "camadas": [
+        "capa_real",
+        "corpo"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "04_guerreiro_capa_arcano.png",
+      "camadas": [
+        "capa_arcano",
+        "corpo"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "05_guerreiro_armadura_cavaleiro.png",
+      "camadas": [
+        "corpo",
+        "armadura_cavaleiro",
+        "capacete"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "06_guerreiro_armadura_negra.png",
+      "camadas": [
+        "corpo",
+        "armadura_negra",
+        "capacete"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "07_guerreiro_espada_chama.png",
+      "camadas": [
+        "corpo",
+        "espada_chama"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "08_guerreiro_espada_sombra.png",
+      "camadas": [
+        "corpo",
+        "espada_sombra"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "09_guerreiro_escudo_ouro.png",
+      "camadas": [
+        "corpo",
+        "escudo_ouro"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "10_guerreiro_escudo_cristal.png",
+      "camadas": [
+        "corpo",
+        "escudo_cristal"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "11_set_cavaleiro_ferro.png",
+      "camadas": [
+        "capa_real",
+        "corpo",
+        "capacete",
+        "escudo_ferro",
+        "espada_inicial"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "12_set_cavaleiro_ouro.png",
+      "camadas": [
+        "capa_real",
+        "corpo",
+        "capacete",
+        "escudo_ouro",
+        "espada_inicial"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "13_set_cavaleiro_cristal.png",
+      "camadas": [
+        "capa_arcano",
+        "corpo",
+        "capacete",
+        "escudo_cristal",
+        "espada_inicial"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "14_set_cavaleiro_chama.png",
+      "camadas": [
+        "capa_real",
+        "corpo",
+        "capacete",
+        "escudo_ouro",
+        "espada_chama"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "15_set_guerreiro_sombrio.png",
+      "camadas": [
+        "capa_arcano",
+        "corpo",
+        "armadura_negra",
+        "capacete",
+        "escudo_cristal",
+        "espada_sombra"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "16_set_guerreiro_sombrio_ferro.png",
+      "camadas": [
+        "capa_arcano",
+        "corpo",
+        "armadura_negra",
+        "capacete",
+        "escudo_ferro",
+        "espada_sombra"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "17_set_armadura_cavaleiro_ferro.png",
+      "camadas": [
+        "capa_real",
+        "corpo",
+        "armadura_cavaleiro",
+        "capacete",
+        "escudo_ferro",
+        "espada_inicial"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "18_set_armadura_cavaleiro_chama.png",
+      "camadas": [
+        "capa_real",
+        "corpo",
+        "armadura_cavaleiro",
+        "capacete",
+        "escudo_ouro",
+        "espada_chama"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "19_set_armadura_cavaleiro_cristal.png",
+      "camadas": [
+        "capa_arcano",
+        "corpo",
+        "armadura_cavaleiro",
+        "capacete",
+        "escudo_cristal",
+        "espada_inicial"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    },
+    {
+      "arquivo": "20_set_espada_classica.png",
+      "camadas": [
+        "capa_inicial",
+        "corpo",
+        "capacete",
+        "escudo_inicial",
+        "espada_classica"
+      ],
+      "tamanho": [
+        1632,
+        2176
+      ]
+    }
+  ]
+}

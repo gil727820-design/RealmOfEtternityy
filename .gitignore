@@ -1,0 +1,38 @@
+# Dependências
+/node_modules
+
+# Next.js (build/cache NÃO deve ir pro git — foi a causa do cache corrompido)
+/.next/
+/out/
+
+# Builds
+/build
+/dist
+
+# Arquivos de ambiente / segredos
+.env
+.env.*
+!.env.example
+.env.local
+
+# Logs do dev server / npm
+*.log
+start.log
+nohup.out
+.devserver.*
+
+# TypeScript / build info
+*.tsbuildinfo
+*.tgz
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Temporários
+_typecheck.txt

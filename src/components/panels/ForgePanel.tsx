@@ -1,0 +1,263 @@
+"use client";
+import { useState, useEffect, useCallback } from "react";
+import { useGameStore } from "@/store/gameStore";
+import { t } from "@/i18n";
+import { MAX_ENHANCE, ENCHANT_POOL, enhanceCost, enhanceChance, enchantById } from "@/game/forge";
+
+type ForgeTab = "enhance" | "enchant" | "craft" | "refine";
+
+/** ⚠️ Modo manutenção da forja — bloqueia qualquer ação. */
+const FORGE_MAINTENANCE = true;
+
+export default function ForgePanel() {
+  const { characterId, inventory, locale, notify, setCharacter, setInventory } = useGameStore();
+  const [tab, setTab] = useState<ForgeTab>("enhance");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const equipItems = inventory.filter(
+    (e) => {
+      const template = e.template as Record<string, unknown>;
+      return !!template?.slot && template?.type !== "consumable";
+    }
+  );
+  const selected = equipItems.find((e) => String((e.item as Record<string, unknown>).id) === selectedId) || null;
+  const selItem = (selected?.item as Record<string, unknown>) || null;
+  const selTemplate = (selected?.template as Record<string, unknown>) || null;
+
+  const refresh = useCallback(async () => {
+    if (!characterId) return;
+    try {
+      const res = await fetch(`/api/character/${characterId}`);
+      const d = await res.json();
+      if (d.character) setCharacter(d.character);
+      if (d.inventory) setInventory(d.inventory);
+    } catch { /* ignore */ }
+  }, [characterId, setCharacter, setInventory]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const doForge = async (action: "enhance" | "enchant") => {
+    if (!characterId || !selectedId) return;
+    if (FORGE_MAINTENANCE) {
+      notify("⚠️ A forja está em manutenção!", "error");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/forge", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, characterId, itemId: selectedId }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        notify(`❌ ${d.error}`, "error");
+      } else if (action === "enhance") {
+        if (d.enhanced) notify(`✅ ${t("forge.enhance.success", locale)} +${d.newLevel} (-${d.cost} 💰)`, "success");
+        else notify(`😱 ${t("forge.enhance.fail", locale)} (-${d.cost} 💰)`, "error");
+      } else {
+        notify(`✨ ${t("forge.enchant.success", locale)} ${d.enchanted.icon} ${t(d.enchanted.labelKey, locale)}!`, "success");
+      }
+      await refresh();
+    } catch {
+      notify(t("general.error", locale), "error");
+    }
+    setBusy(false);
+  };
+
+  const tabs: { id: ForgeTab; label: string; icon: string; soon?: boolean }[] = [
+    { id: "enhance", label: t("forge.enhance", locale), icon: "⬆️" },
+    { id: "enchant", label: t("forge.enchant", locale), icon: "✨" },
+    { id: "craft", label: t("forge.craft", locale), icon: "🛠️", soon: true },
+    { id: "refine", label: t("forge.refine", locale), icon: "🔄", soon: true },
+  ];
+
+  const enh = (selItem?.enhanceLevel as number) || 0;
+  const ench = selItem?.enchant ? enchantById(String(selItem.enchant)) : null;
+  return (
+    <div className="space-y-6 animate-fadeIn">
+      <h2 className="text-3xl font-black flex items-center gap-3">
+        <img src="/images/sidebar/menu_forja.png" alt={t("forge.title", locale)} className="w-10 h-10 object-contain" />
+        <span className="bg-gradient-to-r from-[#f97316] to-[#ffd700] bg-clip-text text-transparent">{t("forge.title", locale)}</span>
+      </h2>
+
+      {FORGE_MAINTENANCE && (
+        <div className="relative overflow-hidden rounded-2xl border border-amber-500/40 game-card p-6 text-center animate-fadeInDown">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,158,11,0.18),transparent_70%)]" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-amber-400 to-transparent animate-pulse-soft" />
+          <div className="relative">
+            <div className="text-5xl mb-2 animate-float">🔧</div>
+            <div className="text-2xl sm:text-3xl font-black text-amber-400 tracking-widest animate-pulse-soft drop-shadow-[0_0_18px_rgba(245,158,11,0.45)]">
+              ⚠️ FORJA EM MANUTENÇÃO ⚠️
+            </div>
+            <p className="text-sm text-gray-400 mt-3">
+              O ferreiro está consertando o equipamento da forja.<br />Nenhuma ação pode ser feita agora — volte mais tarde!
+            </p>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <span className="text-[11px] font-bold bg-black/40 border border-amber-500/30 rounded-full px-4 py-1.5 text-amber-300">🔨 Martelo em conserto</span>
+              <span className="text-[11px] font-bold bg-black/40 border border-amber-500/30 rounded-full px-4 py-1.5 text-amber-300">⚒️ Bigorna bloqueada</span>
+              <span className="text-[11px] font-bold bg-black/40 border border-amber-500/30 rounded-full px-4 py-1.5 text-amber-300">🔥 Fogo apagado</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className={FORGE_MAINTENANCE ? "pointer-events-none select-none opacity-40" : ""}>
+      {/* Abas */}
+      <div className="flex gap-2 tab-bar border-b border-gray-800 pb-2 overflow-x-auto">
+        {tabs.map((tb) => (
+          <button key={tb.id} onClick={() => { if (FORGE_MAINTENANCE) return; setTab(tb.id); }}
+            disabled={FORGE_MAINTENANCE}
+            className={`tab-item ${tab === tb.id ? "active" : ""} whitespace-nowrap ${tb.soon ? "opacity-60" : ""}`}>
+            {tb.icon} {tb.label} {tb.soon && <span className="text-[9px] bg-yellow-600 text-white rounded-full px-1.5 py-0.5 ml-1">{t("forge.soon", locale)}</span>}
+          </button>
+        ))}
+      </div>
+
+      {(tab === "craft" || tab === "refine") && (
+        <div className="game-card p-10 text-center border-2 border-dashed border-gray-700">
+          <div className="text-6xl mb-4 animate-pulse">🛠️</div>
+          <div className="text-lg font-bold text-gray-300">{t("forge.select", locale)}</div>
+          <div className="text-sm text-gray-500">{t("forge.soon", locale)}…</div>
+        </div>
+      )}
+
+      {tab !== "craft" && tab !== "refine" && (
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Lista de itens */}
+          <div className="game-card p-4">
+            <h3 className="font-bold text-sm text-gray-300 mb-3">🎒 {t("nav.inventory", locale)}</h3>
+            {equipItems.length === 0 ? (
+              <div className="text-center text-gray-500 text-sm py-8">{t("inv.empty", locale)}</div>
+            ) : (
+              <div className="space-y-2 max-h-[440px] overflow-y-auto pr-1">
+                {equipItems.map((e) => {
+                  const item = e.item as Record<string, unknown>;
+                  const template = e.template as Record<string, unknown>;
+                  const lvl = (item.enhanceLevel as number) || 0;
+                  const enc = item.enchant ? enchantById(String(item.enchant)) : null;
+                  const isSelected = String(item.id) === selectedId;
+                  return (
+                    <button
+                      key={String(item.id)}
+                      onClick={() => setSelectedId(String(item.id))}
+                      className={`w-full text-left p-3 rounded-xl border transition ${isSelected ? "border-[#f97316] bg-[#f97316]/10" : "border-white/10 bg-[#0a0a12] hover:border-white/30"}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-xl shrink-0">{String(template.icon || "🎒")}</span>
+                          <div className="min-w-0">
+                            <div className="font-bold text-white text-sm truncate">{t(String(template.nameKey), locale)}</div>
+                            <div className="text-[11px] text-gray-500">{t(`slot.${template.slot as string}`, locale)} • Lv.{String(template.minLevel || 1)}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {lvl > 0 && (
+                            <span className="text-[10px] font-black bg-[#f97316]/20 border border-[#f97316]/40 text-orange-300 rounded-full px-2 py-0.5">+{lvl}</span>
+                          )}
+                          {!!enc && (
+                            <span className="text-[10px] font-black bg-purple-500/20 border border-purple-500/40 text-purple-300 rounded-full px-2 py-0.5" title={t(enc.labelKey, locale)}>{enc.icon}</span>
+                          )}
+                          {!!item.equipped && <span className="text-[10px] bg-green-500/20 text-green-300 rounded-full px-2 py-0.5">✓</span>}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Painel da ação */}
+          <div className="game-card p-5">
+          {!selected ? (
+              <div className="h-full flex flex-col items-center justify-center text-center border-2 border-dashed border-gray-700 rounded-xl p-8">
+                <div className="text-6xl mb-3 animate-float">{tab === "enhance" ? "⬆️" : "✨"}</div>
+                <div className="text-lg font-bold">{t("forge.select", locale)}</div>
+                <div className="text-sm text-gray-500 mt-1">{t("forge.drag", locale)}</div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{String(selTemplate?.icon || "🎒")}</span>
+                  <div>
+                    <div className="font-bold text-lg text-white">{t(String(selTemplate?.nameKey), locale)}</div>
+                    <div className="text-xs text-gray-400">{t(`slot.${selTemplate?.slot as string}`, locale)}</div>
+                  </div>
+                </div>
+
+                {enh > 0 && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-black text-2xl bg-gradient-to-r from-[#f97316] to-[#ffd700] bg-clip-text text-transparent">+{enh}</span>
+                    <span className="text-[10px] font-bold bg-[#f97316]/20 border border-[#f97316]/40 text-orange-300 rounded-full px-2 py-0.5">
+                      +{enh * 10}% {t("forge.enhance.desc.up", locale)}
+                    </span>
+                  </div>
+                )}
+
+                {!!ench && (
+                  <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-3">
+                    <div className="text-xs text-purple-300 font-bold mb-1">{t("forge.enchantLabel", locale)}</div>
+                    <div className="text-sm text-white">{ench.icon} {t(ench.labelKey, locale)}</div>
+                    <div className="text-[11px] text-gray-400">{t("forge.enchant.effect", locale)}: +{ench.amount} {t(`stat.${ench.stat}`, locale)}</div>
+                  </div>
+                )}
+
+                {tab === "enhance" && (
+                  <>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="bg-[#0a0a12] rounded-xl p-3 border border-white/10">
+                        <div className="text-xs text-gray-500">{t("forge.chance", locale)}</div>
+                        <div className="font-black text-white">{enh >= MAX_ENHANCE ? "—" : `${enhanceChance(enh)}%`}</div>
+                      </div>
+                      <div className="bg-[#0a0a12] rounded-xl p-3 border border-white/10">
+                        <div className="text-xs text-gray-500">{t("forge.cost", locale)}</div>
+                        <div className="font-black text-[#ffd700]">💰 {enh >= MAX_ENHANCE ? "—" : enhanceCost(enh).toLocaleString()}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => doForge("enhance")}
+                      disabled={busy || enh >= MAX_ENHANCE || !!ench}
+                      className={`w-full py-3 text-sm font-black rounded-xl bg-gradient-to-r from-[#f97316] to-[#ffd700] text-black disabled:opacity-40`}
+                    >
+                      {busy ? t("forge.busy", locale) : enh >= MAX_ENHANCE ? `${t("forge.max", locale)} (+20)` : `${t("forge.enhance.btn", locale)}`}
+                    </button>
+                    {enh >= MAX_ENHANCE && <p className="text-xs text-center text-[#ffd700]">{t("forge.enhance.locked", locale)}</p>}
+                    {!!ench && <p className="text-xs text-center text-purple-300">{t("forge.enchant.locked", locale)}</p>}
+                  </>
+                )}
+
+                {tab === "enchant" && (
+                  <>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="bg-[#0a0a12] rounded-xl p-3 border border-white/10">
+                        <div className="text-xs text-gray-500">{t("forge.chance", locale)}</div>
+                        <div className="font-black text-white">100%</div>
+                      </div>
+                      <div className="bg-[#0a0a12] rounded-xl p-3 border border-white/10">
+                        <div className="text-xs text-gray-500">{t("forge.cost", locale)}</div>
+                        <div className="font-black text-[#ffd700]">💰 3.000</div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                      {ENCHANT_POOL.map((en) => `${en.icon} ${t(en.labelKey, locale)}`).join(" · ")}
+                    </div>
+                    <button
+                      onClick={() => doForge("enchant")}
+                      disabled={busy || !!ench}
+                      className={`w-full py-3 text-sm font-black rounded-xl bg-gradient-to-r from-purple-500 to-purple-700 text-white disabled:opacity-40`}
+                    >
+                      {busy ? t("forge.busy", locale) : !!ench ? t("forge.enchant.needEnhance", locale) : `${t("forge.enchant.btn", locale)}`}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,408 @@
+﻿@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: rgba(6, 6, 17, 0.55);
+  --color-bg-secondary: rgba(12, 12, 29, 0.5);
+  --color-bg-card: rgba(17, 17, 39, 0.48);
+  --color-bg-card-alt: rgba(21, 21, 50, 0.5);
+  --color-bg-hover: rgba(26, 26, 58, 0.55);
+  --color-bg-surface: rgba(14, 14, 34, 0.42);
+  --color-bg-elevated: rgba(24, 24, 56, 0.55);
+  --color-accent: #e94560;
+  --color-accent-light: #ff6b8a;
+  --color-accent-dark: #c73050;
+  --color-accent-secondary: #00d4aa;
+  --color-accent-tertiary: #7c5cfc;
+  --color-gold: #ffd700;
+  --color-gold-dark: #c8a600;
+  --color-gold-light: #ffe44d;
+  --color-diamond: #00cfff;
+  --color-diamond-light: #66e5ff;
+  --color-crystal: #c77dff;
+  --color-xp-green: #00ff88;
+  --color-xp-dark: #00cc6a;
+  --color-hp-red: #ff4757;
+  --color-mana-blue: #00b4d8;
+  --color-energy-yellow: #ffc800;
+}
+
+* { scrollbar-width: thin; scrollbar-color: rgba(233,69,96,0.3) transparent; }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #e94560, #7c5cfc); border-radius: 10px; }
+
+html { scroll-behavior: smooth; }
+body {
+  background: #060611;
+  color: #e2e4f0;
+  font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: rgba(233,69,96,0.3); color: white; }
+
+@keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeInUp { from { opacity:0; transform:translateY(30px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+@keyframes fadeInDown { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:translateY(0); } }
+@keyframes slideInLeft { from { opacity:0; transform:translateX(-30px); } to { opacity:1; transform:translateX(0); } }
+@keyframes slideInRight { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
+@keyframes scaleIn { from { opacity:0; transform:scale(0.85); } to { opacity:1; transform:scale(1); } }
+@keyframes bounceIn { 0% { opacity:0; transform:scale(0.3); } 50% { transform:scale(1.08); } 70% { transform:scale(0.95); } 100% { opacity:1; transform:scale(1); } }
+@keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+@keyframes floatSlow { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-12px); } }
+@keyframes pulse-glow { 0%,100% { box-shadow:0 0 8px rgba(233,69,96,0.4),0 0 16px rgba(233,69,96,0.2); } 50% { box-shadow:0 0 20px rgba(233,69,96,0.6),0 0 40px rgba(233,69,96,0.3),0 0 60px rgba(233,69,96,0.15); } }
+@keyframes pulse-soft { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+@keyframes shimmer { 0% { background-position:-200% 0; } 100% { background-position:200% 0; } }
+@keyframes gradientFlow { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
+@keyframes rotate { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+@keyframes wiggle { 0%,100% { transform:rotate(-2deg); } 50% { transform:rotate(2deg); } }
+@keyframes shake { 0%,100% { transform:translateX(0); } 20% { transform:translateX(-4px); } 40% { transform:translateX(4px); } 60% { transform:translateX(-3px); } 80% { transform:translateX(3px); } }
+@keyframes heartbeat { 0%,100% { transform:scale(1); } 15% { transform:scale(1.15); } 30% { transform:scale(1); } 45% { transform:scale(1.1); } }
+@keyframes particle-rise { 0% { transform:translateY(0) scale(1); opacity:0.6; } 100% { transform:translateY(-100vh) scale(0); opacity:0; } }
+@keyframes particle-float { 0%,100% { transform:translateY(0) translateX(0); opacity:0.6; } 25% { transform:translateY(-15px) translateX(8px); opacity:0.8; } 50% { transform:translateY(-30px) translateX(-4px); opacity:0.5; } 75% { transform:translateY(-15px) translateX(12px); opacity:0.7; } }
+@keyframes border-dance { 0%,100% { border-color:#e94560; } 33% { border-color:#00d4aa; } 66% { border-color:#ffd700; } }
+@keyframes text-glow { 0%,100% { text-shadow:0 0 8px currentColor,0 0 16px currentColor; } 50% { text-shadow:0 0 16px currentColor,0 0 32px currentColor,0 0 48px currentColor; } }
+@keyframes victory-burst { 0% { transform:scale(0) rotate(0deg); opacity:0; } 50% { transform:scale(1.3) rotate(180deg); opacity:1; } 100% { transform:scale(1) rotate(360deg); opacity:1; } }
+@keyframes progress-stripe { 0% { background-position:0 0; } 100% { background-position:30px 0; } }
+@keyframes slideUp { from { opacity:0; transform:translateY(100%); } to { opacity:1; transform:translateY(0); } }
+@keyframes glow-pulse { 0%,100% { filter:brightness(1); } 50% { filter:brightness(1.3); } }
+@keyframes skeletonPulse { 0% { opacity:0.4; } 50% { opacity:0.7; } 100% { opacity:0.4; } }
+
+.animate-fadeIn { animation: fadeIn 0.5s cubic-bezier(0.22,1,0.36,1) forwards; }
+.animate-fadeInUp { animation: fadeInUp 0.6s cubic-bezier(0.22,1,0.36,1) forwards; }
+.animate-fadeInDown { animation: fadeInDown 0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
+.animate-slideInLeft { animation: slideInLeft 0.5s cubic-bezier(0.22,1,0.36,1) forwards; }
+.animate-slideInRight { animation: slideInRight 0.5s cubic-bezier(0.22,1,0.36,1) forwards; }
+.animate-scaleIn { animation: scaleIn 0.35s cubic-bezier(0.22,1,0.36,1) forwards; }
+.animate-bounceIn { animation: bounceIn 0.7s cubic-bezier(0.68,-0.55,0.265,1.55) forwards; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-floatSlow { animation: floatSlow 5s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-pulse-soft { animation: pulse-soft 2.5s ease-in-out infinite; }
+.animate-shimmer { background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.06) 50%,transparent 100%); background-size:200% 100%; animation:shimmer 2.5s infinite; }
+.animate-gradient { background-size:200% 200%; animation:gradientFlow 4s ease infinite; }
+.animate-rotate { animation: rotate 12s linear infinite; }
+.animate-wiggle { animation: wiggle 0.4s ease-in-out; }
+.animate-shake { animation: shake 0.4s ease-in-out; }
+.animate-heartbeat { animation: heartbeat 1.2s ease-in-out infinite; }
+.animate-border-dance { animation: border-dance 3s ease infinite; }
+.animate-text-glow { animation: text-glow 2.5s ease-in-out infinite; }
+.animate-glow-pulse { animation: glow-pulse 2s ease-in-out infinite; }
+.animate-slideUp { animation: slideUp 0.4s cubic-bezier(0.22,1,0.36,1) forwards; }
+@keyframes equip-flash { 0% { box-shadow:0 0 0 rgba(255,215,0,0); } 50% { box-shadow:0 0 18px rgba(255,215,0,0.75),0 0 40px rgba(255,215,0,0.3); } 100% { box-shadow:0 0 0 rgba(255,215,0,0); } }
+@keyframes char-equip-glow { 0%,100% { filter:drop-shadow(0 0 0 rgba(255,215,0,0)); } 50% { filter:drop-shadow(0 0 18px rgba(255,215,0,0.85)); } }
+.equip-flash { animation:equip-flash 0.9s ease-out; }
+.char-equip-glow { animation:char-equip-glow 0.9s ease-out; }
+
+/* Transição suave do fundo ao trocar de ilha */
+@keyframes bgFade { from { opacity:0; transform:scale(1.08); } to { opacity:1; transform:scale(1); } }
+.animate-bg-fade { animation: bgFade 1.2s ease-out forwards; }
+
+/* Partículas flutuantes do fundo */
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.35);
+  filter: blur(0.5px);
+  animation: particle-rise 12s linear infinite;
+}
+.particle:nth-child(2n) { width: 2px; height: 2px; animation-duration: 18s; animation-delay: 2s; }
+.particle:nth-child(3n) { width: 6px; height: 6px; animation-duration: 22s; animation-delay: 4s; background: rgba(255, 215, 0, 0.3); }
+.particle:nth-child(2n + 1) { left: 8%; }
+.particle:nth-child(3n + 1) { left: 28%; }
+.particle:nth-child(3n + 2) { left: 52%; }
+.particle:nth-child(4n) { left: 74%; }
+.particle:nth-child(5n) { left: 90%; }
+.particle:nth-child(odd) { bottom: -10px; }
+.particle:nth-child(even) { bottom: -30px; }
+
+/* ---- Torre: efeitos de combate ---- */
+@keyframes towerHitShake { 0%,100%{transform:translateX(0);} 20%{transform:translateX(-5px) rotate(-3deg);} 40%{transform:translateX(6px) rotate(3deg);} 60%{transform:translateX(-4px);} 80%{transform:translateX(4px);} }
+.animate-hit-shake { animation: towerHitShake 0.4s ease-in-out; }
+@keyframes battleFlashKf { 0%{opacity:.7;} 100%{opacity:0;} }
+.battle-flash { animation: battleFlashKf 0.5s ease-out forwards; background: radial-gradient(circle, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 70%); }
+@keyframes damageFloatKf { 0%{opacity:0; transform:translate(-50%,0) scale(.5);} 12%{opacity:1; transform:translate(-50%,-8px) scale(1.3);} 100%{opacity:0; transform:translate(-50%,-72px) scale(1);} }
+.damage-float { position:absolute; left:50%; top:-8px; z-index:30; font-weight:900; font-size:1.5rem; color:#ffd700; text-shadow:0 0 10px rgba(255,215,0,.6), 0 2px 2px rgba(0,0,0,.9); animation:damageFloatKf 1.05s ease-out forwards; pointer-events:none; white-space:nowrap; }
+.damage-float-crit { font-size:1.9rem; color:#ff5252; text-shadow:0 0 14px rgba(255,82,82,.8), 0 2px 2px rgba(0,0,0,.9); }
+/* ============================================================
+   Componentes base (fornecem fundo/borda às classes usadas no app)
+   ============================================================ */
+
+/* Vidro / blur do header e superfícies */
+.glass-effect {
+  background: linear-gradient(180deg, rgba(13, 15, 28, 0.5), rgba(13, 15, 28, 0.3));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* Cartões — vidro translúcido para o fundo da ilha aparecer */
+.game-card {
+  position: relative;
+  background: linear-gradient(160deg, rgba(21, 20, 46, 0.55) 0%, rgba(13, 13, 34, 0.42) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+.game-card-glow {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 10px 34px rgba(233, 69, 96, 0.08),
+    0 0 22px rgba(233, 69, 96, 0.06);
+}
+.game-card-accent { border-color: rgba(233, 69, 96, 0.35); }
+
+/* Estatísticas (cards de atributo) */
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.7rem;
+  flex-shrink: 0;
+}
+
+/* Barras (HP / Mana / Energia / XP / Missão) */
+.bar-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  background: rgba(255, 255, 255, 0.09);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+.hp-bar, .mana-bar, .energy-bar, .xp-bar, .mission-bar {
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+  height: 100%;
+}
+.hp-bar { background: linear-gradient(90deg, #b91c1c, #ff4757); box-shadow: 0 0 8px rgba(255, 71, 87, 0.4); }
+.mana-bar { background: linear-gradient(90deg, #0284c7, #38bdf8); box-shadow: 0 0 8px rgba(56, 189, 248, 0.4); }
+.energy-bar { background: linear-gradient(90deg, #d97706, #fbbf24); box-shadow: 0 0 8px rgba(251, 191, 36, 0.4); }
+.xp-bar { background: linear-gradient(90deg, #00cc6a, #00ff88); box-shadow: 0 0 8px rgba(0, 255, 136, 0.4); }
+.mission-bar { background: linear-gradient(90deg, #4f46e5, #8b5cf6); box-shadow: 0 0 8px rgba(139, 92, 246, 0.4); }
+
+/* Botões — translúcidos para o fundo da ilha aparecer através deles */
+.game-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 0.7rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  border: 1px solid rgba(255, 107, 138, 0.45);
+  background: linear-gradient(135deg, rgba(233, 69, 96, 0.6), rgba(199, 48, 80, 0.4));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(233, 69, 96, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+}
+.game-btn:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(233, 69, 96, 0.8), rgba(199, 48, 80, 0.6));
+  box-shadow: 0 6px 18px rgba(233, 69, 96, 0.35);
+}
+.game-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.game-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 0.7rem;
+  font-weight: 600;
+  color: #e2e4f0;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  transition: border-color 0.2s ease, transform 0.15s ease, background 0.2s ease;
+}
+.game-btn-secondary:hover { border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.14); transform: translateY(-1px); }
+
+/* Campos de input — com borda profissional e brilho no foco */
+.game-input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  outline: none;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.game-input::placeholder { color: rgba(255, 255, 255, 0.35); }
+.game-input:hover { border-color: rgba(255, 255, 255, 0.32); }
+.game-input:focus {
+  border-color: rgba(0, 212, 170, 0.75);
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.16), 0 0 18px rgba(0, 212, 170, 0.28);
+}
+
+/* Variante de destaque (campo de senha) — borda de cor que pulsa */
+.game-input-accent {
+  border-color: rgba(233, 69, 96, 0.6);
+  box-shadow: 0 0 0 1px rgba(233, 69, 96, 0.18), 0 0 12px rgba(233, 69, 96, 0.2);
+}
+.game-input-accent:hover { border-color: rgba(233, 69, 96, 0.75); }
+.game-input-accent:focus {
+  border-color: rgba(233, 69, 96, 0.9);
+  box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.2), 0 0 20px rgba(233, 69, 96, 0.35);
+}
+
+/* Título com letras em gradiente arco-íris animado (loop RGB) */
+.gradient-text {
+  background: linear-gradient(90deg, #ff4757, #ff8c2e, #ffd700, #00ff88, #38bdf8, #a855f7, #ff4757);
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: gradientFlow 6s ease-in-out infinite;
+  filter: drop-shadow(0 0 14px rgba(233, 69, 96, 0.25));
+}
+/* ---- Telas de login: moldura cinematográfica estilo MMORPG ---- */
+/* Vinheta escura nas bordas para dar profundidade */
+.vignette {
+  background: radial-gradient(120% 95% at 50% 42%, transparent 35%, rgba(0, 0, 0, 0.62) 100%);
+}
+/* Régua ornamental dourada (divisor com losango no centro) */
+.ornate-rule {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.65), transparent);
+  position: relative;
+}
+.ornate-rule::after {
+  content: "❖";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  color: #ffd700;
+  font-size: 0.7rem;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.8);
+}
+/* Card com moldura "real" (borda superior dourada) */
+.card-royal {
+  border-top: 1px solid rgba(255, 215, 0, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 215, 0, 0.25), 0 10px 34px rgba(0, 0, 0, 0.4);
+}
+/* Brasas douradas subindo (partículas vivas) */
+.ember {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, #ffd700, rgba(255, 138, 0, 0.35));
+  box-shadow: 0 0 6px rgba(255, 215, 0, 0.7);
+  animation: particle-rise 10s linear infinite;
+  opacity: 0;
+  pointer-events: none;
+}
+/* Brilho vermelho fraco pulsando (coroa, espada, escudo) */
+@keyframes glowRed {
+  0%, 100% { text-shadow: 0 0 4px rgba(233, 69, 96, 0.3), 0 0 9px rgba(233, 69, 96, 0.18); }
+  50% { text-shadow: 0 0 12px rgba(233, 69, 96, 0.65), 0 0 24px rgba(233, 69, 96, 0.35); }
+}
+.glow-red-blink { animation: glowRed 1.8s ease-in-out infinite; }
+
+/* Badges MMORPG / IDLE — chip com borda e brilho vermelho piscando */
+@keyframes blinkRed {
+  0%, 100% { box-shadow: 0 0 0 1px rgba(233, 69, 96, 0.12), 0 0 6px rgba(233, 69, 96, 0.16); }
+  50% { box-shadow: 0 0 0 1px rgba(233, 69, 96, 0.55), 0 0 14px rgba(233, 69, 96, 0.45); }
+}
+.badge {
+  display: inline-block;
+  padding: 0.35rem 0.95rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(233, 69, 96, 0.5);
+  background: rgba(233, 69, 96, 0.12);
+  color: #ffe9ec;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  animation: blinkRed 2s ease-in-out infinite;
+}
+
+/* Spinner / skeleton / hover */
+.spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #ffd700;
+  animation: rotate 0.8s linear infinite;
+}
+.skeleton { background: rgba(255, 255, 255, 0.06); border-radius: 0.6rem; animation: skeletonPulse 1.4s ease-in-out infinite; }
+.animate-stagger-6 { animation: fadeInUp 0.5s ease both; animation-delay: 0.3s; }
+
+/* Texto com brilho */
+.glow-text { text-shadow: 0 0 10px rgba(255, 215, 0, 0.5), 0 0 22px rgba(255, 215, 0, 0.22); }
+.hover-lift { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+.hover-lift:hover { transform: translateY(-4px); box-shadow: 0 14px 28px rgba(0, 0, 0, 0.4); }
+.toast { background: rgba(13, 15, 28, 0.88); }
+
+/* Navegação lateral */
+.nav-item {
+  position: relative;
+  border-radius: 0.6rem;
+  margin: 0 0.5rem 0.15rem;
+  color: #9ca3af;
+  transition: all 0.2s ease;
+}
+.nav-item:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.06);
+}
+.nav-item.active {
+  color: #fff;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 2px 0 0 var(--region-accent, #e94560);
+}
+
+/* Stagger de entrada (Rankings etc.) */
+.animate-stagger-1 { animation: fadeInUp 0.5s ease both; animation-delay: 0.05s; }
+.animate-stagger-2 { animation: fadeInUp 0.5s ease both; animation-delay: 0.1s; }
+.animate-stagger-3 { animation: fadeInUp 0.5s ease both; animation-delay: 0.15s; }
+.animate-stagger-4 { animation: fadeInUp 0.5s ease both; animation-delay: 0.2s; }
+.animate-stagger-5 { animation: fadeInUp 0.5s ease both; animation-delay: 0.25s; }
+.animate-stagger-6 { animation: fadeInUp 0.5s ease both; animation-delay: 0.3s; }
+/* Animações de imagem — ilhas vivas e interativas */
+@keyframes islandFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.island-float { animation: islandFloat 3.4s ease-in-out infinite; }
+
+/* Brilho suave pulsante sutil sobre a imagem ao passar o mouse */
+.img-glow-wrap { border-radius: 0.75rem; }
+.img-glow {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.img-glow:hover { box-shadow: 0 0 18px rgba(255, 255, 255, 0.25); }

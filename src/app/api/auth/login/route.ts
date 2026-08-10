@@ -1,0 +1,61 @@
+import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
+import jsonDb from "@/db/repo";
+
+export async function POST(req: NextRequest) {
+  try {
+    const { username, password } = await req.json();
+    
+    if (!username || !password) {
+      return NextResponse.json({ error: "Usuário e senha obrigatórios" }, { status: 400 });
+    }
+    
+    const uname = username.trim().toLowerCase();
+    const user = await jsonDb.findUserByUsername(uname);
+
+    if (!user) {
+      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+    }
+
+    if (user.banned) {
+      return NextResponse.json({ error: `Conta banida: ${user.banReason || "Violação dos termos"}` }, { status: 403 });
+    }
+
+    if (user.deleted) {
+      return NextResponse.json(
+        { error: "Conta excluída. Caso ache que foi um engano, contate a administração." },
+        { status: 403 }
+      );
+    }
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      return NextResponse.json({ error: "Senha incorreta" }, { status: 401 });
+    }
+
+    await jsonDb.updateUser(user.id, { lastLogin: new Date().toISOString() });
+
+    // Personagem único da conta (o primeiro criado é o personagem principal).
+    const chars = (await jsonDb.getCharactersByUserId(user.id)).sort((a: any, b: any) =>
+      (a.createdAt || "").localeCompare(b.createdAt || "")
+    );
+    const main = chars[0] ?? null;
+    const mailboxCount = main
+      ? await jsonDb.countUnclaimedMails(main.id)
+      : 0;
+
+    return NextResponse.json({
+      userId: user.id,
+      username: user.username,
+      role: user.role,
+      locale: user.locale,
+      hasCharacter: chars.length > 0,
+      character: main,
+      mailboxCount,
+    });
+  } catch (e: unknown) {
+    console.error("Login error:", e);
+    const msg = e instanceof Error ? e.message : "Erro interno do servidor";
+    return NextResponse.json({ error: msg }, { status: 500 });
+  }
+}
