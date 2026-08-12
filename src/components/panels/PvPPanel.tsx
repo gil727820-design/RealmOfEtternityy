@@ -8,6 +8,7 @@ import {
   classSkillName,
   type ClassName,
 } from "@/game/constants";
+import { computePvpDaily, PVP_DAILY_MAX } from "@/game/pvp";
 
 export default function PvPPanel() {
   const { characterId, character, locale, notify, setCharacter } = useGameStore();
@@ -71,6 +72,9 @@ export default function PvPPanel() {
 
   const currentRating = Number(character.pvpRating) || 0;
   const league = getLeagueData(currentRating);
+
+  // Limite diário de batalhas na Arena (zera sozinho a cada dia).
+  const pvpDaily = computePvpDaily(character);
 
   const playerImg = classImage(character.classType as ClassName, character.sex as string);
   const playerName = (character.name as string) || "Você";
@@ -164,7 +168,7 @@ export default function PvPPanel() {
     try {
       const data = await sendAction("start", null, opp);
       if (!data || data.error) {
-        notify(data.error || "Erro", "error");
+        notify(data.code === "pvp_daily_limit" ? t("pvp.capNotice", locale) : data.error || "Erro", "error");
         setPhase("league");
         setBusy(false);
         return;
@@ -267,6 +271,11 @@ export default function PvPPanel() {
           <img src={league.image} alt={league.id} className="w-5 h-5 object-contain inline-block align-[-2px] mr-1" />
           <img src="/images/icons/icone_rating.png" alt="rating" className="w-4 h-4 object-contain inline-block align-[-1px] mr-1" />
           {currentRating} {t("pvp.rating", locale)} · 🪙 {Number(character.pvpCoins) || 0}
+        </span>
+      <span className="text-sm bg-purple-900/40 px-3 py-1 rounded-full border border-purple-500/50 font-bold text-purple-300">
+          ⚔️ {pvpDaily.used}/{PVP_DAILY_MAX} ·{" "}
+          <span className={pvpDaily.dailyLeft > 0 ? "text-[#00ff88]" : "text-red-400"}>{pvpDaily.dailyLeft}</span>{" "}
+          {t("pvp.remaining", locale)}
         </span>
       </header>
 

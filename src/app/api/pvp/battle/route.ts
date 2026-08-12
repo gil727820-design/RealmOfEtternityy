@@ -3,6 +3,7 @@ import jsonDb from "@/db/repo";
 import { leagueForRating, powerCalc, xpForLevel } from "@/game/constants";
 import { getSkinClassBuff, skinRarityMult } from "@/game/skinBuffs";
 import { xpMultiplier } from "@/game/boosts";
+import { computePvpDaily, PVP_DAILY_MAX, pvpDateKey } from "@/game/pvp";
 
 const SKILL_COST = 15;
 const MAX_ROUNDS = 40;
@@ -108,11 +109,27 @@ export async function POST(req: NextRequest) {
       round: b.round,
     });
 
+// Limite diário da Arena (mesmo padrão das masmorras): bloqueia novas
+    // batalhas quando o personagem já gastou as permitidas hoje.
+    const dailyStart = computePvpDaily(char);
+    if (action === "start" && dailyStart.used >= PVP_DAILY_MAX) {
+      return NextResponse.json(
+        {
+          error: "Limite diário de batalhas atingido! Volte amanhã.",
+          code: "pvp_daily_limit",
+          dailyMax: PVP_DAILY_MAX,
+          dailyLeft: 0,
+        },
+        { status: 400 }
+      );
+    }
     // ---- Iniciar batalha ----
     if (action === "start") {
       return NextResponse.json({
         ok: true,
         action: "start",
+        dailyMax: PVP_DAILY_MAX,
+        dailyLeft: dailyStart.dailyLeft,
         won: false,
         lost: false,
         log: [],
@@ -255,6 +272,8 @@ export async function POST(req: NextRequest) {
     let xpEarned = 0;
     let goldEarned = 0;
     if (won || lost) {
+      const today = pvpDateKey();
+      const newUsed = Math.min(PVP_DAILY_MAX, computePvpDaily(char).used + 1);
       ratingChange = won ? 5 : -3;
       const newAtkRating = Math.max(0, (char.pvpRating || 0) + ratingChange);
 
@@ -286,6 +305,8 @@ export async function POST(req: NextRequest) {
         pvpRating: newAtkRating,
         pvpLeague: leagueForRating(newAtkRating),
         pvpCoins: (char.pvpCoins || 0) + (won ? 12 : 3),
+        pvpDailyDate: today,
+        pvpDailyCount: newUsed,
         xp: newXp,
         level: newLevel,
         xpToNext: newXpToNext,
@@ -334,6 +355,8 @@ export async function POST(req: NextRequest) {
       goldEarned,
       isBot,
       attacker: fresh,
+      dailyMax: PVP_DAILY_MAX,
+      dailyLeft: computePvpDaily(fresh).dailyLeft,
       battle: battlePayload({ charHp, charMp, oppHp, oppMp, round }),
     });
   } catch (e: unknown) {
