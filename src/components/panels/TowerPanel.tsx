@@ -100,7 +100,9 @@ export default function TowerPanel() {
       setResult(data);
       setStage("result");
       refreshChar();
-      if (data.won && mode === "auto") {
+      // Usa modeRef (não o estado "mode"): applyRound roda dentro da closure antiga
+      // do autoLoop, então "mode" capturado seria o valor do render original (null).
+      if (data.won && modeRef.current === "auto") {
         // Automático venceu → cooldown e segue SOZINHO para o próximo andar.
         scheduleAutoNext();
       } else if (data.lost) {
@@ -192,7 +194,8 @@ export default function TowerPanel() {
   // Automático: após vencer, aguarda o cooldown e JÁ inicia o próximo andar sozinho.
   const scheduleAutoNext = () => {
     cancelAutoNext();
-    if (mode !== "auto") return;
+    // Mesma proteção anti-closure velha: modeRef é atualizado de forma síncrona.
+    if (modeRef.current !== "auto") return;
     setNextIn(Math.ceil(AUTO_NEXT_COOLDOWN_MS / 1000));
     const started = Date.now();
     nextTick.current = setInterval(() => {
