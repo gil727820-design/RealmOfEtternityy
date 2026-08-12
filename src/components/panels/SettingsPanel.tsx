@@ -1,9 +1,34 @@
 "use client";
+import { useEffect, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t, supportedLocales } from "@/i18n";
 
 export default function SettingsPanel() {
-  const { locale, setLocale, soundOn, setSoundOn, volume, setVolume } = useGameStore();
+  const { locale, setLocale, soundOn, setSoundOn, volume, setVolume, characterId } = useGameStore();
+  const [onlineCount, setOnlineCount] = useState<number | null>(null);
+
+  // Contador real de jogadores online (heartbeat de presença) + marca o próprio
+  // jogador como online ao abrir as configurações. Atualiza a cada 30s.
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        const res = await fetch("/api/presence");
+        const d = await res.json();
+        if (active && typeof d.online === "number") setOnlineCount(d.online);
+      } catch { /* ignora */ }
+    };
+    if (characterId) {
+      fetch("/api/presence", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characterId }),
+      }).catch(() => {});
+    }
+    load();
+    const id = setInterval(load, 30000);
+    return () => { active = false; clearInterval(id); };
+  }, [characterId]);
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -72,7 +97,7 @@ export default function SettingsPanel() {
         <div className="space-y-2 text-sm text-gray-400">
           <div>🕹️ {t("app.title", locale)} <span className="text-white">1.0.0</span></div>
           <div>{t("settings.server", locale)}: <span className="text-[#22c55e]">🟢 {t("settings.online", locale)}</span></div>
-          <div>{t("settings.players", locale)}: <span className="text-white">1</span></div>
+          <div>{t("settings.players", locale)}: <span className="text-white">{onlineCount ?? "…"}</span></div>
         </div>
       </div>
 

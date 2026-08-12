@@ -79,6 +79,40 @@ export default function GameScreen() {
     }
   }, [notification, clearNotification]);
 
+  // Heartbeat de presença: mantém o personagem marcado como "online" enquanto o
+  // jogo está aberto (o SettingsPanel mostra a contagem real em "/api/presence").
+  useEffect(() => {
+    if (!characterId) return;
+    let stopped = false;
+    let timer: ReturnType<typeof setInterval> | null = null;
+    const ping = () => {
+      if (stopped) return;
+      fetch("/api/presence", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characterId }),
+      }).catch(() => {});
+    };
+    const start = () => {
+      if (timer) clearInterval(timer);
+      ping();
+      timer = setInterval(ping, 45000);
+    };
+    const stop = () => {
+      if (timer) { clearInterval(timer); timer = null; }
+    };
+    const onVis = () => (document.visibilityState === "visible" ? start() : stop());
+    start();
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("beforeunload", stop);
+    return () => {
+      stopped = true;
+      stop();
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("beforeunload", stop);
+    };
+  }, [characterId]);
+
   const renderPanel = () => {
     if (initialLoading) {
       return (

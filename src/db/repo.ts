@@ -189,6 +189,25 @@ export async function listCharacters(search = "", limit = 50) {
     .sort((a: any, b: any) => (a.level > b.level ? -1 : 1));
 }
 
+/**
+ * Conta quantos jogadores estão online: personagens com lastActivity (heartbeat
+ * de presença) dentro dos últimos `minutes` minutos. Agrupa por userId para não
+ * contar contas com vários personagens (alts) mais de uma vez.
+ */
+export async function countRecentlyActive(minutes = 3) {
+  const all = await rowsOf(characters);
+  const cutoff = Date.now() - Math.max(1, minutes) * 60 * 1000;
+  const seen = new Set<string>();
+  for (const c of all) {
+    const ts = c.lastActivity || c.lastSeenAt;
+    if (!ts) continue;
+    const t = new Date(ts).getTime();
+    if (Number.isNaN(t) || t < cutoff) continue;
+    seen.add(c.userId ? String(c.userId) : String(c.id));
+  }
+  return seen.size;
+}
+
 /* ─── Inventory / Items ─── */
 
 export async function insertInventoryItem(item: any) {
@@ -877,6 +896,7 @@ export default {
   updateCharacter,
   deleteCharacter,
   listCharacters,
+  countRecentlyActive,
   // inventory / items
   insertInventoryItem,
   grantItem,

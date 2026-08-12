@@ -245,6 +245,30 @@ export default function AdminPage() {
     await loadCharacters();
   };
 
+  const resetAttributes = async (c: Record<string, unknown>) => {
+    if (busy) return;
+    const name = String(c.name);
+    if (!window.confirm(`🔥 Resetar TODOS os atributos de "${name}"?\n\nOs status voltam ao padrão da classe e todos os pontos (3 por nível) voltam a ficar disponíveis.`)) return;
+    setBusy(`stats_reset_${String(c.id)}`);
+    const d = await callAdmin({ action: "reset_attributes", characterId: c.id });
+    setMessage(d.success ? `✅ Atributos de "${name}" resetados para o padrão!` : `❌ ${d.error || "Falha"}`);
+    await loadCharacters();
+    setBusy(null);
+  };
+
+  const grantStatPoints = async (c: Record<string, unknown>) => {
+    if (busy) return;
+    const level = Math.max(1, Number(c.level) || 1);
+    const pts = level * 3;
+    const name = String(c.name);
+    if (!window.confirm(`🎁 Dar ${pts} pontos de status (3 × Lv.${level}) para "${name}"?`)) return;
+    setBusy(`stats_grant_${String(c.id)}`);
+    const d = await callAdmin({ action: "grant_stat_points", characterId: c.id });
+    setMessage(d.success ? `✅ ${pts} pontos de status concedidos a "${name}"!` : `❌ ${d.error || "Falha"}`);
+    await loadCharacters();
+    setBusy(null);
+  };
+
   const callAdmin = async (body: Record<string, unknown>) => {
     try {
       const res = await fetch("/api/admin", { method: "POST", headers, body: JSON.stringify(body) });
@@ -747,6 +771,18 @@ export default function AdminPage() {
                           <div className="text-xs text-gray-400">💰 {Number(c.gold || 0).toLocaleString()} • 💎 {Number(c.diamonds || 0)}</div>
                         </div>
                         <div className="flex gap-2">
+                          <button
+                            onClick={() => resetAttributes(c)}
+                            disabled={busy === `stats_reset_${String(c.id)}`}
+                            className="text-xs bg-[#ff6b6b] text-white rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
+                            {busy === `stats_reset_${String(c.id)}` ? "..." : "🔄 Resetar Atributos"}
+                          </button>
+                          <button
+                            onClick={() => grantStatPoints(c)}
+                            disabled={busy === `stats_grant_${String(c.id)}`}
+                            className="text-xs bg-[#4ecdc4] text-black rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
+                            {busy === `stats_grant_${String(c.id)}` ? "..." : `➕ ${Math.max(1, Number(c.level) || 1) * 3} pts (3×Lv)`}
+                          </button>
                           <button
                             onClick={() => {
                               setEditCharId(String(c.id));

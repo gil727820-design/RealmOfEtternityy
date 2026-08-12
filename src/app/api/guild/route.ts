@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import jsonDb from "@/db/repo";
 
 const MAX_MEMBERS = 10;
+
+// Limites da foto da guilda (salva como Data URL base64 direto no banco).
+const MAX_LOGO_RAW_BYTES = 4 * 1024 * 1024; // 4MB de imagem bruta (o cliente já redimensiona)
+const MAX_LOGO_DATA_LEN = 7 * 1024 * 1024; // teto do Data URL base64
 
 /** Cria o "cartão" de membro a partir do personagem. */
 async function memberSnapshot(char: any, rank: string) {
@@ -81,38 +83,40 @@ export async function POST(req: NextRequest) {
     const { action } = body;
 
     // ---------- UPLOAD da foto da guilda ----------
+    // A logo é salva como Data URL (base64) direto no banco (Postgres/Supabase),
+    // sem gravar arquivos no disco — funciona em qualquer hospedagem (inclusive
+    // serverless, onde public/uploads é somente leitura).
     if (action === "upload_logo") {
-      if (!logoFile) return NextResponse.json({ error: "Nenhum arquivo enviado" }, { status: 400 });
-      if (!logoFile.type.startsWith("image/")) {
+      let logoData = typeof body.logoData === "string" ? String(body.logoData) : "";
+
+      // Compatibilidade: aceita também envio multipart (File) e converte em base64.
+      if (!logoData && logoFile) {
+        const bytes = Buffer.from(await logoFile.arrayBuffer());
+        if (bytes.byteLength > MAX_LOGO_RAW_BYTES) {
+          return NextResponse.json({ error: "Imagem muito grande (máx. 4MB)" }, { status: 400 });
+        }
+        const mime = logoFile.type && logoFile.type.startsWith("image/") ? logoFile.type : "image/png";
+        logoData = `data:${mime};base64,${bytes.toString("base64")}`;
+      }
+
+      if (!logoData) return NextResponse.json({ error: "Nenhuma imagem enviada" }, { status: 400 });
+      if (!logoData.startsWith("data:image/")) {
         return NextResponse.json({ error: "O arquivo deve ser uma imagem" }, { status: 400 });
       }
-      const rawExt = (logoFile.name || "png").split(".").pop() || "png";
-      const ext = ["png", "jpg", "jpeg", "gif", "webp"].includes(rawExt.toLowerCase()) ? rawExt.toLowerCase() : "png";
-      const guildIdForName = body.guildId ? String(body.guildId).replace(/[^a-zA-Z0-9_-]/g, "") : `tmp_${Date.now()}`;
-      const fileName = `${guildIdForName}.${ext}`;
-
-      const dir = path.join(process.cwd(), "public", "uploads", "guilds");
-      await fs.mkdir(dir, { recursive: true });
-      const bytes = Buffer.from(await logoFile.arrayBuffer());
-      await fs.writeFile(path.join(dir, fileName), bytes);
-
-      const url = `/uploads/guilds/${fileName}`;
-
-      // Se for uma guilda existente: remove a foto antiga e salva o novo caminho.
-      if (body.guildId) {
-        const guild = await jsonDb.findGuildById(String(body.guildId));
-        if (!guild) return NextResponse.json({ error: "Guilda não encontrada" }, { status: 404 });
-        if (guild.logo && typeof guild.logo === "string" && guild.logo.startsWith("/uploads/guilds/") && guild.logo !== url) {
-          const oldName = path.basename(guild.logo);
-          if (!oldName.startsWith(`${guildIdForName}.`)) {
-            try {
-              await fs.unlink(path.join(dir, oldName));
-            } catch { /* já não existe */ }
-          }
-        }
-        await jsonDb.updateGuild(String(body.guildId), { logo: url });
+      if (logoData.length > MAX_LOGO_DATA_LEN) {
+        return NextResponse.json({ error: "Imagem muito grande (máx. 4MB)" }, { status: 400 });
       }
-      return NextResponse.json({ success: true, url });
+
+      const guildId = body.guildId ? String(body.guildId) : "";
+      if (guildId) {
+        const guild = await jsonDb.findGuildById(guildId);
+        if (!guild) return NextResponse.json({ error: "Guilda não encontrada" }, { status: 404 });
+        const updated = await jsonDb.updateGuild(guildId, { logo: logoData });
+        return NextResponse.json({ success: true, logo: logoData, url: logoData, guild: updated });
+      }
+
+      // Sem guildId: usado durante a criação — a logo é gravada junto com a guilda.
+      return NextResponse.json({ success: true, logo: logoData, url: logoData });
     }
 
     // ---------- CRIAR guilda ----------
@@ -132,7 +136,7 @@ export async function POST(req: NextRequest) {
         name: String(name).trim().slice(0, 20),
         description: String(description || "").trim().slice(0, 120),
         icon: String(icon || "🏰").trim().slice(0, 4) || "🏰",
-        logo: String((body.logo as string) || "").slice(0, 300),
+        logo: String((body.logo as string) || "").slice(0, MAX_LOGO_DATA_LEN),
         members: [leader],
         level: 1,
         gold: 0,

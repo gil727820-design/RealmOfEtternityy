@@ -4,7 +4,8 @@ import path from "path";
 import { randomUUID } from "crypto";
 import jsonDb from "@/db/repo";
 import { SKIN_CATALOG, skinById } from "@/game/skins";
-import { REGIONS } from "@/game/constants";
+import { CLASS_BASE_STATS, powerCalc, REGIONS } from "@/game/constants";
+import type { ClassName } from "@/game/constants";
 
 // Admin auth middleware
 async function checkAdmin(req: NextRequest) {
@@ -160,6 +161,61 @@ export async function POST(req: NextRequest) {
       const updated = await jsonDb.updateCharacter(String(characterId), clean);
       if (!updated) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
       return NextResponse.json({ success: true, updated: updated });
+    }
+
+    if (action === "reset_attributes") {
+      const { characterId } = body;
+      if (!characterId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
+
+      const char = await jsonDb.findCharacterById(String(characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+
+      const base = CLASS_BASE_STATS[(char.classType as ClassName) ?? "warrior"] ?? CLASS_BASE_STATS.warrior;
+      const level = Math.max(1, Number(char.level) || 1);
+      const patch: Record<string, unknown> = {
+        hp: base.hp,
+        maxHp: base.hp,
+        mana: base.mana,
+        maxMana: base.mana,
+        attack: base.attack,
+        defense: base.defense,
+        speed: base.speed,
+        critical: base.critical,
+        precision: 5,
+        dodge: 5,
+        resistance: 5,
+        unspentStatPoints: Math.max(0, level - 1) * 3,
+        power: powerCalc({
+          attack: base.attack,
+          defense: base.defense,
+          hp: base.hp,
+          speed: base.speed,
+          critical: base.critical,
+          level,
+        }),
+        lastActivity: new Date().toISOString(),
+      };
+
+      const updated = await jsonDb.updateCharacter(String(characterId), patch);
+      if (!updated) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+      return NextResponse.json({ success: true, character: updated, message: "Atributos resetados para o padrão da classe!" });
+    }
+
+    if (action === "grant_stat_points") {
+      const { characterId } = body;
+      if (!characterId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
+
+      const char = await jsonDb.findCharacterById(String(characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+
+      const level = Math.max(1, Number(char.level) || 1);
+      const add = level * 3;
+      const updated = await jsonDb.updateCharacter(String(characterId), {
+        unspentStatPoints: (Number(char.unspentStatPoints) || 0) + add,
+        lastActivity: new Date().toISOString(),
+      });
+      if (!updated) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+      return NextResponse.json({ success: true, character: updated, granted: add, message: `${add} pontos de status concedidos (3 × Lv.${level})!` });
     }
 
     if (action === "edit_user") {

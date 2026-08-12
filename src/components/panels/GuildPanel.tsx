@@ -8,6 +8,44 @@ type Member = { id: string; name: string; classType: string; sex: string; level:
 type Invite = { id: string; guildId: string; guildName?: string; targetCharacterId?: string; targetName?: string; createdAt?: string };
 type ChatMsg = { id: string; characterId: string; name: string; classType: string; sex: string; level: number; text: string; createdAt: string };
 
+const MAX_LOGO_RAW_BYTES = 4 * 1024 * 1024; // 4MB — compatível com o limite do servidor
+
+/** Lê a imagem no navegador e devolve um Data URL redimensionado (~400px JPEG). */
+function fileToDataUrl(file: File, maxSide = 400, quality = 0.9): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("read-failed"));
+    reader.onload = () => {
+      const raw = String(reader.result || "");
+      if (!raw.startsWith("data:image/")) { reject(new Error("not-image")); return; }
+      const img = new Image();
+      img.onerror = () => reject(new Error("decode-failed"));
+      img.onload = () => {
+        try {
+          const scale = Math.min(1, maxSide / Math.max(img.width || 1, img.height || 1));
+          const w = Math.max(1, Math.round((img.width || 1) * scale));
+          const h = Math.max(1, Math.round((img.height || 1) * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) { resolve(raw); return; }
+          // Fundo escuro para imagens com transparência (PNG/GIF).
+          ctx.fillStyle = "#0a0a12";
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          const out = canvas.toDataURL("image/jpeg", quality);
+          resolve(out && out.startsWith("data:image/") && out.length < 7_000_000 ? out : raw);
+        } catch {
+          reject(new Error("draw-failed"));
+        }
+      };
+      img.src = raw;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function GuildPanel() {
   const { characterId, character, locale, notify, setCharacter } = useGameStore();
   const [guildsList, setGuildsList] = useState<Array<Record<string, unknown>>>([]);
@@ -96,17 +134,25 @@ export default function GuildPanel() {
     setCreating(true);
     let logo = "";
     if (guildLogoFile) {
-      const fd = new FormData();
-      fd.append("action", "upload_logo");
-      fd.append("file", guildLogoFile);
-      const upRes = await fetch("/api/guild", { method: "POST", body: fd }).catch(() => null);
-      const up = upRes ? await upRes.json().catch(() => ({})) : {};
-      if (!upRes || !up.success) {
-        notify(up.error || "Falha ao enviar a foto da guilda", "error");
+      if (guildLogoFile.size > MAX_LOGO_RAW_BYTES) {
+        notify("Imagem muito grande (máx. 4MB)", "error");
         setCreating(false);
         return;
       }
-      logo = String(up.url || "");
+      try {
+        const logoData = await fileToDataUrl(guildLogoFile);
+        const up = await call({ action: "upload_logo", logoData });
+        if (!up.success) {
+          notify(up.error || "Falha ao enviar a foto da guilda", "error");
+          setCreating(false);
+          return;
+        }
+        logo = String(up.logo || up.url || "");
+      } catch {
+        notify("Não foi possível ler essa imagem. Tente JPG ou PNG.", "error");
+        setCreating(false);
+        return;
+      }
     }
     const d = await call({ action: "create", characterId, name: guildName.trim(), icon: guildIcon, description: guildDesc.trim(), logo });
     setCreating(false);
@@ -201,17 +247,20 @@ export default function GuildPanel() {
   const uploadGuildPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f || !myGuild) return;
+    if (f.size > MAX_LOGO_RAW_BYTES) { notify("Imagem muito grande (máx. 4MB)", "error"); return; }
     setBusy("logo");
-    const fd = new FormData();
-    fd.append("action", "upload_logo");
-    fd.append("guildId", String(myGuild.id));
-    fd.append("file", f);
-    const res = await fetch("/api/guild", { method: "POST", body: fd }).catch(() => null);
-    const d = res ? await res.json().catch(() => ({})) : {};
-    setBusy(null);
-    if (!res || !d.success) { notify(d.error || "Falha ao enviar a foto", "error"); return; }
-    notify("✅ Foto da guilda atualizada!", "success");
-    await load();
+    try {
+      const logoData = await fileToDataUrl(f);
+      const d = await call({ action: "upload_logo", guildId: String(myGuild.id), logoData });
+      if (!d.success) { notify(d.error || "Falha ao enviar a foto", "error"); return; }
+      notify("✅ Foto da guilda atualizada!", "success");
+      await load();
+    } catch {
+      notify("Não foi possível ler essa imagem. Tente JPG ou PNG.", "error");
+    } finally {
+      setBusy(null);
+      e.target.value = "";
+    }
   };
 
   const members = (Array.isArray(myGuild?.members) ? (myGuild?.members as Member[]) : []) as Member[];
