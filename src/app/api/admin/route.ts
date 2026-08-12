@@ -184,7 +184,7 @@ export async function POST(req: NextRequest) {
         precision: 5,
         dodge: 5,
         resistance: 5,
-        unspentStatPoints: Math.max(0, level - 1) * 3,
+        unspentStatPoints: 0,
         power: powerCalc({
           attack: base.attack,
           defense: base.defense,
@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
 
       const updated = await jsonDb.updateCharacter(String(characterId), patch);
       if (!updated) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
-      return NextResponse.json({ success: true, character: updated, message: "Atributos resetados para o padrão da classe!" });
+      return NextResponse.json({ success: true, character: updated, message: "Atributos resetados para o padrão da classe e pontos zerados!" });
     }
 
     if (action === "grant_stat_points") {

@@ -248,7 +248,7 @@ export default function AdminPage() {
   const resetAttributes = async (c: Record<string, unknown>) => {
     if (busy) return;
     const name = String(c.name);
-    if (!window.confirm(`🔥 Resetar TODOS os atributos de "${name}"?\n\nOs status voltam ao padrão da classe e todos os pontos (3 por nível) voltam a ficar disponíveis.`)) return;
+    if (!window.confirm(`🔥 Resetar TODOS os atributos de "${name}"?\n\nOs status voltam ao padrão da classe e os pontos de atributo são ZERADOS (não são devolvidos).`)) return;
     setBusy(`stats_reset_${String(c.id)}`);
     const d = await callAdmin({ action: "reset_attributes", characterId: c.id });
     setMessage(d.success ? `✅ Atributos de "${name}" resetados para o padrão!` : `❌ ${d.error || "Falha"}`);

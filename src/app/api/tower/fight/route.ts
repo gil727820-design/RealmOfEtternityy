@@ -291,9 +291,9 @@ export async function POST(req: NextRequest) {
           newFloor: newTowerFloor,
         };
       } else {
-        // Derrota → volta ao andar 1
+        // Derrota → NÃO reseta: o jogador permanece no andar em que perdeu e
+        // pode tentar de novo (o progresso da torre é mantido no andar atual).
         await jsonDb.updateCharacter(char.id, {
-          towerFloor: 1,
           lastActivity: new Date().toISOString(),
         });
       }

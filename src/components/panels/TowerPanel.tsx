@@ -90,7 +90,7 @@ export default function TowerPanel() {
     if (data.won || data.lost) {
       setResult(data);
       setStage("result");
-      if (data.won) refreshChar();
+      refreshChar();
       return true;
     }
     return false;
