@@ -363,6 +363,19 @@ export async function insertMissionTemplates(missions: any[]) {
   return missions.length;
 }
 
+export async function upsertMissionTemplates(missions: any[]) {
+  // Insere missões geradas automaticamente com IDs explícitos (negativos),
+  // sem sobrescrever missões já existentes — é idempotente entre chamadas.
+  for (const m of missions) {
+    await db
+      .insert(missionTemplates)
+      .values({ id: Number(m.id), data: m })
+      .onConflictDoNothing({ target: missionTemplates.id });
+  }
+  return missions.length;
+}
+
+
 export async function getMissionTemplateById(id: number) {
   return getRec(missionTemplates, id);
 }
@@ -914,6 +927,7 @@ export default {
   // missions
   getMissionTemplates,
   insertMissionTemplates,
+  upsertMissionTemplates,
   getMissionTemplateById,
   // active missions
   findActiveMissionByCharacterId,

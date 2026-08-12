@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
+import { missingRegionMissions } from "@/game/generatedMissions";
 
 const ITEMS = [
   { nameKey: "item.wooden_sword", slot: "weapon" as const, rarity: "common" as const, minLevel: 1, attack: 5, defense: 0, hp: 0, speed: 0, critical: 1, icon: "⚔️", sellPrice: 10 },
@@ -97,6 +98,14 @@ export async function POST() {
     if (existingMissions.length === 0) {
       await jsonDb.insertMissionTemplates(MISSIONS as any[]);
       missionsInserted = MISSIONS.length;
+    }
+    // Ilhas que ainda não têm nenhuma missão manual (ex.: Ruínas Antigas, Minas
+    // Profundas...) recebem missões geradas automaticamente, persistidas com IDs
+    // negativos estáveis e idempotentes (ON CONFLICT DO NOTHING).
+    const generated = missingRegionMissions(await jsonDb.getMissionTemplates());
+    if (generated.length) {
+      await jsonDb.upsertMissionTemplates(generated);
+      missionsInserted += generated.length;
     }
 
     return NextResponse.json({ 

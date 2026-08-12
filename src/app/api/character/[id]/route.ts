@@ -5,6 +5,7 @@ import { computeEnergyRegen } from "@/game/energy";
 import { energyMultiplier, xpMultiplier } from "@/game/boosts";
 import { computeAfkRewards } from "@/game/afk";
 import { computeDungeonStatus } from "@/game/dungeons";
+import { missingRegionMissions } from "@/game/generatedMissions";
 
 // Calculate AFK rewards (buffado — fórmula compartilhada via @/game/afk)
 function calcAfkRewards(char: any) {
@@ -55,6 +56,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
     // Get all mission templates
     const allMissions: any[] = await jsonDb.getMissionTemplates();
+
+    // Gera (e persiste) missões para as ilhas que ainda não têm nenhuma missão
+    // manual (ex.: Ruínas Antigas, Minas Profundas, Pântano Sombrio etc.) — assim
+    // toda ilha oferece missões jogáveis. A geração é idempotente (ON CONFLICT).
+    const generated = missingRegionMissions(allMissions);
+    if (generated.length) {
+      await jsonDb.upsertMissionTemplates(generated);
+      allMissions.push(...generated);
+    }
 
     const level = char.level || 1;
     const region = char.currentRegion || "starter_village";

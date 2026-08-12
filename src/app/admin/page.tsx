@@ -269,6 +269,18 @@ export default function AdminPage() {
     setBusy(null);
   };
 
+  const resetAttributesGeneral = async () => {
+    if (busy) return;
+    if (!window.confirm(
+      `🔥 ZERAR ATRIBUTOS + DAR PONTOS (GERAL)?\n\nTODOS os personagens terão os status zerados para o padrão da classe e receberão 3 pontos por nível (3 × Lv) de uma vez só.\nOs bônus de itens equipados são mantidos.\n\nEsta ação afeta TODOS os personagens!`
+    )) return;
+    setBusy("stats_reset_general");
+    const d = await callAdmin({ action: "reset_attributes_general" });
+    setMessage(d.success ? `✅ ${d.message || "Atributos resetados em geral!"}` : `❌ ${d.error || "Falha"}`);
+    await loadCharacters();
+    setBusy(null);
+  };
+
   const callAdmin = async (body: Record<string, unknown>) => {
     try {
       const res = await fetch("/api/admin", { method: "POST", headers, body: JSON.stringify(body) });
@@ -742,6 +754,13 @@ export default function AdminPage() {
                     className="flex-1 bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2 text-white focus:border-[#ff6b6b] focus:outline-none"
                     onKeyDown={(e) => e.key === "Enter" && loadCharacters()} />
                   <button onClick={loadCharacters} className="bg-[#ff6b6b] text-white rounded-xl px-4 py-2 font-bold">🔍</button>
+                  <button
+                    onClick={resetAttributesGeneral}
+                    disabled={busy === "stats_reset_general"}
+                    className="bg-gradient-to-r from-[#ff6b6b] to-[#ff9900] text-white rounded-xl px-4 py-2 font-bold text-sm hover:opacity-90 disabled:opacity-40"
+                  >
+                    {busy === "stats_reset_general" ? "Resetando..." : "🔥 Zerar + Dar Pontos (Todos)"}
+                  </button>
                 </div>
 
                 {/* Edit Form */}

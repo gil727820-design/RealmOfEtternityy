@@ -5,6 +5,7 @@ import { randomUUID } from "crypto";
 import jsonDb from "@/db/repo";
 import { SKIN_CATALOG, skinById } from "@/game/skins";
 import { CLASS_BASE_STATS, powerCalc, REGIONS } from "@/game/constants";
+import { equipmentBonus } from "@/game/forge";
 import type { ClassName } from "@/game/constants";
 
 // Admin auth middleware
@@ -15,6 +16,22 @@ async function checkAdmin(req: NextRequest) {
 }
 
 const MUSIC_EXT = [".mp3", ".ogg", ".wav", ".m4a", ".webm"];
+
+/** Soma os bônus de todos os itens equipados (forja + encanto) de um personagem. */
+async function equippedBonuses(characterId: string) {
+  let atk = 0, def = 0, hp = 0, spd = 0, crit = 0;
+  const inv = await jsonDb.getInventoryForCharacter(characterId);
+  for (const e of inv) {
+    if (!e.item?.equipped || e.template?.type === "consumable") continue;
+    const b = equipmentBonus(e.template, e.item);
+    atk += b.attack;
+    def += b.defense;
+    hp += b.maxHp;
+    spd += b.speed;
+    crit += b.critical;
+  }
+  return { atk, def, hp, spd, crit };
+}
 
 export async function GET(req: NextRequest) {
   if (!(await checkAdmin(req))) {
@@ -172,25 +189,27 @@ export async function POST(req: NextRequest) {
 
       const base = CLASS_BASE_STATS[(char.classType as ClassName) ?? "warrior"] ?? CLASS_BASE_STATS.warrior;
       const level = Math.max(1, Number(char.level) || 1);
+      // Bônus dos itens equipados continuam valendo após o reset.
+      const equip = await equippedBonuses(String(characterId));
       const patch: Record<string, unknown> = {
-        hp: base.hp,
-        maxHp: base.hp,
+        hp: Math.min(Number(char.hp) || base.hp, base.hp + equip.hp),
+        maxHp: base.hp + equip.hp,
         mana: base.mana,
         maxMana: base.mana,
-        attack: base.attack,
-        defense: base.defense,
-        speed: base.speed,
-        critical: base.critical,
+        attack: base.attack + equip.atk,
+        defense: base.defense + equip.def,
+        speed: base.speed + equip.spd,
+        critical: base.critical + equip.crit,
         precision: 5,
         dodge: 5,
         resistance: 5,
         unspentStatPoints: 0,
         power: powerCalc({
-          attack: base.attack,
-          defense: base.defense,
-          hp: base.hp,
-          speed: base.speed,
-          critical: base.critical,
+          attack: base.attack + equip.atk,
+          defense: base.defense + equip.def,
+          hp: base.hp + equip.hp,
+          speed: base.speed + equip.spd,
+          critical: base.critical + equip.crit,
           level,
         }),
         lastActivity: new Date().toISOString(),
@@ -198,7 +217,7 @@ export async function POST(req: NextRequest) {
 
       const updated = await jsonDb.updateCharacter(String(characterId), patch);
       if (!updated) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
-      return NextResponse.json({ success: true, character: updated, message: "Atributos resetados para o padrão da classe e pontos zerados!" });
+      return NextResponse.json({ success: true, character: updated, message: "Atributos resetados para o padrão da classe e pontos zerados (bônus de itens equipados mantidos)!" });
     }
 
     if (action === "grant_stat_points") {
@@ -216,6 +235,48 @@ export async function POST(req: NextRequest) {
       });
       if (!updated) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
       return NextResponse.json({ success: true, character: updated, granted: add, message: `${add} pontos de status concedidos (3 × Lv.${level})!` });
+    }
+
+    if (action === "reset_attributes_general") {
+      // Zera os atributos de TODOS os personagens e devolve 3 pontos de status por nível,
+      // tudo de uma vez (sem precisar escolher 1 por 1).
+      const all = await jsonDb.listCharacters("", 999999);
+      if (!all.length) return NextResponse.json({ error: "Nenhum personagem encontrado" }, { status: 400 });
+      let processed = 0;
+      for (const c of all) {
+        const base = CLASS_BASE_STATS[(c.classType as ClassName) ?? "warrior"] ?? CLASS_BASE_STATS.warrior;
+        const level = Math.max(1, Number(c.level) || 1);
+        const equip = await equippedBonuses(String(c.id));
+        await jsonDb.updateCharacter(String(c.id), {
+          hp: Math.min(Number(c.hp) || base.hp, base.hp + equip.hp),
+          maxHp: base.hp + equip.hp,
+          mana: base.mana,
+          maxMana: base.mana,
+          attack: base.attack + equip.atk,
+          defense: base.defense + equip.def,
+          speed: base.speed + equip.spd,
+          critical: base.critical + equip.crit,
+          precision: 5,
+          dodge: 5,
+          resistance: 5,
+          unspentStatPoints: level * 3,
+          power: powerCalc({
+            attack: base.attack + equip.atk,
+            defense: base.defense + equip.def,
+            hp: base.hp + equip.hp,
+            speed: base.speed + equip.spd,
+            critical: base.critical + equip.crit,
+            level,
+          }),
+          lastActivity: new Date().toISOString(),
+        });
+        processed++;
+      }
+      return NextResponse.json({
+        success: true,
+        processed,
+        message: `Atributos zerados em ${processed} personagens e cada um recebeu 3 × Lv em pontos de status!`,
+      });
     }
 
     if (action === "edit_user") {

@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
-import { classImage, REGIONS, regionWithAlpha, type ClassName } from "@/game/constants";
+import { classImage, REGIONS, regionWithAlpha, STAT_RESET_COST, type ClassName } from "@/game/constants";
 import { skinById } from "@/game/skins";
 import { effectiveStats, skinBuffDesc } from "@/game/skinBuffs";
 import StatHelpModal from "@/components/StatHelpModal";
@@ -12,10 +12,12 @@ export default function DashboardPanel() {
   // Os hooks devem ser chamados SEMPRE na mesma ordem (antes de qualquer early return).
   const [allocating, setAllocating] = useState<string | null>(null);
   const [showStatHelp, setShowStatHelp] = useState(false);
+  const [allocQty, setAllocQty] = useState(1);
   const energyRegenMsRef = useRef(0);
   const energyAtRef = useRef(Date.now());
   const energyRefetchedRef = useRef(false);
   const [, setEnergyTick] = useState(0);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     if (typeof (character as any)?.energyRegenMs === "number") energyRegenMsRef.current = (character as any).energyRegenMs;
@@ -102,14 +104,16 @@ export default function DashboardPanel() {
     { stat: "resistance", key: "stat.resistance", image: "/images/attributes/attr_resistencia.png", emoji: "", color: "#22c55e", perPoint: 1 },
   ];
 
-  const allocatePoint = async (row: (typeof allocStats)[number]) => {
+  const allocatePoint = async (row: (typeof allocStats)[number], qtyOverride?: number) => {
     if (pointsLeft <= 0 || !characterId || allocating) return;
+    // Qtd por clique: usa o valor digitado, limitado pelos pontos restantes.
+    const amount = Math.max(1, Math.min(qtyOverride ?? allocQty, pointsLeft));
     setAllocating(row.stat);
     try {
       const res = await fetch("/api/character/allocate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ characterId, stat: row.stat, amount: 1 }),
+        body: JSON.stringify({ characterId, stat: row.stat, amount }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -117,11 +121,40 @@ export default function DashboardPanel() {
         return;
       }
       if (data.character) setCharacter(data.character);
-      notify(`+${String(row.perPoint)} ${t(row.key, locale)}!`, "success");
+      notify(`+${String(row.perPoint * amount)} ${t(row.key, locale)}!`, "success");
     } catch {
       notify("Erro ao distribuir status", "error");
     } finally {
       setAllocating(null);
+    }
+  };
+
+  // Reset de atributos: devolve todos os pontos investidos por 100k de ouro.
+  const resetAttributes = async () => {
+    if (resetting || !characterId) return;
+    const confirmMsg = t("dash.resetStatsConfirm", locale).replace(
+      "{cost}",
+      STAT_RESET_COST.toLocaleString(locale === "en" ? "en-US" : "pt-BR")
+    );
+    if (!window.confirm(confirmMsg)) return;
+    setResetting(true);
+    try {
+      const res = await fetch("/api/character/reset-stats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characterId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        notify(data.error || "Erro ao resetar atributos", "error");
+        return;
+      }
+      if (data.character) setCharacter(data.character);
+      notify(data.message || t("dash.resetStatsDone", locale), "success");
+    } catch {
+      notify("Erro ao resetar atributos", "error");
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -351,6 +384,25 @@ export default function DashboardPanel() {
               {t("status.noPoints", locale)}
             </div>
           ) : (
+            <>
+            <div className="mb-3 flex items-center gap-2 p-2.5 rounded-xl bg-[#00ff88]/5 border border-[#00ff88]/20">
+              <span className="text-xs text-gray-400 font-bold whitespace-nowrap">{t("dash.allocQty", locale)}</span>
+              <input
+                type="number"
+                min={1}
+                max={pointsLeft}
+                value={allocQty}
+                onChange={(e) => setAllocQty(Math.max(1, Math.min(pointsLeft, Math.floor(Number(e.target.value) || 1))))}
+                className="w-20 bg-[#0a0a12] border border-[#00ff88]/30 rounded-lg px-2 py-1.5 text-center text-white font-black focus:outline-none focus:border-[#00ff88]"
+              />
+              <span className="text-[10px] text-gray-500">{t("dash.allocMax", locale)} {String(pointsLeft)}</span>
+              <button
+                onClick={() => setAllocQty(pointsLeft)}
+                className="ml-auto text-[11px] font-black text-[#00ff88] hover:underline"
+              >
+                {t("dash.allocAll", locale)}
+              </button>
+            </div>
             <div className="space-y-2">
               {allocStats.map((row) => {
                 const currentVal = num(c[row.stat]);
@@ -374,18 +426,44 @@ export default function DashboardPanel() {
                       <div className="text-base font-bold text-white">{String(currentVal)}</div>
                     </div>
                     <button
-                      onClick={() => allocatePoint(row)}
+                      onClick={() => allocatePoint(row, allocQty)}
                       disabled={allocating !== null || pointsLeft <= 0}
                       title={t("status.addPoint", locale)}
-                      className="w-9 h-9 rounded-lg flex items-center justify-center text-lg font-black text-white bg-gradient-to-br from-[#00ff88] to-[#00b37a] hover:brightness-110 hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all shadow-[0_0_12px_rgba(0,255,136,0.25)]"
+                      className="w-auto min-w-9 h-9 px-2.5 rounded-lg flex items-center justify-center text-base font-black text-white bg-gradient-to-br from-[#00ff88] to-[#00b37a] hover:brightness-110 hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all shadow-[0_0_12px_rgba(0,255,136,0.25)]"
                     >
-                      +
+                      +{String(allocQty)}
                     </button>
                   </div>
                 );
               })}
             </div>
+            </>
           )}
+
+          {/* Reset de atributos — 100k de ouro */}
+          <div
+            className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between gap-3 animate-fadeIn"
+            style={{ animationDelay: "0.2s" }}
+          >
+            <div>
+              <div className="text-xs font-bold text-gray-300 flex items-center gap-1.5">
+                <span>🔄</span> {t("dash.resetStats", locale)}
+              </div>
+              <div className="text-[11px] text-gray-500">💰 {t("dash.resetStatsCost", locale)}</div>
+            </div>
+            <button
+              onClick={resetAttributes}
+              disabled={resetting || num(c.gold) < STAT_RESET_COST}
+              title={num(c.gold) < STAT_RESET_COST ? t("dash.resetStatsNoGold", locale) : t("dash.resetStats", locale)}
+              className={`px-4 py-2 rounded-lg text-sm font-black transition-all border ${
+                num(c.gold) < STAT_RESET_COST
+                  ? "bg-white/5 border-white/10 text-gray-500 cursor-not-allowed"
+                  : "bg-gradient-to-br from-[#ffd700] to-[#ff8c00] text-black hover:brightness-110 hover:scale-105 shadow-[0_0_12px_rgba(255,215,0,0.3)]"
+              }`}
+            >
+              {resetting ? t("general.loading", locale) : t("dash.resetStatsBtn", locale)}
+            </button>
+          </div>
         </div>
 
         {/* Quick Actions & Currency */}

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
 import { missionImage } from "@/game/constants";
+import { missionTitle } from "@/game/generatedMissions";
 
 export default function MissionsPanel() {
   const { characterId, locale, notify, character, setCharacter } = useGameStore();
@@ -189,7 +190,7 @@ export default function MissionsPanel() {
                     {missionImage(mission.nameKey as string) ? (
                       <img
                         src={missionImage(mission.nameKey as string)}
-                        alt={t(mission.nameKey as string, locale)}
+                        alt={missionTitle(mission, locale)}
                         className="w-11 h-11 object-cover rounded-lg shrink-0"
                         draggable={false}
                       />
@@ -198,7 +199,7 @@ export default function MissionsPanel() {
                     )}
                     <div className="flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <div className="font-bold text-lg text-white">{t(mission.nameKey as string, locale)}</div>
+                        <div className="font-bold text-lg text-white">{missionTitle(mission, locale)}</div>
                         {(mission.minLevel as number) === ((character?.level as number) || 1) + 1 && (
                           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-red-500 text-white">
                             {t("mission.challenge", locale)} Lv.{(mission.minLevel as number)}
@@ -274,14 +275,14 @@ export default function MissionsPanel() {
                       {missionImage(mission.template.nameKey as string) ? (
                         <img
                           src={missionImage(mission.template.nameKey as string)}
-                          alt={t(mission.template.nameKey as string, locale)}
+                          alt={missionTitle(mission.template, locale)}
                           className="w-8 h-8 object-cover rounded-md shrink-0"
                           draggable={false}
                         />
                       ) : (
                         <span>{mission.template.icon as string}</span>
                       )}
-                      {t(mission.template.nameKey as string, locale)}
+                      {missionTitle(mission.template, locale)}
                     </span>
                     <span className={"font-mono font-bold " + (completed ? 'text-green-400' : 'text-[#4ecdc4]')}>
                       {completed ? t("mission.completed", locale) + "!" : formatTime(remaining)}

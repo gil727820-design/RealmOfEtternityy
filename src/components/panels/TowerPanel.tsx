@@ -4,6 +4,9 @@ import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
 import { classImage, classSkillName, type ClassName } from "@/game/constants";
 
+// Cooldown (ms) entre andares no modo "Lutar Automaticamente" (anti-spam).
+const AUTO_NEXT_COOLDOWN_MS = 3000;
+
 export default function TowerPanel() {
   const { characterId, character, locale, notify, setCharacter } = useGameStore();
   const [stage, setStage] = useState<"arena" | "battle" | "result">("arena");
@@ -18,6 +21,12 @@ export default function TowerPanel() {
   const [flash, setFlash] = useState(0);
   const autoStop = useRef(false);
   const floatId = useRef(0);
+
+  // Automático contínuo: cooldown entre andares + ref de modo (leitura segura no timeout)
+  const [nextIn, setNextIn] = useState(0);
+  const nextTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const nextTick = useRef<ReturnType<typeof setInterval> | null>(null);
+  const modeRef = useRef<"auto" | "turn" | null>(null);
 
   if (!character) return null;
 
@@ -91,12 +100,22 @@ export default function TowerPanel() {
       setResult(data);
       setStage("result");
       refreshChar();
+      if (data.won && mode === "auto") {
+        // Automático venceu → cooldown e segue SOZINHO para o próximo andar.
+        scheduleAutoNext();
+      } else if (data.lost) {
+        // Automático perdeu → para aqui (fica no andar atual, sem reset).
+        cancelAutoNext();
+        modeRef.current = null;
+        setMode(null);
+      }
       return true;
     }
     return false;
   };
 
   const startBattle = async (m: "auto" | "turn") => {
+    cancelAutoNext();
     setBusy(true);
     try {
       const data = await sendAction("start", null);
@@ -108,6 +127,7 @@ export default function TowerPanel() {
       setBattle(data.battle);
       setLog([]);
       setResult(null);
+      modeRef.current = m;
       setMode(m);
       setStage("battle");
       if (m === "auto") {
@@ -158,11 +178,38 @@ export default function TowerPanel() {
 
   const takeControl = () => {
     autoStop.current = true;
+    cancelAutoNext();
+    modeRef.current = "turn";
     setMode("turn");
+  };
+
+  const cancelAutoNext = () => {
+    if (nextTimer.current) { clearTimeout(nextTimer.current); nextTimer.current = null; }
+    if (nextTick.current) { clearInterval(nextTick.current); nextTick.current = null; }
+    setNextIn(0);
+  };
+
+  // Automático: após vencer, aguarda o cooldown e JÁ inicia o próximo andar sozinho.
+  const scheduleAutoNext = () => {
+    cancelAutoNext();
+    if (mode !== "auto") return;
+    setNextIn(Math.ceil(AUTO_NEXT_COOLDOWN_MS / 1000));
+    const started = Date.now();
+    nextTick.current = setInterval(() => {
+      const left = Math.max(0, Math.ceil((AUTO_NEXT_COOLDOWN_MS - (Date.now() - started)) / 1000));
+      setNextIn(left);
+    }, 200);
+    nextTimer.current = setTimeout(() => {
+      if (nextTick.current) { clearInterval(nextTick.current); nextTick.current = null; }
+      setNextIn(0);
+      if (modeRef.current === "auto") startBattle("auto");
+    }, AUTO_NEXT_COOLDOWN_MS);
   };
 
   const flee = () => {
     autoStop.current = true;
+    cancelAutoNext();
+    modeRef.current = null;
     setBattle(null);
     setLog([]);
     setResult(null);
@@ -171,7 +218,19 @@ export default function TowerPanel() {
     notify(t("tower.fledMsg", locale), "info");
   };
 
+  const backToTower = () => {
+    autoStop.current = true;
+    cancelAutoNext();
+    modeRef.current = null;
+    setBattle(null);
+    setLog([]);
+    setResult(null);
+    setStage("arena");
+    setMode(null);
+  };
+
   const goNext = () => {
+    cancelAutoNext();
     if (result?.rewards?.newFloor) {
       startBattle(mode || "auto");
     } else {
@@ -438,18 +497,24 @@ export default function TowerPanel() {
             </div>
           )}
           {!result.won && <p className="text-gray-400 mb-2">{t("tower.dontGiveUp", locale)}</p>}
-          <div className="mt-5 flex justify-center gap-3 flex-wrap">
+          <div className="mt-5 flex justify-center items-center gap-3 flex-wrap">
             {result.won ? (
-              <button onClick={goNext} className="bg-transparent px-8 py-3 rounded-xl font-bold text-lg border border-white/25 text-white/90 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 transition-all">
-                ⚔️ {t("tower.nextFloor", locale)} → {result.rewards?.newFloor}
-              </button>
+              mode === "auto" ? (
+                <div className="px-8 py-3 rounded-xl font-bold text-lg border border-purple-500/40 bg-purple-500/10 text-purple-200 animate-pulse-soft">
+                  ⏳ {t("tower.nextFloor", locale)} → {result.rewards?.newFloor} {t("tower.inSeconds", locale)} {nextIn}s…
+                </div>
+              ) : (
+                <button onClick={goNext} className="bg-transparent px-8 py-3 rounded-xl font-bold text-lg border border-white/25 text-white/90 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 transition-all">
+                  ⚔️ {t("tower.nextFloor", locale)} → {result.rewards?.newFloor}
+                </button>
+              )
             ) : (
               <button onClick={goNext} className="bg-transparent px-8 py-3 rounded-xl font-bold text-lg border border-white/25 text-white/90 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 transition-all">
                 🔄 {t("tower.attackBtn", locale)}
               </button>
             )}
             <button
-              onClick={() => { setBattle(null); setResult(null); setStage("arena"); setMode(null); }}
+              onClick={backToTower}
               className="bg-transparent px-8 py-3 rounded-xl font-bold text-lg border border-white/25 text-white/90 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 transition-all"
             >
               🏰 {t("tower.backTower", locale)}

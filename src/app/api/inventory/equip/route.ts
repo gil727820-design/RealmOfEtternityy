@@ -3,18 +3,19 @@ import jsonDb from "@/db/repo";
 import { powerCalc } from "@/game/constants";
 import { equipmentBonus } from "@/game/forge";
 
-// Estatísticas-base usadas para calcular os bônus de equipamento.
-// Se o personagem nunca guardou baseStats (personagens antigos), usa os valores atuais
-// do save — que neste sistema ainda não tinham sido modificados por equipamento.
-function resolveBase(char: any) {
-  if (char.baseStats) return char.baseStats;
-  return {
-    attack: char.attack || 0,
-    defense: char.defense || 0,
-    maxHp: char.maxHp || char.hp || 0,
-    speed: char.speed || 0,
-    critical: char.critical || 0,
-  };
+// Soma os bônus de todos os itens equipados em uma lista do inventário (forja + encanto).
+function sumEquippedBonuses(entries: any[]) {
+  const total = { attack: 0, defense: 0, maxHp: 0, speed: 0, critical: 0 };
+  for (const e of entries) {
+    if (e.template?.type === "consumable") continue; // consumíveis nunca dão bônus passivos
+    const b = equipmentBonus(e.template, e.item);
+    total.attack += b.attack;
+    total.defense += b.defense;
+    total.maxHp += b.maxHp;
+    total.speed += b.speed;
+    total.critical += b.critical;
+  }
+  return total;
 }
 
 /** Valida requisitos do template contra o personagem (nível e classe). */
@@ -55,6 +56,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Este item não possui slot de equipamento" }, { status: 400 });
     }
 
+    // Bônus dos itens equipados ANTES desta mudança (para preservar os status investidos).
+    const oldInv = await jsonDb.getInventoryForCharacter(characterId);
+    const oldEquipped = oldInv.filter((e: any) => e.item.equipped);
+    const oldBonus = sumEquippedBonuses(oldEquipped);
+
     if (unequip) {
       await jsonDb.updateInventoryItem(itemId, { equipped: false });
     } else {
@@ -68,8 +74,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, equipped: true, character: char });
       }
       // Desequipa qualquer outro item já equipado no mesmo slot
-      const inventory = await jsonDb.getInventoryForCharacter(characterId);
-      const sameSlot = inventory.filter(
+      const sameSlot = oldInv.filter(
         (e: any) => e.item.equipped && e.template?.slot === template.slot && e.item.id !== itemId
       );
       for (const s of sameSlot) {
@@ -78,27 +83,26 @@ export async function POST(req: NextRequest) {
       await jsonDb.updateInventoryItem(itemId, { equipped: true });
     }
 
-    // Recalcula bônus de todos os itens equipados após a mudança
-    // (considerando APRIMORAMENTO da forja e ENCANTAMENTO).
+    // Bônus dos itens equipados DEPOIS da mudança.
     const freshInv = await jsonDb.getInventoryForCharacter(characterId);
-    const equipped = freshInv.filter((e: any) => e.item.equipped);
-    let bonusAtk = 0, bonusDef = 0, bonusHp = 0, bonusSpd = 0, bonusCrit = 0;
-    for (const e of equipped) {
-      if (e.template?.type === "consumable") continue; // consumíveis nunca dão bônus passivos
-      const b = equipmentBonus(e.template, e.item);
-      bonusAtk += b.attack;
-      bonusDef += b.defense;
-      bonusHp += b.maxHp;
-      bonusSpd += b.speed;
-      bonusCrit += b.critical;
-    }
+    const newBonus = sumEquippedBonuses(freshInv.filter((e: any) => e.item.equipped));
 
-    const base = resolveBase(char);
-    const totalAttack = base.attack + bonusAtk;
-    const totalDefense = base.defense + bonusDef;
-    const totalMaxHp = base.maxHp + bonusHp;
-    const totalSpeed = base.speed + bonusSpd;
-    const totalCritical = base.critical + bonusCrit;
+    // Base real = status atuais MENOS os bônus que estavam equipados antes da mudança.
+    // Assim os pontos investidos (alocação de status, reset de atributos, level up,
+    // edição pelo admin) NUNCA são perdidos nem sobrescritos ao equipar/trocar itens.
+    const base = {
+      attack: Math.max(0, (Number(char.attack) || 0) - oldBonus.attack),
+      defense: Math.max(0, (Number(char.defense) || 0) - oldBonus.defense),
+      maxHp: Math.max(0, (Number(char.maxHp) || 0) - oldBonus.maxHp),
+      speed: Math.max(0, (Number(char.speed) || 0) - oldBonus.speed),
+      critical: Math.max(0, (Number(char.critical) || 0) - oldBonus.critical),
+    };
+
+    const totalAttack = base.attack + newBonus.attack;
+    const totalDefense = base.defense + newBonus.defense;
+    const totalMaxHp = base.maxHp + newBonus.maxHp;
+    const totalSpeed = base.speed + newBonus.speed;
+    const totalCritical = base.critical + newBonus.critical;
 
     const power = powerCalc({
       attack: totalAttack,

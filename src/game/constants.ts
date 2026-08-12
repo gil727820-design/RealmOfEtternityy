@@ -121,6 +121,9 @@ export const CLASS_BASE_STATS: Record<ClassName, {hp:number;attack:number;defens
   archer:      { hp: 80,  attack: 15, defense: 4,  speed: 8, mana: 30, critical: 12 },
 };
 
+// Custo (em ouro) do botão de resetar atributos (Dashboard).
+export const STAT_RESET_COST = 100_000;
+
 // Fundo de tela cheia (MAPA/) + tema (accent) de cada ilha.
 export const REGIONS = [
   { id: "starter_village", icon: "🏘️", minLevel: 1, image: "/images/islands/regiao_vila_inicial.png", bg: "/images/map_bg/bg_vila_inicial.png", accent: "#e94560" },
