@@ -1,19 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { powerCalc } from "@/game/constants";
+import { powerCalc, classStatCap, type ClassName, type AllocStatKey } from "@/game/constants";
+import { equipmentBonus } from "@/game/forge";
 
 // Configuração de cada status: quanto vale 1 ponto investido
-const STAT_CONFIG: Record<string, { field: string; perPoint: number; cap?: number }> = {
-  attack: { field: "attack", perPoint: 2 },
-  defense: { field: "defense", perPoint: 2 },
-  speed: { field: "speed", perPoint: 2 },
-  hp: { field: "maxHp", perPoint: 10 },
+const STAT_CONFIG: Record<string, { field: string; perPoint: number; cap?: number; bonusKey?: "atk" | "def" | "hp" | "spd" | "crit" }> = {
+  attack: { field: "attack", perPoint: 2, bonusKey: "atk" },
+  defense: { field: "defense", perPoint: 2, bonusKey: "def" },
+  speed: { field: "speed", perPoint: 2, bonusKey: "spd" },
+  hp: { field: "maxHp", perPoint: 10, bonusKey: "hp" },
   mana: { field: "maxMana", perPoint: 5 },
-  critical: { field: "critical", perPoint: 1, cap: 90 },
+  critical: { field: "critical", perPoint: 1, cap: 90, bonusKey: "crit" },
   precision: { field: "precision", perPoint: 1 },
   dodge: { field: "dodge", perPoint: 1, cap: 50 },
   resistance: { field: "resistance", perPoint: 1 },
 };
+
+/** Soma os bônus de todos os itens equipados (forja + encanto) de um personagem. */
+async function equippedBonuses(characterId: string) {
+  let atk = 0, def = 0, hp = 0, spd = 0, crit = 0;
+  const inv = await jsonDb.getInventoryForCharacter(characterId);
+  for (const e of inv) {
+    if (!e.item?.equipped || e.template?.type === "consumable") continue;
+    const b = equipmentBonus(e.template, e.item);
+    atk += b.attack;
+    def += b.defense;
+    hp += b.maxHp;
+    spd += b.speed;
+    crit += b.critical;
+  }
+  return { atk, def, hp, spd, crit };
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -46,14 +63,37 @@ export async function POST(req: NextRequest) {
     // Quantos pontos o incremento vale (em unidades do status)
     let appliedQty = qty;
 
-    // Limite máximo do status (ex.: critical até 90%, dodge até 50%)
+    // Valor total atual do status (inclui bônus de itens equipados)
     const current = Number(char[config.field]) || 0;
-    if (config.cap !== undefined && current + config.perPoint * qty > config.cap) {
+
+    // Bônus de itens equipados para esse status (base investida exclui isso)
+    const equip = await equippedBonuses(String(characterId));
+    const bonusVal = config.bonusKey ? equip[config.bonusKey] : 0;
+
+    // Limite POR CLASSE: cada classe tem papel definido (DPS/tank/caster) e não
+    // pode virar outra. O cap é sobre o valor investido (classe base + pontos),
+    // então equipamentos ainda somam por cima mas não te deixam passar de tank/DPS.
+    const cls = (char.classType ?? "warrior") as ClassName;
+    const classCap = classStatCap(cls, stat as AllocStatKey);
+    const baseInvested = Math.max(0, current - bonusVal);
+    if (classCap !== null && baseInvested + config.perPoint * qty > classCap) {
+      const maxPoints = Math.floor((classCap - baseInvested) / config.perPoint);
+      if (maxPoints <= 0) {
+        return NextResponse.json(
+          { error: `${stat} já está no limite da sua classe (${classCap})!` },
+          { status: 400 }
+        );
+      }
+      appliedQty = Math.min(qty, maxPoints);
+    }
+
+    // Limite máximo global do status (ex.: critical até 90%, dodge até 50%)
+    if (config.cap !== undefined && current + config.perPoint * appliedQty > config.cap) {
       const maxPoints = Math.floor((config.cap - current) / config.perPoint);
       if (maxPoints <= 0) {
         return NextResponse.json({ error: `${stat} já está no limite (${config.cap})!` }, { status: 400 });
       }
-      appliedQty = Math.min(qty, maxPoints);
+      appliedQty = Math.min(appliedQty, maxPoints);
     }
 
     const delta = config.perPoint * appliedQty;
@@ -63,6 +103,16 @@ export async function POST(req: NextRequest) {
       [config.field]: current + delta,
       unspentStatPoints: points - appliedQty,
     };
+
+    // Mantém baseStats sincronizado (base da classe + pontos investidos, SEM
+    // equipamento) para a UI saber quanto já foi investido em cada status.
+    const baseStats = (char.baseStats as Record<string, number> | undefined) ?? {};
+    const baseFieldMap: Record<string, string> = { attack: "attack", defense: "defense", speed: "speed", hp: "maxHp", critical: "critical" };
+    if (baseFieldMap[stat as string]) {
+      const baseKey = baseFieldMap[stat as string];
+      const baseVal = Number(baseStats[baseKey]) || 0;
+      patch.baseStats = { ...baseStats, [baseKey]: baseVal + delta };
+    }
 
     // HP/Mana: ao aumentar o máximo, também aumenta o valor atual
     if (stat === "hp") {

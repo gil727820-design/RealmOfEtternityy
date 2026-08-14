@@ -7,8 +7,8 @@ import ItemIcon from "@/components/ui/ItemIcon";
 
 type ForgeTab = "enhance" | "enchant" | "craft" | "refine";
 
-/** ⚠️ Modo manutenção da forja — bloqueia qualquer ação. */
-const FORGE_MAINTENANCE = true;
+/** Forja ativa (balanceada: +5% por aprimoramento, custos altos). */
+const FORGE_MAINTENANCE = false;
 
 export default function ForgePanel() {
   const { characterId, inventory, locale, notify, setCharacter, setInventory } = useGameStore();

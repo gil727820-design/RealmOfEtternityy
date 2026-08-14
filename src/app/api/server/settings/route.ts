@@ -15,8 +15,11 @@ export async function GET() {
       maintenance: !!settings?.maintenance,
       maintenanceMessage:
         typeof settings?.maintenanceMessage === "string" ? settings.maintenanceMessage : "",
+      maintenanceUntil:
+        typeof settings?.maintenanceUntil === "string" ? settings.maintenanceUntil : "",
       donatePixKey: typeof settings?.donatePixKey === "string" ? settings.donatePixKey : "",
       donateQrCode: typeof settings?.donateQrCode === "string" ? settings.donateQrCode : "",
+      diamondsPerReal: Number(settings?.diamondsPerReal) > 0 ? Number(settings.diamondsPerReal) : 1000,
     });
   } catch {
     return NextResponse.json({
@@ -27,6 +30,7 @@ export async function GET() {
       maintenanceMessage: "",
       donatePixKey: "",
       donateQrCode: "",
+      diamondsPerReal: 1000,
     });
   }
 }

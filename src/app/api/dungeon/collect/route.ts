@@ -2,12 +2,52 @@ import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { xpForLevel, powerCalc } from "@/game/constants";
 import { computeEnergyRegen } from "@/game/energy";
-import { energyMultiplier } from "@/game/boosts";
+import { energyMultiplier, goldMultiplier } from "@/game/boosts";
 import {
   computeDungeonRewards,
   computeDungeonStatus,
   dungeonDateKey,
+  dungeonRollRarity,
+  dungeonMaxRarityIdx,
 } from "@/game/dungeons";
+
+/** Rola `rolls` itens compatíveis com o nível e a profundidade da expedição. */
+async function rollDungeonDrops(
+  characterId: string,
+  clears: number,
+  rolls: number,
+  level: number
+): Promise<any[]> {
+  const allItems = await jsonDb.getAllItemTemplates();
+  const maxIdx = dungeonMaxRarityIdx(clears);
+  const lvl = Math.max(1, Number(level) || 1);
+  // Só EQUIPAMENTOS de raridade até o teto do andar (máx. raro) e de nível
+  // acessível. Poções/consumíveis nunca dropam de masmorra — só na loja.
+  const usable = allItems.filter((it: any) => {
+    if (it.type === "consumable" || it.stackable === true) return false;
+    const r = String(it.rarity || "common");
+    const rIdx = ["common", "uncommon", "rare", "epic", "legendary", "mythic", "divine"].indexOf(r);
+    if (rIdx < 0 || rIdx > maxIdx) return false;
+    return (Number(it.minLevel) || 1) <= lvl + 5;
+  });
+
+  const rolled: any[] = [];
+  for (let i = 0; i < rolls; i++) {
+    if (usable.length === 0) break;
+    // Roll ponderado: itens de raridade mais próxima do teto têm mais peso.
+    let rarity = dungeonRollRarity(clears);
+    let pool = usable.filter((it: any) => String(it.rarity) === rarity);
+    if (pool.length === 0) {
+      // Fallback: sorteia entre todos os usáveis.
+      pool = usable;
+    }
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    if (!pick) continue;
+    await jsonDb.grantItem(characterId, Number(pick.id), 1);
+    rolled.push(pick);
+  }
+  return rolled;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -49,11 +89,11 @@ export async function POST(req: NextRequest) {
       newStatPoints += 3;
     }
 
-    const newGold = (char.gold || 0) + rw.gold;
+    const newGold = (char.gold || 0) + Math.floor(rw.gold * goldMultiplier(char));
     const newCrystals = (char.crystals || 0) + rw.crystals;
 
-    // Itens NÃO dropam mais em expedições — apenas o painel admin concede itens.
-    const rolled: any[] = [];
+    // ---- Drops de items (peso de raridade sobe com a profundidade) ----
+    const rolled: any[] = rw.clears > 0 ? await rollDungeonDrops(characterId, rw.clears, rw.rolls, char.level) : [];
 
     // ---- Recarga passiva de energia durante a expedição ----
     const regen = computeEnergyRegen(char, now, energyMultiplier(char));

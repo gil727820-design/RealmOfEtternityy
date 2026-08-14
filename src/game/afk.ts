@@ -5,12 +5,13 @@
 
 export const AFK_MAX_DURATION_SEC = 43200; // 12h
 
-// Buff de recompensas por minuto (vs. fórmula antiga: gold Lv*2+pwr*0.1 / xp Lv*3+pwr*0.05)
+// Taxas por minuto (rebalanceadas para reduzir a inflação de ouro: gold ≈ metade
+// da fórmula anterior; XP mantido).
 export function afkRatesPerMinute(char: any) {
   const level = Number(char.level) || 1;
   const power = Number(char.power) || 0;
   return {
-    goldPerMin: Math.floor(level * 9 + power * 0.25),
+    goldPerMin: Math.floor(level * 5 + power * 0.12),
     xpPerMin: Math.floor(level * 12 + power * 0.12),
   };
 }

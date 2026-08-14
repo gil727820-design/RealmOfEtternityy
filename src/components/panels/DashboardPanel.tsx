@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
-import { classImage, REGIONS, regionWithAlpha, STAT_RESET_COST, type ClassName } from "@/game/constants";
+import { classImage, classStatCap, REGIONS, regionWithAlpha, STAT_RESET_COST, type ClassName, type AllocStatKey } from "@/game/constants";
 import { skinById } from "@/game/skins";
 import { effectiveStats, skinBuffDesc } from "@/game/skinBuffs";
 import StatHelpModal from "@/components/StatHelpModal";
@@ -127,6 +127,19 @@ export default function DashboardPanel() {
     } finally {
       setAllocating(null);
     }
+  };
+
+  // Cap por classe: cada classe tem papel definido (DPS/tank/caster) e não pode
+  // virar outra. O cap é sobre o valor investido (base da classe + pontos),
+  // excluindo bônus de itens equipados.
+  const investedBase = (row: (typeof allocStats)[number]) => {
+    const baseStats = (c as any)?.baseStats as Record<string, number> | undefined;
+    const map: Record<string, string> = { attack: "attack", defense: "defense", speed: "speed", hp: "maxHp", critical: "critical" };
+    if (baseStats && map[row.stat]) return num(baseStats[map[row.stat]]);
+    // Sem baseStats: mana parte da base da classe; os demais (precisão, esquiva,
+    // resistência) partem de 5.
+    if (row.stat === "mana") return num(c.maxMana);
+    return num(c[row.stat]);
   };
 
   // Reset de atributos: devolve todos os pontos investidos por 100k de ouro.
@@ -406,6 +419,11 @@ export default function DashboardPanel() {
             <div className="space-y-2">
               {allocStats.map((row) => {
                 const currentVal = num(c[row.stat]);
+                // Cap efetivo: o da classe (se houver) prevalece sobre o global.
+                const classCap = classStatCap(cls, row.stat as AllocStatKey);
+                const cap = classCap ?? (row as any).cap ?? undefined;
+                const invested = investedBase(row);
+                const atCap = cap !== undefined && invested + row.perPoint * allocQty > cap;
                 return (
                   <div
                     key={row.stat}
@@ -422,15 +440,15 @@ export default function DashboardPanel() {
                       <div className="text-xs text-gray-400 flex items-center gap-2">
                         {t(row.key, locale)}
                         <span className="text-[10px] text-gray-600">+{String(row.perPoint)} {t("status.perPoint", locale)}</span>
-                        {(row as any).cap !== undefined && (
-                          <span className="text-[10px] text-[#ffd700]/80">máx {(row as any).cap}%</span>
+                        {cap !== undefined && (
+                          <span className="text-[10px] text-[#ffd700]/80">máx {String(cap)}</span>
                         )}
                       </div>
                       <div className="text-base font-bold text-white">{String(currentVal)}</div>
                     </div>
                     <button
                       onClick={() => allocatePoint(row, allocQty)}
-                      disabled={allocating !== null || pointsLeft <= 0 || ((row as any).cap !== undefined && currentVal >= (row as any).cap)}
+                      disabled={allocating !== null || pointsLeft <= 0 || atCap}
                       title={t("status.addPoint", locale)}
                       className="w-auto min-w-9 h-9 px-2.5 rounded-lg flex items-center justify-center text-base font-black text-white bg-gradient-to-br from-[#00ff88] to-[#00b37a] hover:brightness-110 hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all shadow-[0_0_12px_rgba(0,255,136,0.25)]"
                     >

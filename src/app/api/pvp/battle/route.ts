@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { leagueForRating, powerCalc, xpForLevel } from "@/game/constants";
+import { leagueForRating, powerCalc, xpForLevel, classSkillEffect, type ClassName } from "@/game/constants";
 import { getSkinClassBuff, skinRarityMult } from "@/game/skinBuffs";
-import { xpMultiplier } from "@/game/boosts";
+import { xpMultiplier, goldMultiplier } from "@/game/boosts";
 import { computePvpDaily, PVP_DAILY_MAX, pvpDateKey } from "@/game/pvp";
 
 const SKILL_COST = 15;
@@ -22,11 +22,12 @@ function getCharCombat(char: any) {
 }
 
 // Golpe: retorna dano, crítico ou esquiva
+// Precisão anula esquiva 1:1 (1 ponto de precisão = 1% a menos de esquiva).
 function strike(
   att: { attack: number; critical: number; precision: number },
   def: { defense: number; dodge: number }
 ) {
-  const dodge = Math.max(0, def.dodge - (att.precision || 0) * 0.15);
+  const dodge = Math.max(0, def.dodge - (att.precision || 0));
   if (Math.random() * 100 < dodge) return { hit: false, dmg: 0, crit: false, dodged: true };
   let dmg = Math.max(1, Math.round(att.attack - Math.floor(def.defense * 0.4)));
   const crit = Math.random() * 100 < att.critical;
@@ -153,6 +154,9 @@ export async function POST(req: NextRequest) {
     const events: any[] = [];
     let defended = false;
     let bleedStack = 0; // sangramento acumulado no inimigo (skin de assassino)
+    // Efeito mecânico do golpe especial da CLASSE do personagem.
+    const skillFx = classSkillEffect((char.classType as ClassName) || "warrior");
+    let skillUsed = false;
 
     // ---- Ação do jogador (você) ----
     if (action === "defend") {
@@ -162,13 +166,16 @@ export async function POST(req: NextRequest) {
       log.push(`🛡️ Você assume postura de defesa.`);
       events.push({ type: "defend", target: "player" });
     } else if (action === "skill") {
-      if (charMp < SKILL_COST) {
+      const cost = skillFx.manaCost ?? SKILL_COST;
+      if (charMp < cost) {
         return NextResponse.json({ error: "Mana insuficiente", code: "no_mana" }, { status: 400 });
       }
-      charMp -= SKILL_COST;
+      charMp -= cost;
+      skillUsed = true;
+      const pierceDef = oppDefense * (1 - (skillFx.pierce || 0));
       const r = strike(
-        { attack: Math.round(ca.attack * 1.8 * pm), critical: ca.critical + 15 + myCritAdd, precision: ca.precision },
-        { defense: oppDefense, dodge: oppDodge }
+        { attack: Math.round(ca.attack * (skillFx.dmgMult || 1.8) * pm), critical: ca.critical + (skillFx.critBonus ?? 15) + myCritAdd, precision: ca.precision },
+        { defense: pierceDef, dodge: oppDodge }
       );
       if (r.dodged) {
         log.push(`💨 ${oppName} esquivou do golpe especial!`);
@@ -178,6 +185,20 @@ export async function POST(req: NextRequest) {
         log.push(`✨ Golpe Poderoso! -${r.dmg}${r.crit ? " 💥CRÍTICO!" : ""}`);
         events.push({ type: r.crit ? "crit" : "skill", target: "enemy", amount: r.dmg });
         if (myBuff?.bleedPerRound) bleedStack += Math.max(1, Math.round(ca.attack * myBuff.bleedPerRound * myMult));
+        if (skillFx.doubleStrikeChance && Math.random() * 100 < skillFx.doubleStrikeChance) {
+          const d2 = Math.max(1, Math.round(ca.attack * pm - Math.floor(oppDefense * 0.4)));
+          oppHp = Math.max(0, oppHp - d2);
+          log.push(`⚡ Golpe duplo! -${d2}`);
+          events.push({ type: "skill", target: "enemy", amount: d2 });
+        }
+        if (skillFx.healOnUse) {
+          const heal = Math.max(1, Math.round(ca.maxHp * skillFx.healOnUse));
+          charHp = Math.min(ca.maxHp, charHp + heal);
+          log.push(`✨ Você se cura! +${heal}`);
+        }
+      }
+      if (skillFx.bleedChance && Math.random() * 100 < skillFx.bleedChance) {
+        bleedStack += Math.max(1, Math.round(ca.attack * 0.12));
       }
     } else {
       const r = strike(
@@ -204,6 +225,9 @@ export async function POST(req: NextRequest) {
 
     // ---- Resposta do oponente (se ainda vivo) ----
     if (oppHp > 0) {
+      // Se você usou o golpe especial, o oponente contra-ataca com o multiplicador
+      // de recebimento da sua classe (berserker fica mais frágil, paladino resiste).
+      const recv = skillUsed && skillFx.receivedMult != null ? skillFx.receivedMult : 1;
       const useSkill = oppMp >= SKILL_COST && Math.random() < 0.4;
       const useDefend = !useSkill && Math.random() < 0.15;
       if (useSkill) {
@@ -216,10 +240,10 @@ export async function POST(req: NextRequest) {
           log.push(`✅ Você desviou do golpe especial de ${oppName}!`);
           events.push({ type: "dodge", target: "player" });
         } else {
-          const taken = defended ? Math.max(1, Math.round(r.dmg * 0.5)) : r.dmg;
-          charHp = Math.max(0, charHp - taken);
-          log.push(`✨ ${oppName} usa a técnica especial! -${taken}${r.crit ? " 💥CRÍTICO!" : ""}`);
-          events.push({ type: r.crit ? "crit" : "skill", target: "player", amount: taken });
+          const taken = (defended ? Math.max(1, Math.round(r.dmg * 0.5)) : r.dmg) * recv;
+          charHp = Math.max(0, charHp - Math.round(taken));
+          log.push(`✨ ${oppName} usa a técnica especial! -${Math.round(taken)}${r.crit ? " 💥CRÍTICO!" : ""}`);
+          events.push({ type: r.crit ? "crit" : "skill", target: "player", amount: Math.round(taken) });
         }
       } else if (useDefend) {
         const regen = Math.min(8, oppMaxMp - oppMp);
@@ -235,10 +259,10 @@ export async function POST(req: NextRequest) {
           log.push(`✅ Você desviou do ataque de ${oppName}!`);
           events.push({ type: "dodge", target: "player" });
         } else {
-          const taken = defended ? Math.max(1, Math.round(r.dmg * 0.5)) : r.dmg;
-          charHp = Math.max(0, charHp - taken);
-          log.push(`🗡️ ${oppName} atacou você! -${taken}${r.crit ? " 💥CRÍTICO!" : ""}`);
-          events.push({ type: r.crit ? "crit" : "hit", target: "player", amount: taken });
+          const taken = (defended ? Math.max(1, Math.round(r.dmg * 0.5)) : r.dmg) * recv;
+          charHp = Math.max(0, charHp - Math.round(taken));
+          log.push(`🗡️ ${oppName} atacou você! -${Math.round(taken)}${r.crit ? " 💥CRÍTICO!" : ""}`);
+          events.push({ type: r.crit ? "crit" : "hit", target: "player", amount: Math.round(taken) });
         }
       }
     }
@@ -277,9 +301,9 @@ export async function POST(req: NextRequest) {
       ratingChange = won ? 5 : -3;
       const newAtkRating = Math.max(0, (char.pvpRating || 0) + ratingChange);
 
-      // Recompensa: dinheiro (ouro) + XP (ampliada por boost 2x)
-      goldEarned = won ? 12 : 3;
-      xpEarned = (won ? 30 : 8) * xpMultiplier(char);
+      // Recompensa: dinheiro (ouro) + XP (ampliada por boost 2x / VIP)
+      goldEarned = Math.floor((won ? 8 : 2) * goldMultiplier(char));
+      xpEarned = Math.floor((won ? 30 : 8) * xpMultiplier(char));
 
       let newXp = (char.xp || 0) + xpEarned;
       let newLevel = char.level || 1;

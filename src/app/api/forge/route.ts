@@ -149,7 +149,7 @@ export async function POST(req: NextRequest) {
       if (item.enchant) {
         return NextResponse.json({ error: "Este item já está encantado" }, { status: 400 });
       }
-      const cost = 3000;
+      const cost = 5000;
       if (currentGold < cost) {
         return NextResponse.json({ error: "Ouro insuficiente" }, { status: 400 });
       }

@@ -29,11 +29,11 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "level_50", nameKey: "ach.name_level_50", descKey: "ach.desc_level_50", icon: "⚡", rarity: "epic",
-    reward: { gold: 25000, crystals: 100 }, condition: (c) => (c.level as number) >= 50,
+    reward: { gold: 18000, crystals: 100 }, condition: (c) => (c.level as number) >= 50,
   },
   {
     id: "level_100", nameKey: "ach.name_level_100", descKey: "ach.desc_level_100", icon: "👑", rarity: "legendary",
-    reward: { gold: 100000, crystals: 300 }, condition: (c) => (c.level as number) >= 100,
+    reward: { gold: 60000, crystals: 300 }, condition: (c) => (c.level as number) >= 100,
   },
   {
     id: "rich", nameKey: "ach.name_rich", descKey: "ach.desc_rich", icon: "💰", rarity: "rare",
@@ -49,7 +49,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "pvp_1000", nameKey: "ach.name_pvp_1000", descKey: "ach.desc_pvp_1000", icon: "⚔️", rarity: "epic",
-    reward: { gold: 15000, crystals: 80 }, condition: (c) => (c.pvpRating as number) >= 1000,
+    reward: { gold: 12000, crystals: 80 }, condition: (c) => (c.pvpRating as number) >= 1000,
   },
   {
     id: "tower_10", nameKey: "ach.name_tower_10", descKey: "ach.desc_tower_10", icon: "🏯", rarity: "common",
@@ -61,11 +61,11 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   },
   {
     id: "tower_50", nameKey: "ach.name_tower_50", descKey: "ach.desc_tower_50", icon: "🏛️", rarity: "epic",
-    reward: { gold: 30000, crystals: 130 }, condition: (c) => (c.towerFloor as number) >= 50,
+    reward: { gold: 20000, crystals: 130 }, condition: (c) => (c.towerFloor as number) >= 50,
   },
   {
     id: "prestige_1", nameKey: "ach.name_prestige", descKey: "ach.desc_prestige", icon: "🌟", rarity: "epic",
-    reward: { gold: 20000, crystals: 130 }, condition: (c) => (c.prestige as number) >= 1,
+    reward: { gold: 15000, crystals: 130 }, condition: (c) => (c.prestige as number) >= 1,
   },
   {
     id: "guild_join", nameKey: "ach.name_guild", descKey: "ach.desc_guild", icon: "🏰", rarity: "common",

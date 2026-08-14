@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { xpForLevel, powerCalc } from "@/game/constants";
 import { computeEnergyRegen } from "@/game/energy";
-import { xpMultiplier, energyMultiplier } from "@/game/boosts";
+import { xpMultiplier, energyMultiplier, goldMultiplier } from "@/game/boosts";
 import { computeAfkRewards } from "@/game/afk";
 
 export async function POST(req: NextRequest) {
@@ -15,8 +15,8 @@ export async function POST(req: NextRequest) {
     const afk = computeAfkRewards(char, char.afkSince, now);
     if (afk.diffSec < 60) return NextResponse.json({ gold: 0, xp: 0, duration: afk.diffSec, message: "Muito cedo" });
 
-    const goldEarned = afk.gold;
-    const xpEarned = afk.xp * xpMultiplier(char);
+    const goldEarned = Math.floor(afk.gold * goldMultiplier(char));
+    const xpEarned = Math.floor(afk.xp * xpMultiplier(char));
 
     let newXp = (char.xp || 0) + xpEarned;
     let newLevel = char.level || 1;

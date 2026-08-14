@@ -141,6 +141,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ reports });
     }
 
+    if (action === "purchases") {
+      const purchases = await jsonDb.listPurchases();
+      return NextResponse.json({ purchases });
+    }
+
     return NextResponse.json({ error: "Ação inválida" }, { status: 400 });
   } catch (e: unknown) {
     console.error("Admin error:", e);
@@ -526,6 +531,42 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, mailId: sent.id });
     }
 
+    // ---- Compras PIX: aprovar / rejeitar comprovantes ----
+
+    if (action === "approve_purchase") {
+      const { purchaseId } = body;
+      const purchase = purchaseId ? await jsonDb.updatePurchase(String(purchaseId), {
+        status: "approved",
+        decidedAt: new Date().toISOString(),
+      }) : null;
+      if (!purchase) return NextResponse.json({ error: "Compra não encontrada" }, { status: 404 });
+      const char = await jsonDb.findCharacterById(String(purchase.characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+      const diamonds = Number(purchase.diamonds) || 0;
+      await jsonDb.updateCharacter(char.id, { diamonds: (char.diamonds || 0) + diamonds });
+      return NextResponse.json({ success: true, purchase, granted: diamonds, message: `💎 ${diamonds} diamantes creditados para ${char.name}!` });
+    }
+
+    if (action === "reject_purchase") {
+      const { purchaseId } = body;
+      const purchase = purchaseId ? await jsonDb.updatePurchase(String(purchaseId), {
+        status: "rejected",
+        decidedAt: new Date().toISOString(),
+      }) : null;
+      if (!purchase) return NextResponse.json({ error: "Compra não encontrada" }, { status: 404 });
+      return NextResponse.json({ success: true, purchase, message: "Compra rejeitada." });
+    }
+
+    // ---- Reset do jogo (começar do zero) ----
+
+    if (action === "reset_game") {
+      await jsonDb.resetGameData();
+      return NextResponse.json({
+        success: true,
+        message: "♻️ Jogo resetado! Todos os jogadores, personagens, guildas, inventário e correio foram apagados. O catálogo de itens/missões foi mantido.",
+      });
+    }
+
     // ---- Mensagem global / manutenção (anúncio para todos os jogadores) ----
 
     if (action === "toggle_infinite_energy") {
@@ -554,9 +595,16 @@ export async function POST(req: NextRequest) {
       }
       if (typeof maintenance === "boolean") patch.maintenance = maintenance;
       if (typeof maintenanceMessage === "string") patch.maintenanceMessage = maintenanceMessage;
+      // Horário programado para o fim da manutenção (ISO) — o cliente mostra
+      // um cooldown ao vivo até essa hora.
+      if (typeof body.maintenanceUntil === "string") patch.maintenanceUntil = body.maintenanceUntil;
       if (typeof body.infiniteEnergy === "boolean") patch.infiniteEnergy = body.infiniteEnergy;
       if (typeof body.donatePixKey === "string") patch.donatePixKey = body.donatePixKey.trim();
       if (typeof body.donateQrCode === "string") patch.donateQrCode = body.donateQrCode.trim();
+      // Conversão de diamantes por real (loja PIX): quantos diamantes valem R$ 1.
+      if (typeof body.diamondsPerReal === "number" && Number.isFinite(body.diamondsPerReal)) {
+        patch.diamondsPerReal = Math.max(1, Math.floor(body.diamondsPerReal));
+      }
       const saved = await jsonDb.updateServerSettings(patch);
       return NextResponse.json({ success: true, settings: saved });
     }

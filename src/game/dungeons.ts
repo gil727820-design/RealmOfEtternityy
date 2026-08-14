@@ -8,8 +8,9 @@
  *    8h ≈ 5.5× a 2h — vale a pena deixar o herói rodando mais tempo.
  *  - O combate é simulado por poder: tentar muito além do seu poder gera
  *    derrota e perde o bônus → incentiva escolher a dificuldade certa.
- *  - Drops pendurados na raridade: andares profundos sobem o peso de raridades
- *    altas (e o chefe garante +1 drop), mas nunca saturam.
+ *  - Drops: só até RARO (comum/incomum/raro) — épico+ sai apenas de baús da
+ *    loja. Andares profundos dão mais drops (e o chefe garante +1), mas nunca
+ *    sobem além de raro.
  */
 
 import { xpMultiplier } from "./boosts";
@@ -83,14 +84,13 @@ export const DUNGEON_RARITY_ORDER = [
   "legendary", "mythic", "divine",
 ] as const;
 
-/** Raridade máxima alcançável conforme a profundidade limpa. */
-export function dungeonMaxRarityIdx(clears: number): number {
-  if (clears >= 40) return 6; // divine
-  if (clears >= 30) return 5; // mythic
-  if (clears >= 20) return 4; // legendary
-  if (clears >= 10) return 3; // epic
-  if (clears >= 5) return 2;  // rare
-  return 1;                   // uncommon
+/**
+ * Raridade máxima dos drops de masmorra.
+ * Regra de design: drops de masmorra/torre vão no máximo até RARO —
+ * épico e acima só saem de BAÚS da loja (item premium/cultivado).
+ */
+export function dungeonMaxRarityIdx(_clears: number): number {
+  return 2; // rare — épico+ só em baús
 }
 
 /**
@@ -135,7 +135,7 @@ export function dungeonGoldByClears(clears: number, hours: number): number {
   if (clears <= 0) return 0;
   const factor = dungeonDurationFactor(hours);
   let sum = 0;
-  for (let f = 1; f <= clears; f++) sum += Math.floor(28 + f * 17);
+  for (let f = 1; f <= clears; f++) sum += Math.floor(22 + f * 13);
   return Math.floor(sum * factor);
 }
 
@@ -156,7 +156,7 @@ export function dungeonCrystalsByClears(clears: number, hours: number): number {
 
 /** Prêmio extra por vencer o chefe do piso atual. */
 export function dungeonBossBonus(): { gold: number; xp: number } {
-  return { gold: 180, xp: 120 };
+  return { gold: 120, xp: 120 };
 }
 
 /**
@@ -191,9 +191,8 @@ export function computeDungeonRewards(char: any, attemptFloor: number, hours: nu
     xpRaw: base.xp,
     xp: dungeonXpEarned(char, base.xp),
     crystals: dungeonCrystalsByClears(clears, hours),
-    // Itens NÃO dropam mais em expedições — apenas o painel admin concede itens.
-    rolls: 0,
-    bestRarity: "none",
+    rolls: dungeonItemRolls(clears, hours, boss),
+    bestRarity: clears > 0 ? dungeonBestRarity(clears) : "none",
     factor: dungeonDurationFactor(hours),
   };
 }

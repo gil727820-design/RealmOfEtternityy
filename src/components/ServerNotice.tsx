@@ -7,6 +7,7 @@ type ServerSettings = {
   announcementId: string;
   maintenance: boolean;
   maintenanceMessage: string;
+  maintenanceUntil: string;
 };
 
 const SEEN_KEY = "serverNoticeSeenIds"; // ids de popup já exibidos (mensagem única)
@@ -18,10 +19,23 @@ const SEEN_KEY = "serverNoticeSeenIds"; // ids de popup já exibidos (mensagem �
  *  - manutenção ativa → tela de bloqueio para todos.
  * Atualiza sozinho a cada 30s (polling) para detectar novas mensagens.
  */
+/** Formata milissegundos em cooldown legível (ex.: 02:31:07 ou 2d 3h 12m). */
+function formatCountdown(ms: number): string {
+  if (ms <= 0) return "00:00:00";
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (d > 0) return `${d}d ${h}h ${m}m`;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+}
+
 export default function ServerNotice() {
   const [settings, setSettings] = useState<ServerSettings | null>(null);
   const [bannerVisible, setBannerVisible] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   const seenRef = useRef<string[]>([]);
 
   // Lê os popups já vistos neste navegador (persiste entre recarregamentos).
@@ -68,8 +82,18 @@ export default function ServerNotice() {
     };
   }, []);
 
+  // Relógio do cooldown: atualiza a cada segundo enquanto a manutenção tiver hora marcada.
+  const maintenanceUntilMs = settings?.maintenanceUntil ? new Date(settings.maintenanceUntil).getTime() : 0;
+  const hasCountdown = !!settings?.maintenance && Number.isFinite(maintenanceUntilMs) && maintenanceUntilMs > 0;
+  useEffect(() => {
+    if (!hasCountdown) return;
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, [hasCountdown]);
+
   // ---- Manutenção ativa: bloqueia o jogo para todos ----
   if (settings?.maintenance) {
+    const remainingMs = maintenanceUntilMs ? maintenanceUntilMs - now : 0;
     return (
       <div className="fixed inset-0 z-[999] flex items-center justify-center bg-[#0a0a12]/95 backdrop-blur-xl p-6">
         <div className="relative max-w-md w-full text-center rounded-3xl border-2 border-[#ff6b8a]/40 bg-gradient-to-b from-[#1a1030]/95 to-[#0f0a1c]/95 p-10 shadow-[0_0_70px_rgba(233,69,96,0.35)] animate-scaleIn overflow-hidden">
@@ -83,10 +107,31 @@ export default function ServerNotice() {
           <p className="text-gray-300 text-sm leading-relaxed">
             {settings.maintenanceMessage || "Estamos realizando melhorias. Volte em breve!"}
           </p>
-          <div className="mt-6 flex items-center justify-center gap-2 text-[#ff6b8a]/70 text-xs">
-            <span className="w-2 h-2 rounded-full bg-[#ff6b8a] animate-pulse-soft" />
-            Tente novamente em instantes
-          </div>
+          {hasCountdown ? (
+            remainingMs > 0 ? (
+              <div className="mt-6">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-[#ff6b8a]/70 mb-2">
+                  ⏳ Volta em
+                </p>
+                <div className="text-4xl font-black text-white tabular-nums tracking-widest" style={{ textShadow: "0 0 20px rgba(255,107,138,0.5)" }}>
+                  {formatCountdown(remainingMs)}
+                </div>
+                <p className="mt-2 text-xs text-gray-400">
+                  Entre em <b className="text-[#ffd700]">{new Date(maintenanceUntilMs).toLocaleString("pt-BR")}</b>
+                </p>
+              </div>
+            ) : (
+              <div className="mt-6 flex items-center justify-center gap-2 text-[#ff6b8a]/80 text-xs">
+                <span className="w-2 h-2 rounded-full bg-[#ff6b8a] animate-pulse-soft" />
+                O horário programado já passou — o servidor deve voltar em instantes
+              </div>
+            )
+          ) : (
+            <div className="mt-6 flex items-center justify-center gap-2 text-[#ff6b8a]/70 text-xs">
+              <span className="w-2 h-2 rounded-full bg-[#ff6b8a] animate-pulse-soft" />
+              Tente novamente em instantes
+            </div>
+          )}
         </div>
       </div>
     );

@@ -1,27 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
+import { VIP_TIERS } from "@/game/vip";
 
 const SHOP_ITEMS: Record<string, { price: number; currency: "gold"|"diamonds"; type: string; value: number; value2?: number; value3?: string }> = {
   // Baús
-  common: { price: 500, currency: "gold", type: "chest", value: 2, value2: 2, value3: "uncommon" },
-  uncommon: { price: 1000, currency: "gold", type: "chest", value: 3, value2: 3, value3: "rare" },
-  rare: { price: 2000, currency: "gold", type: "chest", value: 3, value2: 4, value3: "epic" },
-  epic: { price: 100, currency: "diamonds", type: "chest", value: 3, value2: 4, value3: "epic" },
-  legendary: { price: 300, currency: "diamonds", type: "chest", value: 4, value2: 5, value3: "legendary" },
-  mythic: { price: 600, currency: "diamonds", type: "chest", value: 4, value2: 6, value3: "mythic" },
-  divine: { price: 1200, currency: "diamonds", type: "chest", value: 5, value2: 7, value3: "divine" },
-  secret: { price: 2500, currency: "diamonds", type: "chest", value: 5, value2: 8, value3: "supreme" },
+  common: { price: 1500, currency: "gold", type: "chest", value: 2, value2: 2, value3: "uncommon" },
+  uncommon: { price: 3500, currency: "gold", type: "chest", value: 3, value2: 3, value3: "rare" },
+  rare: { price: 7000, currency: "gold", type: "chest", value: 3, value2: 4, value3: "epic" },
+  epic: { price: 150, currency: "diamonds", type: "chest", value: 3, value2: 4, value3: "epic" },
+  legendary: { price: 450, currency: "diamonds", type: "chest", value: 4, value2: 5, value3: "legendary" },
+  mythic: { price: 900, currency: "diamonds", type: "chest", value: 4, value2: 6, value3: "mythic" },
+  divine: { price: 1800, currency: "diamonds", type: "chest", value: 5, value2: 7, value3: "divine" },
+  secret: { price: 4000, currency: "diamonds", type: "chest", value: 5, value2: 8, value3: "supreme" },
   // Poções
-  vida: { price: 100, currency: "gold", type: "potion", value: 100 },
-  mana: { price: 100, currency: "gold", type: "potion", value: 100 },
-  energia: { price: 150, currency: "gold", type: "potion", value: 50 },
-  forca: { price: 200, currency: "gold", type: "potion", value: 10 },
-  velocidade: { price: 200, currency: "gold", type: "potion", value: 10 },
-  vigor: { price: 250, currency: "gold", type: "potion", value: 20 },
-  experiencia: { price: 300, currency: "diamonds", type: "potion", value: 50 },
-  antidoto: { price: 150, currency: "gold", type: "potion", value: 50 },
-  // VIP
-  vip1: { price: 500, currency: "diamonds", type: "vip", value: 1, value2: 7 },
+  vida: { price: 250, currency: "gold", type: "potion", value: 100 },
+  mana: { price: 250, currency: "gold", type: "potion", value: 100 },
+  energia: { price: 300, currency: "gold", type: "potion", value: 50 },
+  forca: { price: 350, currency: "gold", type: "potion", value: 10 },
+  velocidade: { price: 350, currency: "gold", type: "potion", value: 10 },
+  vigor: { price: 400, currency: "gold", type: "potion", value: 20 },
+  experiencia: { price: 400, currency: "diamonds", type: "potion", value: 50 },
+  antidoto: { price: 300, currency: "gold", type: "potion", value: 50 },
+  // VIP (tiers: bronze → imperador, 30 dias cada)
+  ...Object.fromEntries(
+    VIP_TIERS.map((tier) => [
+      `vip_${tier.id}`,
+      { price: tier.price, currency: "diamonds", type: "vip", value: VIP_TIERS.indexOf(tier) },
+    ])
+  ),
 };
 
 const RARITY_ORDER = ["common","uncommon","rare","epic","legendary","mythic","divine","ancestral","supreme"];
@@ -33,11 +39,6 @@ export async function POST(req: NextRequest) {
     
     const shopItem = SHOP_ITEMS[itemId];
     if (!shopItem) return NextResponse.json({ error: "Item não encontrado" }, { status: 404 });
-
-    // Manutenção da loja (assim como a forja): baús, poções E VIP bloqueados.
-    if (shopItem.type === "chest" || shopItem.type === "potion" || shopItem.type === "vip") {
-      return NextResponse.json({ error: "Esta seção da loja está em manutenção" }, { status: 400 });
-    }
     
     const char = await jsonDb.findCharacterById(characterId);
     if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
@@ -59,18 +60,38 @@ export async function POST(req: NextRequest) {
     if (shopItem.type === "chest") {
       const count = shopItem.value;
       const maxRarityIdx = Math.max(0, RARITY_ORDER.indexOf(shopItem.value3 ?? "rare"));
+      const level = Math.max(1, Number(char.level) || 1);
       const allItems = await jsonDb.getAllItemTemplates();
       const eligible = allItems.filter((it: any) => {
         const idx = RARITY_ORDER.indexOf(it.rarity || "common");
-        return idx >= 0 && idx <= maxRarityIdx;
+        if (idx < 0 || idx > maxRarityIdx) return false;
+        // Baús NUNCA entregam poções/consumíveis — só equipamentos.
+        if (it.type === "consumable" || it.stackable === true) return false;
+        // Nunca entregar item acima do nível do jogador (não pode equipar).
+        const minLv = Number(it.minLevel) || 1;
+        return minLv <= level + 10; // pequena folga só para não frustrar
       });
-      
-      const rolled: Array<Record<string,unknown>> = [];
+
+      // Ponderado por raridade: o topo do baú tem o maior peso e cada nível
+      // abaixo corta o peso pela metade. Baú comum solta quase só comum/incomum;
+      // baú lendário raramente solta comum — "nada absurdo vindo de baú básico".
+      const weighted: Array<{ pick: Record<string, unknown>; weight: number }> = eligible.map((it: any) => {
+        const idx = Math.max(0, RARITY_ORDER.indexOf(it.rarity || "common"));
+        const dist = maxRarityIdx - idx;
+        return { pick: it, weight: Math.pow(0.5, dist) };
+      });
+      const totalW = weighted.reduce((s, w) => s + w.weight, 0);
+
+      const rolled: Array<Record<string, unknown>> = [];
       for (let i = 0; i < count; i++) {
-        if (eligible.length > 0) {
-          const pick = eligible[Math.floor(Math.random() * eligible.length)];
-          // grantItem empilha consumíveis no inventário
-          await jsonDb.grantItem(characterId, pick.id, 1);
+        if (weighted.length > 0) {
+          let r = Math.random() * totalW;
+          let pick = weighted[0].pick;
+          for (const w of weighted) {
+            r -= w.weight;
+            if (r <= 0) { pick = w.pick; break; }
+          }
+          await jsonDb.grantItem(characterId, Number(pick.id), 1);
           rolled.push(pick);
         }
       }
@@ -118,9 +139,17 @@ export async function POST(req: NextRequest) {
     }
     
     if (shopItem.type === "vip") {
-      await jsonDb.updateCharacter(characterId, { vipLevel: shopItem.value });
+      const tier = VIP_TIERS[shopItem.value];
+      if (!tier) return NextResponse.json({ error: "VIP não encontrado" }, { status: 404 });
+      const now = new Date();
+      const vipUntil = new Date(now.getTime() + tier.days * 24 * 3600 * 1000).toISOString();
+      await jsonDb.updateCharacter(characterId, {
+        vipTier: tier.id,
+        vipUntil,
+        vipLevel: VIP_TIERS.indexOf(tier) + 1,
+      });
       const updated = await jsonDb.findCharacterById(characterId);
-      return NextResponse.json({ success: true, type: "vip", vipLevel: shopItem.value, duration: shopItem.value2, character: updated });
+      return NextResponse.json({ success: true, type: "vip", vipTier: tier.id, vipUntil, character: updated });
     }
     
     const updated = await jsonDb.findCharacterById(characterId);

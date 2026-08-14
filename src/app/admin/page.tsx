@@ -8,7 +8,19 @@ import { t } from "@/i18n";
 
 const ADMIN_KEY = "PereiraAdmin2026@";
 
-type Tab = "dash" | "users" | "characters" | "guilds" | "skins" | "send" | "excluded" | "music" | "server" | "codes" | "reports" | "donate";
+const RARITY_ORDER = ["common", "uncommon", "rare", "epic", "legendary", "mythic", "divine", "ancestral", "supreme"];
+const SLOTS = ["weapon", "shield", "helmet", "armor", "gloves", "boots", "ring", "amulet", "relic", "artifact"];
+
+/** ISO → valor do input datetime-local (horário local, formato YYYY-MM-DDTHH:mm). */
+function isoToLocalInput(iso: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+type Tab = "dash" | "users" | "characters" | "guilds" | "skins" | "send" | "excluded" | "music" | "server" | "codes" | "reports" | "donate" | "pix";
 type SkinChar = { id: string; name: string; level: number; classType: string; skins: string[] };
 
 /** Recursos que o ADM pode presentear pelo correio. */
@@ -47,17 +59,26 @@ export default function AdminPage() {
   const [sendQty, setSendQty] = useState("1");
   const [sendMsg, setSendMsg] = useState("");
   const [itemCatalog, setItemCatalog] = useState<Record<string, unknown>[]>([]);
+  const [itemFilter, setItemFilter] = useState("");
+  const [itemFilterRarity, setItemFilterRarity] = useState("");
+  const [itemFilterSlot, setItemFilterSlot] = useState("");
   // Mensagem global / manutenção
   const [serverAnnouncement, setServerAnnouncement] = useState("");
   const [serverStyle, setServerStyle] = useState<"banner" | "popup">("banner");
   const [serverMaintenance, setServerMaintenance] = useState(false);
   const [serverMaintenanceMsg, setServerMaintenanceMsg] = useState("");
+  const [serverMaintenanceUntil, setServerMaintenanceUntil] = useState("");
   const [infiniteEnergy, setInfiniteEnergy] = useState(false);
+  const [resetConfirm, setResetConfirm] = useState("");
   const [serverLoaded, setServerLoaded] = useState(false);
   // Donate (PIX + QR Code)
   const [donatePixKey, setDonatePixKey] = useState("");
   const [donateQrCode, setDonateQrCode] = useState("");
   const [donateLoaded, setDonateLoaded] = useState(false);
+  // Compras PIX de diamantes — conversão por real + lista para aprovar/rejeitar
+  const [diamondsPerReal, setDiamondsPerReal] = useState("1000");
+  const [purchases, setPurchases] = useState<Record<string, unknown>[]>([]);
+  const [pixLoaded, setPixLoaded] = useState(false);
   // Códigos de resgate
   const [codeValue, setCodeValue] = useState("");
   const [codeXpHours, setCodeXpHours] = useState("12");
@@ -225,6 +246,7 @@ export default function AdminPage() {
       codes: loadCodes,
       reports: loadReports,
       donate: loadDonateSettings,
+      pix: loadPurchases,
     } as Record<Tab, (() => Promise<void>) | undefined>)[tab];
     if (run) {
       const id = setTimeout(() => { void run(); }, 0);
@@ -292,6 +314,20 @@ export default function AdminPage() {
     setMessage(d.success ? `✅ ${d.message || "Torre resetada!"}` : `❌ ${d.error || "Falha"}`);
     await loadCharacters();
     setBusy(null);
+  };
+
+  /** ♻️ Reset total do jogo — apaga todos os jogadores (começar do zero). */
+  const resetGame = async () => {
+    if (resetConfirm !== "RESETAR") return setMessage("❌ Digite RESETAR para confirmar.");
+    if (!window.confirm(
+      `⚠️ TEM CERTEZA ABSOLUTA?\n\nIsso apaga TODOS os jogadores, personagens, guildas, inventário, correio, códigos usados e reportes.\nO catálogo de itens e missões é mantido.\n\nNÃO há como desfazer!`
+    )) return;
+    setBusy("reset_game");
+    const d = await callAdmin({ action: "reset_game" });
+    setMessage(d.success ? `✅ ${d.message || "Jogo resetado!"}` : `❌ ${d.error || "Falha"}`);
+    setResetConfirm("");
+    setBusy(null);
+    await loadDashboard();
   };
 
   const callAdmin = async (body: Record<string, unknown>) => {
@@ -442,6 +478,7 @@ export default function AdminPage() {
       setServerStyle(s.announcementStyle === "popup" ? "popup" : "banner");
       setServerMaintenance(!!s.maintenance);
       setServerMaintenanceMsg(typeof s.maintenanceMessage === "string" ? s.maintenanceMessage : "");
+      setServerMaintenanceUntil(typeof s.maintenanceUntil === "string" ? isoToLocalInput(s.maintenanceUntil) : "");
       setInfiniteEnergy(!!s.infiniteEnergy);
       setDonatePixKey(typeof s.donatePixKey === "string" ? s.donatePixKey : "");
       setDonateQrCode(typeof s.donateQrCode === "string" ? s.donateQrCode : "");
@@ -463,6 +500,47 @@ export default function AdminPage() {
       setDonateQrCode(typeof s.donateQrCode === "string" ? s.donateQrCode : "");
     } catch { /* ignora */ }
     setDonateLoaded(true);
+  };
+
+  /** Carrega a lista de compras PIX (comprovantes) + a conversão de diamantes. */
+  const loadPurchases = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin?action=purchases`, { headers });
+      const d = await res.json();
+      setPurchases(Array.isArray(d.purchases) ? (d.purchases as Record<string, unknown>[]) : []);
+      const sres = await fetch(`/api/admin?action=settings`, { headers });
+      const sd = await sres.json();
+      const s = (sd.settings || {}) as Record<string, unknown>;
+      setDiamondsPerReal(String(Number(s.diamondsPerReal) > 0 ? Number(s.diamondsPerReal) : 1000));
+    } catch { /* ignora */ }
+    setPixLoaded(true);
+    setLoading(false);
+  };
+
+  /** Aprova (credita diamantes) ou rejeita um comprovante de compra PIX. */
+  const decidePurchase = async (purchase: Record<string, unknown>, approve: boolean) => {
+    const p = purchase as Record<string, unknown>;
+    const name = String(p.characterName || "?");
+    const confirmMsg = approve
+      ? `Aprovar a compra de "${name}"? 💎 ${Number(p.diamonds || 0).toLocaleString()} diamantes (R$ ${String(p.valueBRL)}) serão creditados.`
+      : `Rejeitar a compra de "${name}"? Nenhum diamante será creditado.`;
+    if (!window.confirm(confirmMsg)) return;
+    setBusy(`pix_${String(p.id)}`);
+    const d = await callAdmin({ action: approve ? "approve_purchase" : "reject_purchase", purchaseId: p.id });
+    setMessage(d.success ? `✅ ${d.message || "Compra atualizada!"}` : `❌ ${d.error || "Falha"}`);
+    await loadPurchases();
+    setBusy(null);
+  };
+
+  /** Salva quantos diamantes valem R$ 1 na loja PIX. */
+  const saveDiamondsPerReal = async () => {
+    const v = Math.max(1, Math.floor(Number(diamondsPerReal) || 1000));
+    setBusy("pix_rate");
+    const d = await callAdmin({ action: "update_server_settings", diamondsPerReal: v });
+    setMessage(d.success ? `✅ Conversão salva: ${v.toLocaleString()} 💎 = R$ 1` : `❌ ${d.error || "Erro"}`);
+    if (d.success) setDiamondsPerReal(String(v));
+    setBusy(null);
   };
 
   /** Envia/atualiza a mensagem global (banner ou popup). */
@@ -506,6 +584,8 @@ export default function AdminPage() {
       action: "update_server_settings",
       maintenance: serverMaintenance,
       maintenanceMessage: serverMaintenanceMsg.trim(),
+      // Horário programado de retorno → vira o cooldown visível para os jogadores.
+      maintenanceUntil: serverMaintenance && serverMaintenanceUntil ? new Date(serverMaintenanceUntil).toISOString() : "",
     });
     setMessage(
       d.success
@@ -550,7 +630,8 @@ export default function AdminPage() {
   useEffect(() => {
     if (tab === "server" && !serverLoaded) loadServerSettings();
     if (tab === "donate" && !donateLoaded) loadDonateSettings();
-  }, [tab, serverLoaded, donateLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (tab === "pix" && !pixLoaded) loadPurchases();
+  }, [tab, serverLoaded, donateLoaded, pixLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const skinChars = (Array.isArray(data.characters) ? data.characters : []).map((c) => ({ ...c, skins: Array.isArray(c.skins) ? c.skins : [] })) as SkinChar[];
   const selectedSkinChar = skinChars.find((c) => c.id === skinCharId) || null;
@@ -631,6 +712,7 @@ export default function AdminPage() {
     { id: "codes", label: "Códigos", icon: "🎟️" },
     { id: "reports", label: "Reportes", icon: "📝" },
     { id: "donate", label: "Donate (PIX)", icon: "💖" },
+    { id: "pix", label: "Compras PIX", icon: "💎" },
   ];
 
   const dash = data as Record<string, number>;
@@ -669,8 +751,8 @@ export default function AdminPage() {
               <span>{td.icon}</span> {td.label}
             </button>
           ))}
-        </div>
-        {tab === "dash" && (
+        </div>            {tab === "dash" && (
+              <div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
                   { label: "Usuários", value: dash.users ?? 0, icon: "👤", color: "#4ecdc4" },
@@ -684,6 +766,30 @@ export default function AdminPage() {
                     <div className="text-xs text-gray-400">{s.label}</div>
                   </div>
                 ))}
+              </div>
+
+              {/* ♻️ Reset do jogo */}
+              <div className="mt-6 bg-[#1a1a2e] rounded-2xl p-5 border border-red-500/30">
+                <h3 className="text-sm font-bold text-red-400 mb-1">♻️ Resetar o Jogo (começar do zero)</h3>
+                <p className="text-xs text-gray-400 mb-4">
+                  Apaga <b className="text-red-300">TODOS os jogadores</b> (contas, personagens, guildas, inventário, correio, códigos usados e reportes). O catálogo de itens e missões é mantido.
+                </p>
+                <div className="flex gap-3 flex-wrap items-center">
+                  <input
+                    value={resetConfirm}
+                    onChange={(e) => setResetConfirm(e.target.value)}
+                    placeholder='Digite "RESETAR" para habilitar'
+                    className="w-64 bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2 text-white focus:border-[#ff6b6b] focus:outline-none"
+                  />
+                  <button
+                    onClick={resetGame}
+                    disabled={resetConfirm !== "RESETAR" || busy === "reset_game"}
+                    className={`px-5 py-2 rounded-xl font-bold text-sm text-white disabled:opacity-40 ${resetConfirm === "RESETAR" ? "bg-red-600 hover:bg-red-500" : "bg-gray-800"}`}
+                  >
+                    {busy === "reset_game" ? "Resetando..." : "♻️ Resetar tudo"}
+                  </button>
+                </div>
+              </div>
               </div>
             )}
 
@@ -1021,7 +1127,7 @@ export default function AdminPage() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between gap-3">
                         <p className="text-xs text-gray-400">
-                          🗡️ {itemCatalog.length} espadas disponíveis — clique para selecionar.
+                          🧪 {itemCatalog.length} itens disponíveis — clique para selecionar.
                         </p>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-500">Qtd:</span>
@@ -1029,8 +1135,33 @@ export default function AdminPage() {
                             className="w-24 bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white focus:border-[#ff6b6b] focus:outline-none" />
                         </div>
                       </div>
+                      <div className="flex gap-2 flex-wrap items-center">
+                        <input value={itemFilter}
+                          onChange={(e) => setItemFilter(e.target.value)}
+                          placeholder="🔍 Buscar item..."
+                          className="flex-1 min-w-[180px] bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white text-xs focus:border-[#ff6b6b] focus:outline-none" />
+                        <select value={itemFilterRarity} onChange={(e) => setItemFilterRarity(e.target.value)}
+                          className="bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white text-xs focus:border-[#ff6b6b] focus:outline-none">
+                          <option value="">Todas raridades</option>
+                          {RARITY_ORDER.map((r) => <option key={r} value={r}>{r.toUpperCase()}</option>)}
+                        </select>
+                        <select value={itemFilterSlot} onChange={(e) => setItemFilterSlot(e.target.value)}
+                          className="bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white text-xs focus:border-[#ff6b6b] focus:outline-none">
+                          <option value="">Todos slots</option>
+                          {SLOTS.map((s) => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </div>
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-[420px] overflow-y-auto pr-1">
-                        {itemCatalog.map((it) => {
+                        {itemCatalog.filter((it) => {
+                          if (itemFilterRarity && String(it.rarity || "common") !== itemFilterRarity) return false;
+                          if (itemFilterSlot && String(it.slot || "weapon") !== itemFilterSlot) return false;
+                          if (itemFilter.trim()) {
+                            const q = itemFilter.trim().toLowerCase();
+                            const name = t(String(it.nameKey)).toLowerCase();
+                            if (!name.includes(q)) return false;
+                          }
+                          return true;
+                        }).map((it) => {
                           const id = Number(it.id);
                           const isSel = String(it.id) === sendItemId;
                           const rarity = String(it.rarity || "common");
@@ -1053,12 +1184,24 @@ export default function AdminPage() {
                               <span className="w-full truncate text-[11px] font-bold text-white">{t(String(it.nameKey))}</span>
                               <span className="text-[9px] font-bold uppercase" style={{ color }}>{rarity}</span>
                               <span className="text-[9px] text-gray-500">
-                                Lv.{String(it.minLevel || 1)} • ⚔ {String(it.attack || 0)}
+                                {String(it.slot || "weapon")} • ⚔ {String(it.attack || 0)}
                               </span>
                             </button>
                           );
                         })}
                       </div>
+                      {itemCatalog.filter((it) => {
+                        if (itemFilterRarity && String(it.rarity || "common") !== itemFilterRarity) return false;
+                        if (itemFilterSlot && String(it.slot || "weapon") !== itemFilterSlot) return false;
+                        if (itemFilter.trim()) {
+                          const q = itemFilter.trim().toLowerCase();
+                          const name = t(String(it.nameKey)).toLowerCase();
+                          if (!name.includes(q)) return false;
+                        }
+                        return true;
+                      }).length === 0 && (
+                        <div className="text-center py-8 text-gray-500 text-sm">Nenhum item encontrado.</div>
+                      )}
                     </div>
                   )}
 
@@ -1306,6 +1449,16 @@ export default function AdminPage() {
                     rows={3}
                     className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#ff6b6b] focus:outline-none resize-none mb-3"
                   />
+                  <label className="block text-xs text-gray-500 mb-1">⏳ Volta às (horário de término)</label>
+                  <input
+                    type="datetime-local"
+                    value={serverMaintenanceUntil}
+                    onChange={(e) => setServerMaintenanceUntil(e.target.value)}
+                    className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2 text-white focus:border-[#ff6b6b] focus:outline-none mb-1"
+                  />
+                  <p className="text-[10px] text-gray-500 mb-3">
+                    Os jogadores veem um <b className="text-gray-300">cooldown ao vivo</b> na tela de manutenção até essa hora. Deixe vazio para mensagem genérica.
+                  </p>
                   <button onClick={saveMaintenance} disabled={busy === "server"}
                     className="w-full bg-red-600 hover:bg-red-500 text-white rounded-xl px-4 py-2.5 font-bold text-sm disabled:opacity-40">
                     {busy === "server" ? "Salvando..." : "💾 Salvar manutenção"}
@@ -1480,6 +1633,100 @@ export default function AdminPage() {
                     >
                       🗑️ Remover QR Code
                     </button>
+                  )}
+                </div>
+              </div>
+            )}
+            {tab === "pix" && (
+              <div className="space-y-4">
+                {/* Conversão de diamantes por real */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <h3 className="text-sm font-bold text-[#a855f7] mb-1">💎 Loja de Diamantes — Conversão</h3>
+                  <p className="text-xs text-gray-400 mb-4">
+                    Define quantos <b className="text-[#a855f7]">diamantes valem R$ 1</b> na loja PIX do jogo (aba Diamantes). Pacotes fixos: R$ 5, 10, 20, 50 e 100.
+                  </p>
+                  <div className="flex gap-3 flex-wrap items-end">
+                    <div className="w-48">
+                      <label className="block text-xs text-gray-500 mb-1">💎 Diamantes por R$ 1</label>
+                      <input type="number" min={1} value={diamondsPerReal} onChange={(e) => setDiamondsPerReal(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#a855f7] focus:outline-none" />
+                    </div>
+                    <div className="text-xs text-gray-400 pb-2.5 flex flex-wrap gap-1.5">
+                      {[5, 10, 20, 50, 100].map((v) => {
+                        const rate = Math.max(1, Math.floor(Number(diamondsPerReal) || 1000));
+                        return (
+                          <span key={v} className="inline-block bg-[#0a0a12] border border-white/10 rounded-lg px-2 py-1">
+                            R$ {v} = 💎 {(v * rate).toLocaleString()}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <button onClick={saveDiamondsPerReal} disabled={busy === "pix_rate"}
+                      className="bg-[#a855f7] hover:bg-[#9333ea] text-white rounded-xl px-4 py-2.5 font-bold text-sm disabled:opacity-40">
+                      {busy === "pix_rate" ? "Salvando..." : "💾 Salvar conversão"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Compras aguardando aprovação */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <h3 className="text-sm font-bold text-white mb-1">📥 Compras PIX ({purchases.length})</h3>
+                  <p className="text-xs text-gray-400 mb-4">
+                    O jogador envia o comprovante pelo jogo (aba Diamantes). <b className="text-green-400">Aprovar</b> credita os diamantes no personagem; <b className="text-red-400">Rejeitar</b> recusa sem creditar.
+                  </p>
+                  {loading && purchases.length === 0 ? (
+                    <div className="text-center text-gray-500 text-sm py-10">Carregando...</div>
+                  ) : purchases.length === 0 ? (
+                    <div className="text-center text-gray-500 text-sm py-10">Nenhuma compra registrada ainda.</div>
+                  ) : (
+                    <div className="space-y-3 max-h-[560px] overflow-y-auto pr-1">
+                      {purchases.map((p) => {
+                        const status = String(p.status || "pending");
+                        const statusBadge = status === "approved"
+                          ? <span className="text-[10px] bg-green-500/20 border border-green-500/40 text-green-300 rounded-full px-2 py-0.5">✅ Aprovada</span>
+                          : status === "rejected"
+                            ? <span className="text-[10px] bg-red-500/20 border border-red-500/40 text-red-300 rounded-full px-2 py-0.5">❌ Rejeitada</span>
+                            : <span className="text-[10px] bg-[#ffd700]/20 border border-[#ffd700]/40 text-[#ffd700] rounded-full px-2 py-0.5">⏳ Pendente</span>;
+                        return (
+                          <div key={String(p.id)} className="rounded-xl border border-white/10 bg-[#0a0a12] p-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-bold text-white text-sm">👤 {String(p.characterName || "—")}</span>
+                                <span className="text-xs text-[#a855f7] font-black">💎 {Number(p.diamonds || 0).toLocaleString()}</span>
+                                <span className="text-xs text-gray-400">R$ {String(p.valueBRL)}</span>
+                                {statusBadge}
+                              </div>
+                              <span className="text-[10px] text-gray-500">
+                                {p.createdAt ? new Date(String(p.createdAt)).toLocaleString("pt-BR") : "—"}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-gray-400 mb-1.5">📝 {String(p.note || "—")}</p>
+                            <div className="flex flex-wrap items-center gap-2">
+                              {p.screenshotUrl ? (
+                                <a href={String(p.screenshotUrl)} target="_blank" rel="noreferrer"
+                                  className="text-[11px] bg-white/10 hover:bg-white/20 text-white rounded-lg px-2.5 py-1 font-bold">
+                                  🖼️ Ver comprovante
+                                </a>
+                              ) : (
+                                <span className="text-[10px] text-gray-600">sem screenshot</span>
+                              )}
+                              {status === "pending" && (
+                                <div className="flex gap-2 ml-auto">
+                                  <button onClick={() => decidePurchase(p, true)} disabled={busy === `pix_${String(p.id)}`}
+                                    className="text-[11px] bg-green-600 hover:bg-green-500 text-white rounded-lg px-3 py-1.5 font-bold disabled:opacity-40">
+                                    {busy === `pix_${String(p.id)}` ? "..." : "✅ Aprovar"}
+                                  </button>
+                                  <button onClick={() => decidePurchase(p, false)} disabled={busy === `pix_${String(p.id)}`}
+                                    className="text-[11px] bg-red-600/80 hover:bg-red-600 text-white rounded-lg px-3 py-1.5 font-bold disabled:opacity-40">
+                                    ❌ Rejeitar
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               </div>

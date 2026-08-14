@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { xpForLevel, powerCalc, missionXpReward } from "@/game/constants";
 import { computeEnergyRegen } from "@/game/energy";
-import { xpMultiplier, energyMultiplier } from "@/game/boosts";
+import { xpMultiplier, energyMultiplier, goldMultiplier } from "@/game/boosts";
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       newStatPoints += 3;
     }
 
-    const newGold = (char.gold || 0) + (mission.goldReward || 0);
+    const newGold = (char.gold || 0) + Math.floor((mission.goldReward || 0) * goldMultiplier(char));
     const power = powerCalc({ attack: char.attack, defense: char.defense, hp: char.maxHp, speed: char.speed, critical: char.critical, level: newLevel });
 
     // Itens NÃO dropam mais em missões — apenas o painel admin concede itens.

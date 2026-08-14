@@ -11,7 +11,8 @@ import {
   type TowerBossKind,
 } from "@/game/constants";
 import { getSkinClassBuff, skinRarityMult } from "@/game/skinBuffs";
-import { xpMultiplier } from "@/game/boosts";
+import { xpMultiplier, goldMultiplier } from "@/game/boosts";
+import { classSkillEffect, type ClassName } from "@/game/constants";
 
 const SKILL_COST = 15;
 const MAX_ROUNDS = 40;
@@ -41,39 +42,47 @@ function getCharCombat(char: any) {
   };
 }
 
-function floorMonster(floor: number, kind: TowerMonsterKind | TowerBossKind, seed: number) {
+function floorMonster(char: any, floor: number, kind: TowerMonsterKind | TowerBossKind, seed: number) {
   const rng = mulberry32(seed);
   rng();
   rng();
   const boss = floor % 10 === 0;
-  // Chefe é forte, mas justo: multiplicador moderado + bônus que não explodem.
-  const mult = boss ? 1.5 : 1;
-  const bHp = boss ? Math.round(floor * 10 + 40) : 0;
-  const bAtk = boss ? Math.round(floor * 1 + 3) : 0;
-  const bDef = boss ? Math.round(floor * 0.4 + 1) : 0;
+  const f = Math.max(1, Number(floor) || 1);
+  const lv = Number(char.level) || 1;
+  const floorBoost = Math.min(120, f);
+  // Dificuldade FIXA por andar (NÃO espelha o poder/inventário do jogador):
+  // os monstros ficam mais fortes gradualmente a cada andar. Assim um jogador
+  // de nível baixo não consegue quebrar o ranking global só por ser fraco —
+  // ele bate no teto dele e quem sobe é quem realmente é forte.
+  const bossMult = boss ? 1.4 : 1;
   return {
     kind,
     image: towerMonsterImage(kind),
     nameKey: TOWER_MONSTER_NAMES[kind],
-    maxHp: Math.round((55 + floor * 12) * mult) + bHp,
-    attack: (5 + floor * 2.2) * mult + bAtk,
-    defense: (2 + floor * 1.4) * mult + bDef,
-    speed: 1.5 + floor * 0.6,
-    critical: Math.min(30, (2 + floor * 0.25) * (boss ? 1.3 : 1)),
-    dodge: Math.min(12, 1 + floor * 0.2),
-    goldReward: boss ? 60 + floor * 30 : 20 + floor * 15,
-    xpReward: boss ? 40 + floor * 25 : 15 + floor * 12,
-    coinsReward: boss ? 35 : 5,
+    maxHp: Math.max(50, Math.round((40 + f * 16) * bossMult)),
+    attack: Math.max(4, Math.round((6 + f * 2.2) * bossMult)),
+    defense: Math.max(1, Math.round((1 + f * 1.1) * bossMult)),
+    speed: Math.max(1, Math.round((1 + f * 0.04) * 100) / 100),
+    critical: Math.min(30, Math.round(1 + f * 0.18)),
+    dodge: Math.min(15, Math.round((0.5 + f * 0.1) * 10) / 10),
+    goldReward: boss ? 120 + f * 30 : 30 + f * 20,
+    // XP escala com a CURVA DE NÍVEL (mesmo conceito das missões): a recompensa
+    // acompanha o quanto você precisa para subir, então nunca vira "2k de XP
+    // pra quem precisa de 1M". Chefe paga o dobro de XP.
+    xpReward: Math.max(30, Math.floor(xpForLevel(lv) * (0.015 + floorBoost * 0.002)) * (boss ? 2 : 1)),
+    coinsReward: boss ? 30 + Math.floor(f / 10) : 4 + Math.floor(f / 12),
     boss,
   };
 }
 
 // Golpe: retorna dano, crítico ou esquiva
+// Precisão anula esquiva 1:1 (1 ponto de precisão = 1% a menos de esquiva),
+// assim "maxar esquiva" deixa de ser a única build viável.
 function strike(
   att: { attack: number; critical: number; precision: number },
   def: { defense: number; dodge: number }
 ) {
-  const dodge = Math.max(0, def.dodge - (att.precision || 0) * 0.15);
+  const dodge = Math.max(0, def.dodge - (att.precision || 0));
   if (Math.random() * 100 < dodge) return { hit: false, dmg: 0, crit: false, dodged: true };
   let dmg = Math.max(1, Math.round(att.attack - Math.floor(def.defense * 0.4)));
   const crit = Math.random() * 100 < att.critical;
@@ -108,7 +117,7 @@ export async function POST(req: NextRequest) {
     if (action === "start") {
       const kind = towerMonsterForFloor(floor);
       const seed = Math.floor(Math.random() * 1e9);
-      const mon = floorMonster(floor, kind, seed);
+      const mon = floorMonster(char, floor, kind, seed);
       return NextResponse.json({
         ok: true,
         action,
@@ -147,7 +156,7 @@ export async function POST(req: NextRequest) {
 
     const seed = Number(state.seed) || 1;
     const kind = isTowerMonsterKind(state.kind) ? (state.kind as TowerMonsterKind | TowerBossKind) : "slime";
-    const mon = floorMonster(state.floor || floor, kind, seed);
+    const mon = floorMonster(char, state.floor || floor, kind, seed);
 
     // Estado atual, garantindo limites (não confiamos cegamente no cliente)
     let charHp = Math.min(ca.maxHp, Math.max(1, Number(state.charHp) || ca.maxHp));
@@ -159,6 +168,9 @@ export async function POST(req: NextRequest) {
     const events: any[] = [];
     let defended = false;
     let bleedStack = 0; // sangramento acumulado no inimigo (skin de assassino)
+    // Efeito mecânico do golpe especial da CLASSE do personagem.
+    const skillFx = classSkillEffect((char.classType as ClassName) || "warrior");
+    let skillUsed = false;
 
     // ---- Ação do personagem ----
     if (action === "defend") {
@@ -168,13 +180,16 @@ export async function POST(req: NextRequest) {
       log.push("🛡️ Você assume postura de defesa.");
       events.push({ type: "defend", target: "player" });
     } else if (action === "skill") {
-      if (charMp < SKILL_COST) {
+      const cost = skillFx.manaCost ?? SKILL_COST;
+      if (charMp < cost) {
         return NextResponse.json({ error: "Mana insuficiente", code: "no_mana" }, { status: 400 });
       }
-      charMp -= SKILL_COST;
+      charMp -= cost;
+      skillUsed = true;
+      const pierceDef = mon.defense * (1 - (skillFx.pierce || 0));
       const r = strike(
-        { attack: Math.round(ca.attack * 1.8 * atkFactor), critical: ca.critical + 15 + critAdd, precision: ca.precision },
-        { defense: mon.defense, dodge: mon.dodge }
+        { attack: Math.round(ca.attack * (skillFx.dmgMult || 1.8) * atkFactor), critical: ca.critical + (skillFx.critBonus ?? 15) + critAdd, precision: ca.precision },
+        { defense: pierceDef, dodge: mon.dodge }
       );
       if (r.dodged) {
         log.push(`💨 O inimigo desviou do golpe poderoso!`);
@@ -184,6 +199,24 @@ export async function POST(req: NextRequest) {
         log.push(`✨ Golpe Poderoso! -${r.dmg}${r.crit ? " 💥CRÍTICO!" : ""}`);
         events.push({ type: r.crit ? "crit" : "skill", target: "monster", amount: r.dmg });
         if (skinBuff?.bleedPerRound) bleedStack += Math.max(1, Math.round(ca.attack * skinBuff.bleedPerRound * skinMult));
+        // Double strike (assassino): 1 ataque básico extra sem crítico
+        if (skillFx.doubleStrikeChance && Math.random() * 100 < skillFx.doubleStrikeChance) {
+          const d2 = Math.max(1, Math.round(ca.attack * atkFactor - Math.floor(mon.defense * 0.4)));
+          monHp = Math.max(0, monHp - d2);
+          log.push(`⚡ Golpe duplo! -${d2}`);
+          events.push({ type: "skill", target: "monster", amount: d2 });
+        }
+        // Cura ao usar (paladino/templário)
+        if (skillFx.healOnUse) {
+          const heal = Math.max(1, Math.round(ca.maxHp * skillFx.healOnUse));
+          charHp = Math.min(ca.maxHp, charHp + heal);
+          log.push(`✨ Você se cura! +${heal}`);
+        }
+      }
+      // Sangramento do golpe (necromante/summoner)
+      if (skillFx.bleedChance && Math.random() * 100 < skillFx.bleedChance) {
+        const bleedDmg = Math.max(1, Math.round(ca.attack * 0.12));
+        bleedStack += bleedDmg;
       }
     } else {
       const r = strike(
@@ -201,7 +234,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Sangramento da skin (ex.: assassino) atinge o inimigo
+    // Sangramento (skin + golpe da classe) atinge o inimigo
     if (bleedStack > 0 && monHp > 0) {
       monHp = Math.max(0, monHp - bleedStack);
       log.push(`🩸 O inimigo sangra! -${bleedStack}`);
@@ -215,6 +248,9 @@ export async function POST(req: NextRequest) {
     if (monHp <= 0) {
       won = true;
     } else {
+      // Classes que gastam o golpe (berserker) ou são suportes (paladino/cavaleiro)
+      // recebem mais/menos dano do inimigo logo após o golpe.
+      const recv = (skillUsed && skillFx.receivedMult != null) ? skillFx.receivedMult : 1;
       const r = strike(
         { attack: mon.attack, critical: mon.critical, precision: 0 },
         { defense: ca.defense, dodge: ca.dodge }
@@ -223,7 +259,7 @@ export async function POST(req: NextRequest) {
         log.push(`✅ Você desviou do contra-ataque!`);
         events.push({ type: "dodge", target: "player" });
       } else {
-        const taken = Math.max(1, Math.round((defended ? Math.max(1, Math.round(r.dmg * 0.5)) : r.dmg) * takenFactor));
+        const taken = Math.max(1, Math.round((defended ? Math.max(1, Math.round(r.dmg * 0.5)) : r.dmg) * takenFactor * recv));
         charHp = Math.max(0, charHp - taken);
         log.push(`🗡️ O inimigo atacou você! -${taken}${r.crit ? " 💥CRÍTICO!" : ""}`);
         events.push({ type: r.crit ? "crit" : "hit", target: "player", amount: taken });
@@ -261,7 +297,7 @@ export async function POST(req: NextRequest) {
           newXpToNext = xpForLevel(newLevel);
           newStatPoints += 3;
         }
-        const newGold = (char.gold || 0) + mon.goldReward;
+        const newGold = (char.gold || 0) + Math.floor(mon.goldReward * goldMultiplier(char));
         const newCoins = (char.towerCoins || 0) + mon.coinsReward;
         const newTowerFloor = floor + 1;
         const power = powerCalc({

@@ -7,7 +7,13 @@
  *
  * Enquanto ativos, as recompensas de XP (missões/AFK) e a recarga de energia
  * são multiplicadas por 2 (XP_MULT / ENERGY_MULT).
+ *
+ * Os multiplicadores do VIP (ver src/game/vip.ts) são aplicados AQUI, somados
+ * aos boosts — assim todo lugar que usa xpMultiplier/energyMultiplier/goldMultiplier
+ * respeita o VIP automaticamente.
  */
+
+import { vipXpMult, vipEnergyRate, vipGoldMult } from "./vip";
 
 export interface Boosts {
   xpUntil?: string;
@@ -36,14 +42,19 @@ export function energyActive(char: Record<string, unknown> | null | undefined): 
   return isActive(getBoosts(char).energyUntil);
 }
 
-/** Multiplicador de XP (1 ou 2). */
+/** Multiplicador de XP (boost 2x combinado com o bônus do VIP). */
 export function xpMultiplier(char: Record<string, unknown> | null | undefined): number {
-  return xpActive(char) ? XP_MULT : 1;
+  return (xpActive(char) ? XP_MULT : 1) * vipXpMult(char);
 }
 
-/** Multiplicador de recarga de energia (1 ou 2). */
+/** Multiplicador de recarga de energia (boost 2x combinado com o bônus do VIP). */
 export function energyMultiplier(char: Record<string, unknown> | null | undefined): number {
-  return energyActive(char) ? ENERGY_MULT : 1;
+  return (energyActive(char) ? ENERGY_MULT : 1) * vipEnergyRate(char);
+}
+
+/** Multiplicador de ouro (bônus do VIP). Usado nas recompensas em ouro. */
+export function goldMultiplier(char: Record<string, unknown> | null | undefined): number {
+  return vipGoldMult(char);
 }
 
 /** Gera a lista de boosts atualizada ao aplicar um boost de N horas. */

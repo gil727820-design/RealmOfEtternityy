@@ -24,7 +24,6 @@ import ReportPanel from "./panels/ReportPanel";
 import DonatePanel from "./panels/DonatePanel";
 import SettingsPanel from "./panels/SettingsPanel";
 import MusicController from "./MusicController";
-import ServerNotice from "./ServerNotice";
 import PreloadImages from "./ui/PreloadImages";
 import { skinById } from "@/game/skins";
 
@@ -218,7 +217,6 @@ export default function GameScreen() {
 
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
       <MusicController />
-      <ServerNotice />
 
       <div className={"relative z-10 transition-all duration-500 ease-in-out " + (collapsed ? "md:pl-0" : "md:pl-56")}>
         <header

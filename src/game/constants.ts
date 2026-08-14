@@ -53,6 +53,54 @@ export function classSkillName(classType: ClassName, locale: string): string {
   return CLASS_SKILL_NAMES[classType]?.[bare] ?? (bare === "pt" ? "Golpe Poderoso" : "Powerful Strike");
 }
 
+/**
+ * Efeito mecânico do golpe especial por classe — cada classe joga de um jeito
+ * (não é só um multiplicador igual para todo mundo). Diferenças:
+ *  - dano extra (% do ataque), bônus de crítico
+ *  - fúria/rage: dano alto com penalidade de defesa
+ *  - magia: ignora parte da defesa inimiga
+ *  - destreza: chance extra de golpe duplo
+ *  - cura/sangramento ligados às classes de suporte
+ */
+export interface ClassSkillEffect {
+  /** Multiplicador sobre o ataque BASE para o golpe especial. */
+  dmgMult: number;
+  /** Bônus percentual de crítico durante o golpe especial. */
+  critBonus: number;
+  /** Multiplicador de dano RECEBIDO durante/por causa do golpe (≥1 = penalidade, <1 = é resistente). */
+  receivedMult?: number;
+  /** % da defesa inimiga ignorada neste golpe (0–1). */
+  pierce?: number;
+  /** Chance (%) de acertar 1 ataque extra básico (+dano sem crítico). */
+  doubleStrikeChance?: number;
+  /** Chance (%) de aplicar sangramento (dano ao longo da luta vs monstro). */
+  bleedChance?: number;
+  /** Cura fixa (% do HP máx) ao usar o golpe. */
+  healOnUse?: number;
+  /** Custo de mana do golpe (padrão das outras rotas: 15). */
+  manaCost?: number;
+}
+
+export const CLASS_SKILL_EFFECTS: Record<ClassName, ClassSkillEffect> = {
+  warrior:     { dmgMult: 1.7,  critBonus: 5 },
+  paladin:     { dmgMult: 1.5,  critBonus: 5,  receivedMult: 0.8, healOnUse: 0.06 },
+  berserker:   { dmgMult: 2.1,  critBonus: 8,  receivedMult: 1.25 },
+  mage:        { dmgMult: 1.6,  critBonus: 10, pierce: 0.3 },
+  necromancer: { dmgMult: 1.5,  critBonus: 5,  bleedChance: 55 },
+  assassin:    { dmgMult: 1.45, critBonus: 18, doubleStrikeChance: 40 },
+  hunter:      { dmgMult: 1.5,  critBonus: 15, pierce: 0.3 },
+  monk:        { dmgMult: 1.75, critBonus: 8,  receivedMult: 0.85 },
+  samurai:     { dmgMult: 1.9,  critBonus: 12 },
+  knight:      { dmgMult: 1.55, critBonus: 5,  receivedMult: 0.75 },
+  summoner:    { dmgMult: 1.55, critBonus: 7,  bleedChance: 45 },
+  templar:     { dmgMult: 1.5,  critBonus: 6,  receivedMult: 0.82, healOnUse: 0.05 },
+  archer:      { dmgMult: 1.4,  critBonus: 15, pierce: 0.4 },
+};
+
+export function classSkillEffect(classType: ClassName): ClassSkillEffect {
+  return CLASS_SKILL_EFFECTS[classType] ?? CLASS_SKILL_EFFECTS.warrior;
+}
+
 // --- Torre Infinita: monstros ---
 // Mobs dos andares comuns (visuais novos da pasta MOBS) + os 8 originais.
 export type TowerMonsterKind =
@@ -229,6 +277,44 @@ export const CLASS_BASE_STATS: Record<ClassName, {hp:number;attack:number;defens
   templar:     { hp: 110, attack: 12, defense: 11, speed: 4, mana: 55, critical: 3 },
   archer:      { hp: 80,  attack: 15, defense: 4,  speed: 8, mana: 30, critical: 12 },
 };
+
+/**
+ * Limite de investimento de status POR CLASSE.
+ *
+ * Cada classe tem um papel (DPS, tank, suporte/caster) e NÃO pode virar outra:
+ * um mago não pode virar tanque, um cavaleiro não alcança o DPS de um berserker
+ * etc. O valor é o MÁXIMO alcançável em cada status (base da classe + pontos
+ * investidos, SEM contar itens equipados — equipamentos ainda somam por cima).
+ */
+export type AllocStatKey =
+  | "attack" | "defense" | "speed" | "hp" | "mana"
+  | "critical" | "precision" | "dodge" | "resistance";
+
+export const CLASS_STAT_CAPS: Record<ClassName, Record<AllocStatKey, number>> = {
+  // DPS puro: ataque/crítico altos, frágil
+  berserker:   { attack: 190, defense: 55,  speed: 85,  hp: 400, mana: 160, critical: 65, precision: 25, dodge: 25, resistance: 20 },
+  samurai:     { attack: 180, defense: 90,  speed: 100, hp: 450, mana: 220, critical: 55, precision: 35, dodge: 35, resistance: 35 },
+  assassin:    { attack: 160, defense: 45,  speed: 130, hp: 280, mana: 220, critical: 60, precision: 45, dodge: 50, resistance: 20 },
+  archer:      { attack: 160, defense: 55,  speed: 110, hp: 320, mana: 200, critical: 55, precision: 55, dodge: 45, resistance: 25 },
+  hunter:      { attack: 150, defense: 65,  speed: 100, hp: 340, mana: 220, critical: 50, precision: 50, dodge: 35, resistance: 25 },
+  // Híbrido / equilibrado
+  warrior:     { attack: 140, defense: 120, speed: 70,  hp: 550, mana: 220, critical: 45, precision: 35, dodge: 35, resistance: 35 },
+  monk:        { attack: 110, defense: 140, speed: 100, hp: 550, mana: 270, critical: 40, precision: 35, dodge: 40, resistance: 50 },
+  // Caster / suporte: mana altíssima, frágil fisicamente
+  mage:        { attack: 160, defense: 45,  speed: 65,  hp: 280, mana: 520, critical: 40, precision: 25, dodge: 20, resistance: 25 },
+  necromancer: { attack: 140, defense: 55,  speed: 55,  hp: 320, mana: 470, critical: 35, precision: 25, dodge: 20, resistance: 30 },
+  summoner:    { attack: 130, defense: 55,  speed: 65,  hp: 300, mana: 500, critical: 35, precision: 25, dodge: 20, resistance: 30 },
+  // Tank: defesa/vida altíssimas, ataque baixo
+  knight:      { attack: 75,  defense: 210, speed: 35,  hp: 850, mana: 160, critical: 20, precision: 15, dodge: 15, resistance: 90 },
+  paladin:     { attack: 90,  defense: 170, speed: 45,  hp: 750, mana: 320, critical: 25, precision: 20, dodge: 20, resistance: 70 },
+  templar:     { attack: 90,  defense: 170, speed: 50,  hp: 700, mana: 340, critical: 25, precision: 20, dodge: 20, resistance: 80 },
+};
+
+/** Cap de um status específico para uma classe (retorna null se não houver limite). */
+export function classStatCap(classType: ClassName | string, stat: AllocStatKey): number | null {
+  const caps = CLASS_STAT_CAPS[(classType as ClassName) ?? "warrior"];
+  return caps?.[stat] ?? null;
+}
 
 // Custo (em ouro) do botão de resetar atributos (Dashboard).
 export const STAT_RESET_COST = 100_000;

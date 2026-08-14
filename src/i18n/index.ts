@@ -1,11 +1,14 @@
 import ptBR from "./pt-BR";
 import en from "./en";
 import es from "./es";
+import rpgItemsPt from "./items/pt";
+import rpgItemsEn from "./items/en";
+import rpgItemsEs from "./items/es";
 
 const locales: Record<string, Record<string, string>> = {
-  "pt-BR": ptBR,
-  en,
-  es,
+  "pt-BR": { ...ptBR, ...rpgItemsPt },
+  en: { ...en, ...rpgItemsEn },
+  es: { ...es, ...rpgItemsEs },
 };
 
 export type Locale = "pt-BR" | "en" | "es";

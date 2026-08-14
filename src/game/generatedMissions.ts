@@ -180,7 +180,7 @@ export function missionTemplateForRegion(
     minLevel,
     // xpReward: 0 → missionXpReward() já escala o XP pela curva de nível da missão.
     xpReward: 0,
-    goldReward: Math.round((10 + minLevel * 8) / 5) * 5,
+    goldReward: Math.round((8 + minLevel * 6) / 5) * 5,
     durationSec: Math.round(30 + minLevel * 4 + (index % 2) * 12),
     energyCost: Math.min(25, Math.round(3 + minLevel * 0.3)),
     difficulty: minLevel >= 50 ? 3 : minLevel >= 20 ? 2 : 1,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { missingRegionMissions } from "@/game/generatedMissions";
+import { RPG_ITEMS } from "@/game/rpgItems.gen";
 
 // ─── Catálogo de Espadas ────────────────────────────────────────────────────
 // Ícones de arma (32×32) copiados de "32 Free Weapon Icons" para
@@ -69,14 +70,24 @@ const MISSIONS = [
 
 export async function POST() {
   try {
-    // Itens (espadas) foram reativados: o seed insere o catálogo de armas
-    // que vieram dos ícones "32 Free Weapon Icons" (em /images/items/swords/).
-    // Outros tipos de item (poções, baús, armaduras...) seguem fora do jogo.
+    // Catálogo RPG (272 itens: espadas, armaduras, acessórios, etc.) + espadas
+    // clássicas. Se o banco já tem itens, apenas complementa os que faltam
+    // (idempotente via ON CONFLICT no update do repositorio também).
     const existingItems = await jsonDb.getAllItemTemplates();
     let itemsInserted = 0;
     if (existingItems.length === 0) {
       await jsonDb.insertItemTemplates(SWORDS as any[]);
-      itemsInserted = SWORDS.length;
+      await jsonDb.insertItemTemplates(RPG_ITEMS as any[]);
+      itemsInserted = SWORDS.length + RPG_ITEMS.length;
+    } else {
+      // Banco já populado (ex.: admin usou scripts/seed-*): garante que os
+      // itens RPG existam se ainda não tiverem sido inseridos.
+      const knownIds = new Set(existingItems.map((t: any) => t.id));
+      const missing = (RPG_ITEMS as any[]).filter((it) => !knownIds.has(it.id));
+      if (missing.length) {
+        await jsonDb.insertItemTemplates(missing);
+        itemsInserted = missing.length;
+      }
     }
 
     // Check if missions already seeded

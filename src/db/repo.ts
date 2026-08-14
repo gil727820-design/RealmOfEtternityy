@@ -899,6 +899,63 @@ export async function deleteReport(id: string) {
   return true;
 }
 
+/* ─── Compras PIX (diamantes) — comprovantes aguardando aprovação ─── */
+
+async function getPurchasesData(): Promise<any[]> {
+  const settings = await getServerSettings();
+  return Array.isArray(settings?.purchases) ? settings.purchases : [];
+}
+
+export async function listPurchases() {
+  const all = await getPurchasesData();
+  return all.sort((a: any, b: any) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+}
+
+export async function createPurchase(rec: any) {
+  const full = { id: uuidv4(), createdAt: new Date().toISOString(), status: "pending", ...rec };
+  const next = [...(await getPurchasesData()), full];
+  await updateServerSettings({ purchases: next });
+  return full;
+}
+
+export async function updatePurchase(id: string, patch: any) {
+  const next = (await getPurchasesData()).map((p: any) =>
+    p.id === id ? { ...p, ...patch } : p
+  );
+  await updateServerSettings({ purchases: next });
+  return next.find((p: any) => p.id === id) ?? null;
+}
+
+/* ─── Reset do jogo (administrador) ─── */
+
+/**
+ * Apaga TODOS os dados de jogadores para "começar do zero".
+ * Mantém o catálogo de itens, missões, músicas das ilhas e as configurações
+ * do servidor (anúncio/manutenção/PIX) intactos — só o progresso dos
+ * jogadores (contas, personagens, inventário, guildas, correio, códigos
+ * usados, reportes etc.) é zerado.
+ */
+export async function resetGameData() {
+  for (const table of [
+    users,
+    characters,
+    inventoryItems,
+    activeMissions,
+    afkRewards,
+    battles,
+    guilds,
+    guildInvites,
+    guildChats,
+    mailbox,
+    excludedUsers,
+    codes,
+    reports,
+  ]) {
+    await db.delete(table);
+  }
+  return true;
+}
+
 export default {
   // users
   findUserByUsername,
@@ -1000,4 +1057,9 @@ export default {
   listReports,
   createReport,
   deleteReport,
+  // compras PIX (diamantes)
+  listPurchases,
+  createPurchase,
+  updatePurchase,
+  resetGameData,
 };
