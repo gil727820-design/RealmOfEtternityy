@@ -236,17 +236,21 @@ export default function DungeonPanel() {
                   <div className="text-sm text-gray-400">{t("dungeon.estCrystals", locale)}</div>
                   <div className="text-xl font-black text-[#06b6d4]">+{preview.crystals}</div>
                 </div>
-                <div className="bg-gradient-to-br from-[#a855f7]/10 to-transparent rounded-xl p-3 border border-[#a855f7]/20">
-                  <div className="text-sm text-gray-400">{t("dungeon.estDrops", locale)}</div>
-                  <div className="text-xl font-black text-[#a855f7]">{preview.rolls} 🎲</div>
+                {Number(preview.rolls) > 0 && (
+                  <div className="bg-gradient-to-br from-[#a855f7]/10 to-transparent rounded-xl p-3 border border-[#a855f7]/20">
+                    <div className="text-sm text-gray-400">{t("dungeon.estDrops", locale)}</div>
+                    <div className="text-xl font-black text-[#a855f7]">{preview.rolls} 🎲</div>
+                  </div>
+                )}
+              </div>
+              {Number(preview.rolls) > 0 && (
+                <div className="flex items-center justify-center gap-2 mt-4 text-sm">
+                  <span className="text-gray-400">{t("dungeon.estBest", locale)}:</span>
+                  <span className="rounded-full px-3 py-1 font-bold text-xs text-black" style={{ background: RARITY_COLORS[preview.bestRarity] || "#9ca3af" }}>
+                    {String(preview.bestRarity).toUpperCase()}
+                  </span>
                 </div>
-              </div>
-              <div className="flex items-center justify-center gap-2 mt-4 text-sm">
-                <span className="text-gray-400">{t("dungeon.estBest", locale)}:</span>
-                <span className="rounded-full px-3 py-1 font-bold text-xs text-black" style={{ background: RARITY_COLORS[preview.bestRarity] || "#9ca3af" }}>
-                  {preview.bestRarity.toUpperCase()}
-                </span>
-              </div>
+              )}
 
               <button
                 onClick={start}

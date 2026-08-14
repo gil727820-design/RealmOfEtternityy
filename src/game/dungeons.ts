@@ -191,8 +191,9 @@ export function computeDungeonRewards(char: any, attemptFloor: number, hours: nu
     xpRaw: base.xp,
     xp: dungeonXpEarned(char, base.xp),
     crystals: dungeonCrystalsByClears(clears, hours),
-    rolls: dungeonItemRolls(clears, hours, boss),
-    bestRarity: dungeonBestRarity(clears),
+    // Itens NÃO dropam mais em expedições — apenas o painel admin concede itens.
+    rolls: 0,
+    bestRarity: "none",
     factor: dungeonDurationFactor(hours),
   };
 }

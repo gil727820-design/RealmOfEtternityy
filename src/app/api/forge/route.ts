@@ -1,6 +1,76 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { MAX_ENHANCE, ENCHANT_POOL, enhanceCost, enhanceChance } from "@/game/forge";
+import { MAX_ENHANCE, ENCHANT_POOL, enhanceCost, enhanceChance, equipmentBonus } from "@/game/forge";
+import { powerCalc } from "@/game/constants";
+
+/** Soma os bônus de todos os itens equipados (forja + encanto). */
+function sumEquippedBonuses(entries: any[]) {
+  const total = { attack: 0, defense: 0, maxHp: 0, speed: 0, critical: 0 };
+  for (const e of entries) {
+    if (e.template?.type === "consumable") continue;
+    const b = equipmentBonus(e.template, e.item);
+    total.attack += b.attack;
+    total.defense += b.defense;
+    total.maxHp += b.maxHp;
+    total.speed += b.speed;
+    total.critical += b.critical;
+  }
+  return total;
+}
+
+/**
+ * Recalcula os atributos do personagem a partir dos itens equipados.
+ * Preserva os pontos investidos (baseStats) e soma os bônus atuais.
+ * Chamado após aprimorar/encantar um item que está equipado.
+ * @param prevBonus Bônus do item ANTES da forja.
+ * @param newItemBonus Bônus do item APÓS a forja (como está no inventário agora).
+ */
+async function recalcFromEquipped(
+  characterId: string,
+  prevBonus: Record<string, number> = { attack: 0, defense: 0, maxHp: 0, speed: 0, critical: 0 },
+  newItemBonus: Record<string, number> = { attack: 0, defense: 0, maxHp: 0, speed: 0, critical: 0 }
+) {
+  const char = await jsonDb.findCharacterById(characterId);
+  if (!char) return null;
+
+  const inv = await jsonDb.getInventoryForCharacter(characterId);
+  const bonus = sumEquippedBonuses(inv.filter((e: any) => e.item?.equipped));
+
+  // Bônus que o personagem reflete hoje = total novo - (novo item) + (item antigo).
+  const currentBonus = {
+    attack: bonus.attack - newItemBonus.attack + prevBonus.attack,
+    defense: bonus.defense - newItemBonus.defense + prevBonus.defense,
+    maxHp: bonus.maxHp - newItemBonus.maxHp + prevBonus.maxHp,
+    speed: bonus.speed - newItemBonus.speed + prevBonus.speed,
+    critical: bonus.critical - newItemBonus.critical + prevBonus.critical,
+  };
+
+  // Base real (pontos investidos) = total atual - bônus atualmente refletido.
+  const base = {
+    attack: Math.max(0, (Number(char.attack) || 0) - currentBonus.attack),
+    defense: Math.max(0, (Number(char.defense) || 0) - currentBonus.defense),
+    maxHp: Math.max(0, (Number(char.maxHp) || 0) - currentBonus.maxHp),
+    speed: Math.max(0, (Number(char.speed) || 0) - currentBonus.speed),
+    critical: Math.max(0, (Number(char.critical) || 0) - currentBonus.critical),
+  };
+
+  const attack = base.attack + bonus.attack;
+  const defense = base.defense + bonus.defense;
+  const maxHp = base.maxHp + bonus.maxHp;
+  const speed = base.speed + bonus.speed;
+  const critical = base.critical + bonus.critical;
+
+  return jsonDb.updateCharacter(characterId, {
+    attack,
+    defense,
+    maxHp,
+    hp: Math.min(Number(char.hp) || maxHp, maxHp),
+    speed,
+    critical,
+    power: powerCalc({ attack, defense, hp: maxHp, speed, critical, level: char.level || 1 }),
+    lastActivity: new Date().toISOString(),
+  });
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -53,13 +123,23 @@ export async function POST(req: NextRequest) {
         await jsonDb.updateInventoryItem(String(itemId), { enhanceLevel: newLevel });
       }
 
+      // Se o item está equipado, recalcula os atributos do personagem.
+      let updatedChar = char;
+      if (item.equipped) {
+        updatedChar = (await recalcFromEquipped(
+          char.id,
+          equipmentBonus(template, { ...item, enhanceLevel: level }),
+          equipmentBonus(template, { ...item, enhanceLevel: newLevel })
+        )) ?? char;
+      }
+
       return NextResponse.json({
         success: true,
         enhanced: success,
         newLevel,
         cost,
         chance,
-        character: await jsonDb.findCharacterById(char.id),
+        character: updatedChar,
         item: await jsonDb.getInventoryItemById(String(itemId)),
       });
     }
@@ -77,11 +157,21 @@ export async function POST(req: NextRequest) {
       await jsonDb.updateCharacter(char.id, { gold: currentGold - cost });
       await jsonDb.updateInventoryItem(String(item.id), { enchant: roll.id });
 
+      // Se o item está equipado, recalcula os atributos do personagem.
+      let updatedCharEnchant = char;
+      if (item.equipped) {
+        updatedCharEnchant = (await recalcFromEquipped(
+          char.id,
+          equipmentBonus(template, { ...item, enchant: undefined }),
+          equipmentBonus(template, { ...item, enchant: roll.id })
+        )) ?? char;
+      }
+
       return NextResponse.json({
         success: true,
         enchanted: roll,
         cost,
-        character: await jsonDb.findCharacterById(char.id),
+        character: updatedCharEnchant,
         item: await jsonDb.getInventoryItemById(String(item.id)),
       });
     }

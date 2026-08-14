@@ -35,16 +35,8 @@ export async function POST(req: NextRequest) {
     // Recarga passiva de energia (tempo real decorrido durante o descanso)
     const regen = computeEnergyRegen(char, now, energyMultiplier(char));
 
-    // Chance de drop de item durante o descanso (15% — foi buffada de 10%)
-    let droppedItem = null;
-    if (Math.random() < 0.15) {
-      const items = await jsonDb.getItemTemplatesByMaxLevel(newLevel);
-      if (items.length > 0) {
-        const randomItem = items[Math.floor(Math.random() * items.length)];
-        const result = await jsonDb.grantItem(characterId, randomItem.id, 1);
-        droppedItem = { item: result?.item, template: result?.template, stackable: result?.merged };
-      }
-    }
+    // Itens NÃO dropam mais em AFK — apenas o painel admin concede itens.
+    const droppedItem = null;
 
     await jsonDb.updateCharacter(characterId, {
       xp: newXp,

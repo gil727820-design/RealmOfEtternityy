@@ -11,7 +11,7 @@ const STAT_CONFIG: Record<string, { field: string; perPoint: number; cap?: numbe
   mana: { field: "maxMana", perPoint: 5 },
   critical: { field: "critical", perPoint: 1, cap: 90 },
   precision: { field: "precision", perPoint: 1 },
-  dodge: { field: "dodge", perPoint: 1, cap: 75 },
+  dodge: { field: "dodge", perPoint: 1, cap: 50 },
   resistance: { field: "resistance", perPoint: 1 },
 };
 
@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     // Quantos pontos o incremento vale (em unidades do status)
     let appliedQty = qty;
 
-    // Limite máximo do status (ex.: critical até 90%, dodge até 75%)
+    // Limite máximo do status (ex.: critical até 90%, dodge até 50%)
     const current = Number(char[config.field]) || 0;
     if (config.cap !== undefined && current + config.perPoint * qty > config.cap) {
       const maxPoints = Math.floor((config.cap - current) / config.perPoint);

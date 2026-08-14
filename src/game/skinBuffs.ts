@@ -158,7 +158,7 @@ export function effectiveStats(char: Record<string, unknown> | null | undefined)
     speed: Number(c.speed) || 0,
     critical: Number(c.critical) || 0,
     precision: Number(c.precision) || 0,
-    dodge: Math.min(75, Number(c.dodge) || 0),
+    dodge: Math.min(50, Number(c.dodge) || 0),
   };
   const classType = String(c.classType || "warrior");
   const buff = getSkinClassBuff(classType, c.activeSkinId as string | null | undefined);

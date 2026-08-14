@@ -4,19 +4,17 @@ import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
 import {
   classImage,
-  classSkillName,
   towerBossForFloor,
   towerMonsterImage,
   type ClassName,
 } from "@/game/constants";
 
-// Cooldown (ms) entre andares no modo "Lutar Automaticamente" (anti-spam).
+// Cooldown (ms) entre andares no modo automático (anti-spam).
 const AUTO_NEXT_COOLDOWN_MS = 4000;
 
 export default function TowerPanel() {
   const { characterId, character, locale, notify, setCharacter } = useGameStore();
   const [stage, setStage] = useState<"arena" | "battle" | "result">("arena");
-  const [mode, setMode] = useState<"auto" | "turn" | null>(null);
   const [battle, setBattle] = useState<any>(null);
   const [result, setResult] = useState<any>(null);
   const [log, setLog] = useState<string[]>([]);
@@ -28,11 +26,11 @@ export default function TowerPanel() {
   const autoStop = useRef(false);
   const floatId = useRef(0);
 
-  // Automático contínuo: cooldown entre andares + ref de modo (leitura segura no timeout)
+  // Automático contínuo: cooldown entre andares + ref de controle (leitura segura no timeout)
   const [nextIn, setNextIn] = useState(0);
   const nextTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nextTick = useRef<ReturnType<typeof setInterval> | null>(null);
-  const modeRef = useRef<"auto" | "turn" | null>(null);
+  const autoActive = useRef(false);
 
   if (!character) return null;
 
@@ -41,7 +39,6 @@ export default function TowerPanel() {
   const isBossFloor = floor % 10 === 0;
   const playerImg = classImage(character.classType as ClassName, character.sex as string);
   const playerName = (character.name as string) || t("tower.your", locale);
-  const skillLabel = classSkillName(character.classType as ClassName, locale);
 
   // Ícones de atributos (mesmos usados no painel de status) para a torre
   const fIcons = {
@@ -106,23 +103,20 @@ export default function TowerPanel() {
       setResult(data);
       setStage("result");
       refreshChar();
-      // Usa modeRef (não o estado "mode"): applyRound roda dentro da closure antiga
-      // do autoLoop, então "mode" capturado seria o valor do render original (null).
-      if (data.won && modeRef.current === "auto") {
+      if (data.won && autoActive.current) {
         // Automático venceu → cooldown e segue SOZINHO para o próximo andar.
         scheduleAutoNext();
       } else if (data.lost) {
         // Automático perdeu → para aqui (fica no andar atual, sem reset).
         cancelAutoNext();
-        modeRef.current = null;
-        setMode(null);
+        autoActive.current = false;
       }
       return true;
     }
     return false;
   };
 
-  const startBattle = async (m: "auto" | "turn") => {
+  const startBattle = async () => {
     cancelAutoNext();
     setBusy(true);
     try {
@@ -135,13 +129,10 @@ export default function TowerPanel() {
       setBattle(data.battle);
       setLog([]);
       setResult(null);
-      modeRef.current = m;
-      setMode(m);
+      autoActive.current = true;
       setStage("battle");
-      if (m === "auto") {
-        autoStop.current = false;
-        setTimeout(() => autoLoop(data.battle), 900);
-      }
+      autoStop.current = false;
+      setTimeout(() => autoLoop(data.battle), 900);
     } catch {
       notify(t("map.connectionError", locale), "error");
     }
@@ -151,6 +142,7 @@ export default function TowerPanel() {
   // Luta automática: dispara ações sozinho até o fim
   const autoLoop = async (state: any) => {
     if (autoStop.current || !state) return;
+    // eslint-disable-next-line react-hooks/purity -- sorteio de ação na lógica de jogo (evento assíncrono)
     const useSkill = state.charMp >= 15 && Math.random() < 0.45;
     const act = useSkill ? "skill" : "attack";
     const data = await sendAction(act, state);
@@ -166,31 +158,6 @@ export default function TowerPanel() {
     if (!ended && data.battle) setTimeout(() => autoLoop(data.battle), 1200);
   };
 
-  const turnAction = async (act: "attack" | "skill" | "defend") => {
-    if (busy || !battle) return;
-    setBusy(true);
-    try {
-      const data = await sendAction(act, battle);
-      if (!data) return;
-      if (data.error) {
-        notify(data.error, "error");
-        return;
-      }
-      applyRound(data);
-    } catch {
-      notify(t("map.connectionError", locale), "error");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const takeControl = () => {
-    autoStop.current = true;
-    cancelAutoNext();
-    modeRef.current = "turn";
-    setMode("turn");
-  };
-
   const cancelAutoNext = () => {
     if (nextTimer.current) { clearTimeout(nextTimer.current); nextTimer.current = null; }
     if (nextTick.current) { clearInterval(nextTick.current); nextTick.current = null; }
@@ -200,9 +167,9 @@ export default function TowerPanel() {
   // Automático: após vencer, aguarda o cooldown e JÁ inicia o próximo andar sozinho.
   const scheduleAutoNext = () => {
     cancelAutoNext();
-    // Mesma proteção anti-closure velha: modeRef é atualizado de forma síncrona.
-    if (modeRef.current !== "auto") return;
+    if (!autoActive.current) return;
     setNextIn(Math.ceil(AUTO_NEXT_COOLDOWN_MS / 1000));
+    // eslint-disable-next-line react-hooks/purity -- timer de jogo (evento assíncrono)
     const started = Date.now();
     nextTick.current = setInterval(() => {
       const left = Math.max(0, Math.ceil((AUTO_NEXT_COOLDOWN_MS - (Date.now() - started)) / 1000));
@@ -211,41 +178,26 @@ export default function TowerPanel() {
     nextTimer.current = setTimeout(() => {
       if (nextTick.current) { clearInterval(nextTick.current); nextTick.current = null; }
       setNextIn(0);
-      if (modeRef.current === "auto") startBattle("auto");
+      if (autoActive.current) startBattle();
     }, AUTO_NEXT_COOLDOWN_MS);
   };
 
-  const flee = () => {
+  const stopFighting = () => {
     autoStop.current = true;
     cancelAutoNext();
-    modeRef.current = null;
+    autoActive.current = false;
     setBattle(null);
     setLog([]);
     setResult(null);
     setStage("arena");
-    setMode(null);
-    notify(t("tower.fledMsg", locale), "info");
-  };
-
-  const backToTower = () => {
-    autoStop.current = true;
-    cancelAutoNext();
-    modeRef.current = null;
-    setBattle(null);
-    setLog([]);
-    setResult(null);
-    setStage("arena");
-    setMode(null);
   };
 
   const goNext = () => {
     cancelAutoNext();
     if (result?.rewards?.newFloor) {
-      startBattle(mode || "auto");
+      startBattle();
     } else {
-      setBattle(null);
-      setResult(null);
-      setStage("arena");
+      stopFighting();
     }
   };
 
@@ -305,18 +257,11 @@ export default function TowerPanel() {
             )}
             <div className="flex justify-center gap-3 flex-wrap">
               <button
-                onClick={() => startBattle("auto")}
+                onClick={startBattle}
                 disabled={busy}
                 className={`bg-transparent text-lg font-bold px-6 py-4 rounded-xl transition-all border border-white/25 text-white/90 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 ${busy ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 {t("tower.fightAuto", locale)}
-              </button>
-              <button
-                onClick={() => startBattle("turn")}
-                disabled={busy}
-                className={`bg-transparent text-lg font-bold px-6 py-4 rounded-xl transition-all border border-white/25 text-white/90 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 ${busy ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                {t("tower.fightTurn", locale)}
               </button>
             </div>
             <p className="text-gray-500 text-xs mt-4">{t("tower.challenge", locale)}</p>
@@ -354,15 +299,8 @@ export default function TowerPanel() {
               <div className="text-xs text-gray-400">{t("tower.round", locale)} {battle.round || 0}</div>
             </div>
             <div className="flex items-center gap-2">
-              {mode === "auto" ? (
-                <>
-                  <span className="text-xs text-purple-300 animate-pulse-soft">⚡ {t("tower.auto", locale)}</span>
-                  <button onClick={takeControl} className="text-xs game-btn px-3 py-1 rounded-lg">{t("tower.takeControl", locale)}</button>
-                </>
-              ) : (
-                <span className="text-xs text-teal-300">🎮 {t("tower.turn", locale)}</span>
-              )}
-              <button onClick={flee} className="text-xs text-red-400 border border-red-500/40 rounded-lg px-3 py-1 hover:bg-red-500/10">
+              <span className="text-xs text-purple-300 animate-pulse-soft">⚡ {t("tower.auto", locale)}</span>
+              <button onClick={stopFighting} className="text-xs text-red-400 border border-red-500/40 rounded-lg px-3 py-1 hover:bg-red-500/10">
                 {t("tower.flee", locale)}
               </button>
             </div>
@@ -442,35 +380,8 @@ export default function TowerPanel() {
             ))}
           </div>
 
-          {/* Controles acima do log */}
-          {mode === "turn" ? (
-            <div className="mt-4 flex flex-wrap justify-center gap-3">
-              <button
-                onClick={() => turnAction("attack")}
-                disabled={busy}
-                className="game-btn-purple px-6 py-3 rounded-xl font-bold text-lg disabled:opacity-50 animate-glow-pulse"
-              >
-                ⚔️ {t("tower.attackBtn", locale)}
-              </button>
-              <button
-                onClick={() => turnAction("skill")}
-                disabled={busy || battle.charMp < 15}
-                className="game-btn px-6 py-3 rounded-xl font-bold text-lg disabled:opacity-40"
-                title={t("tower.skillDesc", locale)}
-              >
-                ✨ {skillLabel} ({battle.charMp}/{15} {t("tower.mp", locale)})
-              </button>
-              <button
-                onClick={() => turnAction("defend")}
-                disabled={busy}
-                className="game-btn px-6 py-3 rounded-xl font-bold text-lg disabled:opacity-50"
-              >
-                🛡️ {t("tower.defendBtn", locale)}
-              </button>
-            </div>
-          ) : (
-            <div className="mt-4 text-center text-sm text-purple-300 animate-pulse-soft">⚡ {t("tower.fighting", locale)}</div>
-          )}
+          {/* Status do combate automático */}
+          <div className="mt-4 text-center text-sm text-purple-300 animate-pulse-soft">⚡ {t("tower.fighting", locale)}</div>
 
           {/* Log da batalha */}
           <div className="mt-4 bg-black/50 rounded-xl p-3 max-h-32 overflow-y-auto font-mono text-xs space-y-1 border border-white/5 min-h-[72px]">
@@ -521,22 +432,16 @@ export default function TowerPanel() {
           {!result.won && <p className="text-gray-400 mb-2">{t("tower.dontGiveUp", locale)}</p>}
           <div className="mt-5 flex justify-center items-center gap-3 flex-wrap">
             {result.won ? (
-              mode === "auto" ? (
-                <div className="px-8 py-3 rounded-xl font-bold text-lg border border-purple-500/40 bg-purple-500/10 text-purple-200 animate-pulse-soft">
-                  ⏳ {t("tower.nextFloor", locale)} → {result.rewards?.newFloor} {t("tower.inSeconds", locale)} {nextIn}s…
-                </div>
-              ) : (
-                <button onClick={goNext} className="bg-transparent px-8 py-3 rounded-xl font-bold text-lg border border-white/25 text-white/90 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 transition-all">
-                  ⚔️ {t("tower.nextFloor", locale)} → {result.rewards?.newFloor}
-                </button>
-              )
+              <div className="px-8 py-3 rounded-xl font-bold text-lg border border-purple-500/40 bg-purple-500/10 text-purple-200 animate-pulse-soft">
+                ⏳ {t("tower.nextFloor", locale)} → {result.rewards?.newFloor} {t("tower.inSeconds", locale)} {nextIn}s…
+              </div>
             ) : (
               <button onClick={goNext} className="bg-transparent px-8 py-3 rounded-xl font-bold text-lg border border-white/25 text-white/90 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 transition-all">
                 🔄 {t("tower.attackBtn", locale)}
               </button>
             )}
             <button
-              onClick={backToTower}
+              onClick={stopFighting}
               className="bg-transparent px-8 py-3 rounded-xl font-bold text-lg border border-white/25 text-white/90 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 transition-all"
             >
               🏰 {t("tower.backTower", locale)}

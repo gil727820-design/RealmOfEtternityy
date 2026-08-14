@@ -100,7 +100,7 @@ export default function DashboardPanel() {
     { stat: "mana", key: "stat.mana", image: "", emoji: "🔮", color: "#00d4ff", perPoint: 5 },
     { stat: "critical", key: "stat.critical", image: "/images/attributes/attr_critico.png", emoji: "", color: "#ffd700", perPoint: 1, cap: 90 },
     { stat: "precision", key: "stat.precision", image: "/images/attributes/attr_precisao.png", emoji: "", color: "#a855f7", perPoint: 1 },
-    { stat: "dodge", key: "stat.dodge", image: "/images/attributes/attr_esquiva.png", emoji: "", color: "#ec4899", perPoint: 1, cap: 75 },
+    { stat: "dodge", key: "stat.dodge", image: "/images/attributes/attr_esquiva.png", emoji: "", color: "#ec4899", perPoint: 1, cap: 50 },
     { stat: "resistance", key: "stat.resistance", image: "/images/attributes/attr_resistencia.png", emoji: "", color: "#22c55e", perPoint: 1 },
   ];
 

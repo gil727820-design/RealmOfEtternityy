@@ -34,7 +34,7 @@ function getCharCombat(char: any) {
     defense: Number(char.defense) || 0,
     speed: Number(char.speed) || 0,
     critical: Math.min(90, Number(char.critical) || 0),
-    dodge: Math.min(75, Number(char.dodge) || 0),
+    dodge: Math.min(50, Number(char.dodge) || 0),
     precision: Number(char.precision) || 0,
     maxHp: Number(char.maxHp) || 100,
     maxMana: Number(char.maxMana) || 50,
@@ -47,20 +47,20 @@ function floorMonster(floor: number, kind: TowerMonsterKind | TowerBossKind, see
   rng();
   const boss = floor % 10 === 0;
   // Chefe é forte, mas justo: multiplicador moderado + bônus que não explodem.
-  const mult = boss ? 1.75 : 1;
-  const bHp = boss ? Math.round(floor * 15 + 60) : 0;
-  const bAtk = boss ? Math.round(floor * 1.5 + 6) : 0;
-  const bDef = boss ? Math.round(floor * 0.7 + 2) : 0;
+  const mult = boss ? 1.5 : 1;
+  const bHp = boss ? Math.round(floor * 10 + 40) : 0;
+  const bAtk = boss ? Math.round(floor * 1 + 3) : 0;
+  const bDef = boss ? Math.round(floor * 0.4 + 1) : 0;
   return {
     kind,
     image: towerMonsterImage(kind),
     nameKey: TOWER_MONSTER_NAMES[kind],
-    maxHp: Math.round((60 + floor * 20) * mult) + bHp,
-    attack: (6 + floor * 4) * mult + bAtk,
-    defense: (3 + floor * 2) * mult + bDef,
-    speed: 2 + floor * 0.9,
-    critical: Math.min(40, (2 + floor * 0.4) * (boss ? 1.5 : 1)),
-    dodge: Math.min(20, 1 + floor * 0.35),
+    maxHp: Math.round((55 + floor * 12) * mult) + bHp,
+    attack: (5 + floor * 2.2) * mult + bAtk,
+    defense: (2 + floor * 1.4) * mult + bDef,
+    speed: 1.5 + floor * 0.6,
+    critical: Math.min(30, (2 + floor * 0.25) * (boss ? 1.3 : 1)),
+    dodge: Math.min(12, 1 + floor * 0.2),
     goldReward: boss ? 60 + floor * 30 : 20 + floor * 15,
     xpReward: boss ? 40 + floor * 25 : 15 + floor * 12,
     coinsReward: boss ? 35 : 5,

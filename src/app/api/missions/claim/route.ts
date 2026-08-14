@@ -40,16 +40,8 @@ export async function POST(req: NextRequest) {
     const newGold = (char.gold || 0) + (mission.goldReward || 0);
     const power = powerCalc({ attack: char.attack, defense: char.defense, hp: char.maxHp, speed: char.speed, critical: char.critical, level: newLevel });
 
-    // Random item drop (30% chance) — consumíveis empilham, equipamentos viram instâncias
-    let droppedItem = null;
-    if (Math.random() < 0.3) {
-      const items = await jsonDb.getItemTemplatesByMaxLevel(newLevel);
-      if (items.length > 0) {
-        const randomItem = items[Math.floor(Math.random() * items.length)];
-        const result = await jsonDb.grantItem(char.id, randomItem.id, 1);
-        droppedItem = { item: result?.item, template: result?.template, stackable: result?.merged };
-      }
-    }
+    // Itens NÃO dropam mais em missões — apenas o painel admin concede itens.
+    const droppedItem = null;
 
     await jsonDb.updateCharacter(char.id, {
       xp: newXp,

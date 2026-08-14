@@ -7,7 +7,6 @@ import {
   computeDungeonRewards,
   computeDungeonStatus,
   dungeonDateKey,
-  dungeonRollRarity,
 } from "@/game/dungeons";
 
 export async function POST(req: NextRequest) {
@@ -53,28 +52,8 @@ export async function POST(req: NextRequest) {
     const newGold = (char.gold || 0) + rw.gold;
     const newCrystals = (char.crystals || 0) + rw.crystals;
 
-    // ---- Drops de item (raridade ponderada por profundidade) ----
-    const allTemplate = await jsonDb.getAllItemTemplates();
-    const buckets: Record<string, any[]> = {};
-    for (const it of allTemplate) {
-      if ((it.minLevel || 1) <= newLevel) {
-        const r = it.rarity || "common";
-        (buckets[r] ||= []).push(it);
-      }
-    }
+    // Itens NÃO dropam mais em expedições — apenas o painel admin concede itens.
     const rolled: any[] = [];
-    for (let i = 0; i < rw.rolls; i++) {
-      const rarity = dungeonRollRarity(rw.clears);
-      let pool = buckets[rarity] || [];
-      if (pool.length === 0) {
-        pool = Object.values(buckets).flat();
-      }
-      if (pool.length > 0) {
-        const pick = pool[Math.floor(Math.random() * pool.length)];
-        await jsonDb.grantItem(characterId, pick.id, 1);
-        rolled.push({ template: pick, rarity });
-      }
-    }
 
     // ---- Recarga passiva de energia durante a expedição ----
     const regen = computeEnergyRegen(char, now, energyMultiplier(char));
