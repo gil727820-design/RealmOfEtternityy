@@ -13,6 +13,7 @@ interface MailTemplate {
   nameKey: string;
   rarity?: string;
   icon?: string;
+  image?: string;
   sheet?: string;
   sellPrice?: number;
   type?: string;
@@ -200,8 +201,8 @@ export default function MailboxPanel() {
                 subtitleStr = `${t("mailbox.qty", locale)} ×${Number(mail.amount) || 1}`;
               } else if (tmpl) {
                 rarity = tmpl.rarity || "common";
-                const sprite = tmpl ? itemSpriteUrl(tmpl) : undefined;
-                iconEl = sprite ? <img src={sprite} alt="" className="w-10 h-10 object-contain" /> : tmpl.icon || "🎁";
+                const sprite = tmpl.image || (tmpl ? itemSpriteUrl(tmpl) : undefined);
+                iconEl = sprite ? <img src={sprite} alt="" loading="lazy" decoding="async" className="w-10 h-10 object-contain" /> : tmpl.icon || "🎁";
                 titleStr = t(tmpl.nameKey, locale);
                 subtitleStr = `${t(`rarity.${rarity}`, locale)} • ${t("mailbox.qty", locale)} ×${mail.quantity ?? 1}`;
               }

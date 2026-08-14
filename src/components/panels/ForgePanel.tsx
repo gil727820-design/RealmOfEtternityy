@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
 import { MAX_ENHANCE, ENCHANT_POOL, enhanceCost, enhanceChance, enchantById } from "@/game/forge";
+import ItemIcon from "@/components/ui/ItemIcon";
 
 type ForgeTab = "enhance" | "enchant" | "craft" | "refine";
 
@@ -146,7 +147,7 @@ export default function ForgePanel() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-xl shrink-0">{String(template.icon || "🎒")}</span>
+                          <ItemIcon template={template} emojiClass="text-xl" alt="" />
                           <div className="min-w-0">
                             <div className="font-bold text-white text-sm truncate">{t(String(template.nameKey), locale)}</div>
                             <div className="text-[11px] text-gray-500">{t(`slot.${template.slot as string}`, locale)} • Lv.{String(template.minLevel || 1)}</div>

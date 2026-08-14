@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       talents: {},
       // Currencies
       gold: 500,
-      diamonds: 10,
+      diamonds: 0,
       crystals: 0,
       pvpCoins: 0,
       guildCoins: 0,
@@ -106,17 +106,8 @@ export async function POST(req: NextRequest) {
       }),
     });
 
-    // Poções de boas-vindas (consumíveis empilháveis) — só se o seed de consumíveis existir
-    const welcomePotions: Array<[string, number]> = [
-      ["item.hp_potion", 3],
-      ["item.mana_potion", 2],
-    ];
-    for (const [nameKey, qty] of welcomePotions) {
-      const template = await jsonDb.getItemTemplateByNameKey(nameKey);
-      if (template) {
-        await jsonDb.grantItem(char.id, template.id, qty);
-      }
-    }
+    // Itens removidos do jogo por enquanto — novos personagens não recebem
+    // poções de boas-vindas.
 
     return NextResponse.json({ character: char });
   } catch (e: unknown) {

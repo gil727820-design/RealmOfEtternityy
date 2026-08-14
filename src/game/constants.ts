@@ -54,6 +54,7 @@ export function classSkillName(classType: ClassName, locale: string): string {
 }
 
 // --- Torre Infinita: monstros ---
+// Mobs dos andares comuns (visuais novos da pasta MOBS) + os 8 originais.
 export type TowerMonsterKind =
   | "slime"
   | "lobo"
@@ -62,9 +63,33 @@ export type TowerMonsterKind =
   | "golem"
   | "minotauro"
   | "espectro"
-  | "dragao";
+  | "dragao"
+  | "sentinela_pedra"
+  | "assassino_sombras"
+  | "mago_caos"
+  | "gargula_ferro"
+  | "cavaleiro_corrompido"
+  | "invocador_almas"
+  | "beholder_vigilancia"
+  | "lich_trono"
+  | "avatar_eternidade"
+  | "quimera_torre";
 
-export const TOWER_MONSTER_IMAGES: Record<TowerMonsterKind, string> = {
+// Chefes (todo andar múltiplo de 10) — visuais "Realm of Eternity".
+export type TowerBossKind =
+  | "coral_kraken"
+  | "crystal_basilisk"
+  | "eclipse_lich"
+  | "ember_phoenix"
+  | "glacier_troll"
+  | "mushroom_brute"
+  | "root_guardian"
+  | "sand_scorpion"
+  | "steam_automaton"
+  | "thunder_roc"
+  | "void_wyrm";
+
+export const TOWER_MONSTER_IMAGES: Record<TowerMonsterKind | TowerBossKind, string> = {
   slime: "/images/tower/monsters/monstro_slime.png",
   lobo: "/images/tower/monsters/monstro_lobo.png",
   aranha: "/images/tower/monsters/monstro_aranha.png",
@@ -73,9 +98,30 @@ export const TOWER_MONSTER_IMAGES: Record<TowerMonsterKind, string> = {
   minotauro: "/images/tower/monsters/monstro_minotauro.png",
   espectro: "/images/tower/monsters/monstro_espectro.png",
   dragao: "/images/tower/monsters/monstro_dragao.png",
+  sentinela_pedra: "/images/tower/monsters/mob_sentinela_pedra.png",
+  assassino_sombras: "/images/tower/monsters/mob_assassino_sombras.png",
+  mago_caos: "/images/tower/monsters/mob_mago_caos.png",
+  gargula_ferro: "/images/tower/monsters/mob_gargula_ferro.png",
+  cavaleiro_corrompido: "/images/tower/monsters/mob_cavaleiro_corrompido.png",
+  invocador_almas: "/images/tower/monsters/mob_invocador_almas.png",
+  beholder_vigilancia: "/images/tower/monsters/mob_beholder_vigilancia.png",
+  lich_trono: "/images/tower/monsters/mob_lich_trono.png",
+  avatar_eternidade: "/images/tower/monsters/mob_avatar_eternidade.png",
+  quimera_torre: "/images/tower/monsters/mob_quimera_torre.png",
+  coral_kraken: "/images/tower/monsters/realm_of_eternity_coral_kraken_clean.png",
+  crystal_basilisk: "/images/tower/monsters/realm_of_eternity_crystal_basilisk_clean.png",
+  eclipse_lich: "/images/tower/monsters/realm_of_eternity_eclipse_lich_clean.png",
+  ember_phoenix: "/images/tower/monsters/realm_of_eternity_ember_phoenix_clean.png",
+  glacier_troll: "/images/tower/monsters/realm_of_eternity_glacier_troll_clean.png",
+  mushroom_brute: "/images/tower/monsters/realm_of_eternity_mushroom_brute_clean.png",
+  root_guardian: "/images/tower/monsters/realm_of_eternity_root_guardian_final.png",
+  sand_scorpion: "/images/tower/monsters/realm_of_eternity_sand_scorpion_clean.png",
+  steam_automaton: "/images/tower/monsters/realm_of_eternity_steam_automaton_clean.png",
+  thunder_roc: "/images/tower/monsters/realm_of_eternity_thunder_roc_clean.png",
+  void_wyrm: "/images/tower/monsters/realm_of_eternity_void_wyrm_clean.png",
 };
 
-export const TOWER_MONSTER_NAMES: Record<TowerMonsterKind, string> = {
+export const TOWER_MONSTER_NAMES: Record<TowerMonsterKind | TowerBossKind, string> = {
   slime: "monster.slime",
   lobo: "monster.lobo",
   aranha: "monster.aranha",
@@ -84,24 +130,87 @@ export const TOWER_MONSTER_NAMES: Record<TowerMonsterKind, string> = {
   minotauro: "monster.minotauro",
   espectro: "monster.espectro",
   dragao: "monster.dragao",
+  sentinela_pedra: "monster.sentinela_pedra",
+  assassino_sombras: "monster.assassino_sombras",
+  mago_caos: "monster.mago_caos",
+  gargula_ferro: "monster.gargula_ferro",
+  cavaleiro_corrompido: "monster.cavaleiro_corrompido",
+  invocador_almas: "monster.invocador_almas",
+  beholder_vigilancia: "monster.beholder_vigilancia",
+  lich_trono: "monster.lich_trono",
+  avatar_eternidade: "monster.avatar_eternidade",
+  quimera_torre: "monster.quimera_torre",
+  coral_kraken: "monster.coral_kraken",
+  crystal_basilisk: "monster.crystal_basilisk",
+  eclipse_lich: "monster.eclipse_lich",
+  ember_phoenix: "monster.ember_phoenix",
+  glacier_troll: "monster.glacier_troll",
+  mushroom_brute: "monster.mushroom_brute",
+  root_guardian: "monster.root_guardian",
+  sand_scorpion: "monster.sand_scorpion",
+  steam_automaton: "monster.steam_automaton",
+  thunder_roc: "monster.thunder_roc",
+  void_wyrm: "monster.void_wyrm",
 };
 
-// Faixas de andar -> quais NPCs aparecem na torre
+// Faixas de andar -> quais NPCs aparecem na torre (andares comuns, sem boss).
 export const TOWER_MONSTER_TIERS: Array<{ min: number; kinds: TowerMonsterKind[] }> = [
-  { min: 1, kinds: ["slime", "lobo"] },
-  { min: 5, kinds: ["aranha", "esqueleto"] },
-  { min: 10, kinds: ["golem", "minotauro"] },
-  { min: 15, kinds: ["espectro"] },
-  { min: 20, kinds: ["dragao"] },
+  { min: 1, kinds: ["slime", "lobo", "sentinela_pedra"] },
+  { min: 5, kinds: ["aranha", "esqueleto", "mago_caos", "assassino_sombras"] },
+  { min: 10, kinds: ["golem", "minotauro", "gargula_ferro", "cavaleiro_corrompido"] },
+  { min: 15, kinds: ["espectro", "invocador_almas", "beholder_vigilancia"] },
+  { min: 20, kinds: ["dragao", "lich_trono", "avatar_eternidade"] },
+  { min: 30, kinds: ["quimera_torre"] },
 ];
 
-export function towerMonsterForFloor(floor: number): TowerMonsterKind {
+// Mix adicional por faixa: soma aos kinds acima para dar mais variedade sem
+// repetir o mesmo bicho toda hora (o usuário via ~5 sempre iguais).
+export const TOWER_MONSTER_TIERS_BONUS: Array<{ min: number; kinds: TowerMonsterKind[] }> = [
+  { min: 1, kinds: ["esqueleto", "aranha"] },
+  { min: 5, kinds: ["slime", "espectro"] },
+  { min: 10, kinds: ["assassino_sombras", "invocador_almas"] },
+  { min: 15, kinds: ["beholder_vigilancia", "gargula_ferro"] },
+  { min: 20, kinds: ["espectro", "mago_caos"] },
+  { min: 30, kinds: ["avatar_eternidade", "lich_trono", "cavaleiro_corrompido"] },
+];
+
+// Chefes da torre: um diferente a cada 10 andares, ciclando.
+export const TOWER_BOSS_KINDS: TowerBossKind[] = [
+  "coral_kraken",
+  "crystal_basilisk",
+  "eclipse_lich",
+  "ember_phoenix",
+  "glacier_troll",
+  "mushroom_brute",
+  "root_guardian",
+  "sand_scorpion",
+  "steam_automaton",
+  "thunder_roc",
+  "void_wyrm",
+];
+
+export function towerBossForFloor(floor: number): TowerBossKind {
+  const i = Math.floor(floor / 10) - 1; // andar 10 → 0, 20 → 1...
+  const idx = ((i % TOWER_BOSS_KINDS.length) + TOWER_BOSS_KINDS.length) % TOWER_BOSS_KINDS.length;
+  return TOWER_BOSS_KINDS[idx];
+}
+
+// Faixa de andar -> qual monstro aparece (comum, sem boss). Mistura base + bônus
+// para variar bastante: evita repetir os mesmos ~5 toda hora.
+export function towerMonsterForFloor(floor: number): TowerMonsterKind | TowerBossKind {
+  if (floor % 10 === 0) return towerBossForFloor(floor);
   const tier = [...TOWER_MONSTER_TIERS].reverse().find((t) => floor >= t.min);
-  const kinds = tier ? tier.kinds : TOWER_MONSTER_TIERS[0].kinds;
+  let kinds = tier ? tier.kinds : TOWER_MONSTER_TIERS[0].kinds;
+  const bonus = [...TOWER_MONSTER_TIERS_BONUS].reverse().find((t) => floor >= t.min);
+  if (bonus) kinds = [...kinds, ...bonus.kinds];
   return kinds[Math.floor(Math.random() * kinds.length)];
 }
 
-export function towerMonsterImage(kind: TowerMonsterKind): string {
+export function isTowerMonsterKind(kind: any): kind is TowerMonsterKind | TowerBossKind {
+  return typeof kind === "string" && kind in TOWER_MONSTER_IMAGES;
+}
+
+export function towerMonsterImage(kind: TowerMonsterKind | TowerBossKind): string {
   return TOWER_MONSTER_IMAGES[kind] ?? TOWER_MONSTER_IMAGES.slime;
 }
 

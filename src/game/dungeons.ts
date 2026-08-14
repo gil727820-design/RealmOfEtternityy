@@ -2,14 +2,14 @@
  * Regras das Masmorras off-line (compartilhadas entre a API e a estimativa da UI).
  *
  * Conceito de design (para não virar jogo de "cultivo"):
- *  - Aventuras finitas por dia (MORPG_DUNGEON_DAILY_CAP) → recurso escasso.
+ *  - Aventuras finitas por dia (DUNGEON_DAILY_CAP) → recurso escasso.
  *  - Custo de energia ao iniciar (compete com missões).
- *  - Durações longas têm RETORNO DECRESCENTE de item por hora → não compensa
- *    deixar 24h rodando apenas para dropar mais itens.
+ *  - Durações mais longas pagam MUITO mais (fator crescente): 4h ≈ 2.5× a 2h,
+ *    8h ≈ 5.5× a 2h — vale a pena deixar o herói rodando mais tempo.
  *  - O combate é simulado por poder: tentar muito além do seu poder gera
  *    derrota e perde o bônus → incentiva escolher a dificuldade certa.
  *  - Drops pendurados na raridade: andares profundos sobem o peso de raridades
- *    altas, mas nunca saturam (fica competitivo entre as classes).
+ *    altas (e o chefe garante +1 drop), mas nunca saturam.
  */
 
 import { xpMultiplier } from "./boosts";
@@ -61,17 +61,20 @@ export function dungeonClears(
   return { clears, boss };
 }
 
-/** Fator de retorno decrescente (0..1): durações longas rendem menos item/hora. */
-export function dungeonDurationDiminish(hours: number): number {
+/** Fator de recompensa por duração: quanto mais tempo, mais recompensa (com parcimônia). */
+export function dungeonDurationFactor(hours: number): number {
   if (hours <= 0) return 0;
-  // 2h -> 1.0 | 4h -> ~0.5 | 8h -> ~0.25
-  return Math.max(0.08, Math.pow(0.5, (hours - 2) / 2));
+  // 2h -> 0.5 | 4h -> 0.8 | 8h -> 1.0
+  if (hours <= 4) return Math.round((0.5 + (hours - 2) * 0.15) * 100) / 100;
+  return Math.round((0.8 + (hours - 4) * 0.05) * 100) / 100;
 }
 
-/** Quantos rolls de item a expedição concede (com retorno decrescente). */
-export function dungeonItemRolls(clears: number, hours: number): number {
-  const dim = dungeonDurationDiminish(hours);
-  return Math.max(0, Math.floor((clears / 12) * dim));
+/** Quantos rolls de item a expedição concede (sobe com duração e profundidade).
+ * Vencer um chefe (andar múltiplo de 10) garante +1 drop. */
+export function dungeonItemRolls(clears: number, hours: number, boss: boolean = false): number {
+  const factor = dungeonDurationFactor(hours);
+  if (clears <= 0) return 0;
+  return Math.max(1, Math.floor((clears / 12) * factor) + (boss ? 1 : 0));
 }
 
 /** Ordem de raridade (baixa → alta). */
@@ -91,15 +94,14 @@ export function dungeonMaxRarityIdx(clears: number): number {
 }
 
 /**
- * Pool ponderado de raridade para os drops. Raridades baixas dominam; as altas
- * entram com peso reduzido conforme a profundidade, mas nunca saturam.
- * Retorna um array onde a probabilidade de cada tier ≈ (ocorrências / total).
+ * Pool ponderado de raridade para os drops. Andares profundos sobem o peso de
+ * raridades altas. Retorna um array onde a probabilidade ≈ (ocorrências/total).
  */
 export function dungeonRarityPool(clears: number): string[] {
   const maxIdx = dungeonMaxRarityIdx(clears);
-  const counts = [8, 5, 3, 2]; // até o epic
+  const counts = [6, 4, 3, 3]; // common, uncommon, rare, epic
   for (let i = 4; i <= Math.max(4, Math.min(6, maxIdx)); i++) {
-    counts[i] = Math.max(1, 6 - Math.floor(i)); // legendary=2, mythic=1, divine=1
+    counts[i] = Math.max(2, 10 - Math.floor(i) * 2); // legendary=2, mythic=2, divine=2
   }
   const pool: string[] = [];
   for (let i = 0; i <= Math.min(6, maxIdx); i++) {
@@ -128,25 +130,28 @@ export function dungeonDateKey(date: Date = new Date()): string {
   return `${y}-${m}-${d}`;
 }
 
-/** Ouro gerado por masmorra. */
-export function dungeonGoldByClears(clears: number): number {
+/** Ouro gerado por masmorra (escala com a duração da expedição). */
+export function dungeonGoldByClears(clears: number, hours: number): number {
   if (clears <= 0) return 0;
+  const factor = dungeonDurationFactor(hours);
   let sum = 0;
   for (let f = 1; f <= clears; f++) sum += Math.floor(28 + f * 17);
-  return sum;
+  return Math.floor(sum * factor);
 }
 
-/** XP gerado (sem aplicar boost). */
-export function dungeonXpByClears(clears: number): number {
+/** XP gerado (escala com a duração da expedição, sem aplicar boost). */
+export function dungeonXpByClears(clears: number, hours: number): number {
   if (clears <= 0) return 0;
+  const factor = dungeonDurationFactor(hours);
   let sum = 0;
   for (let f = 1; f <= clears; f++) sum += Math.floor(15 + f * 13);
-  return sum;
+  return Math.floor(sum * factor);
 }
 
-/** Cristais extras pelo avanço. */
-export function dungeonCrystalsByClears(clears: number): number {
-  return Math.floor(clears / 18);
+/** Cristais extras pelo avanço (escala com a duração da expedição). */
+export function dungeonCrystalsByClears(clears: number, hours: number): number {
+  if (clears <= 0) return 0;
+  return Math.floor((clears / 14) * dungeonDurationFactor(hours));
 }
 
 /** Prêmio extra por vencer o chefe do piso atual. */
@@ -158,24 +163,24 @@ export function dungeonBossBonus(): { gold: number; xp: number } {
  * Total de ouro/XP bruto de uma expedição (sem aplicar boost de XP). Usado
  * tanto na estimativa (preview) quanto na coleta (claim) — nunca divergem.
  */
-export function dungeonBaseRewards(clears: number, boss: boolean) {
+export function dungeonBaseRewards(clears: number, boss: boolean, hours: number) {
   const b = dungeonBossBonus();
   return {
-    gold: dungeonGoldByClears(clears) + (boss ? b.gold : 0),
-    xp: dungeonXpByClears(clears) + (boss ? b.xp : 0),
+    gold: dungeonGoldByClears(clears, hours) + (boss ? b.gold : 0),
+    xp: dungeonXpByClears(clears, hours) + (boss ? b.xp : 0),
   };
 }
 
 /** Xp final de uma expedição, já com o multiplicador de boost. */
-export function dungeonXpEarned(char: any, buysXp: number): number {
-  return Math.floor(buysXp * xpMultiplier(char));
+export function dungeonXpEarned(char: any, rawXp: number): number {
+  return Math.floor(rawXp * xpMultiplier(char));
 }
 
 /** Recompensas de uma expedição concluída (idênticas ao preview). */
 export function computeDungeonRewards(char: any, attemptFloor: number, hours: number) {
   const power = Number(char.power) || 0;
   const { clears, boss } = dungeonClears(power, attemptFloor);
-  const base = dungeonBaseRewards(clears, boss);
+  const base = dungeonBaseRewards(clears, boss, hours);
   return {
     power,
     attemptFloor,
@@ -185,9 +190,10 @@ export function computeDungeonRewards(char: any, attemptFloor: number, hours: nu
     gold: base.gold,
     xpRaw: base.xp,
     xp: dungeonXpEarned(char, base.xp),
-    crystals: dungeonCrystalsByClears(clears),
-    rolls: dungeonItemRolls(clears, hours),
+    crystals: dungeonCrystalsByClears(clears, hours),
+    rolls: dungeonItemRolls(clears, hours, boss),
     bestRarity: dungeonBestRarity(clears),
+    factor: dungeonDurationFactor(hours),
   };
 }
 

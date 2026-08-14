@@ -158,14 +158,14 @@ export function effectiveStats(char: Record<string, unknown> | null | undefined)
     speed: Number(c.speed) || 0,
     critical: Number(c.critical) || 0,
     precision: Number(c.precision) || 0,
-    dodge: Number(c.dodge) || 0,
+    dodge: Math.min(75, Number(c.dodge) || 0),
   };
   const classType = String(c.classType || "warrior");
   const buff = getSkinClassBuff(classType, c.activeSkinId as string | null | undefined);
   return {
     ...base,
     // Crítico efetivo = base + bônus da skin (aplicado em todos os combates).
-    critical: base.critical + (buff?.critBonus || 0),
+    critical: Math.min(90, base.critical + (buff?.critBonus || 0)),
     // Multiplicador de dano efetivo (dano × multiplicador da skin × raridade).
     damageMult: buff ? buff.damageMult * skinRarityMult(c.activeSkinId as string | null) : 1,
     buff,

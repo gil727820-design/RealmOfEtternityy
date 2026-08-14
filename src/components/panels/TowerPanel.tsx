@@ -2,10 +2,16 @@
 import { useRef, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
-import { classImage, classSkillName, type ClassName } from "@/game/constants";
+import {
+  classImage,
+  classSkillName,
+  towerBossForFloor,
+  towerMonsterImage,
+  type ClassName,
+} from "@/game/constants";
 
 // Cooldown (ms) entre andares no modo "Lutar Automaticamente" (anti-spam).
-const AUTO_NEXT_COOLDOWN_MS = 3000;
+const AUTO_NEXT_COOLDOWN_MS = 4000;
 
 export default function TowerPanel() {
   const { characterId, character, locale, notify, setCharacter } = useGameStore();
@@ -134,7 +140,7 @@ export default function TowerPanel() {
       setStage("battle");
       if (m === "auto") {
         autoStop.current = false;
-        setTimeout(() => autoLoop(data.battle), 600);
+        setTimeout(() => autoLoop(data.battle), 900);
       }
     } catch {
       notify(t("map.connectionError", locale), "error");
@@ -152,12 +158,12 @@ export default function TowerPanel() {
       if (data && data.code === "no_mana") {
         const d2 = await sendAction("attack", state);
         const ended = applyRound(d2);
-        if (!ended && d2.battle) setTimeout(() => autoLoop(d2.battle), 800);
+        if (!ended && d2.battle) setTimeout(() => autoLoop(d2.battle), 1200);
       }
       return;
     }
     const ended = applyRound(data);
-    if (!ended && data.battle) setTimeout(() => autoLoop(data.battle), 800);
+    if (!ended && data.battle) setTimeout(() => autoLoop(data.battle), 1200);
   };
 
   const turnAction = async (act: "attack" | "skill" | "defend") => {
@@ -281,9 +287,22 @@ export default function TowerPanel() {
                 {t("tower.floor", locale)} {floor}
               </span>
             </div>
-            <p className="text-gray-400 mb-2">
+            <p className="text-gray-400 mb-3">
               {isBossFloor && <span className="text-yellow-400 font-bold">⚠️ {t("tower.bossFloor", locale)}</span>}
             </p>
+            {isBossFloor && (
+              <div className="flex items-center justify-center gap-3 mb-4 bg-yellow-500/5 border border-yellow-500/30 rounded-xl px-4 py-3 max-w-sm mx-auto">
+                <img
+                  src={towerMonsterImage(towerBossForFloor(floor))}
+                  alt={t(`monster.${towerBossForFloor(floor)}`, locale)}
+                  className="w-16 h-16 rounded-xl border border-yellow-500/50 object-cover shadow-[0_0_20px_rgba(234,179,8,0.4)]"
+                />
+                <div className="text-left">
+                  <div className="text-[10px] uppercase tracking-widest text-yellow-400 font-bold">{t("tower.bossFloor", locale)}</div>
+                  <div className="font-black text-white">{t(`monster.${towerBossForFloor(floor)}`, locale)}</div>
+                </div>
+              </div>
+            )}
             <div className="flex justify-center gap-3 flex-wrap">
               <button
                 onClick={() => startBattle("auto")}

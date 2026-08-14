@@ -52,6 +52,7 @@ export default function AdminPage() {
   const [serverStyle, setServerStyle] = useState<"banner" | "popup">("banner");
   const [serverMaintenance, setServerMaintenance] = useState(false);
   const [serverMaintenanceMsg, setServerMaintenanceMsg] = useState("");
+  const [infiniteEnergy, setInfiniteEnergy] = useState(false);
   const [serverLoaded, setServerLoaded] = useState(false);
   // Donate (PIX + QR Code)
   const [donatePixKey, setDonatePixKey] = useState("");
@@ -281,6 +282,18 @@ export default function AdminPage() {
     setBusy(null);
   };
 
+  const resetTowerGeneral = async () => {
+    if (busy) return;
+    if (!window.confirm(
+      `🗼 RESETAR A TORRE (GERAL)?\n\nTODOS os personagens voltarão para o 1º andar da torre.\nAs moedas da torre (towerCoins) são mantidas.\n\nEsta ação afeta TODOS os personagens!`
+    )) return;
+    setBusy("tower_reset_general");
+    const d = await callAdmin({ action: "reset_tower" });
+    setMessage(d.success ? `✅ ${d.message || "Torre resetada!"}` : `❌ ${d.error || "Falha"}`);
+    await loadCharacters();
+    setBusy(null);
+  };
+
   const callAdmin = async (body: Record<string, unknown>) => {
     try {
       const res = await fetch("/api/admin", { method: "POST", headers, body: JSON.stringify(body) });
@@ -429,6 +442,7 @@ export default function AdminPage() {
       setServerStyle(s.announcementStyle === "popup" ? "popup" : "banner");
       setServerMaintenance(!!s.maintenance);
       setServerMaintenanceMsg(typeof s.maintenanceMessage === "string" ? s.maintenanceMessage : "");
+      setInfiniteEnergy(!!s.infiniteEnergy);
       setDonatePixKey(typeof s.donatePixKey === "string" ? s.donatePixKey : "");
       setDonateQrCode(typeof s.donateQrCode === "string" ? s.donateQrCode : "");
       setServerLoaded(true);
@@ -464,6 +478,24 @@ export default function AdminPage() {
         ? "✅ Mensagem enviada! Os jogadores já podem ver (popup aparece uma única vez)."
         : `❌ ${d.error || "Erro"}`
     );
+    setBusy(null);
+  };
+
+  /** Liga/desliga a ENERGIA INFINITA para todos os jogadores. */
+  const toggleInfiniteEnergy = async () => {
+    setBusy("infinite_energy");
+    const d = await callAdmin({
+      action: "update_server_settings",
+      infiniteEnergy: !infiniteEnergy,
+    });
+    setMessage(
+      d.success
+        ? !infiniteEnergy
+          ? "⚡ ENERGIA INFINITA ATIVADA — nenhum jogador gasta energia em missões/masmorras."
+          : "✅ Energia infinita desligada — os jogadores voltam a gastar energia normalmente."
+        : `❌ ${d.error || "Erro"}`
+    );
+    if (d.success) setInfiniteEnergy(!infiniteEnergy);
     setBusy(null);
   };
 
@@ -520,7 +552,7 @@ export default function AdminPage() {
     if (tab === "donate" && !donateLoaded) loadDonateSettings();
   }, [tab, serverLoaded, donateLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const skinChars = (Array.isArray(data.characters) ? data.characters : []) as SkinChar[];
+  const skinChars = (Array.isArray(data.characters) ? data.characters : []).map((c) => ({ ...c, skins: Array.isArray(c.skins) ? c.skins : [] })) as SkinChar[];
   const selectedSkinChar = skinChars.find((c) => c.id === skinCharId) || null;
 
   const classGroups: { className: ClassName; skins: SkinTemplate[] }[] = [];
@@ -761,6 +793,13 @@ export default function AdminPage() {
                   >
                     {busy === "stats_reset_general" ? "Resetando..." : "🔥 Zerar + Dar Pontos (Todos)"}
                   </button>
+                  <button
+                    onClick={resetTowerGeneral}
+                    disabled={busy === "tower_reset_general"}
+                    className="bg-gradient-to-r from-[#7c5cfc] to-[#4ecdc4] text-white rounded-xl px-4 py-2 font-bold text-sm hover:opacity-90 disabled:opacity-40"
+                  >
+                    {busy === "tower_reset_general" ? "Resetando..." : "🗼 Resetar Torre (Todos)"}
+                  </button>
                 </div>
 
                 {/* Edit Form */}
@@ -768,7 +807,7 @@ export default function AdminPage() {
                   <h3 className="text-sm font-bold text-[#ffd700] mb-3">⚡ Editar Personagem (use o ID da lista abaixo)</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
                     <input value={editCharId} onChange={(e) => setEditCharId(e.target.value)} placeholder="ID do personagem" className="bg-[#0a0a12] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#ff6b6b] focus:outline-none" />
-                    {["gold", "diamonds", "energy", "level", "attack", "defense", "power", "vipLevel"].map((f) => (
+                    {["gold", "diamonds", "energy", "maxEnergy", "level", "attack", "defense", "power", "vipLevel"].map((f) => (
                       <input key={f} value={editFields[f] || ""} onChange={(e) => setEditFields({ ...editFields, [f]: e.target.value })} placeholder={f}
                         type="number" className="bg-[#0a0a12] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#ff6b6b] focus:outline-none" />
                     ))}
@@ -979,18 +1018,47 @@ export default function AdminPage() {
                   )}
 
                   {sendKind === "item" && (
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      <select value={sendItemId} onChange={(e) => setSendItemId(e.target.value)}
-                        className="bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#ff6b6b] focus:outline-none">
-                        <option value="">— selecionar item —</option>
-                        {itemCatalog.map((it) => (
-                          <option key={Number(it.id)} value={String(it.id)}>
-                            {String(it.icon || "🧪")} {t(String(it.nameKey))} {it.stackable ? ` (×${sendQty})` : ""}
-                          </option>
-                        ))}
-                      </select>
-                      <input type="number" min={1} value={sendQty} onChange={(e) => setSendQty(e.target.value)}
-                        placeholder="Quantidade" className="bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#ff6b6b] focus:outline-none" />
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs text-gray-400">
+                          🗡️ {itemCatalog.length} espadas disponíveis — clique para selecionar.
+                        </p>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">Qtd:</span>
+                          <input type="number" min={1} value={sendQty} onChange={(e) => setSendQty(e.target.value)}
+                            className="w-24 bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white focus:border-[#ff6b6b] focus:outline-none" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-[420px] overflow-y-auto pr-1">
+                        {itemCatalog.map((it) => {
+                          const id = Number(it.id);
+                          const isSel = String(it.id) === sendItemId;
+                          const rarity = String(it.rarity || "common");
+                          const color = RARITY_COLORS[rarity] ?? "#9ca3af";
+                          return (
+                            <button
+                              key={id}
+                              onClick={() => setSendItemId(isSel ? "" : String(it.id))}
+                              className={`relative flex flex-col items-center gap-1 rounded-xl border bg-[#0a0a12] p-3 text-center transition-all ${
+                                isSel ? "ring-2 ring-[#ff6b6b] border-[#ff6b6b]" : "border-white/10 hover:border-white/30"
+                              }`}
+                              style={!isSel ? { borderColor: color + "44" } : undefined}
+                            >
+                              {isSel && <span className="absolute top-1.5 right-1.5 text-[10px] font-black text-[#ff6b6b]">✓</span>}
+                              {it.image ? (
+                                <img src={String(it.image)} alt="" loading="lazy" decoding="async" className="h-12 w-12 object-contain" />
+                              ) : (
+                                <span className="text-2xl">{String(it.icon || "🗡️")}</span>
+                              )}
+                              <span className="w-full truncate text-[11px] font-bold text-white">{t(String(it.nameKey))}</span>
+                              <span className="text-[9px] font-bold uppercase" style={{ color }}>{rarity}</span>
+                              <span className="text-[9px] text-gray-500">
+                                Lv.{String(it.minLevel || 1)} • ⚔ {String(it.attack || 0)}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
 
@@ -1242,6 +1310,29 @@ export default function AdminPage() {
                     className="w-full bg-red-600 hover:bg-red-500 text-white rounded-xl px-4 py-2.5 font-bold text-sm disabled:opacity-40">
                     {busy === "server" ? "Salvando..." : "💾 Salvar manutenção"}
                   </button>
+                </div>
+
+                {/* Energia infinita */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10 md:col-span-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <div>
+                      <h3 className="text-sm font-bold text-[#ffd700]">⚡ Energia Infinita (Todos)</h3>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Quando ativado, <b className="text-[#ffd700]">nenhum jogador gasta energia</b> ao iniciar missões ou masmorras — a energia fica sempre no máximo. Desative para voltar ao normal.
+                      </p>
+                    </div>
+                    <button
+                      onClick={toggleInfiniteEnergy}
+                      disabled={busy === "infinite_energy"}
+                      className={`relative w-16 h-9 rounded-full transition-colors shrink-0 ${infiniteEnergy ? "bg-[#ffd700]" : "bg-gray-700"} ${busy === "infinite_energy" ? "opacity-50" : ""}`}
+                      aria-pressed={infiniteEnergy}
+                    >
+                      <span className={`absolute top-1 left-1 w-7 h-7 rounded-full bg-white shadow transition-transform ${infiniteEnergy ? "translate-x-7" : ""}`} />
+                    </button>
+                  </div>
+                  <div className={`mt-3 text-center rounded-xl py-2 text-sm font-black ${infiniteEnergy ? "bg-[#ffd700]/15 border border-[#ffd700]/40 text-[#ffd700]" : "bg-[#0a0a12] border border-gray-700 text-gray-500"}`}>
+                    {infiniteEnergy ? "⚡ ATIVA — energia infinita para todos" : "❄️ Desativada — custo de energia normal"}
+                  </div>
                 </div>
               </div>
             )}

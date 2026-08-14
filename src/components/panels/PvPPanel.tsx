@@ -12,7 +12,9 @@ import { computePvpDaily, PVP_DAILY_MAX } from "@/game/pvp";
 
 export default function PvPPanel() {
   const { characterId, character, locale, notify, setCharacter } = useGameStore();
-  const [opponents, setOpponents] = useState<Array<any>>([]);
+  const [bots, setBots] = useState<Array<any>>([]);
+  const [players, setPlayers] = useState<Array<any>>([]);
+  const [tab, setTab] = useState<"bots" | "players">("bots");
   const [loading, setLoading] = useState(true);
 
   const [phase, setPhase] = useState<"league" | "battle" | "result">("league");
@@ -45,7 +47,8 @@ export default function PvPPanel() {
     try {
       const res = await fetch(`/api/pvp/fight?characterId=${characterId}`);
       const data = await res.json();
-      setOpponents(data.opponents ?? []);
+      setBots(data.bots ?? []);
+      setPlayers(data.players ?? []);
     } catch (e) {
       console.error(e);
     }
@@ -260,6 +263,54 @@ export default function PvPPanel() {
       ]
     : [];
 
+  const renderOpp = (opp: any) => (
+    <div key={opp.id} className="game-card p-4 flex justify-between items-center gap-3">
+      <div className="flex items-center gap-3">
+        <img
+          src={classImage((opp.classType as ClassName) || "warrior", (opp.sex as string) || "male")}
+          alt={opp.name}
+          className="w-12 h-12 rounded-lg border border-white/10 object-cover"
+        />
+        <div>
+          <div className="font-bold">
+            {opp.name}{" "}
+            {opp.isBot ? (
+              <span className="text-[9px] bg-gray-700 text-gray-300 rounded px-1">BOT</span>
+            ) : (
+              <span className="text-[9px] bg-cyan-900/60 text-cyan-300 rounded px-1">👤 {t("pvp.player", locale)}</span>
+            )}
+          </div>
+          <div className="text-sm text-gray-400">Lv {opp.level} | Power: {opp.power}</div>
+          <div className="text-xs text-purple-300">✨ {classSkillName((opp.classType as ClassName) || "warrior", locale)}</div>
+        </div>
+      </div>
+      <div className="flex flex-col items-end gap-2">
+        <span className="text-sm font-bold text-yellow-500 flex items-center gap-1">
+          <img src="/images/icons/icone_rating.png" alt="rating" className="w-4 h-4 object-contain" />
+          {opp.pvpRating} {t("pvp.rating", locale)}
+        </span>
+        <div className="flex gap-2">
+          <button
+            onClick={() => beginBattle(opp, "auto")}
+            disabled={busy}
+            className={`${ghostBtn} px-3 py-1 text-xs`}
+            title={t("pvp.fightAuto", locale)}
+          >
+            {t("pvp.auto", locale)}
+          </button>
+          <button
+            onClick={() => beginBattle(opp, "turn")}
+            disabled={busy}
+            className={`${ghostBtn} px-3 py-1 text-xs`}
+            title={t("pvp.fightTurn", locale)}
+          >
+            {t("pvp.turn", locale)}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6 p-4">
       <header className="flex items-center gap-3 justify-between flex-wrap">
@@ -297,61 +348,51 @@ export default function PvPPanel() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Oponentes */}
+            {/* Oponentes — abas: Bots | Players */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold">🎯 {t("pvp.opponents", locale)}</h3>
                 <button
-                  onClick={loadOpponents}
+                  onClick={() => {
+                    setTab("bots");
+                    loadOpponents();
+                  }}
                   className={`${ghostBtn} inline-flex items-center justify-center px-3 py-1.5 text-sm`}
                   title={t("pvp.fightAuto", locale)}
                 >
                   🔄
                 </button>
               </div>
+
+              {/* Abas: Bots | Players */}
+              <div className="flex gap-2 mb-3">
+                <button
+                  onClick={() => setTab("bots")}
+                  className={`${ghostBtn} flex-1 px-3 py-1.5 text-sm ${tab === "bots" ? "border-purple-400 text-purple-300 bg-purple-500/10" : ""}`}
+                >
+                  🤖 {t("pvp.bots", locale)} <span className="text-[10px] text-gray-400">({bots.length})</span>
+                </button>
+                <button
+                  onClick={() => setTab("players")}
+                  className={`${ghostBtn} flex-1 px-3 py-1.5 text-sm ${tab === "players" ? "border-purple-400 text-purple-300 bg-purple-500/10" : ""}`}
+                >
+                  👥 {t("pvp.players", locale)} <span className="text-[10px] text-gray-400">({players.length})</span>
+                </button>
+              </div>
+
               <div className="space-y-3">
                 {loading ? (
                   <div className="text-gray-500 animate-pulse-soft">{t("pvp.noOpponents", locale)}</div>
+                ) : tab === "bots" ? (
+                  bots.length === 0 ? (
+                    <div className="game-card p-3 text-sm text-gray-500">{t("pvp.noOpponents", locale)}</div>
+                  ) : (
+                    bots.map(renderOpp)
+                  )
+                ) : players.length === 0 ? (
+                  <div className="game-card p-3 text-sm text-gray-500">{t("pvp.noPlayers", locale)}</div>
                 ) : (
-                  opponents.map((opp) => (
-                    <div key={opp.id} className="game-card p-4 flex justify-between items-center gap-3">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={classImage((opp.classType as ClassName) || "warrior", (opp.sex as string) || "male")}
-                          alt={opp.name}
-                          className="w-12 h-12 rounded-lg border border-white/10 object-cover"
-                        />
-                        <div>
-                          <div className="font-bold">{opp.name} {opp.isBot && <span className="text-[9px] bg-gray-700 text-gray-300 rounded px-1">BOT</span>}</div>
-                          <div className="text-sm text-gray-400">Lv {opp.level} | Power: {opp.power}</div>
-                          <div className="text-xs text-purple-300">✨ {classSkillName((opp.classType as ClassName) || "warrior", locale)}</div>
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <span className="text-sm font-bold text-yellow-500 flex items-center gap-1">
-                          <img src="/images/icons/icone_rating.png" alt="rating" className="w-4 h-4 object-contain" />
-                          {opp.pvpRating} {t("pvp.rating", locale)}
-                        </span>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => beginBattle(opp, "auto")}
-                            disabled={busy}
-                            className={`${ghostBtn} px-3 py-1 text-xs`}
-                            title={t("pvp.fightAuto", locale)}
-                          >
-                            {t("pvp.auto", locale)}
-                          </button>
-                          <button
-                            onClick={() => beginBattle(opp, "turn")}
-                            disabled={busy}
-                            className={`${ghostBtn} px-3 py-1 text-xs`}
-                            title={t("pvp.fightTurn", locale)}
-                          >
-                            {t("pvp.turn", locale)}
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))
+                  players.map(renderOpp)
                 )}
               </div>
             </section>

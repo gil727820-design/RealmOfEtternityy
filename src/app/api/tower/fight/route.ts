@@ -5,8 +5,10 @@ import {
   powerCalc,
   towerMonsterForFloor,
   towerMonsterImage,
+  isTowerMonsterKind,
   TOWER_MONSTER_NAMES,
   type TowerMonsterKind,
+  type TowerBossKind,
 } from "@/game/constants";
 import { getSkinClassBuff, skinRarityMult } from "@/game/skinBuffs";
 import { xpMultiplier } from "@/game/boosts";
@@ -31,24 +33,24 @@ function getCharCombat(char: any) {
     attack: Number(char.attack) || 0,
     defense: Number(char.defense) || 0,
     speed: Number(char.speed) || 0,
-    critical: Number(char.critical) || 0,
-    dodge: Number(char.dodge) || 0,
+    critical: Math.min(90, Number(char.critical) || 0),
+    dodge: Math.min(75, Number(char.dodge) || 0),
     precision: Number(char.precision) || 0,
     maxHp: Number(char.maxHp) || 100,
     maxMana: Number(char.maxMana) || 50,
   };
 }
 
-function floorMonster(floor: number, kind: TowerMonsterKind, seed: number) {
+function floorMonster(floor: number, kind: TowerMonsterKind | TowerBossKind, seed: number) {
   const rng = mulberry32(seed);
   rng();
   rng();
   const boss = floor % 10 === 0;
-  const mult = boss ? 2.0 : 1;
-  // Bônus extras do chefe para torná-lo bem mais forte (vida, força, defesa, crítico)
-  const bHp = boss ? Math.round(floor * 25 + 80) : 0;
-  const bAtk = boss ? Math.round(floor * 2 + 8) : 0;
-  const bDef = boss ? Math.round(floor + 2) : 0;
+  // Chefe é forte, mas justo: multiplicador moderado + bônus que não explodem.
+  const mult = boss ? 1.75 : 1;
+  const bHp = boss ? Math.round(floor * 15 + 60) : 0;
+  const bAtk = boss ? Math.round(floor * 1.5 + 6) : 0;
+  const bDef = boss ? Math.round(floor * 0.7 + 2) : 0;
   return {
     kind,
     image: towerMonsterImage(kind),
@@ -144,8 +146,7 @@ export async function POST(req: NextRequest) {
     }
 
     const seed = Number(state.seed) || 1;
-    const kinds = ["slime", "lobo", "aranha", "esqueleto", "golem", "minotauro", "espectro", "dragao"] as TowerMonsterKind[];
-    const kind = kinds.includes(state.kind) ? (state.kind as TowerMonsterKind) : "slime";
+    const kind = isTowerMonsterKind(state.kind) ? (state.kind as TowerMonsterKind | TowerBossKind) : "slime";
     const mon = floorMonster(state.floor || floor, kind, seed);
 
     // Estado atual, garantindo limites (não confiamos cegamente no cliente)

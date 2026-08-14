@@ -52,9 +52,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Energia infinita ativa globalmente (config do admin) → sem custo de energia.
+    const settings = await jsonDb.getServerSettings();
+    const infiniteEnergy = !!settings?.infiniteEnergy;
+
     // Aplica a recarga passiva de energia antes de verificar/gastar.
     const regen = computeEnergyRegen(char, new Date(), energyMultiplier(char));
-    if (regen.energy < cost) {
+    if (!infiniteEnergy && regen.energy < cost) {
       return NextResponse.json(
         { error: `Energia insuficiente! Custo: ${cost} ⚡ (${hours}h).` },
         { status: 400 }
@@ -75,8 +79,9 @@ export async function POST(req: NextRequest) {
     const now = new Date();
 
     // Deduz energia (timer de recarga recomeça a partir deste momento).
+    // Com energia infinita, a energia é mantida (nunca diminui).
     await jsonDb.updateCharacter(characterId, {
-      energy: regen.energy - cost,
+      energy: infiniteEnergy ? Math.max(regen.energy, char.maxEnergy || 100) : regen.energy - cost,
       lastEnergyAt: now.toISOString(),
       lastActivity: now.toISOString(),
     });

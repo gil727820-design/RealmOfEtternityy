@@ -29,11 +29,15 @@ export async function POST(req: NextRequest) {
 
     const now = new Date();
 
+    // Energia infinita ativa globalmente (config do admin) → missões sem custo.
+    const settings = await jsonDb.getServerSettings();
+    const infiniteEnergy = !!settings?.infiniteEnergy;
+
     // Aplica a recarga passiva de energia ANTES de verificar/gastar.
     const regen = computeEnergyRegen(char, now, energyMultiplier(char));
     const currentEnergy = regen.energy;
 
-    if (currentEnergy < mission.energyCost) {
+    if (!infiniteEnergy && currentEnergy < mission.energyCost) {
       return NextResponse.json({ error: "Energia insuficiente!" }, { status: 400 });
     }
 
@@ -43,9 +47,10 @@ export async function POST(req: NextRequest) {
 
     const endsAt = new Date(now.getTime() + mission.durationSec * 1000);
 
-    // Deduzir energia (timer de recarga recomeça a partir deste momento)
+    // Deduzir energia (timer de recarga recomeça a partir deste momento).
+    // Com energia infinita, a energia é mantida (nunca diminui).
     await jsonDb.updateCharacter(characterId, {
-      energy: currentEnergy - mission.energyCost,
+      energy: infiniteEnergy ? Math.max(currentEnergy, char.maxEnergy || 100) : currentEnergy - mission.energyCost,
       lastEnergyAt: now.toISOString(),
       lastActivity: now.toISOString(),
     });

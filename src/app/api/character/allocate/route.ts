@@ -3,15 +3,15 @@ import jsonDb from "@/db/repo";
 import { powerCalc } from "@/game/constants";
 
 // Configuração de cada status: quanto vale 1 ponto investido
-const STAT_CONFIG: Record<string, { field: string; perPoint: number }> = {
+const STAT_CONFIG: Record<string, { field: string; perPoint: number; cap?: number }> = {
   attack: { field: "attack", perPoint: 2 },
   defense: { field: "defense", perPoint: 2 },
   speed: { field: "speed", perPoint: 2 },
   hp: { field: "maxHp", perPoint: 10 },
   mana: { field: "maxMana", perPoint: 5 },
-  critical: { field: "critical", perPoint: 1 },
+  critical: { field: "critical", perPoint: 1, cap: 90 },
   precision: { field: "precision", perPoint: 1 },
-  dodge: { field: "dodge", perPoint: 1 },
+  dodge: { field: "dodge", perPoint: 1, cap: 75 },
   resistance: { field: "resistance", perPoint: 1 },
 };
 
@@ -43,12 +43,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Pontos de status insuficientes!" }, { status: 400 });
     }
 
-    const delta = config.perPoint * qty;
+    // Quantos pontos o incremento vale (em unidades do status)
+    let appliedQty = qty;
+
+    // Limite máximo do status (ex.: critical até 90%, dodge até 75%)
+    const current = Number(char[config.field]) || 0;
+    if (config.cap !== undefined && current + config.perPoint * qty > config.cap) {
+      const maxPoints = Math.floor((config.cap - current) / config.perPoint);
+      if (maxPoints <= 0) {
+        return NextResponse.json({ error: `${stat} já está no limite (${config.cap})!` }, { status: 400 });
+      }
+      appliedQty = Math.min(qty, maxPoints);
+    }
+
+    const delta = config.perPoint * appliedQty;
 
     // Aplica o incremento no status correspondente
     const patch: Record<string, unknown> = {
-      [config.field]: (Number(char[config.field]) || 0) + delta,
-      unspentStatPoints: points - qty,
+      [config.field]: current + delta,
+      unspentStatPoints: points - appliedQty,
     };
 
     // HP/Mana: ao aumentar o máximo, também aumenta o valor atual
@@ -83,7 +96,7 @@ export async function POST(req: NextRequest) {
       character: updated,
       stat,
       added: delta,
-      pointsSpent: qty,
+      pointsSpent: appliedQty,
       pointsLeft: (updated.unspentStatPoints || 0),
     });
   } catch (e: unknown) {

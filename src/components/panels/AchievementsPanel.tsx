@@ -6,7 +6,7 @@ import { RARITY_COLORS } from "@/game/constants";
 
 type AchItem = {
   id: string; nameKey: string; descKey: string; icon: string; rarity: string;
-  reward: { gold?: number; diamonds?: number; xp?: number };
+  reward: { gold?: number; crystals?: number; xp?: number };
   unlocked: boolean; claimed: boolean;
 };
 type TitleItem = {
@@ -48,7 +48,7 @@ export default function AchievementsPanel() {
       if (!res.ok) { notify(d.error, "error"); setBusy(null); return; }
       const parts = [];
       if (d.reward?.gold) parts.push(`💰 +${d.reward.gold}`);
-      if (d.reward?.diamonds) parts.push(`💎 +${d.reward.diamonds}`);
+      if (d.reward?.crystals) parts.push(`🔮 +${d.reward.crystals}`);
       if (d.reward?.xp) parts.push(`✨ +${d.reward.xp} XP`);
       notify(`🎉 ${t("ach.claimSuccess", locale)} ${parts.join(" ")}`, "success");
       if (d.character) setCharacter(d.character);
@@ -101,7 +101,7 @@ export default function AchievementsPanel() {
               <div className="bg-gradient-to-r from-[#8b5cf6] to-[#facc15] h-2.5 rounded-full transition-all"
                 style={{ width: `${(unlockedCount / Math.max(1, achievements.length)) * 100}%` }} />
             </div>
-            <p className="text-[11px] text-gray-500 mt-2">{t("ach.reward", locale)} 💰 / 💎 ao coletar cada conquista desbloqueada.</p>
+            <p className="text-[11px] text-gray-500 mt-2">{t("ach.reward", locale)} 💰 / 🔮 ao coletar cada conquista desbloqueada.</p>
           </div>
 
           {/* Grade de conquistas */}
@@ -125,7 +125,7 @@ export default function AchievementsPanel() {
                   <div className="flex items-center justify-between gap-2 text-[11px]">
                     <span className="text-[#ffd700]">
                       {a.reward.gold ? `💰 ${a.reward.gold.toLocaleString()}` : ""}
-                      {a.reward.diamonds ? ` 💎 ${a.reward.diamonds}` : ""}
+                      {a.reward.crystals ? ` 🔮 ${a.reward.crystals}` : ""}
                       {a.reward.xp ? ` ✨ ${a.reward.xp} XP` : ""}
                     </span>
                     {a.unlocked ? (

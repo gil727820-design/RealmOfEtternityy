@@ -119,7 +119,7 @@ const DEFAULT_CHAR_FIELDS: Record<string, unknown> = {
   energy: 100,
   maxEnergy: 100,
   gold: 500,
-  diamonds: 10,
+  diamonds: 0,
   crystals: 0,
   pvpCoins: 0,
   guildCoins: 0,
@@ -841,6 +841,12 @@ export async function updateServerSettings(patch: any) {
   const rec = { key: "core", ...patch };
   await insertRec(serverSettings, rec, [["key", "key"]], "key");
   return rec;
+}
+
+/** Verifica se a energia infinita está ativada globalmente. */
+export async function isInfiniteEnergyEnabled(): Promise<boolean> {
+  const settings = await getServerSettings();
+  return !!settings.infiniteEnergy;
 }
 
 /* ─── Códigos de resgate ─── */

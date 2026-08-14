@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, type CSSProperties } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
-import { REGIONS, regionWithAlpha } from "@/game/constants";
+import { REGIONS, regionWithAlpha, classImage, type ClassName } from "@/game/constants";
 import Sidebar from "./Sidebar";
 import TopBar from "./TopBar";
 import DashboardPanel from "./panels/DashboardPanel";
@@ -25,6 +25,8 @@ import DonatePanel from "./panels/DonatePanel";
 import SettingsPanel from "./panels/SettingsPanel";
 import MusicController from "./MusicController";
 import ServerNotice from "./ServerNotice";
+import PreloadImages from "./ui/PreloadImages";
+import { skinById } from "@/game/skins";
 
 export default function GameScreen() {
   const { activeTab, characterId, setCharacter, character, notification, clearNotification, setInventory, setActiveMissions, setAvailableMissions, setAfkRewards, setMailboxCount, logout, locale } = useGameStore();
@@ -162,11 +164,20 @@ export default function GameScreen() {
   const currentRegion = REGIONS.find((r) => r.id === regionId) || REGIONS[0];
   const regionAccent = currentRegion.accent;
 
+  const avatarSrc =
+    (() => {
+      const sid = (character as any)?.activeSkinId;
+      return sid ? skinById(String(sid))?.image : null;
+    })() ||
+    classImage(((character?.classType as ClassName) || "warrior"), (character?.sex as string) || "male");
+
   return (
     <div
       className="min-h-screen relative overflow-hidden text-white"
       style={{ "--region-accent": regionAccent } as CSSProperties}
     >
+      {/* Preload: personagem + HUD + fundo da região atual */}
+      <PreloadImages urls={[avatarSrc, currentRegion.bg, currentRegion.image]} />
       {/* Background Effects — fundo da ilha atual */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[#0a0a12]" />

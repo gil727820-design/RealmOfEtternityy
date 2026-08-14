@@ -4,6 +4,7 @@ import { useGameStore, type GameTab } from "@/store/gameStore";
 import { t } from "@/i18n";
 import { classImage, type ClassName } from "@/game/constants";
 import { skinById } from "@/game/skins";
+import PreloadImages from "./ui/PreloadImages";
 
 const NAV_ITEMS: { tab: GameTab; icon: string; image: string; labelKey: string; color: string }[] = [
   { tab: "dashboard", icon: "🏠", image: "/images/sidebar/menu_personagem.png", labelKey: "nav.character", color: "#ff6b6b" },
@@ -41,6 +42,17 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
 
   return (
     <>
+      {/* Pré-carrega os ícones fixos do menu (HUD) e o avatar */}
+      <PreloadImages urls={[...new Set([...NAV_ITEMS.map((n) => n.image), avatarSrc])]} />
+      {/* Click-outside overlay: fecha a sidebar ao clicar em qualquer canto fora dela */}
+      {!collapsed && (
+        <div
+          className="fixed inset-0 z-30 bg-black/40 backdrop-blur-sm cursor-pointer"
+          onClick={onToggle}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Floating toggle (visible when sidebar is hidden) — draggable */}
       {collapsed && <FloatingToggle onClick={onToggle} />}
 

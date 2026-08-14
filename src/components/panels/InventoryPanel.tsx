@@ -3,10 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
-import { RARITY_COLORS, classImage, type ClassName } from "@/game/constants";
+import { RARITY_COLORS, classImage, powerCalc, type ClassName } from "@/game/constants";
 import { skinById, SKIN_CATALOG, type SkinTemplate } from "@/game/skins";
 import { skinBuffDesc } from "@/game/skinBuffs";
 import { boostSummary, formatBoostMs } from "@/game/boosts";
+import ItemIcon from "@/components/ui/ItemIcon";
 
 // ---------------------------------------------------------------- utilidades
 function chipCls(active: boolean) {
@@ -277,7 +278,7 @@ function BoostSection() {
               style={{ borderColor: RARITY_COLORS[it.template.rarity] ?? "#ffffff1a" }}
             >
               <div className="flex min-w-0 items-center gap-2">
-                <span className="text-lg">{it.template.icon || "🧪"}</span>
+                <ItemIcon template={it.template} emojiClass="text-lg" alt={t(it.template?.nameKey || "", locale)} />
                 <div className="min-w-0">
                   <span className="block truncate text-xs font-bold text-white">
                     {t(it.template.nameKey || "", locale)}
@@ -327,6 +328,16 @@ const CATEGORY_GROUPS: Record<string, string[]> = {
   accessories: ["ring", "amulet", "relic", "artifact"],
 };
 
+const CATEGORY_ICONS: Record<string, string> = {
+  all: "🗂️",
+  visual: "🧍",
+  weapons: "⚔️",
+  armor: "🛡️",
+  accessories: "💍",
+  consumables: "🧪",
+  skins: "🎨",
+};
+
 const STATS: Array<{ key: string; labelKey: string }> = [
   { key: "attack", labelKey: "stat.attack" },
   { key: "defense", labelKey: "stat.defense" },
@@ -346,6 +357,66 @@ function WalletPill({ img, alt, value, tint }: { img: string; alt: string; value
   );
 }
 // ===================================================================== painel
+function VisualTab() {
+  const { character, locale } = useGameStore();
+  const char = character as any;
+  const cls = (char?.classType as ClassName) || "warrior";
+  const sex = (char?.sex as string) || "male";
+  const baseImg = classImage(cls, sex);
+  const activeSkin = (char?.activeSkinId as string | null | undefined)
+    ? skinById(String(char?.activeSkinId))
+    : null;
+
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-bg-surface p-3 sm:p-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-black">🧍 {t("inv.visual.title", locale)}</h2>
+        <span className="text-xs text-gray-400">{t("inv.visual.subtitle", locale)}</span>
+      </div>
+
+      <div className="grid grid-cols-1 items-stretch gap-4 sm:grid-cols-[220px_1fr]">
+        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-[#1b2436] to-[#0f141f] p-4">
+          <div className="pointer-events-none absolute top-2 right-3 text-[9px] uppercase tracking-widest text-gray-600">
+            {t("inv.visual.title", locale)}
+          </div>
+          <div className="grid place-items-center pt-4 pb-2">
+            <img
+              src={baseImg}
+              alt={cls}
+              className="h-40 w-auto max-w-full object-contain animate-float drop-shadow-[0_0_18px_rgba(233,69,96,0.4)]"
+              draggable={false}
+            />
+          </div>
+          <div className="mt-1 flex items-center justify-between px-1 text-[11px]">
+            <span className="rounded-full bg-[#e94560]/20 px-2 py-0.5 font-bold text-[#e94560]">
+              Lv {char?.level ?? 1}
+            </span>
+            <span className="text-gray-400">{char?.power ?? 0} ⚡</span>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <div className="rounded-xl border border-white/10 bg-black/20 p-3 text-[11px] leading-relaxed text-gray-400">
+            🧍 {t("inv.visual.legend", locale)}
+          </div>
+
+          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-black/20 p-3">
+            <span className="text-[10px] uppercase tracking-widest text-gray-500">🎨 {t("inv.skinEquipped", locale)}</span>
+            {activeSkin ? (
+              <div className="flex items-center gap-2">
+                <img src={activeSkin.image} alt="" className="h-9 w-9 object-contain" />
+                <span className="text-sm font-bold text-white">{t(activeSkin.nameKey, locale)}</span>
+              </div>
+            ) : (
+              <span className="text-sm text-gray-500">{t("inv.visualNone", locale)}</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function InventoryPanel() {
   const { characterId, locale, notify, character, setCharacter, setInventory } = useGameStore();
   const char = character as any;
@@ -514,6 +585,25 @@ const selected = items.find((it) => it.inv.id === selectedId) ?? null;
     }));
   }, [selected, selectedCur, locale]);
 
+  // Poder (powerCalc) do item selecionado vs. o equipado no mesmo slot
+  const powerInfo = useMemo(() => {
+    if (!selected || isConsumable) return null;
+    const lvl = Number(char?.level) || 1;
+    const calc = (tpl: any) =>
+      powerCalc({
+        attack: Number(tpl?.attack) || 0,
+        defense: Number(tpl?.defense) || 0,
+        hp: Number(tpl?.hp) || 0,
+        speed: Number(tpl?.speed) || 0,
+        critical: Number(tpl?.critical) || 0,
+        level: lvl,
+      });
+    const cur = selectedCur?.template;
+    const itemPower = calc(selected.template);
+    const curPower = cur ? calc(cur) : 0;
+    return { itemPower, curPower, delta: itemPower - curPower };
+  }, [selected, selectedCur, isConsumable, char?.level]);
+
   // Porta-voz dos handlers; marca o slot como "piscando" ao equipar/desequipar
   const triggerEquipFx = (slot: string | undefined) => {
     setEquipFx((p) => ({ tick: p.tick + 1, slot: slot ?? null }));
@@ -651,6 +741,7 @@ const selected = items.find((it) => it.inv.id === selectedId) ?? null;
   };
 const categories = [
     { key: "all", label: t("inv.category.all", locale) },
+    { key: "visual", label: t("inv.category.visual", locale) },
     { key: "weapons", label: t("inv.category.weapons", locale) },
     { key: "armor", label: t("inv.category.armor", locale) },
     { key: "accessories", label: t("inv.category.accessories", locale) },
@@ -675,7 +766,7 @@ const categories = [
           <div>
             <h1 className="text-xl font-black">{t("inv.title", locale)}</h1>
             <p className="text-[11px] text-gray-500">
-              {fmt(totalSlots)} / {capacity} • {t("inv.value", locale)} {fmt(totalValue)} 🪙
+              {t("inv.value", locale)} {fmt(totalValue)} 🪙
             </p>
           </div>
         </div>
@@ -683,11 +774,34 @@ const categories = [
           <WalletPill img="/images/icons/icone_moeda.png" alt="Gold" value={fmt(char?.gold)} />
           <WalletPill img="/images/icons/icone_diamante.png" alt="Diamonds" value={fmt(char?.diamonds)} tint="text-cyan-300" />
         </div>
+
+        {/* barra de capacidade */}
+        <div className="w-full">
+          <div className="mb-1 flex items-center justify-between text-[10px] uppercase tracking-widest text-gray-500">
+            <span>{fmt(totalSlots)} / {capacity} {t("inv.slots", locale)}</span>
+            <span className="text-[#e94560]">{Math.max(0, capacity - totalSlots)} {t("inv.free", locale)}</span>
+          </div>
+          <div className="h-2.5 overflow-hidden rounded-full border border-white/10 bg-black/30">
+            <div
+              className={`h-full rounded-full bg-gradient-to-r transition-all duration-500 ${
+                totalSlots / capacity > 0.85
+                  ? "from-red-600 to-[#e94560]"
+                  : "from-[#7c5cfc] to-[#e94560]"
+              }`}
+              style={{ width: `${Math.min(100, (totalSlots / capacity) * 100)}%` }}
+            />
+          </div>
+        </div>
       </header>
 
       {category === "skins" ? (
         <>
           <SkinsTab />
+          <BoostSection />
+        </>
+      ) : category === "visual" ? (
+        <>
+          <VisualTab />
           <BoostSection />
         </>
       ) : (
@@ -712,12 +826,12 @@ const categories = [
                         if (first) selectItem(first.inv.id);
                       }
                     }}
-                    className={`flex flex-col items-center gap-0.5 rounded-lg border px-1 py-1 transition-all ${cell} ${
+                    className={`relative z-10 flex flex-col items-center gap-0.5 rounded-lg border px-1 py-1 transition-all ${cell} ${
                       fxOn ? "animate-pulse-soft border-[#e94560] bg-[#e94560]/20" : "border-white/10 bg-black/20 hover:bg-white/10"
                     } ${selected?.template?.slot === slot ? "ring-2 ring-[#e94560]/60" : ""}`}
                   >
                     {entry ? (
-                      <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-2xl leading-none">{entry.template.icon || "❔"}</span>
+                      <ItemIcon template={entry.template} emojiClass="text-2xl" alt="" />
                     ) : (
                       <span className="text-xl opacity-40">{SLOT_ICON[slot]}</span>
                     )}
@@ -725,11 +839,13 @@ const categories = [
                   </button>
                 );
               })}
-              <div className="col-span-1 col-start-2 row-span-2 row-start-2 grid min-h-[130px] w-full place-items-center">
+              <div className="pointer-events-none col-span-1 col-start-2 row-span-2 row-start-1 z-0 grid w-full place-items-center pt-1">
                 <img
                   src={charImg}
                   alt={String(char?.classType ?? "warrior")}
-                  className="h-full w-full object-contain"
+                  className={`h-full w-full max-h-[110px] object-contain animate-float drop-shadow-[0_0_18px_rgba(233,69,96,0.4)] ${
+                    equipFx.tick > 0 ? "char-equip-glow" : ""
+                  }`}
                   draggable={false}
                 />
               </div>
@@ -785,11 +901,27 @@ const categories = [
 
           {/* categorias */}
           <div className="flex flex-wrap gap-1.5">
-            {categories.map((c) => (
-              <button key={c.key} onClick={() => changeCategory(c.key)} className={chipCls(category === c.key)}>
-                {c.label}
-              </button>
-            ))}
+            {categories.map((c) => {
+              const count =
+                c.key === "skins" || c.key === "visual"
+                  ? undefined
+                  : c.key === "consumables"
+                    ? items.filter((it) => it.template?.type === "consumable").length
+                    : c.key === "all"
+                      ? items.length
+                      : items.filter((it) => (CATEGORY_GROUPS[c.key] ?? []).includes(it.template?.slot)).length;
+              return (
+                <button key={c.key} onClick={() => changeCategory(c.key)} className={chipCls(category === c.key)}>
+                  <span className="mr-1">{CATEGORY_ICONS[c.key] ?? "❔"}</span>
+                  {c.label}
+                  {count !== undefined && (
+                    <span className={`ml-1.5 rounded-full px-1.5 text-[10px] ${category === c.key ? "bg-white/20" : "bg-white/10"}`}>
+                      {count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {/* filtros de slot e raridade */}
@@ -854,13 +986,17 @@ const categories = [
                   <button
                     key={id}
                     onClick={() => selectItem(id)}
-                    className={`group relative flex flex-col items-center gap-1 rounded-xl border bg-bg-card px-2 pt-2 pb-1.5 transition-all hover:bg-bg-surface ${
+                    className={`group relative flex flex-col items-center gap-1 overflow-hidden rounded-xl border bg-bg-card px-2 pt-2 pb-1.5 transition-all hover:-translate-y-0.5 hover:bg-bg-surface hover:shadow-lg ${
                       active ? "border-[#e94560] ring-2 ring-[#e94560]/40" : ""
                     }`}
-                    style={!active && rarityHex ? { borderColor: `${rarityHex}55` } : undefined}
+                    style={
+                      !active && rarityHex
+                        ? { borderColor: `${rarityHex}66`, boxShadow: `0 0 12px ${rarityHex}22 inset` }
+                        : undefined
+                    }
                   >
                     <div className="relative grid w-full place-items-center">
-                      <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center text-3xl leading-none">{tpl.icon || "❔"}</span>
+                      <ItemIcon template={tpl} className="h-12 w-12 object-contain" emojiClass="text-3xl" alt="" />
                       {it.inv?.equipped && (
                         <span className="absolute top-0 left-1/2 -translate-x-1/2 rounded-full bg-[#e94560] px-1.5 text-[9px] font-black text-white">
                           ✓
@@ -876,7 +1012,10 @@ const categories = [
                       <div className="truncate text-[11px] leading-tight font-semibold text-gray-200">
                         {t(tpl.nameKey || "", locale)}
                       </div>
-                      <div className="mt-0.5 truncate text-[9px] text-gray-500">
+                      <div
+                        className="mt-0.5 truncate text-[9px] font-bold"
+                        style={{ color: rarityHex ?? "#6b7280" }}
+                      >
                         {rarityLabel(tpl.rarity, locale)} • {sub}
                       </div>
                     </div>
@@ -896,7 +1035,7 @@ const categories = [
                   className="grid h-16 w-16 flex-shrink-0 place-items-center rounded-xl border bg-bg-card"
                   style={{ borderColor: RARITY_COLORS[selected.template?.rarity] ?? "#ffffff33" }}
                 >
-                  <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center text-4xl leading-none">{selected.template.icon || "❔"}</span>
+                  <ItemIcon template={selected.template} className="h-12 w-12 object-contain" emojiClass="text-4xl" alt="" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="truncate text-base font-black text-gray-100">
@@ -956,6 +1095,31 @@ const categories = [
               {/* stats de equipamento + delta vs. o atual */}
               {!isConsumable && (
                 <div className="flex flex-col gap-1.5">
+                  {powerInfo && (
+                    <div className="flex items-center justify-between rounded-lg border border-yellow-500/30 bg-yellow-500/10 px-3 py-1.5 text-sm">
+                      <span className="flex items-center gap-1.5 font-bold text-yellow-300">
+                        ⚡ {t("inv.power", locale)}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        {powerInfo.curPower > 0 && (
+                          <span className="text-[10px] text-gray-400">{powerInfo.curPower}</span>
+                        )}
+                        <span
+                          className={`font-black ${
+                            powerInfo.delta > 0
+                              ? "text-green-400"
+                              : powerInfo.delta < 0
+                                ? "text-red-400"
+                                : "text-gray-200"
+                          }`}
+                        >
+                          {powerInfo.itemPower}
+                          {powerInfo.delta > 0 && <span className="ml-1">▲ +{powerInfo.delta}</span>}
+                          {powerInfo.delta < 0 && <span className="ml-1">▼ {powerInfo.delta}</span>}
+                        </span>
+                      </span>
+                    </div>
+                  )}
                   {statDeltas.map((d) => {
                     const delta = d.value - d.current;
                     return (

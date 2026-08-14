@@ -70,9 +70,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Recompensa já coletada" }, { status: 400 });
       }
       const gold = (char.gold || 0) + (def.reward.gold || 0);
-      const diamonds = (char.diamonds || 0) + (def.reward.diamonds || 0);
+      const crystals = (char.crystals || 0) + (def.reward.crystals || 0);
+      const diamonds = char.diamonds || 0;
       await jsonDb.updateCharacter(char.id, {
         gold,
+        crystals,
         diamonds,
         achievements: [...claimed, def.id],
       });

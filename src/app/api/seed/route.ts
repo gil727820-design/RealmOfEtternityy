@@ -2,39 +2,39 @@ import { NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { missingRegionMissions } from "@/game/generatedMissions";
 
-const ITEMS = [
-  { nameKey: "item.wooden_sword", slot: "weapon" as const, rarity: "common" as const, minLevel: 1, attack: 5, defense: 0, hp: 0, speed: 0, critical: 1, icon: "⚔️", sellPrice: 10 },
-  { nameKey: "item.iron_sword", slot: "weapon" as const, rarity: "uncommon" as const, minLevel: 5, attack: 12, defense: 0, hp: 0, speed: 1, critical: 2, icon: "🗡️", sellPrice: 50 },
-  { nameKey: "item.steel_blade", slot: "weapon" as const, rarity: "rare" as const, minLevel: 10, attack: 22, defense: 0, hp: 0, speed: 2, critical: 4, icon: "⚔️", sellPrice: 150 },
-  { nameKey: "item.flame_sword", slot: "weapon" as const, rarity: "epic" as const, minLevel: 20, attack: 40, defense: 5, hp: 10, speed: 3, critical: 6, icon: "🔥", sellPrice: 500 },
-  { nameKey: "item.frost_staff", slot: "weapon" as const, rarity: "epic" as const, minLevel: 20, attack: 35, defense: 0, hp: 0, speed: 2, critical: 5, icon: "❄️", sellPrice: 480 },
-  { nameKey: "item.shadow_dagger", slot: "weapon" as const, rarity: "legendary" as const, minLevel: 30, attack: 55, defense: 0, hp: 0, speed: 8, critical: 15, icon: "🌑", sellPrice: 1200 },
-  { nameKey: "item.leather_armor", slot: "armor" as const, rarity: "common" as const, minLevel: 1, attack: 0, defense: 8, hp: 15, speed: 0, critical: 0, icon: "🦺", sellPrice: 15 },
-  { nameKey: "item.iron_armor", slot: "armor" as const, rarity: "uncommon" as const, minLevel: 5, attack: 0, defense: 18, hp: 30, speed: -1, critical: 0, icon: "🛡️", sellPrice: 60 },
-  { nameKey: "item.dragon_armor", slot: "armor" as const, rarity: "legendary" as const, minLevel: 30, attack: 10, defense: 50, hp: 100, speed: 2, critical: 3, icon: "🐉", sellPrice: 1500 },
-  { nameKey: "item.wooden_shield", slot: "shield" as const, rarity: "common" as const, minLevel: 1, attack: 0, defense: 6, hp: 10, speed: 0, critical: 0, icon: "🪵", sellPrice: 8 },
-  { nameKey: "item.holy_shield", slot: "shield" as const, rarity: "epic" as const, minLevel: 20, attack: 0, defense: 35, hp: 50, speed: 0, critical: 0, icon: "✨", sellPrice: 600 },
-  { nameKey: "item.iron_helmet", slot: "helmet" as const, rarity: "common" as const, minLevel: 1, attack: 0, defense: 5, hp: 8, speed: 0, critical: 0, icon: "⛑️", sellPrice: 12 },
-  { nameKey: "item.titan_helmet", slot: "helmet" as const, rarity: "legendary" as const, minLevel: 30, attack: 5, defense: 40, hp: 80, speed: 0, critical: 2, icon: "👑", sellPrice: 1300 },
-  { nameKey: "item.leather_boots", slot: "boots" as const, rarity: "common" as const, minLevel: 1, attack: 0, defense: 3, hp: 0, speed: 3, critical: 0, icon: "👢", sellPrice: 8 },
-  { nameKey: "item.cloth_pants", slot: "pants" as const, rarity: "common" as const, minLevel: 1, attack: 0, defense: 4, hp: 5, speed: 1, critical: 0, icon: "👖", sellPrice: 7 },
-  { nameKey: "item.copper_ring", slot: "ring" as const, rarity: "uncommon" as const, minLevel: 3, attack: 3, defense: 2, hp: 5, speed: 1, critical: 1, icon: "💍", sellPrice: 25 },
-  { nameKey: "item.mystic_ring", slot: "ring" as const, rarity: "legendary" as const, minLevel: 25, attack: 15, defense: 10, hp: 30, speed: 5, critical: 8, icon: "💎", sellPrice: 1100 },
-  { nameKey: "item.bone_amulet", slot: "amulet" as const, rarity: "uncommon" as const, minLevel: 5, attack: 5, defense: 3, hp: 10, speed: 0, critical: 2, icon: "📿", sellPrice: 35 },
-  { nameKey: "item.phoenix_amulet", slot: "amulet" as const, rarity: "mythic" as const, minLevel: 40, attack: 20, defense: 15, hp: 60, speed: 5, critical: 10, icon: "🔥", sellPrice: 2000 },
-  { nameKey: "item.leather_gloves", slot: "gloves" as const, rarity: "common" as const, minLevel: 1, attack: 2, defense: 2, hp: 0, speed: 1, critical: 1, icon: "🧤", sellPrice: 8 },
-];
+// ─── Catálogo de Espadas ────────────────────────────────────────────────────
+// Ícones de arma (32×32) copiados de "32 Free Weapon Icons" para
+// /public/images/items/swords/. `image` é usado no inventário/forja/admin;
+// `sheet` aponta para o sprite do guerreiro (layers) para o personagem
+// exibir a espada correta ao equipar.
+const SWORD_SPRITES = {
+  rusty: "/sprites/guerreiro/base/espada_v1_ferro.png",
+  mid: "/sprites/guerreiro/novos/01_espada.PNG",
+  flame: "/sprites/guerreiro/novos/espada_v2_chama.png",
+  shadow: "/sprites/guerreiro/novos/espada_v3_sombra.png",
+} as const;
 
-// Consumíveis (empilháveis) — obtidos em baús, drops e no inventário inicial.
-const CONSUMABLES = [
-  { nameKey: "item.hp_potion", descKey: "item.hp_potion.desc", type: "consumable", stackable: true, rarity: "common" as const, minLevel: 1, attack: 0, defense: 0, hp: 0, speed: 0, critical: 0, icon: "🧪", sellPrice: 15, effect: { hp: 150 } },
-  { nameKey: "item.mana_potion", descKey: "item.mana_potion.desc", type: "consumable", stackable: true, rarity: "common" as const, minLevel: 1, attack: 0, defense: 0, hp: 0, speed: 0, critical: 0, icon: "🔷", sellPrice: 15, effect: { mana: 150 } },
-  { nameKey: "item.energy_potion", descKey: "item.energy_potion.desc", type: "consumable", stackable: true, rarity: "uncommon" as const, minLevel: 1, attack: 0, defense: 0, hp: 0, speed: 0, critical: 0, icon: "⚡", sellPrice: 25, effect: { energy: 40 } },
-  { nameKey: "item.elixir_xp", descKey: "item.elixir_xp.desc", type: "consumable", stackable: true, rarity: "uncommon" as const, minLevel: 1, attack: 0, defense: 0, hp: 0, speed: 0, critical: 0, icon: "✨", sellPrice: 40, effect: { xp: 30 } },
-  // Poções de BOOST (2x) — duração em horas, aplicadas via character.boosts
-  { nameKey: "item.boost_xp", descKey: "item.boost_xp.desc", type: "consumable", stackable: true, rarity: "rare" as const, minLevel: 1, attack: 0, defense: 0, hp: 0, speed: 0, critical: 0, icon: "🚀", sellPrice: 150, effect: { boostXpHours: 2 } },
-  { nameKey: "item.boost_energy", descKey: "item.boost_energy.desc", type: "consumable", stackable: true, rarity: "rare" as const, minLevel: 1, attack: 0, defense: 0, hp: 0, speed: 0, critical: 0, icon: "🔋", sellPrice: 150, effect: { boostEnergyHours: 2 } },
-  { nameKey: "item.boost_both", descKey: "item.boost_both.desc", type: "consumable", stackable: true, rarity: "epic" as const, minLevel: 1, attack: 0, defense: 0, hp: 0, speed: 0, critical: 0, icon: "💠", sellPrice: 250, effect: { boostXpHours: 2, boostEnergyHours: 2 } },
+const SWORDS = [
+  { id: 30, nameKey: "item.sw_rusty", slot: "weapon", rarity: "common", minLevel: 1, attack: 6, defense: 0, hp: 0, speed: 1, critical: 1, icon: "🗡️", image: "/images/items/swords/Iicon_32_01.png", sheet: SWORD_SPRITES.rusty, sellPrice: 12 },
+  { id: 31, nameKey: "item.sw_iron", slot: "weapon", rarity: "common", minLevel: 3, attack: 9, defense: 0, hp: 0, speed: 1, critical: 2, icon: "🗡️", image: "/images/items/swords/Iicon_32_03.png", sheet: SWORD_SPRITES.rusty, sellPrice: 22 },
+  { id: 32, nameKey: "item.sw_bronze", slot: "weapon", rarity: "common", minLevel: 5, attack: 12, defense: 0, hp: 5, speed: 1, critical: 2, icon: "🗡️", image: "/images/items/swords/Iicon_32_19.png", sheet: SWORD_SPRITES.rusty, sellPrice: 35 },
+  { id: 33, nameKey: "item.sw_steel", slot: "weapon", rarity: "uncommon", minLevel: 8, attack: 16, defense: 0, hp: 0, speed: 2, critical: 3, icon: "⚔️", image: "/images/items/swords/Iicon_32_04.png", sheet: SWORD_SPRITES.mid, sellPrice: 60 },
+  { id: 34, nameKey: "item.sw_wind", slot: "weapon", rarity: "uncommon", minLevel: 10, attack: 19, defense: 0, hp: 0, speed: 3, critical: 3, icon: "⚔️", image: "/images/items/swords/Iicon_32_06.png", sheet: SWORD_SPRITES.mid, sellPrice: 85 },
+  { id: 35, nameKey: "item.sw_silver", slot: "weapon", rarity: "uncommon", minLevel: 12, attack: 22, defense: 0, hp: 5, speed: 2, critical: 4, icon: "⚔️", image: "/images/items/swords/Iicon_32_25.png", sheet: SWORD_SPRITES.mid, sellPrice: 115 },
+  { id: 36, nameKey: "item.sw_hunter", slot: "weapon", rarity: "rare", minLevel: 15, attack: 27, defense: 0, hp: 0, speed: 3, critical: 5, icon: "⚔️", image: "/images/items/swords/Iicon_32_05.png", sheet: SWORD_SPRITES.mid, sellPrice: 160 },
+  { id: 37, nameKey: "item.sw_runic", slot: "weapon", rarity: "rare", minLevel: 18, attack: 32, defense: 0, hp: 8, speed: 3, critical: 5, icon: "🔮", image: "/images/items/swords/Iicon_32_07.png", sheet: SWORD_SPRITES.mid, sellPrice: 220 },
+  { id: 38, nameKey: "item.sw_twilight", slot: "weapon", rarity: "rare", minLevel: 20, attack: 36, defense: 0, hp: 0, speed: 4, critical: 6, icon: "🌗", image: "/images/items/swords/Iicon_32_28.png", sheet: SWORD_SPRITES.mid, sellPrice: 290 },
+  { id: 39, nameKey: "item.sw_royal", slot: "weapon", rarity: "epic", minLevel: 24, attack: 42, defense: 2, hp: 10, speed: 3, critical: 7, icon: "🏰", image: "/images/items/swords/Iicon_32_15.png", sheet: SWORD_SPRITES.mid, sellPrice: 380 },
+  { id: 40, nameKey: "item.sw_knight", slot: "weapon", rarity: "epic", minLevel: 28, attack: 48, defense: 3, hp: 12, speed: 3, critical: 7, icon: "🛡️", image: "/images/items/swords/Iicon_32_16.png", sheet: SWORD_SPRITES.mid, sellPrice: 480 },
+  { id: 41, nameKey: "item.sw_crystal", slot: "weapon", rarity: "epic", minLevel: 32, attack: 55, defense: 0, hp: 10, speed: 5, critical: 8, icon: "💎", image: "/images/items/swords/Iicon_32_08.png", sheet: SWORD_SPRITES.flame, sellPrice: 600 },
+  { id: 42, nameKey: "item.sw_dawn", slot: "weapon", rarity: "legendary", minLevel: 36, attack: 63, defense: 2, hp: 15, speed: 5, critical: 9, icon: "🌅", image: "/images/items/swords/Iicon_32_18.png", sheet: SWORD_SPRITES.flame, sellPrice: 780 },
+  { id: 43, nameKey: "item.sw_dragon", slot: "weapon", rarity: "legendary", minLevel: 40, attack: 72, defense: 3, hp: 18, speed: 5, critical: 10, icon: "🐉", image: "/images/items/swords/Iicon_32_24.png", sheet: SWORD_SPRITES.flame, sellPrice: 980 },
+  { id: 44, nameKey: "item.sw_emperor", slot: "weapon", rarity: "legendary", minLevel: 45, attack: 82, defense: 5, hp: 20, speed: 6, critical: 10, icon: "👑", image: "/images/items/swords/Iicon_32_17.png", sheet: SWORD_SPRITES.flame, sellPrice: 1250 },
+  { id: 45, nameKey: "item.sw_shadow", slot: "weapon", rarity: "mythic", minLevel: 50, attack: 95, defense: 0, hp: 20, speed: 8, critical: 13, icon: "🌑", image: "/images/items/swords/Iicon_32_21.png", sheet: SWORD_SPRITES.shadow, sellPrice: 1600 },
+  { id: 46, nameKey: "item.sw_chaos", slot: "weapon", rarity: "mythic", minLevel: 55, attack: 108, defense: 3, hp: 25, speed: 7, critical: 14, icon: "🔯", image: "/images/items/swords/Iicon_32_22.png", sheet: SWORD_SPRITES.shadow, sellPrice: 2000 },
+  { id: 47, nameKey: "item.sw_celestial", slot: "weapon", rarity: "divine", minLevel: 60, attack: 125, defense: 5, hp: 30, speed: 8, critical: 15, icon: "🌟", image: "/images/items/swords/Iicon_32_23.png", sheet: SWORD_SPRITES.shadow, sellPrice: 2600 },
+  { id: 48, nameKey: "item.sw_ancestral", slot: "weapon", rarity: "ancestral", minLevel: 70, attack: 150, defense: 8, hp: 40, speed: 9, critical: 17, icon: "🕯️", image: "/images/items/swords/Iicon_32_29.png", sheet: SWORD_SPRITES.shadow, sellPrice: 3400 },
+  { id: 49, nameKey: "item.sw_supreme", slot: "weapon", rarity: "supreme", minLevel: 80, attack: 185, defense: 10, hp: 50, speed: 10, critical: 20, icon: "⚡", image: "/images/items/swords/Iicon_32_34.png", sheet: SWORD_SPRITES.shadow, sellPrice: 4500 },
 ];
 
 const MISSIONS = [
@@ -69,27 +69,14 @@ const MISSIONS = [
 
 export async function POST() {
   try {
-    // Check if items already seeded
+    // Itens (espadas) foram reativados: o seed insere o catálogo de armas
+    // que vieram dos ícones "32 Free Weapon Icons" (em /images/items/swords/).
+    // Outros tipos de item (poções, baús, armaduras...) seguem fora do jogo.
     const existingItems = await jsonDb.getAllItemTemplates();
-    
     let itemsInserted = 0;
     if (existingItems.length === 0) {
-      await jsonDb.insertItemTemplates(ITEMS as any[]);
-      itemsInserted = ITEMS.length;
-    }
-
-    // Consumíveis: inseridos separadamente p/ manter o seed idempotente mesmo
-    // quando os equipamentos já existirem (bancos antigos). Poções de boost
-    // entram mesmo num banco que já tenha os consumíveis básicos.
-    const hasStdConsumables = existingItems.some((it: any) => it.type === "consumable" && !(it.effect && (it.effect.boostXpHours || it.effect.boostEnergyHours)));
-    const hasBoostConsumables = existingItems.some((it: any) => it.effect && (it.effect.boostXpHours || it.effect.boostEnergyHours));
-    const toInsertConsumables = [
-      ...(hasStdConsumables ? [] : CONSUMABLES.filter((c: any) => !(c.effect && (c.effect.boostXpHours || c.effect.boostEnergyHours)))),
-      ...(hasBoostConsumables ? [] : CONSUMABLES.filter((c: any) => c.effect && (c.effect.boostXpHours || c.effect.boostEnergyHours))),
-    ];
-    if (toInsertConsumables.length > 0) {
-      await jsonDb.insertItemTemplates(toInsertConsumables as any[]);
-      itemsInserted += toInsertConsumables.length;
+      await jsonDb.insertItemTemplates(SWORDS as any[]);
+      itemsInserted = SWORDS.length;
     }
 
     // Check if missions already seeded
@@ -108,10 +95,10 @@ export async function POST() {
       missionsInserted += generated.length;
     }
 
-    return NextResponse.json({ 
-      message: itemsInserted === 0 && missionsInserted === 0 ? "Already seeded" : "Seeded successfully", 
-      items: itemsInserted, 
-      missions: missionsInserted 
+    return NextResponse.json({
+      message: itemsInserted === 0 && missionsInserted === 0 ? "Already seeded" : "Seeded successfully",
+      items: itemsInserted,
+      missions: missionsInserted,
     });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erro interno";

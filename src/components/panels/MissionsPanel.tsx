@@ -192,6 +192,8 @@ export default function MissionsPanel() {
                         src={missionImage(mission.nameKey as string)}
                         alt={missionTitle(mission, locale)}
                         className="w-11 h-11 object-cover rounded-lg shrink-0"
+                        loading="lazy"
+                        decoding="async"
                         draggable={false}
                       />
                     ) : (

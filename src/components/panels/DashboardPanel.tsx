@@ -98,9 +98,9 @@ export default function DashboardPanel() {
     { stat: "speed", key: "stat.speed", image: "/images/attributes/attr_velocidade.png", emoji: "", color: "#4ecdc4", perPoint: 2 },
     { stat: "hp", key: "stat.hp", image: "", emoji: "❤️", color: "#22c55e", perPoint: 10 },
     { stat: "mana", key: "stat.mana", image: "", emoji: "🔮", color: "#00d4ff", perPoint: 5 },
-    { stat: "critical", key: "stat.critical", image: "/images/attributes/attr_critico.png", emoji: "", color: "#ffd700", perPoint: 1 },
+    { stat: "critical", key: "stat.critical", image: "/images/attributes/attr_critico.png", emoji: "", color: "#ffd700", perPoint: 1, cap: 90 },
     { stat: "precision", key: "stat.precision", image: "/images/attributes/attr_precisao.png", emoji: "", color: "#a855f7", perPoint: 1 },
-    { stat: "dodge", key: "stat.dodge", image: "/images/attributes/attr_esquiva.png", emoji: "", color: "#ec4899", perPoint: 1 },
+    { stat: "dodge", key: "stat.dodge", image: "/images/attributes/attr_esquiva.png", emoji: "", color: "#ec4899", perPoint: 1, cap: 75 },
     { stat: "resistance", key: "stat.resistance", image: "/images/attributes/attr_resistencia.png", emoji: "", color: "#22c55e", perPoint: 1 },
   ];
 
@@ -422,12 +422,15 @@ export default function DashboardPanel() {
                       <div className="text-xs text-gray-400 flex items-center gap-2">
                         {t(row.key, locale)}
                         <span className="text-[10px] text-gray-600">+{String(row.perPoint)} {t("status.perPoint", locale)}</span>
+                        {(row as any).cap !== undefined && (
+                          <span className="text-[10px] text-[#ffd700]/80">máx {(row as any).cap}%</span>
+                        )}
                       </div>
                       <div className="text-base font-bold text-white">{String(currentVal)}</div>
                     </div>
                     <button
                       onClick={() => allocatePoint(row, allocQty)}
-                      disabled={allocating !== null || pointsLeft <= 0}
+                      disabled={allocating !== null || pointsLeft <= 0 || ((row as any).cap !== undefined && currentVal >= (row as any).cap)}
                       title={t("status.addPoint", locale)}
                       className="w-auto min-w-9 h-9 px-2.5 rounded-lg flex items-center justify-center text-base font-black text-white bg-gradient-to-br from-[#00ff88] to-[#00b37a] hover:brightness-110 hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all shadow-[0_0_12px_rgba(0,255,136,0.25)]"
                     >

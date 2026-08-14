@@ -33,6 +33,10 @@ async function equippedBonuses(characterId: string) {
   return { atk, def, hp, spd, crit };
 }
 
+async function getServerSettingsData() {
+  return jsonDb.getServerSettings();
+}
+
 export async function GET(req: NextRequest) {
   if (!(await checkAdmin(req))) {
     return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
@@ -42,6 +46,11 @@ export async function GET(req: NextRequest) {
   const action = url.searchParams.get("action") || "dashboard";
 
   try {
+    if (action === "infinite_energy") {
+      const settings = await getServerSettingsData();
+      return NextResponse.json({ infiniteEnergy: !!settings.infiniteEnergy });
+    }
+
     if (action === "dashboard") {
       const usersList = await jsonDb.listUsers();
       const charsList = await jsonDb.listCharacters();
@@ -279,6 +288,25 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (action === "reset_tower") {
+      // Reseta o andar da torre de TODOS os personagens para 1 (moedas são mantidas).
+      const all = await jsonDb.listCharacters("", 999999);
+      if (!all.length) return NextResponse.json({ error: "Nenhum personagem encontrado" }, { status: 400 });
+      let processed = 0;
+      for (const c of all) {
+        await jsonDb.updateCharacter(String(c.id), {
+          towerFloor: 1,
+          lastActivity: new Date().toISOString(),
+        });
+        processed++;
+      }
+      return NextResponse.json({
+        success: true,
+        processed,
+        message: `Torre resetada para o 1º andar em ${processed} personagens!`,
+      });
+    }
+
     if (action === "edit_user") {
       const { userId, updates } = body;
       if (!userId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
@@ -500,6 +528,14 @@ export async function POST(req: NextRequest) {
 
     // ---- Mensagem global / manutenção (anúncio para todos os jogadores) ----
 
+    if (action === "toggle_infinite_energy") {
+      const { enabled } = body;
+      const settings = await getServerSettingsData();
+      const newValue = typeof enabled === "boolean" ? enabled : !settings.infiniteEnergy;
+      const saved = await jsonDb.updateServerSettings({ infiniteEnergy: newValue });
+      return NextResponse.json({ success: true, infiniteEnergy: !!saved.infiniteEnergy, message: newValue ? "⚡ Energia infinita ATIVADA para todos!" : "⚡ Energia infinita DESATIVADA." });
+    }
+
     if (action === "update_server_settings") {
       const { announcement, maintenance, maintenanceMessage, announcementStyle } = body;
       const patch: Record<string, unknown> = { updatedAt: new Date().toISOString() };
@@ -518,6 +554,7 @@ export async function POST(req: NextRequest) {
       }
       if (typeof maintenance === "boolean") patch.maintenance = maintenance;
       if (typeof maintenanceMessage === "string") patch.maintenanceMessage = maintenanceMessage;
+      if (typeof body.infiniteEnergy === "boolean") patch.infiniteEnergy = body.infiniteEnergy;
       if (typeof body.donatePixKey === "string") patch.donatePixKey = body.donatePixKey.trim();
       if (typeof body.donateQrCode === "string") patch.donateQrCode = body.donateQrCode.trim();
       const saved = await jsonDb.updateServerSettings(patch);

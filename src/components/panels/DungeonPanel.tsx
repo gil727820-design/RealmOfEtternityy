@@ -9,6 +9,7 @@ import {
   computeDungeonRewards,
   computeDungeonStatus,
   dungeonCapFloor,
+  dungeonDurationFactor,
   dungeonEnergyCost,
 } from "@/game/dungeons";
 
@@ -194,7 +195,7 @@ export default function DungeonPanel() {
                 >
                   <div className="text-3xl mb-1">🕐</div>
                   <div className="font-black text-lg">{d.hours}h</div>
-                  <div className="text-[11px] text-gray-400 mt-1">drops ×0.5/h</div>
+                  <div className="text-[11px] text-gray-400 mt-1">recompensa ×{dungeonDurationFactor(d.hours).toLocaleString("pt-BR")}</div>
                 </button>
               ))}
             </div>

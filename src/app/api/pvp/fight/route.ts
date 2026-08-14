@@ -165,7 +165,7 @@ export async function GET(req: NextRequest) {
     if (!char) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     // Matchmaking por nível e poder: oponentes na mesma faixa do jogador
-    const allChars = await jsonDb.listCharacters("", 100);
+    const allChars = await jsonDb.listCharacters("", 999999);
     const myLevel = Number(char.level) || 1;
     const myPower = Number(char.power) || 0;
 
@@ -187,7 +187,17 @@ export async function GET(req: NextRequest) {
     const needed = Math.max(0, 8 - realPlayers.length);
     const combined = [...realPlayers, ...bots.slice(0, needed)];
 
-    return NextResponse.json({ opponents: combined });
+    // Aba "Players": todos os personagens reais listados na Arena (exceto o próprio)
+    const players = allChars
+      .filter((c: any) => c.id !== characterId)
+      .map((c: any) => ({ ...c, isBot: false }))
+      .sort(
+        (a: any, b: any) =>
+          (Number(b.pvpRating) || 0) - (Number(a.pvpRating) || 0) ||
+          (Number(b.power) || 0) - (Number(a.power) || 0)
+      );
+
+    return NextResponse.json({ opponents: combined, bots, players });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erro interno";
     return NextResponse.json({ error: msg }, { status: 500 });

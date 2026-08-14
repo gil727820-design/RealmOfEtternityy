@@ -13,8 +13,8 @@ function getCharCombat(char: any) {
     attack: Number(char.attack) || 0,
     defense: Number(char.defense) || 0,
     speed: Number(char.speed) || 0,
-    critical: Number(char.critical) || 0,
-    dodge: Number(char.dodge) || 0,
+    critical: Math.min(90, Number(char.critical) || 0),
+    dodge: Math.min(75, Number(char.dodge) || 0),
     precision: Number(char.precision) || 0,
     maxHp: Number(char.maxHp) || 100,
     maxMana: Number(char.maxMana) || 50,
@@ -74,8 +74,8 @@ export async function POST(req: NextRequest) {
     const oppAttack = Number(defender.attack) || 10;
     const oppDefense = Number(defender.defense) || 5;
     const oppSpeed = Number(defender.speed) || 3;
-    const oppCritical = Number(defender.critical) || 5;
-    const oppDodge = Number(defender.dodge) || 5;
+    const oppCritical = Math.min(90, Number(defender.critical) || 5);
+    const oppDodge = Math.min(75, Number(defender.dodge) || 5);
     const oppPrecision = Number(defender.precision) || 0;
     const oppMaxMp = Math.max(1, Math.round(Number(defender.maxMana) || (defender.isBot ? 60 : 50)));
     const oppName = String(defender.name || "Oponente");
