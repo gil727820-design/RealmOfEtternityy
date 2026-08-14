@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { RARITY_COLORS, CLASS_ICONS, REGIONS } from "@/game/constants";
 import type { ClassName } from "@/game/constants";
 import { SKIN_CATALOG } from "@/game/skins";
+import { VIP_TIERS, currentVipTier } from "@/game/vip";
 import type { SkinTemplate } from "@/game/skins";
 import { t } from "@/i18n";
 
@@ -68,6 +69,8 @@ export default function AdminPage() {
   // Edit form state (personagens)
   const [editCharId, setEditCharId] = useState("");
   const [editFields, setEditFields] = useState<Record<string, string>>({});
+  // VIP por personagem (tier selecionado em cada linha)
+  const [vipSelects, setVipSelects] = useState<Record<string, string>>({});
   // Skins
   const [skinCharId, setSkinCharId] = useState("");
   const [skinMsg, setSkinMsg] = useState("");
@@ -315,6 +318,33 @@ export default function AdminPage() {
     const d = await res.json();
     setMessage(d.success ? "✅ Personagem atualizado!" : `❌ ${d.error || "Falha"}`);
     await loadCharacters();
+  };
+
+  const setVip = async (c: Record<string, unknown>) => {
+    if (busy) return;
+    const tier = vipSelects[String(c.id)];
+    if (!tier) {
+      setMessage("❌ Selecione um tier VIP no menu ao lado antes de setar.");
+      return;
+    }
+    const name = String(c.name);
+    if (!window.confirm(`👑 Ativar VIP ${tier} para "${name}"? (30 dias)`)) return;
+    setBusy(`vip_set_${String(c.id)}`);
+    const d = await callAdmin({ action: "set_vip", characterId: c.id, tier });
+    setMessage(d.success ? `✅ ${d.message || "VIP ativado!"}` : `❌ ${d.error || "Falha"}`);
+    await loadCharacters();
+    setBusy(null);
+  };
+
+  const removeVip = async (c: Record<string, unknown>) => {
+    if (busy) return;
+    const name = String(c.name);
+    if (!window.confirm(`👑 Remover o VIP de "${name}"?`)) return;
+    setBusy(`vip_rm_${String(c.id)}`);
+    const d = await callAdmin({ action: "remove_vip", characterId: c.id });
+    setMessage(d.success ? `✅ ${d.message || "VIP removido!"}` : `❌ ${d.error || "Falha"}`);
+    await loadCharacters();
+    setBusy(null);
   };
 
   const resetAttributes = async (c: Record<string, unknown>) => {
@@ -1040,8 +1070,9 @@ export default function AdminPage() {
                 {loading ? <div className="text-center py-10 text-gray-400">Carregando...</div> : (
                   <div className="space-y-2">
                     {Array.isArray((data as { characters?: unknown[] }).characters) && ((data as { characters: Record<string, unknown>[] }).characters).map((c) => (
-                      <div key={String(c.id)} className="bg-[#1a1a2e] rounded-xl p-3 border border-white/10 flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-3 flex-wrap">
+                      <div key={String(c.id)} className="bg-[#1a1a2e] rounded-xl p-3 border border-white/10">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                           <span className="text-xl">{CLASS_ICONS[(c.classType as ClassName) || "warrior"]}</span>
                           <div>
                             <div className="font-bold text-white">{String(c.name)}</div>
@@ -1075,7 +1106,52 @@ export default function AdminPage() {
                           </button>
                         </div>
                       </div>
-                    ))}
+                      {/* 👑 VIP — setar / remover */}
+                      <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-white/5 pt-2">
+                        <span className="text-[11px] text-gray-400">
+                          👑 VIP:{" "}
+                          {(() => {
+                            const active = currentVipTier(c);
+                            if (active) {
+                              const label = active.id.charAt(0).toUpperCase() + active.id.slice(1);
+                              return (
+                                <span className="text-[#ffd700] font-bold">
+                                  {label} até {new Date(String(c.vipUntil)).toLocaleDateString("pt-BR")}
+                                </span>
+                              );
+                            }
+                            return c.vipTier ? (
+                              <span className="text-red-400 font-bold">expirado</span>
+                            ) : (
+                              <span className="text-gray-500">nenhum</span>
+                            );
+                          })()}
+                        </span>
+                        <select
+                          value={vipSelects[String(c.id)] || ""}
+                          onChange={(e) => setVipSelects((s) => ({ ...s, [String(c.id)]: e.target.value }))}
+                          className="bg-[#0a0a12] border border-gray-700 rounded-lg px-2 py-1 text-xs text-white focus:border-[#ffd700] focus:outline-none"
+                        >
+                          <option value="">Tier...</option>
+                          {VIP_TIERS.map((tier) => (
+                            <option key={tier.id} value={tier.id}>{tier.id}</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => setVip(c)}
+                          disabled={busy === `vip_set_${String(c.id)}`}
+                          className="text-xs bg-[#ffd700] text-black rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
+                          {busy === `vip_set_${String(c.id)}` ? "..." : "👑 Setar VIP"}
+                        </button>
+                        <button
+                          onClick={() => removeVip(c)}
+                          disabled={busy === `vip_rm_${String(c.id)}`}
+                          className="text-xs bg-[#ff6b6b] text-white rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
+                          {busy === `vip_rm_${String(c.id)}` ? "..." : "🗑️ Remover VIP"}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                   </div>
                 )}
               </div>

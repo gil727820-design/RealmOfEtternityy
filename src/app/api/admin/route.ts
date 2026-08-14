@@ -4,6 +4,7 @@ import path from "path";
 import { randomUUID } from "crypto";
 import jsonDb from "@/db/repo";
 import { SKIN_CATALOG, skinById } from "@/game/skins";
+import { VIP_TIERS, vipTierById } from "@/game/vip";
 import { CLASS_BASE_STATS, powerCalc, REGIONS } from "@/game/constants";
 import { equipmentBonus } from "@/game/forge";
 import type { ClassName } from "@/game/constants";
@@ -195,6 +196,46 @@ export async function POST(req: NextRequest) {
       const updated = await jsonDb.updateCharacter(String(characterId), clean);
       if (!updated) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
       return NextResponse.json({ success: true, updated: updated });
+    }
+
+    if (action === "set_vip") {
+      // Ativa um VIP por tier no personagem (30 dias, igual à loja).
+      const { characterId, tier } = body;
+      if (!characterId || !tier) return NextResponse.json({ error: "Personagem e tier são obrigatórios" }, { status: 400 });
+      const tierDef = vipTierById(String(tier));
+      if (!tierDef) return NextResponse.json({ error: "Tier VIP inválido" }, { status: 400 });
+
+      const char = await jsonDb.findCharacterById(String(characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+
+      const until = new Date(Date.now() + tierDef.days * 86400000).toISOString();
+      const updated = await jsonDb.updateCharacter(String(characterId), {
+        vipTier: tierDef.id,
+        vipUntil: until,
+        lastActivity: new Date().toISOString(),
+      });
+      const tierLabel = tierDef.id.charAt(0).toUpperCase() + tierDef.id.slice(1);
+      return NextResponse.json({
+        success: true,
+        character: updated,
+        message: `👑 VIP ${tierLabel} ativado para ${char.name} até ${new Date(until).toLocaleString("pt-BR")}!`,
+      });
+    }
+
+    if (action === "remove_vip") {
+      // Remove o VIP do personagem (tier e validade zerados).
+      const { characterId } = body;
+      if (!characterId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
+
+      const char = await jsonDb.findCharacterById(String(characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+
+      const updated = await jsonDb.updateCharacter(String(characterId), {
+        vipTier: null,
+        vipUntil: null,
+        lastActivity: new Date().toISOString(),
+      });
+      return NextResponse.json({ success: true, character: updated, message: `👑 VIP removido de ${char.name}!` });
     }
 
     if (action === "reset_attributes") {
