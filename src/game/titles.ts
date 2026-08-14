@@ -34,6 +34,30 @@ export const TITLES: Title[] = [
   // Wealth
   { id: "rich", nameKey: "title.rich", icon: "💰", rarity: "rare", condition: c => (c.gold as number) >= 100000 },
   { id: "millionaire", nameKey: "title.millionaire", icon: "💎", rarity: "legendary", condition: c => (c.gold as number) >= 1000000 },
+
+  // Masmorras
+  { id: "dungeon_diver", nameKey: "title.dungeon_diver", icon: "🕳️", rarity: "rare", condition: c => Number((c.dungeonStats as any)?.bestFloor) >= 30 },
+  { id: "dungeon_lord", nameKey: "title.dungeon_lord", icon: "🏰", rarity: "legendary", condition: c => Number((c.dungeonStats as any)?.bestFloor) >= 75 },
+
+  // Árvore de habilidades
+  { id: "skill_sage", nameKey: "title.skill_sage", icon: "🌳", rarity: "epic", condition: c => {
+    const s = (c.skills as Record<string, number> | undefined) ?? {};
+    return Object.values(s).reduce((a, b) => a + (Number(b) || 0), 0) >= 15;
+  } },
+
+  // Guilda
+  { id: "guild_leader", nameKey: "title.guild_leader", icon: "👑", rarity: "epic", condition: c => (c.guildRank as string) === "leader" },
+
+  // VIP / economia
+  { id: "noble", nameKey: "title.noble", icon: "🎩", rarity: "rare", condition: c => {
+    const until = c.vipUntil as string | undefined;
+    return !!c.vipTier && !!until && new Date(until).getTime() > Date.now();
+  } },
+  { id: "diamond_hoarder", nameKey: "title.diamond_hoarder", icon: "💎", rarity: "rare", condition: c => (c.diamonds as number) >= 5000 },
+  { id: "crystal_collector", nameKey: "title.crystal_collector", icon: "🔮", rarity: "common", condition: c => (c.crystals as number) >= 1000 },
+
+  // PvP avançado
+  { id: "emperor_pvp", nameKey: "title.emperor_pvp", icon: "🔱", rarity: "legendary", condition: c => (c.pvpRating as number) >= 2800 },
 ];
 
 export function getUnlockedTitles(character: Record<string, unknown>): Title[] {

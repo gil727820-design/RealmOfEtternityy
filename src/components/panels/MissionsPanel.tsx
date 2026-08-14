@@ -271,7 +271,7 @@ export default function MissionsPanel() {
               const progress = Math.min(100, (elapsed / total) * 100);
 
               return (
-                <div key={mission.active.id as string} className="game-card-accent p-4">
+                <div key={mission.active.id as string} className="game-card-accent p-4 border border-white/25">
                   <div className="flex justify-between items-center mb-2">
                     <span className="font-bold text-white flex items-center gap-2">
                       {missionImage(mission.template.nameKey as string) ? (

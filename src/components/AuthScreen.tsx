@@ -10,7 +10,7 @@ export default function AuthScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { setUser, setCharacter, setMailboxCount, resetSession, locale, setLocale } = useGameStore();
+  const { setUser, setCharacter, setMailboxCount, resetSession, locale, setLocale, setVolume } = useGameStore();
 
   useEffect(() => {
     setMounted(true);
@@ -34,6 +34,8 @@ export default function AuthScreen() {
           setLoading(false); 
           return; 
         }
+        // Conta nova: começa com o volume baixo (8%) — padrão agradável.
+        setVolume(0.08);
       }
       
       const res = await fetch("/api/auth/login", {

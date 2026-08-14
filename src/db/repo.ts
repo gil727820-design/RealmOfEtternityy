@@ -111,7 +111,7 @@ const DEFAULT_CHAR_FIELDS: Record<string, unknown> = {
   eyeColor: "#2E86AB",
   level: 1,
   xp: 0,
-  xpToNext: 100,
+  xpToNext: 165, // xpForLevel(1) — curva de XP atualizada
   prestige: 0,
   precision: 5,
   dodge: 5,
@@ -131,6 +131,8 @@ const DEFAULT_CHAR_FIELDS: Record<string, unknown> = {
   unspentStatPoints: 0,
   talentPoints: 0,
   talents: {},
+  skillPoints: 0,
+  skills: {},
   skins: [],
   achievements: [],
   titles: [],

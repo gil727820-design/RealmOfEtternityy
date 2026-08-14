@@ -18,6 +18,7 @@ import ForgePanel from "./panels/ForgePanel";
 import AchievementsPanel from "./panels/AchievementsPanel";
 import AfkPanel from "./panels/AfkPanel";
 import DungeonPanel from "./panels/DungeonPanel";
+import SkillTreePanel from "./panels/SkillTreePanel";
 import MailboxPanel from "./panels/MailboxPanel";
 import CodePanel from "./panels/CodePanel";
 import ReportPanel from "./panels/ReportPanel";
@@ -158,6 +159,7 @@ export default function GameScreen() {
       case "achievements": return <AchievementsPanel />;
       case "afk": return <AfkPanel />;
       case "dungeon": return <DungeonPanel />;
+      case "skills": return <SkillTreePanel />;
       case "mailbox": return <MailboxPanel />;
       case "code": return <CodePanel />;
       case "report": return <ReportPanel />;

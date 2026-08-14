@@ -2,7 +2,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-export type GameTab = "dashboard" | "character" | "missions" | "inventory" | "map" | "tower" | "pvp" | "guild" | "shop" | "rankings" | "forge" | "achievements" | "afk" | "dungeon" | "mailbox" | "code" | "report" | "donate" | "settings";
+export type GameTab = "dashboard" | "character" | "missions" | "inventory" | "map" | "tower" | "pvp" | "guild" | "shop" | "rankings" | "forge" | "achievements" | "afk" | "dungeon" | "skills" | "mailbox" | "code" | "report" | "donate" | "settings";
 
 interface GameState {
   userId: string | null;
@@ -63,7 +63,7 @@ const initialState = {
   mailbox: [] as Array<Record<string, unknown>>,
   mailboxCount: 0,
   soundOn: true,
-  volume: 0.6,
+  volume: 0.08,
 };
 
 export const useGameStore = create<GameState>()(

@@ -11,6 +11,16 @@ export async function POST(req: NextRequest) {
     const char = await jsonDb.findCharacterById(characterId);
     if (!char) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+    // Só existe o que coletar se uma sessão AFK estiver ativa (afkSince setado).
+    // Após coletar a rota zera afkSince — o jogador escolhe se quer descansar
+    // de novo (não reinicia sozinho como antes).
+    if (!char.afkSince) {
+      return NextResponse.json(
+        { error: "Nenhuma sessão AFK ativa. Ative o modo descanso primeiro." },
+        { status: 400 }
+      );
+    }
+
     const now = new Date();
     const afk = computeAfkRewards(char, char.afkSince, now);
     if (afk.diffSec < 60) return NextResponse.json({ gold: 0, xp: 0, duration: afk.diffSec, message: "Muito cedo" });
@@ -22,11 +32,15 @@ export async function POST(req: NextRequest) {
     let newLevel = char.level || 1;
     let newXpToNext = char.xpToNext || 100;
     let newStatPoints = char.unspentStatPoints || 0;
+    let newSkillPoints = char.skillPoints || 0;
+    let levelsGained = 0;
     while (newXp >= newXpToNext) {
       newXp -= newXpToNext;
       newLevel++;
       newXpToNext = xpForLevel(newLevel);
       newStatPoints += 3;
+      if (newLevel % 3 === 0) newSkillPoints += 1;
+      levelsGained++;
     }
 
     const newGold = (char.gold || 0) + goldEarned;
@@ -47,7 +61,8 @@ export async function POST(req: NextRequest) {
       energy: regen.energy,
       lastEnergyAt: regen.lastEnergyAt,
       unspentStatPoints: newStatPoints,
-      afkSince: now.toISOString(),
+      skillPoints: newSkillPoints,
+      afkSince: null, // sessão encerrada — o jogador ativa de novo quando quiser
       lastActivity: now.toISOString(),
     });
 

@@ -299,6 +299,16 @@ export default function DashboardPanel() {
               </span>
             </div>
           )}
+          {(c.skillPoints as number) > 0 && (
+            <div className="mt-2 text-center">
+              <button
+                onClick={() => setTab("skills")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#a855f7]/15 border border-[#a855f7]/40 text-[#a855f7] text-xs font-bold hover:bg-[#a855f7]/25 transition animate-pulse-soft"
+              >
+                🌳 +{String(c.skillPoints)} {t("skill.points", locale)} — {t("skill.title", locale)}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Stats */}

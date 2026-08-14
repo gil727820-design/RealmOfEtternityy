@@ -5,7 +5,22 @@ export async function POST(req: NextRequest) {
   try {
     const { characterId } = await req.json();
     if (!characterId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
-    
+
+    const char = await jsonDb.findCharacterById(characterId);
+    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+
+    // Protege contra começar de novo com recompensas ainda pendentes
+    // (perderia o tempo acumulado ao zerar o afkSince).
+    if (char.afkSince) {
+      const diff = Math.floor((Date.now() - new Date(char.afkSince).getTime()) / 1000);
+      if (diff >= 60) {
+        return NextResponse.json(
+          { error: "Você já tem recompensas acumuladas. Colete antes de descansar novamente." },
+          { status: 400 }
+        );
+      }
+    }
+
     await jsonDb.updateCharacter(characterId, { afkSince: new Date().toISOString() });
     
     return NextResponse.json({ success: true, message: "Modo AFK ativado! Suas recompensas começarão a acumular." });

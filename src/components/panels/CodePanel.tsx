@@ -46,7 +46,7 @@ export default function CodePanel() {
   return (
     <div className="animate-fadeInUp">
       <div className="flex items-center gap-3 mb-6">
-        <span className="text-4xl">🎟️</span>
+        <img src="/images/sidebar/menu_codigo.png" alt="Código" className="w-10 h-10 object-contain" />
         <div>
           <h2 className="text-3xl font-black bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">Usar Código</h2>
           <p className="text-xs text-gray-400">Resgate códigos promocionais e ative o boost de 2x XP e 2x Energia.</p>

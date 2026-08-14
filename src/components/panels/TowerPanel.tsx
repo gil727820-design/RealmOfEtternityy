@@ -8,6 +8,8 @@ import {
   towerMonsterImage,
   type ClassName,
 } from "@/game/constants";
+import useBattleFx, { BattleFxLayer } from "@/components/ui/BattleFx";
+import Confetti from "@/components/ui/Confetti";
 
 // Cooldown (ms) entre andares no modo automático (anti-spam).
 const AUTO_NEXT_COOLDOWN_MS = 4000;
@@ -23,6 +25,7 @@ export default function TowerPanel() {
   const [pShake, setPShake] = useState(0);
   const [mShake, setMShake] = useState(0);
   const [flash, setFlash] = useState(0);
+  const fx = useBattleFx();
   const autoStop = useRef(false);
   const floatId = useRef(0);
 
@@ -88,6 +91,9 @@ export default function TowerPanel() {
     setBattle(data.battle);
     if (data.log?.length) setLog((prev) => [...prev, ...data.log]);
 
+    // Efeitos visuais: partículas, anel de impacto, debuffs e curas.
+    fx.applyRound(data, { player: "player", enemy: "monster" });
+
     (data.events || []).forEach((ev: any) => {
       if (ev.amount && (ev.type === "hit" || ev.type === "crit" || ev.type === "skill")) {
         const id = ++floatId.current;
@@ -129,6 +135,7 @@ export default function TowerPanel() {
       setBattle(data.battle);
       setLog([]);
       setResult(null);
+      fx.clear();
       autoActive.current = true;
       setStage("battle");
       autoStop.current = false;
@@ -189,6 +196,7 @@ export default function TowerPanel() {
     setBattle(null);
     setLog([]);
     setResult(null);
+    fx.clear();
     setStage("arena");
   };
 
@@ -318,6 +326,7 @@ export default function TowerPanel() {
                   />
                 </div>
                 {floatEls("player")}
+                <BattleFxLayer fx={fx} target="player" />
               </div>
               <div className="mt-2 font-bold text-white tracking-wider truncate max-w-[140px] mx-auto">{playerName}</div>
               <div className="mt-1 mx-auto max-w-[170px]">
@@ -348,6 +357,7 @@ export default function TowerPanel() {
                   />
                 </div>
                 {floatEls("monster")}
+                <BattleFxLayer fx={fx} target="enemy" />
               </div>
               <div className="mt-2 font-bold text-white tracking-wider truncate max-w-[140px] mx-auto">{monsterName}</div>
               <div className="mt-1 mx-auto max-w-[170px]">
@@ -410,6 +420,7 @@ export default function TowerPanel() {
 
       {stage === "result" && result && (
         <div className="game-card p-8 text-center animate-scaleIn relative overflow-hidden">
+          {result.won && <Confetti />}
           <div className="text-7xl mb-3 animate-bounceIn">{result.won ? "🏆" : "💀"}</div>
           <h3 className={`text-4xl font-black mb-2 ${result.won ? "text-gold" : "text-hp-red"}`}>
             {result.won ? t("tower.youWin", locale) : t("tower.youLose", locale)}

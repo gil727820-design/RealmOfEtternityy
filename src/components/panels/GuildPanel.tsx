@@ -424,6 +424,39 @@ export default function GuildPanel() {
               {busy === "leave" ? "..." : `🚪 ${t("guild.leave", locale)}`}
             </button>
           </div>
+
+          {/* Outras guildas (mesmo estando em uma, dá para ver a lista) */}
+          <div>
+            <h3 className="font-bold text-lg mb-1">📋 {t("guild.list", locale)}</h3>
+            <p className="text-[11px] text-gray-500 mb-4">🔒 {t("guild.inGuildListHint", locale)}</p>
+            {guildsList.filter((g) => String(g.id) !== String(myGuild.id)).length === 0 ? (
+              <div className="game-card p-8 text-center text-gray-500 text-sm">{t("guild.noGuilds", locale)}</div>
+            ) : (
+              <div className="grid gap-3">
+                {guildsList.filter((g) => String(g.id) !== String(myGuild.id)).map((g) => (
+                  <div key={String(g.id)} className="game-card p-4 flex items-center justify-between opacity-90">
+                    <div className="flex items-center gap-4">
+                      {g.logo ? (
+                        <img src={String(g.logo)} alt="" className="w-11 h-11 rounded-xl border border-white/10 object-cover" />
+                      ) : (
+                        <span className="text-3xl">{String(g.icon)}</span>
+                      )}
+                      <div>
+                        <div className="font-bold text-white">{String(g.name)}</div>
+                        <div className="text-xs text-gray-400">
+                          Lv.{String(g.level)} • {String(g.memberCount)}/{String(g.maxMembers)} {t("guild.members", locale)}
+                          {g.description ? <span className="text-gray-600"> • {String(g.description)}</span> : null}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-bold text-gray-500 bg-white/5 border border-white/10 rounded-full px-3 py-1.5 whitespace-nowrap">
+                      🔒 {t("guild.inGuild", locale)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         /* --- SEM guilda --- */

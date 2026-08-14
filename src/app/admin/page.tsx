@@ -6,7 +6,10 @@ import { SKIN_CATALOG } from "@/game/skins";
 import type { SkinTemplate } from "@/game/skins";
 import { t } from "@/i18n";
 
-const ADMIN_KEY = "PereiraAdmin2026@";
+// A chave NÃO fica mais hardcoded aqui (vazava a senha para qualquer visitante
+// no bundle JS). O login valida no servidor (/api/admin/login) e a chave só
+// existe em memória (ou no localStorage se o admin marcar "lembrar de mim").
+const ADMIN_KEY_STORAGE = "realm_admin_key";
 
 const RARITY_ORDER = ["common", "uncommon", "rare", "epic", "legendary", "mythic", "divine", "ancestral", "supreme"];
 const SLOTS = ["weapon", "shield", "helmet", "armor", "gloves", "boots", "ring", "amulet", "relic", "artifact"];
@@ -36,6 +39,24 @@ const RESOURCE_META: Record<string, { icon: string; label: string }> = {
 
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [showKey, setShowKey] = useState(false);
+  const [rememberMe, setRememberMe] = useState<boolean>(() => {
+    try {
+      return !!localStorage.getItem(ADMIN_KEY_STORAGE);
+    } catch {
+      return false;
+    }
+  });
+  // A chave digitada — guardada em memória (e no localStorage se "lembrar").
+  // Lazy initializer: restaura a chave salva sem setState no effect.
+  const [adminKey, setAdminKey] = useState<string>(() => {
+    try {
+      return localStorage.getItem(ADMIN_KEY_STORAGE) ?? "";
+    } catch {
+      return "";
+    }
+  });
   const keyRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<Tab>("dash");
   const [data, setData] = useState<Record<string, unknown>>({});
@@ -96,16 +117,36 @@ export default function AdminPage() {
   const [codeExpiresDays, setCodeExpiresDays] = useState("0");
   const [codesList, setCodesList] = useState<Record<string, unknown>[]>([]);
 
-  const headers = { "Content-Type": "application/json", "x-admin-key": ADMIN_KEY };
-  const audioHeaders = { "x-admin-key": ADMIN_KEY };
+  const headers = { "Content-Type": "application/json", "x-admin-key": adminKey };
+  const audioHeaders = { "x-admin-key": adminKey };
 
-  const login = () => {
+  const login = async () => {
     const typed = (keyRef.current?.value ?? "").trim();
-    if (typed === ADMIN_KEY) {
+    if (!typed) return setMessage("Digite a chave de acesso.");
+    setLoginLoading(true);
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: typed }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setMessage(d.error || "Chave inválida!");
+        return;
+      }
+      setAdminKey(typed);
       setAuthenticated(true);
       setMessage("");
-    } else {
-      setMessage("Chave inválida!");
+      // Lembrar de mim: salva a chave com segurança básica no localStorage.
+      try {
+        if (rememberMe) localStorage.setItem(ADMIN_KEY_STORAGE, typed);
+        else localStorage.removeItem(ADMIN_KEY_STORAGE);
+      } catch { /* ignora */ }
+    } catch {
+      setMessage("Erro de conexão — tente novamente.");
+    } finally {
+      setLoginLoading(false);
     }
   };
 
@@ -685,36 +726,59 @@ export default function AdminPage() {
           ))}
         </div>
 
-        <div className="game-card card-royal p-8 w-full max-w-md animate-fadeInUp relative z-10">
-          <div className="text-center mb-6">
-            <div className="inline-block relative mb-3 animate-float">
-              <span className="text-5xl glow-red-blink">🛡️</span>
+        <div className="game-card card-royal p-8 w-full max-w-md animate-fadeInUp relative z-10 overflow-hidden">
+          <div className="pointer-events-none absolute -top-16 -right-16 w-48 h-48 bg-[#ff6b6b]/10 rounded-full blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 -left-16 w-48 h-48 bg-[#7c5cfc]/10 rounded-full blur-3xl" />
+          <div className="relative text-center mb-6">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-[#ff6b6b] to-[#7c5cfc] shadow-[0_0_35px_rgba(255,107,107,0.4)] mb-3 animate-float">
+              <span className="text-5xl">🛡️</span>
             </div>
             <h1 className="text-3xl font-black mb-2 gradient-text tracking-wide">Painel Admin</h1>
-            <p className="text-gray-400 text-sm italic">Realm of Eternity ⚜️</p>
+            <p className="text-gray-400 text-sm italic">Realm of Eternity ⚜️ — acesso restrito</p>
           </div>
 
           {message && <div className="animate-shake bg-red-500/20 border border-red-500/50 rounded-xl p-3 text-sm text-red-300 mb-4 text-center">{message}</div>}
 
           <form
             onSubmit={(e) => { e.preventDefault(); login(); }}
-            className="space-y-4"
+            className="space-y-4 relative"
           >
             <div className="flex flex-col gap-1.5 text-left">
               <label htmlFor="admin-key" className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                 Chave de administrador
               </label>
-              <input
-                id="admin-key"
-                ref={keyRef}
-                type="password"
-                autoComplete="off"
-                placeholder="Digite a chave de acesso"
-                className="game-input game-input-accent"
-              />
+              <div className="relative">
+                <input
+                  id="admin-key"
+                  ref={keyRef}
+                  type={showKey ? "text" : "password"}
+                  autoComplete="off"
+                  placeholder="Digite a chave de acesso"
+                  defaultValue={adminKey}
+                  className="game-input game-input-accent pr-11"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowKey(!showKey)}
+                  aria-label={showKey ? "Ocultar chave" : "Mostrar chave"}
+                  title={showKey ? "Ocultar chave" : "Mostrar chave"}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-base text-gray-400 hover:text-white hover:bg-white/10 transition"
+                >
+                  {showKey ? "🙈" : "👁️"}
+                </button>
+              </div>
             </div>
-            <button type="submit" className="game-btn w-full py-3">
-              🔐 Entrar
+            <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 accent-[#e94560]"
+              />
+              🔒 Lembrar de mim (não pedir a chave nas próximas visitas)
+            </label>
+            <button type="submit" disabled={loginLoading} className="game-btn w-full py-3 disabled:opacity-50">
+              {loginLoading ? "Verificando..." : "🔐 Entrar"}
             </button>
           </form>
         </div>
@@ -744,16 +808,37 @@ export default function AdminPage() {
   return (
     <div style={{ background: "linear-gradient(135deg, #0a0a12 0%, #1a1a2e 100%)", minHeight: "100vh" }} className="p-4 md:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="text-4xl">⚙️</div>
-            <div>
-              <h1 className="text-2xl font-black text-white">Painel Admin</h1>
-              <p className="text-xs text-gray-400">Realm of Eternity — gerenciamento do servidor</p>
+        {/* Header profissional */}
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-[#1a1a3a] via-[#15152a] to-[#1a1a3a] p-6 shadow-[0_8px_40px_rgba(0,0,0,0.4)]">
+          <div className="absolute -top-24 -right-16 w-72 h-72 bg-[#ff6b6b]/15 rounded-full blur-3xl" />
+          <div className="absolute -bottom-24 -left-16 w-72 h-72 bg-[#7c5cfc]/15 rounded-full blur-3xl" />
+          <div className="relative flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-[#ff6b6b] to-[#7c5cfc] flex items-center justify-center text-3xl shadow-[0_0_25px_rgba(255,107,107,0.4)] animate-pulse-glow">
+                ⚙️
+              </div>
+              <div>
+                <h1 className="text-2xl font-black text-white flex items-center gap-2">
+                  <span className="bg-gradient-to-r from-white via-[#ffd700] to-[#ff6b6b] bg-clip-text text-transparent">Painel Admin</span>
+                  <span className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-[#ffd700]/15 border border-[#ffd700]/40 text-[#ffd700]">
+                    Controle total
+                  </span>
+                </h1>
+                <p className="text-xs text-gray-400 mt-0.5">Realm of Eternity — gerenciamento do servidor</p>
+              </div>
             </div>
+            <button
+              onClick={() => {
+                setAuthenticated(false);
+                setAdminKey("");
+                setMessage("");
+                try { localStorage.removeItem(ADMIN_KEY_STORAGE); } catch { /* ignora */ }
+              }}
+              className="text-xs px-4 py-2 rounded-xl border border-white/10 text-gray-400 hover:text-[#ff6b6b] hover:border-[#ff6b6b]/40 bg-white/5 transition"
+            >
+              ⏻ Sair
+            </button>
           </div>
-          <button onClick={() => setAuthenticated(false)} className="text-xs text-gray-500 hover:text-[#ff6b6b]">⏻ Sair</button>
         </div>
 
         {/* Mensagens */}
@@ -765,12 +850,12 @@ export default function AdminPage() {
         )}
 
         {/* Tab bar */}
-        <div className="flex gap-2 flex-wrap bg-[#15152a] rounded-2xl p-2 border border-white/10">
+        <div className="sticky top-2 z-20 flex gap-2 flex-wrap bg-[#15152a]/95 backdrop-blur-xl rounded-2xl p-2 border border-white/10 shadow-lg">
           {tabDefs.map((td) => (
             <button
               key={td.id}
               onClick={() => setTab(td.id)}
-              className={`px-4 py-2 rounded-xl text-sm font-bold transition flex items-center gap-2 ${tab === td.id ? "bg-[#ff6b6b] text-white shadow-lg" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${tab === td.id ? "bg-gradient-to-r from-[#ff6b6b] to-[#c73050] text-white shadow-lg shadow-[#ff6b6b]/25 scale-[1.02]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
             >
               <span>{td.icon}</span> {td.label}
             </button>
@@ -784,10 +869,17 @@ export default function AdminPage() {
                   { label: "Guildas", value: dash.guilds ?? 0, icon: "🏰", color: "#3b82f6" },
                   { label: "Excluídos", value: dash.excluded ?? 0, icon: "🚫", color: "#ef4444" },
                 ].map((s) => (
-                  <div key={s.label} className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
-                    <div className="text-3xl mb-2">{s.icon}</div>
-                    <div className="text-3xl font-black text-white">{s.value}</div>
-                    <div className="text-xs text-gray-400">{s.label}</div>
+                  <div
+                    key={s.label}
+                    className="relative overflow-hidden rounded-2xl p-5 border border-white/10 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30"
+                    style={{ background: `linear-gradient(135deg, ${s.color}22, #1a1a2e 70%)`, borderColor: `${s.color}44` }}
+                  >
+                    <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl" style={{ backgroundColor: `${s.color}33` }} />
+                    <div className="relative">
+                      <div className="text-3xl mb-2 drop-shadow-[0_0_10px_rgba(255,255,255,0.15)]">{s.icon}</div>
+                      <div className="text-3xl font-black text-white" style={{ textShadow: `0 0 20px ${s.color}66` }}>{s.value}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">{s.label}</div>
+                    </div>
                   </div>
                 ))}
               </div>

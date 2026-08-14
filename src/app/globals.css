@@ -127,6 +127,12 @@ body {
 @keyframes damageFloatKf { 0%{opacity:0; transform:translate(-50%,0) scale(.5);} 12%{opacity:1; transform:translate(-50%,-8px) scale(1.3);} 100%{opacity:0; transform:translate(-50%,-72px) scale(1);} }
 .damage-float { position:absolute; left:50%; top:-8px; z-index:30; font-weight:900; font-size:1.5rem; color:#ffd700; text-shadow:0 0 10px rgba(255,215,0,.6), 0 2px 2px rgba(0,0,0,.9); animation:damageFloatKf 1.05s ease-out forwards; pointer-events:none; white-space:nowrap; }
 .damage-float-crit { font-size:1.9rem; color:#ff5252; text-shadow:0 0 14px rgba(255,82,82,.8), 0 2px 2px rgba(0,0,0,.9); }
+/* ---- Maestria da Árvore de Habilidades (despertar da classe) ---- */
+@keyframes awakenOverlay { 0% { opacity:0; background:radial-gradient(circle,rgba(0,0,0,0.85) 0%,rgba(0,0,0,0.7) 45%,rgba(0,0,0,0) 75%); } 10% { opacity:1; } 80% { opacity:1; } 100% { opacity:0; } }
+@keyframes awakenPop { 0% { opacity:0; transform:scale(0.2) rotate(-6deg); } 18% { opacity:1; transform:scale(1.12) rotate(2deg); } 30% { transform:scale(1) rotate(0); } 80% { opacity:1; } 100% { opacity:0; transform:scale(1.15); } }
+@keyframes awakenFloat { 0%,100% { transform:translateY(0) scale(1); filter:drop-shadow(0 0 24px rgba(255,215,0,0.9)); } 50% { transform:translateY(-18px) scale(1.12); filter:drop-shadow(0 0 42px rgba(255,215,0,1)); } }
+@keyframes awakenShine { 0% { background-position:0% 50%; } 100% { background-position:200% 50%; } }
+
 /* ============================================================
    Componentes base (fornecem fundo/borda às classes usadas no app)
    ============================================================ */
@@ -406,3 +412,130 @@ body {
   transition: box-shadow 0.3s ease, transform 0.3s ease;
 }
 .img-glow:hover { box-shadow: 0 0 18px rgba(255, 255, 255, 0.25); }
+
+/* ---- Árvore de Habilidades: efeitos ---- */
+/* Orb de habilidade girando (borda cintilante) */
+@keyframes skillOrb {
+  0%, 100% { box-shadow: 0 0 12px rgba(168,85,247,0.35), inset 0 0 8px rgba(168,85,247,0.15); }
+  50% { box-shadow: 0 0 26px rgba(168,85,247,0.65), inset 0 0 14px rgba(168,85,247,0.3); }
+}
+.skill-orb { animation: skillOrb 2.4s ease-in-out infinite; }
+/* Flash dourado ao aprender um rank */
+@keyframes rankFlash {
+  0% { box-shadow: 0 0 0 rgba(255,215,0,0); }
+  30% { box-shadow: 0 0 26px rgba(255,215,0,0.85), 0 0 60px rgba(255,215,0,0.35); }
+  100% { box-shadow: 0 0 0 rgba(255,215,0,0); }
+}
+.rank-flash { animation: rankFlash 0.9s ease-out; }
+/* Conector pulsante entre as habilidades da árvore */
+@keyframes treePulse {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.7; }
+}
+.tree-line { animation: treePulse 3s ease-in-out infinite; }
+/* Subida de mana/orbes de energia no card da árvore */
+@keyframes manaRise {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  15% { opacity: 0.8; }
+  100% { transform: translateY(-90px) scale(0.2); opacity: 0; }
+}
+.mana-orb {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, #a855f7, transparent);
+  pointer-events: none;
+  animation: manaRise 4s linear infinite;
+}
+
+/* ---- Batalha (Torre + PvP): partículas de impacto ---- */
+@keyframes sparkFly {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, -40px))) scale(0.1); opacity: 0; }
+}
+.spark {
+  position: absolute;
+  left: 50%;
+  top: 55%;
+  border-radius: 9999px;
+  pointer-events: none;
+  z-index: 25;
+  box-shadow: 0 0 8px currentColor;
+  animation: sparkFly 0.6s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+/* Anel de impacto que expande no golpe especial */
+@keyframes impactRing {
+  0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0.9; border-width: 4px; }
+  100% { transform: translate(-50%, -50%) scale(2.1); opacity: 0; border-width: 1px; }
+}
+.impact-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 90px;
+  height: 90px;
+  border-radius: 9999px;
+  border: 3px solid rgba(255, 215, 0, 0.85);
+  pointer-events: none;
+  z-index: 24;
+  animation: impactRing 0.55s ease-out forwards;
+}
+/* Ícone de debuff flutuando sobre o alvo */
+@keyframes debuffFloatKf {
+  0% { opacity: 0; transform: scale(0.4) translateY(0); }
+  20% { opacity: 1; transform: scale(1.35) translateY(-12px); }
+  100% { opacity: 0; transform: scale(1) translateY(-64px); }
+}
+.debuff-float {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  transform: translateX(-50%);
+  z-index: 30;
+  font-size: 2.1rem;
+  filter: drop-shadow(0 0 10px rgba(255, 107, 107, 0.7));
+  animation: debuffFloatKf 1.3s ease-out forwards;
+  pointer-events: none;
+}
+/* Cura flutuante verde */
+@keyframes healFloatKf {
+  0% { opacity: 0; transform: translate(-50%, 0) scale(0.5); }
+  15% { opacity: 1; transform: translate(-50%, -10px) scale(1.25); }
+  100% { opacity: 0; transform: translate(-50%, -60px) scale(1); }
+}
+.heal-float {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  z-index: 30;
+  font-weight: 900;
+  font-size: 1.3rem;
+  color: #00ff88;
+  text-shadow: 0 0 12px rgba(0, 255, 136, 0.7), 0 2px 2px rgba(0, 0, 0, 0.9);
+  animation: healFloatKf 1.3s ease-out forwards;
+  pointer-events: none;
+  white-space: nowrap;
+}
+/* Pulso da barra de HP ao levar dano (vermelho) */
+@keyframes hpWarn {
+  0%, 100% { filter: none; }
+  50% { filter: brightness(1.6) saturate(1.4); }
+}
+.hp-warn { animation: hpWarn 0.7s ease-in-out; }
+
+/* ---- Confetes ao vencer ---- */
+@keyframes confettiFall {
+  0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(110vh) rotate(720deg); opacity: 0.6; }
+}
+.confetti {
+  position: absolute;
+  top: -12px;
+  width: 9px;
+  height: 14px;
+  border-radius: 2px;
+  pointer-events: none;
+  z-index: 5;
+  animation: confettiFall linear infinite;
+}

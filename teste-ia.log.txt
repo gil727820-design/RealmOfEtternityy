@@ -1,0 +1,123 @@
+============================================================
+ TESTE E CALIBRAÇÃO DA IA DE COMBATE — Realm of Eternity
+ Gerado em 2026-08-14T10:18:03.548Z
+ IA testada: src/game/battleAI.ts (módulo real, importado direto)
+============================================================
+
+PARTE 1 — PVP: IA NOVA (contexto) vs IA ANTIGA (sorteio)
+Oponente = bot gerado para o nível (fórmula de /api/pvp/fight).
+Jogador usa a estratégia automática da Arena (45% golpe quando tem mana).
+
+1.1) ESPELHO SIMÉTRICO (mesmos stats dos dois lados) — só a IA muda:
+  IA ANTIGA (sorteio puro 40/15)
+    Vitória do JOGADOR: 70.7%  (derrota: 29.3%)
+    Rodadas médias: 8.0
+    Ações do oponente: golpe 39.7% · defesa 9.2% · ataque 51.1%
+    Remates (golpe com você ≤30%): 1707 · Defesas com vida ≤35%: 481
+    Ataques extras (velocidade): jogador 0 · oponente 0
+
+  IA NOVA — savvy 0.4 (liga Bronze)
+    Vitória do JOGADOR: 68.8%  (derrota: 31.2%)
+    Rodadas médias: 8.2
+    Ações do oponente: golpe 39.3% · defesa 15.0% · ataque 45.8%
+    Remates (golpe com você ≤30%): 2671 · Defesas com vida ≤35%: 1009
+    Ataques extras (velocidade): jogador 0 · oponente 0
+
+  IA NOVA — savvy 0.7 (liga Prata/Ouro)
+    Vitória do JOGADOR: 64.7%  (derrota: 35.3%)
+    Rodadas médias: 8.3
+    Ações do oponente: golpe 43.8% · defesa 19.2% · ataque 37.0%
+    Remates (golpe com você ≤30%): 3026 · Defesas com vida ≤35%: 1136
+    Ataques extras (velocidade): jogador 0 · oponente 0
+
+  IA NOVA — savvy 1.0 (liga Imperador)
+    Vitória do JOGADOR: 63.9%  (derrota: 36.1%)
+    Rodadas médias: 8.3
+    Ações do oponente: golpe 46.6% · defesa 24.3% · ataque 29.1%
+    Remates (golpe com você ≤30%): 3098 · Defesas com vida ≤35%: 1551
+    Ataques extras (velocidade): jogador 0 · oponente 0
+
+1.2) Bot real de Lv15 (mais fraco que o jogador — stats da fórmula):
+  IA ANTIGA
+    Vitória do JOGADOR: 100.0%  (derrota: 0.0%)
+    Rodadas médias: 4.6
+    Ações do oponente: golpe 39.3% · defesa 9.1% · ataque 51.6%
+    Remates (golpe com você ≤30%): 0 · Defesas com vida ≤35%: 0
+    Ataques extras (velocidade): jogador 273 · oponente 0
+
+  IA NOVA savvy 0.7
+    Vitória do JOGADOR: 100.0%  (derrota: 0.0%)
+    Rodadas médias: 4.7
+    Ações do oponente: golpe 38.0% · defesa 21.1% · ataque 40.9%
+    Remates (golpe com você ≤30%): 0 · Defesas com vida ≤35%: 0
+    Ataques extras (velocidade): jogador 337 · oponente 0
+
+PARTE 2 — PVP: comportamentos estratégicos da IA
+(frequência com que ela REMATA e se DEFENDE nas situações certas)
+
+2.1) Jogador com 25% de vida → oponente (savvy 0.7) escolhe GOLPE em 92.3% das rodadas
+    (IA antiga: só 40% fixo, sem olhar a vida do jogador)
+
+2.2) Oponente com 23% de vida → escolhe DEFESA em 60.3% das rodadas
+    (defesa agora reduz pela metade o próximo golpe do jogador + recupera mana)
+
+PARTE 3 — TORRE: situação atual e proposta de IA do monstro
+Jogador Lv15 build realista. Monstros da torre NÃO têm IA hoje:
+eles sempre contra-atacam (0 decisões). A velocidade dá ataque extra só ao jogador.
+
+  Andar 15 (atual — monstro sempre contra-ataca)
+    Vitória do jogador: 100.0%
+    Rodadas médias: 3.8  · Defesas do monstro: 0
+
+  Andar 15 (PROPOSTA: monstro defende 25% quando ≤35% HP)
+    Vitória do jogador: 100.0%
+    Rodadas médias: 3.8  · Defesas do monstro: 944
+
+  Andar 20 CHEFE (atual)
+    Vitória do jogador: 100.0%
+    Rodadas médias: 6.6  · Defesas do monstro: 0
+
+  Andar 20 CHEFE (PROPOSTA)
+    Vitória do jogador: 100.0%
+    Rodadas médias: 6.8  · Defesas do monstro: 1859
+
+  Andar 30 (atual)
+    Vitória do jogador: 6.6%
+    Rodadas médias: 7.2  · Defesas do monstro: 0
+
+  Andar 30 (PROPOSTA)
+    Vitória do jogador: 11.5%
+    Rodadas médias: 7.7  · Defesas do monstro: 1437
+
+  Andar 40 CHEFE (atual)
+    Vitória do jogador: 0.0%
+    Rodadas médias: 5.2  · Defesas do monstro: 0
+
+  Andar 40 CHEFE (PROPOSTA)
+    Vitória do jogador: 0.0%
+    Rodadas médias: 5.2  · Defesas do monstro: 12
+
+PARTE 4 — CONCLUSÕES E CALIBRAÇÃO
+
+1) PvP — espelho simétrico: com a IA ANTIGA o jogador ganha 70.7%;
+   com a IA NOVA ganha 68.8% (Bronze) / 64.7% (Prata-Ouro) / 63.9% (Imperador).
+   → A IA nova mantém a disputa equilibrada (não favorece ninguém), só joga
+     "mais esperto". A defesa com valor real segura o jogo de virar fácil pro jogador.
+
+2) Remate: com o jogador ≤30% de vida, a IA escolhe GOLPE em ~92% das rodadas
+   (antes: 40% fixo, mesmo com você morrendo).
+
+3) Defesa com vida baixa: a IA se protege ~60% quando está ≤35% de vida
+   (antes: 15% fixo). Como a defesa agora corta o próximo golpe pela metade,
+   essas defesas realmente salvam o oponente — lutas ficam menos previsíveis.
+
+4) Velocidade: o ataque extra vale pros DOIS lados no PvP (corrigido no código:
+   antes só o jogador atacava 2x). Na Torre só o jogador tem (monstros não
+   atacam 2x — balanceamento preservado).
+
+5) Torre: monstros não decidem nada hoje. A PROPOSTA (defender com vida baixa)
+   aumenta levemente as rodadas e cria um "último suspiro", mas nas lutas
+   curtas (4-5 rodadas) o impacto é pequeno. Só valeria em andares onde o
+   jogador luta de igual pra igual (ex.: chefe do andar limite).
+   (NÃO foi implementada — só simulada. Implemento se você aprovar.)
+

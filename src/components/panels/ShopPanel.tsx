@@ -16,17 +16,6 @@ const CHESTS = [
   { id: "secret", name: "shop.chestSecret", cost: 4000, type: "diamond", image: "/images/chests/bau_secreto_transparente.png", desc: "shop.chestSecret.desc" },
 ];
 
-const POTIONS = [
-  { id: "vida", name: "shop.potionLife", cost: 250, type: "gold", image: "/images/potions/pocao_vida.png", desc: "shop.potionLife.desc" },
-  { id: "mana", name: "shop.potionMana", cost: 250, type: "gold", image: "/images/potions/pocao_mana.png", desc: "shop.potionMana.desc" },
-  { id: "energia", name: "shop.potionEnergy", cost: 300, type: "gold", image: "/images/potions/pocao_energia.png", desc: "shop.potionEnergy.desc" },
-  { id: "forca", name: "shop.potionStrength", cost: 350, type: "gold", image: "/images/potions/pocao_forca.png", desc: "shop.potionStrength.desc" },
-  { id: "velocidade", name: "shop.potionSpeed", cost: 350, type: "gold", image: "/images/potions/pocao_velocidade.png", desc: "shop.potionSpeed.desc" },
-  { id: "vigor", name: "shop.potionVigor", cost: 400, type: "gold", image: "/images/potions/pocao_vigor.png", desc: "shop.potionVigor.desc" },
-  { id: "experiencia", name: "shop.potionExperience", cost: 400, type: "diamond", image: "/images/potions/pocao_experiencia.png", desc: "shop.potionExperience.desc" },
-  { id: "antidoto", name: "shop.potionAntidote", cost: 300, type: "gold", image: "/images/potions/pocao_antidoto.png", desc: "shop.potionAntidote.desc" },
-];
-
 /** Pacotes de diamantes vendidos por PIX (valores em reais). */
 const PIX_PACKS = [5, 10, 20, 50, 100];
 
@@ -152,7 +141,6 @@ export default function ShopPanel() {
 
   const tabs = [
     { id: "chests", label: `📦 ${t("shop.chests", locale)}`, icon: "📦" },
-    { id: "potions", label: `🧪 ${t("shop.potions", locale)}`, icon: "🧪" },
     { id: "diamonds", label: `💎 ${t("pix.title", locale)}`, icon: "💎" },
     { id: "vip", label: "👑 VIP", icon: "👑" },
   ];
@@ -199,22 +187,6 @@ export default function ShopPanel() {
                 type={chest.type}
                 disabled={buying === chest.id}
                 onClick={() => buyItem(chest.id, chest.name, chest.type, chest.cost)}
-              />
-            ))}
-          </>
-        )}
-        {tab === "potions" && (
-          <>
-            {POTIONS.map((potion) => (
-              <ShopItem
-                key={potion.id}
-                name={t(potion.name, locale)}
-                cost={potion.cost}
-                image={potion.image}
-                desc={t(potion.desc, locale)}
-                type={potion.type}
-                disabled={buying === potion.id}
-                onClick={() => buyItem(potion.id, potion.name, potion.type, potion.cost)}
               />
             ))}
           </>

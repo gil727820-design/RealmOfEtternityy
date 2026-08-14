@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { applyBoostPatch, xpMultiplier, energyMultiplier, type Boosts } from "@/game/boosts";
+import { xpForLevel } from "@/game/constants";
 
 /**
  * Usa um item consumível (ex.: poções). Efeitos em `template.effect`:
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
     const energy = char.energy ?? 0;
     let xp = char.xp ?? 0;
     let level = char.level ?? 1;
-    let xpToNext = char.xpToNext ?? Math.floor(level * 50);
+    let xpToNext = char.xpToNext ?? xpForLevel(level);
 
     // Boost ativo do personagem amplia efeitos de XP e Energia (2x).
     const multXp = xpMultiplier(char);
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest) {
       xp -= xpToNext;
       level += 1;
       leveledUp += 1;
-      xpToNext = Math.floor(xpToNext * 1.35);
+      xpToNext = xpForLevel(level);
     }
 
     await jsonDb.decrementInventoryItem(itemId, 1);

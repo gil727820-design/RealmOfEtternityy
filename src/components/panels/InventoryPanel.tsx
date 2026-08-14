@@ -812,7 +812,18 @@ const categories = [
             <div className="pointer-events-none absolute top-2 right-3 text-[9px] uppercase tracking-widest text-gray-600">
               {t("inv.slotsTitle", locale)}
             </div>
-            <div className="grid grid-cols-3 grid-rows-4 place-items-center pt-3">
+            {/* Personagem em área própria (não fica por cima dos slots) */}
+            <div className="grid place-items-center pb-1 pt-3">
+              <img
+                src={charImg}
+                alt={String(char?.classType ?? "warrior")}
+                className={`h-20 w-auto max-w-full object-contain animate-float drop-shadow-[0_0_14px_rgba(233,69,96,0.35)] ${
+                  equipFx.tick > 0 ? "char-equip-glow" : ""
+                }`}
+                draggable={false}
+              />
+            </div>
+            <div className="grid grid-cols-3 grid-rows-4 place-items-center pt-2">
               {EQUIP_SLOTS.map(({ slot, cell }) => {
                 const entry = equippedMap.get(slot);
                 const fxOn = equipFx.slot === slot;
@@ -839,16 +850,6 @@ const categories = [
                   </button>
                 );
               })}
-              <div className="pointer-events-none col-span-1 col-start-2 row-span-2 row-start-1 z-0 grid w-full place-items-center pt-1">
-                <img
-                  src={charImg}
-                  alt={String(char?.classType ?? "warrior")}
-                  className={`h-full w-full max-h-[110px] object-contain animate-float drop-shadow-[0_0_18px_rgba(233,69,96,0.4)] ${
-                    equipFx.tick > 0 ? "char-equip-glow" : ""
-                  }`}
-                  draggable={false}
-                />
-              </div>
             </div>
             <div className="mt-1 flex items-center justify-between px-1 text-[11px]">
               <span className="rounded-full bg-[#e94560]/20 px-2 py-0.5 font-bold text-[#e94560]">

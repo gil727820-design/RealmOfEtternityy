@@ -19,11 +19,12 @@ const NAV_ITEMS: { tab: GameTab; icon: string; image: string; labelKey: string; 
   { tab: "forge", icon: "🔨", image: "/images/sidebar/menu_forja.png", labelKey: "nav.forge", color: "#f97316" },
   { tab: "achievements", icon: "🏅", image: "/images/sidebar/menu_conquistas.png", labelKey: "nav.achievements", color: "#8b5cf6" },
   { tab: "afk", icon: "💤", image: "/images/sidebar/menu_afk.png", labelKey: "nav.afk", color: "#06b6d4" },
-  { tab: "dungeon", icon: "🕳️", image: "/images/sidebar/menu_torre.png", labelKey: "nav.dungeon", color: "#8b5cf6" },
+  { tab: "dungeon", icon: "🕳️", image: "/images/sidebar/menu_masmorras.png", labelKey: "nav.dungeon", color: "#8b5cf6" },
+  { tab: "skills", icon: "🌳", image: "/images/sidebar/menu_habilidades.png", labelKey: "nav.skills", color: "#a855f7" },
   { tab: "mailbox", icon: "📬", image: "/images/sidebar/menu_correio.png", labelKey: "nav.mailbox", color: "#facc15" },
-  { tab: "code", icon: "🎟️", image: "/images/sidebar/menu_loja.png", labelKey: "nav.code", color: "#a855f7" },
+  { tab: "code", icon: "🎟️", image: "/images/sidebar/menu_codigo.png", labelKey: "nav.code", color: "#a855f7" },
   { tab: "report", icon: "📝", image: "/images/sidebar/menu_configuracoes.png", labelKey: "nav.report", color: "#4ecdc4" },
-  { tab: "donate", icon: "💖", image: "/images/sidebar/menu_loja.png", labelKey: "nav.donate", color: "#ff4d6d" },
+  { tab: "donate", icon: "💖", image: "/images/sidebar/menu_doar.png", labelKey: "nav.donate", color: "#ff4d6d" },
   { tab: "settings", icon: "⚙️", image: "/images/sidebar/menu_configuracoes.png", labelKey: "nav.settings", color: "#6b7280" },
 ];
 

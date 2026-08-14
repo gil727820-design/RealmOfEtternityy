@@ -4,6 +4,9 @@ import { leagueForRating, powerCalc, xpForLevel, classSkillEffect, type ClassNam
 import { getSkinClassBuff, skinRarityMult } from "@/game/skinBuffs";
 import { xpMultiplier, goldMultiplier } from "@/game/boosts";
 import { computePvpDaily, PVP_DAILY_MAX, pvpDateKey } from "@/game/pvp";
+import { skillTreeDebuff, DEBUFF_LOG } from "@/game/skillTree";
+import { decideEnemyAction } from "@/game/battleAI";
+import { masteryBuff } from "@/game/mastery";
 
 const SKILL_COST = 15;
 const MAX_ROUNDS = 40;
@@ -60,13 +63,28 @@ export async function POST(req: NextRequest) {
     const myMult = myBuff ? skinRarityMult(char.activeSkinId) : 1;
     const eneBuff = getSkinClassBuff(String(defender.classType || "warrior"), defender.activeSkinId);
     const eneMult = eneBuff ? skinRarityMult(defender.activeSkinId) : 1;
+    // Buff de MAESTRIA da árvore de habilidades (30 pontos = árvore completa).
+    // Vale para os DOIS lados: o agressor usa a dele e o oponente (se tiver a
+    // árvore completa) também — multiplica junto com a skin.
+    const myMastery = masteryBuff(char);
+    const eneMastery = masteryBuff(defender);
 
     // Multiplicadores efetivos: player→inimigo (dano do jogador × tank do inimigo);
-    // inimigo→player (dano do inimigo × tank do jogador).
-    const pm = (myBuff ? myBuff.damageMult * myMult : 1) * (eneBuff ? eneBuff.takenMult : 1);
-    const em = (eneBuff ? eneBuff.damageMult * eneMult : 1) * (myBuff ? myBuff.takenMult : 1);
-    const myCritAdd = myBuff ? myBuff.critBonus : 0;
-    const eneCritAdd = eneBuff ? eneBuff.critBonus : 0;
+    // inimigo→player (dano do inimigo × tank do jogador). Skin e Maestria somam.
+    const pm =
+      (myBuff ? myBuff.damageMult * myMult : 1) * (myMastery ? myMastery.damageMult : 1) *
+      (eneBuff ? eneBuff.takenMult : 1) * (eneMastery ? eneMastery.takenMult : 1);
+    const em =
+      (eneBuff ? eneBuff.damageMult * eneMult : 1) * (eneMastery ? eneMastery.damageMult : 1) *
+      (myBuff ? myBuff.takenMult : 1) * (myMastery ? myMastery.takenMult : 1);
+    const myCritAdd = (myBuff ? myBuff.critBonus : 0) + (myMastery ? myMastery.critBonus : 0);
+    const eneCritAdd = (eneBuff ? eneBuff.critBonus : 0) + (eneMastery ? eneMastery.critBonus : 0);
+
+    // RESISTÊNCIA: reduz o dano recebido em % (até ~30% no cap da classe).
+    // Cada lado usa a própria resistência para reduzir o dano que recebe.
+    // (O takenMult da Maestria já entra via pm/em — aqui fica só a resistência.)
+    const myResistMult = Math.max(0.7, 1 - (Number(char.resistance) || 0) * 0.0033);
+    const eneResistMult = Math.max(0.7, 1 - (Number(defender.resistance) || 0) * 0.0033);
     const myHeal = myBuff ? myBuff.healPerRound : 0;
     const eneHeal = eneBuff ? eneBuff.healPerRound : 0;
 
@@ -149,6 +167,9 @@ export async function POST(req: NextRequest) {
     let oppHp = Math.min(oppMaxHp, Math.max(0, Number(state.oppHp) || oppMaxHp));
     let oppMp = Math.min(oppMaxMp, Math.max(0, Number(state.oppMp) || 0));
     let round = Math.max(0, Number(state.round) || 0);
+    // Defesa do OPONENTE: igual à do jogador, ela reduz o próximo golpe que ele
+    // recebe pela metade (sem isso a IA defender era só desperdiçar o turno).
+    let oppDefended = false;
 
     const log: string[] = [];
     const events: any[] = [];
@@ -157,6 +178,9 @@ export async function POST(req: NextRequest) {
     // Efeito mecânico do golpe especial da CLASSE do personagem.
     const skillFx = classSkillEffect((char.classType as ClassName) || "warrior");
     let skillUsed = false;
+    // Debuffs da árvore de habilidades aplicados no contra-ataque do oponente.
+    let oppAttackMult = 1; // weaken/slow: -% de dano do oponente
+    let oppCritReduction = 0; // blind: -pontos de crítico do oponente
 
     // ---- Ação do jogador (você) ----
     if (action === "defend") {
@@ -181,13 +205,39 @@ export async function POST(req: NextRequest) {
         log.push(`💨 ${oppName} esquivou do golpe especial!`);
         events.push({ type: "dodge", target: "enemy" });
       } else {
-        oppHp = Math.max(0, oppHp - r.dmg);
-        log.push(`✨ Golpe Poderoso! -${r.dmg}${r.crit ? " 💥CRÍTICO!" : ""}`);
-        events.push({ type: r.crit ? "crit" : "skill", target: "enemy", amount: r.dmg });
+        // Debuff da ÁRVORE DE HABILIDADES: aplica no golpe especial.
+        const treeDebuff = skillTreeDebuff(char);
+        let skillDmg = r.dmg;
+        if (treeDebuff) {
+          const { type, value } = treeDebuff;
+          // sunder/curse aumentam o dano do próprio golpe.
+          if (type === "sunder" || type === "curse") skillDmg = Math.max(1, Math.round(skillDmg * (1 + value / 100)));
+          oppHp = Math.max(0, oppHp - Math.round(skillDmg * eneResistMult * (oppDefended ? 0.5 : 1)));
+          oppDefended = false;
+          log.push(`✨ ${DEBUFF_LOG[type]}! -${skillDmg}${r.crit ? " 💥CRÍTICO!" : ""}`);
+          events.push({ type: r.crit ? "crit" : "skill", target: "enemy", amount: skillDmg });
+          // bleed/burn/poison: dano extra imediato (% do ataque).
+          if (type === "bleed" || type === "burn" || type === "poison") {
+            const dot = Math.max(1, Math.round(ca.attack * (value / 100)));
+            oppHp = Math.max(0, oppHp - dot);
+            log.push(`🩸 ${DEBUFF_LOG[type]} causa +${dot} de dano!`);
+            events.push({ type: "bleed", target: "enemy", amount: dot });
+          }
+          // weaken/slow: reduz o contra-ataque do oponente neste turno.
+          if (type === "weaken" || type === "slow") oppAttackMult = 1 - value / 100;
+          // blind: reduz o crítico do oponente neste turno.
+          if (type === "blind") oppCritReduction = Math.min(30, value);
+        } else {
+          oppHp = Math.max(0, oppHp - Math.round(skillDmg * eneResistMult * (oppDefended ? 0.5 : 1)));
+          oppDefended = false;
+          log.push(`✨ Golpe Poderoso! -${skillDmg}${r.crit ? " 💥CRÍTICO!" : ""}`);
+          events.push({ type: r.crit ? "crit" : "skill", target: "enemy", amount: skillDmg });
+        }
         if (myBuff?.bleedPerRound) bleedStack += Math.max(1, Math.round(ca.attack * myBuff.bleedPerRound * myMult));
         if (skillFx.doubleStrikeChance && Math.random() * 100 < skillFx.doubleStrikeChance) {
           const d2 = Math.max(1, Math.round(ca.attack * pm - Math.floor(oppDefense * 0.4)));
-          oppHp = Math.max(0, oppHp - d2);
+          oppHp = Math.max(0, oppHp - Math.round(d2 * eneResistMult * (oppDefended ? 0.5 : 1)));
+          oppDefended = false;
           log.push(`⚡ Golpe duplo! -${d2}`);
           events.push({ type: "skill", target: "enemy", amount: d2 });
         }
@@ -209,7 +259,8 @@ export async function POST(req: NextRequest) {
         log.push(`💨 ${oppName} esquivou do seu ataque!`);
         events.push({ type: "dodge", target: "enemy" });
       } else {
-        oppHp = Math.max(0, oppHp - r.dmg);
+        oppHp = Math.max(0, oppHp - Math.round(r.dmg * eneResistMult * (oppDefended ? 0.5 : 1)));
+        oppDefended = false;
         log.push(`⚔️ Você ataca ${oppName}! -${r.dmg}${r.crit ? " 💥CRÍTICO!" : ""}`);
         events.push({ type: r.crit ? "crit" : "hit", target: "enemy", amount: r.dmg });
         if (myBuff?.bleedPerRound) bleedStack += Math.max(1, Math.round(ca.attack * myBuff.bleedPerRound * myMult));
@@ -223,46 +274,104 @@ export async function POST(req: NextRequest) {
       events.push({ type: "bleed", target: "enemy", amount: bleedStack });
     }
 
+    // VELOCIDADE: chance de um ATAQUE EXTRA por rodada — quanto maior a
+    // diferença de velocidade contra o oponente, maior a chance (até 50%).
+    // Não acontece se você defendeu ou se o oponente já caiu.
+    if (!defended && oppHp > 0) {
+      const speedChance = Math.min(50, Math.max(0, (ca.speed - oppSpeed) * 0.5));
+      if (Math.random() * 100 < speedChance) {
+        const r2 = strike(
+          { attack: Math.round(ca.attack * pm), critical: ca.critical + myCritAdd, precision: ca.precision },
+          { defense: oppDefense, dodge: oppDodge }
+        );
+        if (r2.dodged) {
+          log.push(`💨 ${oppName} esquivou do ataque extra!`);
+          events.push({ type: "dodge", target: "enemy" });
+        } else {
+          oppHp = Math.max(0, oppHp - Math.round(r2.dmg * eneResistMult * (oppDefended ? 0.5 : 1)));
+          oppDefended = false;
+          log.push(`⚡ Velocidade! Ataque extra! -${r2.dmg}${r2.crit ? " 💥CRÍTICO!" : ""}`);
+          events.push({ type: r2.crit ? "crit" : "hit", target: "enemy", amount: r2.dmg });
+          if (myBuff?.bleedPerRound) bleedStack += Math.max(1, Math.round(ca.attack * myBuff.bleedPerRound * myMult));
+        }
+      }
+    }
+
     // ---- Resposta do oponente (se ainda vivo) ----
     if (oppHp > 0) {
       // Se você usou o golpe especial, o oponente contra-ataca com o multiplicador
       // de recebimento da sua classe (berserker fica mais frágil, paladino resiste).
       const recv = skillUsed && skillFx.receivedMult != null ? skillFx.receivedMult : 1;
-      const useSkill = oppMp >= SKILL_COST && Math.random() < 0.4;
-      const useDefend = !useSkill && Math.random() < 0.15;
+      // IA do oponente: decide a ação olhando o contexto (vidas, mana, rodada e
+      // rating da liga) em vez de sorteio puro — batalha menos repetitiva.
+      const aiAction = decideEnemyAction({
+        myHp: oppHp,
+        myMaxHp: oppMaxHp,
+        myMp: oppMp,
+        myMaxMp: oppMaxMp,
+        enemyHp: charHp,
+        enemyMaxHp: ca.maxHp,
+        round,
+        skillCost: SKILL_COST,
+        savvy: Math.min(1, 0.4 + oppRating / 3000),
+      });
+      const useSkill = aiAction === "skill";
+      const useDefend = aiAction === "defend";
       if (useSkill) {
         oppMp -= SKILL_COST;
         const r = strike(
-          { attack: Math.round(oppAttack * 1.6 * em), critical: oppCritical + 10 + eneCritAdd, precision: oppPrecision },
+          { attack: Math.round(oppAttack * 1.6 * em * oppAttackMult), critical: Math.max(0, oppCritical + 10 + eneCritAdd - oppCritReduction), precision: oppPrecision },
           { defense: ca.defense, dodge: ca.dodge }
         );
         if (r.dodged) {
           log.push(`✅ Você desviou do golpe especial de ${oppName}!`);
           events.push({ type: "dodge", target: "player" });
         } else {
-          const taken = (defended ? Math.max(1, Math.round(r.dmg * 0.5)) : r.dmg) * recv;
+          const taken = (defended ? Math.max(1, Math.round(r.dmg * 0.5)) : r.dmg) * recv * myResistMult;
           charHp = Math.max(0, charHp - Math.round(taken));
           log.push(`✨ ${oppName} usa a técnica especial! -${Math.round(taken)}${r.crit ? " 💥CRÍTICO!" : ""}`);
           events.push({ type: r.crit ? "crit" : "skill", target: "player", amount: Math.round(taken) });
         }
       } else if (useDefend) {
+        oppDefended = true; // próximo golpe do jogador causa metade do dano
         const regen = Math.min(8, oppMaxMp - oppMp);
         oppMp += regen;
-        log.push(`🛡️ ${oppName} assume postura de defesa.`);
+        log.push(`🛡️ ${oppName} assume postura de defesa!`);
         events.push({ type: "defend", target: "enemy" });
       } else {
         const r = strike(
-          { attack: Math.round(oppAttack * em), critical: oppCritical + eneCritAdd, precision: oppPrecision },
+          { attack: Math.round(oppAttack * em * oppAttackMult), critical: Math.max(0, oppCritical + eneCritAdd - oppCritReduction), precision: oppPrecision },
           { defense: ca.defense, dodge: ca.dodge }
         );
         if (r.dodged) {
           log.push(`✅ Você desviou do ataque de ${oppName}!`);
           events.push({ type: "dodge", target: "player" });
         } else {
-          const taken = (defended ? Math.max(1, Math.round(r.dmg * 0.5)) : r.dmg) * recv;
+          const taken = (defended ? Math.max(1, Math.round(r.dmg * 0.5)) : r.dmg) * recv * myResistMult;
           charHp = Math.max(0, charHp - Math.round(taken));
           log.push(`🗡️ ${oppName} atacou você! -${Math.round(taken)}${r.crit ? " 💥CRÍTICO!" : ""}`);
           events.push({ type: r.crit ? "crit" : "hit", target: "player", amount: Math.round(taken) });
+        }
+      }
+
+      // VELOCIDADE do oponente: chance de um ATAQUE EXTRA (mesma regra do
+      // jogador — sem isso a velocidade só beneficiava um lado da luta).
+      if (!useDefend && charHp > 0) {
+        const speedChance = Math.min(50, Math.max(0, (oppSpeed - ca.speed) * 0.5));
+        if (Math.random() * 100 < speedChance) {
+          const r2 = strike(
+            { attack: Math.round(oppAttack * em), critical: Math.max(0, oppCritical + eneCritAdd - oppCritReduction), precision: oppPrecision },
+            { defense: ca.defense, dodge: ca.dodge }
+          );
+          if (r2.dodged) {
+            log.push(`✅ Você desviou do ataque extra de ${oppName}!`);
+            events.push({ type: "dodge", target: "player" });
+          } else {
+            const taken2 = Math.max(1, Math.round(r2.dmg * recv * myResistMult));
+            charHp = Math.max(0, charHp - taken2);
+            log.push(`⚡ ${oppName} usa a velocidade! Ataque extra! -${taken2}${r2.crit ? " 💥CRÍTICO!" : ""}`);
+            events.push({ type: r2.crit ? "crit" : "hit", target: "player", amount: taken2 });
+          }
         }
       }
     }
@@ -309,11 +418,13 @@ export async function POST(req: NextRequest) {
       let newLevel = char.level || 1;
       let newXpToNext = char.xpToNext || xpForLevel(newLevel);
       let newStatPoints = char.unspentStatPoints || 0;
+      let newSkillPoints = char.skillPoints || 0;
       while (newXp >= newXpToNext) {
         newXp -= newXpToNext;
         newLevel++;
         newXpToNext = xpForLevel(newLevel);
         newStatPoints += 3;
+        if (newLevel % 3 === 0) newSkillPoints += 1;
       }
       const newGold = (char.gold || 0) + goldEarned;
       const power = powerCalc({
@@ -336,6 +447,7 @@ export async function POST(req: NextRequest) {
         xpToNext: newXpToNext,
         gold: newGold,
         unspentStatPoints: newStatPoints,
+        skillPoints: newSkillPoints,
         power,
       });
       // Oponente real (offline) usa a mesma lógica do agressor, invertida

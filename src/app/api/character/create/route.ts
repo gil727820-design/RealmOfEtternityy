@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { CLASS_BASE_STATS, powerCalc } from "@/game/constants";
+import { CLASS_BASE_STATS, powerCalc, xpForLevel } from "@/game/constants";
 import type { ClassName } from "@/game/constants";
 import { isValidUsername } from "@/game/profanityFilter";
 
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
       // Progression
       level: 1,
       xp: 0,
-      xpToNext: 100,
+      xpToNext: xpForLevel(1),
       prestige: 0,
       unspentStatPoints: 0,
       talentPoints: 0,

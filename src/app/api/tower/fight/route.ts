@@ -13,6 +13,8 @@ import {
 import { getSkinClassBuff, skinRarityMult } from "@/game/skinBuffs";
 import { xpMultiplier, goldMultiplier } from "@/game/boosts";
 import { classSkillEffect, type ClassName } from "@/game/constants";
+import { skillTreeDebuff, DEBUFF_LOG } from "@/game/skillTree";
+import { masteryBuff } from "@/game/mastery";
 
 const SKILL_COST = 15;
 const MAX_ROUNDS = 40;
@@ -108,9 +110,12 @@ export async function POST(req: NextRequest) {
     // Buff ativado pela skin equipada (só ativa se for da própria classe)
     const skinBuff = getSkinClassBuff(char.classType, char.activeSkinId);
     const skinMult = skinBuff ? skinRarityMult(char.activeSkinId) : 1;
-    const atkFactor = skinBuff ? skinBuff.damageMult * skinMult : 1;
-    const critAdd = skinBuff ? skinBuff.critBonus : 0;
-    const takenFactor = skinBuff ? skinBuff.takenMult : 1;
+    // Buff de MAESTRIA da árvore (30 pontos = árvore completa): multiplica junto
+    // com a skin — os dois podem estar ativos ao mesmo tempo.
+    const mastery = masteryBuff(char);
+    const atkFactor = (skinBuff ? skinBuff.damageMult * skinMult : 1) * (mastery ? mastery.damageMult : 1);
+    const critAdd = (skinBuff ? skinBuff.critBonus : 0) + (mastery ? mastery.critBonus : 0);
+    const takenFactor = (skinBuff ? skinBuff.takenMult : 1) * (mastery ? mastery.takenMult : 1);
     const floor = Number(char.towerFloor) || 1;
 
     // ---- Iniciar batalha (spawn do NPC) ----
@@ -171,6 +176,9 @@ export async function POST(req: NextRequest) {
     // Efeito mecânico do golpe especial da CLASSE do personagem.
     const skillFx = classSkillEffect((char.classType as ClassName) || "warrior");
     let skillUsed = false;
+    // Debuffs da árvore de habilidades aplicados no contra-ataque do inimigo.
+    let monAttackMult = 1; // weaken/slow: -% de dano do inimigo
+    let monCritReduction = 0; // blind: -pontos de crítico do inimigo
 
     // ---- Ação do personagem ----
     if (action === "defend") {
@@ -195,9 +203,37 @@ export async function POST(req: NextRequest) {
         log.push(`💨 O inimigo desviou do golpe poderoso!`);
         events.push({ type: "dodge", target: "monster" });
       } else {
-        monHp = Math.max(0, monHp - r.dmg);
-        log.push(`✨ Golpe Poderoso! -${r.dmg}${r.crit ? " 💥CRÍTICO!" : ""}`);
-        events.push({ type: r.crit ? "crit" : "skill", target: "monster", amount: r.dmg });
+        // Debuff da ÁRVORE DE HABILIDADES: aplica no golpe especial.
+        const treeDebuff = skillTreeDebuff(char);
+        let skillDmg = r.dmg;
+        if (treeDebuff) {
+          const { type, value } = treeDebuff;
+          // sunders/curse aumentam o dano do próprio golpe.
+          if (type === "sunder") skillDmg = Math.max(1, Math.round(skillDmg * (1 + value / 100)));
+          if (type === "curse") skillDmg = Math.max(1, Math.round(skillDmg * (1 + value / 100)));
+          monHp = Math.max(0, monHp - skillDmg);
+          log.push(`✨ ${DEBUFF_LOG[type]}! -${skillDmg}${r.crit ? " 💥CRÍTICO!" : ""}`);
+          events.push({ type: r.crit ? "crit" : "skill", target: "monster", amount: skillDmg });
+          // bleed/burn/poison: dano extra imediato (% do ataque).
+          if (type === "bleed" || type === "burn" || type === "poison") {
+            const dot = Math.max(1, Math.round(ca.attack * (value / 100)));
+            monHp = Math.max(0, monHp - dot);
+            log.push(`🩸 ${DEBUFF_LOG[type]} causa +${dot} de dano!`);
+            events.push({ type: "bleed", target: "monster", amount: dot });
+          }
+          // weaken/slow: reduz o contra-ataque do inimigo neste turno.
+          if (type === "weaken" || type === "slow") {
+            monAttackMult = 1 - value / 100;
+          }
+          // blind: reduz o crítico do inimigo neste turno.
+          if (type === "blind") {
+            monCritReduction = Math.min(30, value);
+          }
+        } else {
+          monHp = Math.max(0, monHp - skillDmg);
+          log.push(`✨ Golpe Poderoso! -${skillDmg}${r.crit ? " 💥CRÍTICO!" : ""}`);
+          events.push({ type: r.crit ? "crit" : "skill", target: "monster", amount: skillDmg });
+        }
         if (skinBuff?.bleedPerRound) bleedStack += Math.max(1, Math.round(ca.attack * skinBuff.bleedPerRound * skinMult));
         // Double strike (assassino): 1 ataque básico extra sem crítico
         if (skillFx.doubleStrikeChance && Math.random() * 100 < skillFx.doubleStrikeChance) {
@@ -241,6 +277,28 @@ export async function POST(req: NextRequest) {
       events.push({ type: "bleed", target: "monster", amount: bleedStack });
     }
 
+    // VELOCIDADE: chance de um ATAQUE EXTRA por rodada — quanto maior a
+    // diferença de velocidade contra o inimigo, maior a chance (até 50%).
+    // Não acontece se você defendeu ou se o inimigo já caiu.
+    if (!defended && monHp > 0) {
+      const speedChance = Math.min(50, Math.max(0, (ca.speed - mon.speed) * 0.5));
+      if (Math.random() * 100 < speedChance) {
+        const r2 = strike(
+          { attack: Math.round(ca.attack * atkFactor), critical: ca.critical + critAdd, precision: ca.precision },
+          { defense: mon.defense, dodge: mon.dodge }
+        );
+        if (r2.dodged) {
+          log.push(`💨 O inimigo esquivou do ataque extra!`);
+          events.push({ type: "dodge", target: "monster" });
+        } else {
+          monHp = Math.max(0, monHp - r2.dmg);
+          log.push(`⚡ Velocidade! Ataque extra! -${r2.dmg}${r2.crit ? " 💥CRÍTICO!" : ""}`);
+          events.push({ type: r2.crit ? "crit" : "hit", target: "monster", amount: r2.dmg });
+          if (skinBuff?.bleedPerRound) bleedStack += Math.max(1, Math.round(ca.attack * skinBuff.bleedPerRound * skinMult));
+        }
+      }
+    }
+
     let won = false;
     let lost = false;
 
@@ -252,14 +310,18 @@ export async function POST(req: NextRequest) {
       // recebem mais/menos dano do inimigo logo após o golpe.
       const recv = (skillUsed && skillFx.receivedMult != null) ? skillFx.receivedMult : 1;
       const r = strike(
-        { attack: mon.attack, critical: mon.critical, precision: 0 },
+        { attack: Math.round(mon.attack * monAttackMult), critical: Math.max(0, mon.critical - monCritReduction), precision: 0 },
         { defense: ca.defense, dodge: ca.dodge }
       );
       if (r.dodged) {
         log.push(`✅ Você desviou do contra-ataque!`);
         events.push({ type: "dodge", target: "player" });
       } else {
-        const taken = Math.max(1, Math.round((defended ? Math.max(1, Math.round(r.dmg * 0.5)) : r.dmg) * takenFactor * recv));
+        // RESISTÊNCIA: reduz o dano recebido em % (até ~30% no cap da classe).
+        // A Maestria entra aqui também: o multiplicador takenMult da classe é
+        // multiplicado junto com a skin (cavaleiro tanka até -14% a mais).
+        const resistMult = Math.max(0.7, 1 - (Number(char.resistance) || 0) * 0.0033);
+        const taken = Math.max(1, Math.round((defended ? Math.max(1, Math.round(r.dmg * 0.5)) : r.dmg) * takenFactor * recv * resistMult));
         charHp = Math.max(0, charHp - taken);
         log.push(`🗡️ O inimigo atacou você! -${taken}${r.crit ? " 💥CRÍTICO!" : ""}`);
         events.push({ type: r.crit ? "crit" : "hit", target: "player", amount: taken });
@@ -291,11 +353,13 @@ export async function POST(req: NextRequest) {
         let newLevel = char.level || 1;
         let newXpToNext = char.xpToNext || 100;
         let newStatPoints = char.unspentStatPoints || 0;
+        let newSkillPoints = char.skillPoints || 0;
         while (newXp >= newXpToNext) {
           newXp -= newXpToNext;
           newLevel++;
           newXpToNext = xpForLevel(newLevel);
           newStatPoints += 3;
+          if (newLevel % 3 === 0) newSkillPoints += 1;
         }
         const newGold = (char.gold || 0) + Math.floor(mon.goldReward * goldMultiplier(char));
         const newCoins = (char.towerCoins || 0) + mon.coinsReward;
@@ -316,6 +380,7 @@ export async function POST(req: NextRequest) {
           towerCoins: newCoins,
           towerFloor: newTowerFloor,
           unspentStatPoints: newStatPoints,
+          skillPoints: newSkillPoints,
           power,
           lastActivity: new Date().toISOString(),
         });

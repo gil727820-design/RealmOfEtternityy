@@ -81,12 +81,14 @@ export async function POST(req: NextRequest) {
     let newLevel = char.level || 1;
     let newXpToNext = char.xpToNext || 100;
     let newStatPoints = char.unspentStatPoints || 0;
+    let newSkillPoints = char.skillPoints || 0;
     const anyXp = rw.xp > 0;
     while (anyXp && newXp >= newXpToNext) {
       newXp -= newXpToNext;
       newLevel++;
       newXpToNext = xpForLevel(newLevel);
       newStatPoints += 3;
+      if (newLevel % 3 === 0) newSkillPoints += 1;
     }
 
     const newGold = (char.gold || 0) + Math.floor(rw.gold * goldMultiplier(char));
@@ -126,6 +128,7 @@ export async function POST(req: NextRequest) {
       energy: regen.energy,
       lastEnergyAt: regen.lastEnergyAt,
       unspentStatPoints: newStatPoints,
+      skillPoints: newSkillPoints,
       dungeonActive: null,
       dungeonStats: stats,
       lastActivity: now.toISOString(),

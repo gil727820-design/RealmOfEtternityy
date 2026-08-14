@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { MAX_ENHANCE, ENCHANT_POOL, enhanceCost, enhanceChance, equipmentBonus } from "@/game/forge";
+import { MAX_ENHANCE, ENCHANT_COST, enchantPoolForClass, enhanceCost, enhanceChance, equipmentBonus } from "@/game/forge";
 import { powerCalc } from "@/game/constants";
 
 /** Soma os bônus de todos os itens equipados (forja + encanto). */
@@ -98,15 +98,13 @@ export async function POST(req: NextRequest) {
 
     const currentGold = char.gold || 0;
 
-    // ---- APRIMORAR (+1 nível) ----
+    // ---- GRAVAR RUNA (+1 nível) ----
     if (action === "enhance") {
       const level = item.enhanceLevel || 0;
       if (level >= MAX_ENHANCE) {
-        return NextResponse.json({ error: "Este item já atingiu +20" }, { status: 400 });
+        return NextResponse.json({ error: `Este item já atingiu o limite de runas (+${MAX_ENHANCE})` }, { status: 400 });
       }
-      if (item.enchant) {
-        return NextResponse.json({ error: "Itens encantados não podem ser aprimorados novamente" }, { status: 400 });
-      }
+      // Runa e encanto funcionam juntos — itens encantados também podem ganhar runas.
       const cost = enhanceCost(level);
       if (currentGold < cost) {
         return NextResponse.json({ error: "Ouro insuficiente" }, { status: 400 });
@@ -144,16 +142,17 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // ---- ENCANTAR (aplica um encantamento aleatório) ----
+    // ---- ENCANTAR (encantamento aleatório do pool da classe) ----
     if (action === "enchant") {
       if (item.enchant) {
         return NextResponse.json({ error: "Este item já está encantado" }, { status: 400 });
       }
-      const cost = 5000;
+      const cost = ENCHANT_COST;
       if (currentGold < cost) {
         return NextResponse.json({ error: "Ouro insuficiente" }, { status: 400 });
       }
-      const roll = ENCHANT_POOL[Math.floor(Math.random() * ENCHANT_POOL.length)];
+      const classPool = enchantPoolForClass((char.classType as string) || "warrior");
+      const roll = classPool[Math.floor(Math.random() * classPool.length)];
       await jsonDb.updateCharacter(char.id, { gold: currentGold - cost });
       await jsonDb.updateInventoryItem(String(item.id), { enchant: roll.id });
 

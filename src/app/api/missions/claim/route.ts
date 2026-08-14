@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
     let newLevel = char.level || 1;
     let newXpToNext = char.xpToNext || 100;
     let newStatPoints = char.unspentStatPoints || 0;
+    let newSkillPoints = char.skillPoints || 0;
 
     // Level up check
     while (newXp >= newXpToNext) {
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest) {
       newLevel++;
       newXpToNext = xpForLevel(newLevel);
       newStatPoints += 3;
+      if (newLevel % 3 === 0) newSkillPoints += 1;
     }
 
     const newGold = (char.gold || 0) + Math.floor((mission.goldReward || 0) * goldMultiplier(char));
@@ -50,6 +52,7 @@ export async function POST(req: NextRequest) {
       gold: newGold,
       power,
       unspentStatPoints: newStatPoints,
+      skillPoints: newSkillPoints,
       missionBatch: [], // força o embaralhamento de um novo grupo de missões
       energy: regen.energy,
       lastEnergyAt: regen.lastEnergyAt,

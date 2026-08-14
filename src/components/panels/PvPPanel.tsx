@@ -9,6 +9,8 @@ import {
   type ClassName,
 } from "@/game/constants";
 import { computePvpDaily, PVP_DAILY_MAX } from "@/game/pvp";
+import useBattleFx, { BattleFxLayer } from "@/components/ui/BattleFx";
+import Confetti from "@/components/ui/Confetti";
 
 export default function PvPPanel() {
   const { characterId, character, locale, notify, setCharacter } = useGameStore();
@@ -30,6 +32,7 @@ export default function PvPPanel() {
   const [eShake, setEShake] = useState(0);
   const [flash, setFlash] = useState(0);
   const [history, setHistory] = useState<Array<any>>([]);
+  const fx = useBattleFx();
   const autoStop = useRef(false);
   const floatId = useRef(0);
 
@@ -134,6 +137,9 @@ export default function PvPPanel() {
     setBattle(data.battle);
     if (data.log?.length) setLog((prev) => [...prev, ...data.log]);
 
+    // Efeitos visuais: partículas, anel de impacto, debuffs e curas.
+    fx.applyRound(data, { player: "player", enemy: "enemy" });
+
     (data.events || []).forEach((ev: any) => {
       if (ev.amount && (ev.type === "hit" || ev.type === "crit" || ev.type === "skill")) {
         const id = ++floatId.current;
@@ -164,6 +170,7 @@ export default function PvPPanel() {
     setBattle(null);
     setLog([]);
     setFloats([]);
+    fx.clear();
     setResult(null);
     setMode(m);
     setPhase("battle");
@@ -237,6 +244,7 @@ export default function PvPPanel() {
     setMode(null);
     setEnemy(null);
     setFloats([]);
+    fx.clear();
     setPhase("league");
   };
 
@@ -478,6 +486,7 @@ export default function PvPPanel() {
                     />
                   </div>
                   {floatEls("player")}
+                  <BattleFxLayer fx={fx} target="player" />
                 </div>
                 <div className="mt-2 font-bold text-white tracking-wider truncate max-w-[140px] mx-auto">{playerName}</div>
                 <div className="mt-1 mx-auto max-w-[170px]">
@@ -504,6 +513,7 @@ export default function PvPPanel() {
                     />
                   </div>
                   {floatEls("enemy")}
+                  <BattleFxLayer fx={fx} target="enemy" />
                 </div>
                 <div className="mt-2 font-bold text-white tracking-wider truncate max-w-[140px] mx-auto">{enemyName}</div>
                 <div className="text-[10px] text-purple-300">✨ {enemySkill}</div>
@@ -598,6 +608,7 @@ export default function PvPPanel() {
 
       {phase === "result" && result && (
         <div className="game-card p-8 text-center relative overflow-hidden border-teal-800 bg-gradient-to-b from-gray-900/80 to-black/70">
+          {result.won && <Confetti />}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-teal-500/10 via-transparent to-transparent" />
           <div className="relative">
             <div className="text-6xl mb-3">{result.won ? "🏆" : "💀"}</div>

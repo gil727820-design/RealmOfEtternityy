@@ -87,6 +87,51 @@ export const ACHIEVEMENTS: AchievementDef[] = [
     id: "power_1500", nameKey: "ach.name_power1500", descKey: "ach.desc_power1500", icon: "💪", rarity: "rare",
     reward: { gold: 6000, crystals: 30 }, condition: (c) => (c.power as number) >= 1500,
   },
+  {
+    id: "skill_first", nameKey: "ach.name_skill_first", descKey: "ach.desc_skill_first", icon: "🌱", rarity: "common",
+    reward: { gold: 1500 }, condition: (c) => {
+      const s = (c.skills as Record<string, number> | undefined) ?? {};
+      return Object.values(s).reduce((a, b) => a + (Number(b) || 0), 0) >= 1;
+    },
+  },
+  {
+    id: "skill_10", nameKey: "ach.name_skill_10", descKey: "ach.desc_skill_10", icon: "🌳", rarity: "rare",
+    reward: { gold: 5000, crystals: 25 }, condition: (c) => {
+      const s = (c.skills as Record<string, number> | undefined) ?? {};
+      return Object.values(s).reduce((a, b) => a + (Number(b) || 0), 0) >= 10;
+    },
+  },
+  {
+    id: "vip_first", nameKey: "ach.name_vip_first", descKey: "ach.desc_vip_first", icon: "👑", rarity: "rare",
+    reward: { gold: 3000, crystals: 20 }, condition: (c) => {
+      const until = c.vipUntil as string | undefined;
+      return !!c.vipTier && !!until && new Date(until).getTime() > Date.now();
+    },
+  },
+  {
+    id: "diamond_1000", nameKey: "ach.name_diamond_1000", descKey: "ach.desc_diamond_1000", icon: "💎", rarity: "rare",
+    reward: { crystals: 50 }, condition: (c) => (c.diamonds as number) >= 1000,
+  },
+  {
+    id: "dungeon_10", nameKey: "ach.name_dungeon_10", descKey: "ach.desc_dungeon_10", icon: "🕳️", rarity: "common",
+    reward: { gold: 2500 }, condition: (c) => Number((c.dungeonStats as any)?.totalRuns) >= 10,
+  },
+  {
+    id: "dungeon_50", nameKey: "ach.name_dungeon_50", descKey: "ach.desc_dungeon_50", icon: "🏰", rarity: "epic",
+    reward: { gold: 15000, crystals: 90 }, condition: (c) => Number((c.dungeonStats as any)?.bestFloor) >= 50,
+  },
+  {
+    id: "guild_leader", nameKey: "ach.name_guild_leader", descKey: "ach.desc_guild_leader", icon: "👑", rarity: "epic",
+    reward: { gold: 8000, crystals: 60 }, condition: (c) => (c.guildRank as string) === "leader",
+  },
+  {
+    id: "crystals_500", nameKey: "ach.name_crystals_500", descKey: "ach.desc_crystals_500", icon: "🔮", rarity: "rare",
+    reward: { gold: 4000 }, condition: (c) => (c.crystals as number) >= 500,
+  },
+  {
+    id: "pvp_1800", nameKey: "ach.name_pvp_1800", descKey: "ach.desc_pvp_1800", icon: "⚔️", rarity: "legendary",
+    reward: { gold: 30000, crystals: 200 }, condition: (c) => (c.pvpRating as number) >= 1800,
+  },
 ];
 
 export function getAchievementById(id: string): AchievementDef | undefined {

@@ -7,10 +7,17 @@ import { computeAfkRewards } from "@/game/afk";
 import { computeDungeonStatus } from "@/game/dungeons";
 import { missingRegionMissions } from "@/game/generatedMissions";
 
-// Calculate AFK rewards (buffado — fórmula compartilhada via @/game/afk)
+// Calculate AFK rewards (buffado — fórmula compartilhada via @/game/afk).
+// Expõe também as taxas por minuto para o painel atualizar o preview ao vivo.
 function calcAfkRewards(char: any) {
   const r = computeAfkRewards(char, char.afkSince, new Date());
-  return { gold: r.gold, xp: r.xp * xpMultiplier(char), duration: r.diffSec };
+  return {
+    gold: r.gold,
+    xp: r.xp * xpMultiplier(char),
+    duration: r.diffSec,
+    goldPerMin: r.goldPerMin,
+    xpPerMin: r.xpPerMin * xpMultiplier(char),
+  };
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

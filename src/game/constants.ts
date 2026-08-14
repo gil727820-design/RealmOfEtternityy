@@ -317,22 +317,23 @@ export function classStatCap(classType: ClassName | string, stat: AllocStatKey):
 }
 
 // Custo (em ouro) do botão de resetar atributos (Dashboard).
-export const STAT_RESET_COST = 100_000;
+// Ajustado para a economia atual (o jogo ficou mais generoso em ouro).
+export const STAT_RESET_COST = 25_000;
 
 // Fundo de tela cheia (MAPA/) + tema (accent) de cada ilha.
 export const REGIONS = [
-  { id: "starter_village", icon: "🏘️", minLevel: 1, image: "/images/islands/regiao_vila_inicial.png", bg: "/images/map_bg/bg_vila_inicial.png", accent: "#e94560" },
-  { id: "forgotten_forest", icon: "🌲", minLevel: 5, image: "/images/islands/regiao_floresta_esquecida.png", bg: "/images/map_bg/bg_floresta_esquecida.png", accent: "#4ecdc4" },
-  { id: "ancient_ruins", icon: "🏛️", minLevel: 10, image: "/images/islands/regiao_ruinas_antigas.png", bg: "/images/map_bg/bg_ruinas_antigas.png", accent: "#d4a373" },
-  { id: "deep_mines", icon: "⛏️", minLevel: 15, image: "/images/islands/regiao_minas_profundas.png", bg: "/images/map_bg/bg_minas_profundas.png", accent: "#a855f7" },
-  { id: "dark_swamp", icon: "🐊", minLevel: 20, image: "/images/islands/regiao_pantano_sombrio.png", bg: "/images/map_bg/bg_pantano_sombrio.png", accent: "#22c55e" },
-  { id: "frozen_mountains", icon: "🏔️", minLevel: 30, image: "/images/islands/regiao_montanhas_geladas.png", bg: "/images/map_bg/bg_montanhas_geladas.png", accent: "#60a5fa" },
-  { id: "scorching_desert", icon: "🏜️", minLevel: 40, image: "/images/islands/regiao_deserto_escaldante.png", bg: "/images/map_bg/bg_deserto_escaldante.png", accent: "#f59e0b" },
-  { id: "imperial_castle", icon: "🏰", minLevel: 50, image: "/images/islands/regiao_castelo_imperial.png", bg: "/images/map_bg/bg_castelo_imperial.png", accent: "#3b82f6" },
-  { id: "lost_islands", icon: "🏝️", minLevel: 60, image: "/images/islands/regiao_ilhas_perdidas.png", bg: "/images/map_bg/bg_ilhas_perdidas.png", accent: "#00b4d8" },
-  { id: "dragon_world", icon: "🐉", minLevel: 75, image: "/images/islands/regiao_mundo_dragoes.png", bg: "/images/map_bg/bg_mundo_dragoes.png", accent: "#ef4444" },
-  { id: "demon_realm", icon: "👹", minLevel: 90, image: "/images/islands/regiao_reino_demoniaco.png", bg: "/images/map_bg/bg_reino_demoniaco.png", accent: "#c026d3" },
-  { id: "celestial_temple", icon: "⛪", minLevel: 100, image: "/images/islands/regiao_templo_celestial.png", bg: "/images/map_bg/bg_templo_celestial.png", accent: "#facc15" },
+  { id: "starter_village", icon: "🏘️", minLevel: 1, image: "/images/islands/regiao_vila_inicial.png", bg: "/images/map_bg/bg_vila_inicial.webp", accent: "#e94560" },
+  { id: "forgotten_forest", icon: "🌲", minLevel: 5, image: "/images/islands/regiao_floresta_esquecida.png", bg: "/images/map_bg/bg_floresta_esquecida.webp", accent: "#4ecdc4" },
+  { id: "ancient_ruins", icon: "🏛️", minLevel: 10, image: "/images/islands/regiao_ruinas_antigas.png", bg: "/images/map_bg/bg_ruinas_antigas.webp", accent: "#d4a373" },
+  { id: "deep_mines", icon: "⛏️", minLevel: 15, image: "/images/islands/regiao_minas_profundas.png", bg: "/images/map_bg/bg_minas_profundas.webp", accent: "#a855f7" },
+  { id: "dark_swamp", icon: "🐊", minLevel: 20, image: "/images/islands/regiao_pantano_sombrio.png", bg: "/images/map_bg/bg_pantano_sombrio.webp", accent: "#22c55e" },
+  { id: "frozen_mountains", icon: "🏔️", minLevel: 30, image: "/images/islands/regiao_montanhas_geladas.png", bg: "/images/map_bg/bg_montanhas_geladas.webp", accent: "#60a5fa" },
+  { id: "scorching_desert", icon: "🏜️", minLevel: 40, image: "/images/islands/regiao_deserto_escaldante.png", bg: "/images/map_bg/bg_deserto_escaldante.webp", accent: "#f59e0b" },
+  { id: "imperial_castle", icon: "🏰", minLevel: 50, image: "/images/islands/regiao_castelo_imperial.png", bg: "/images/map_bg/bg_castelo_imperial.webp", accent: "#3b82f6" },
+  { id: "lost_islands", icon: "🏝️", minLevel: 60, image: "/images/islands/regiao_ilhas_perdidas.png", bg: "/images/map_bg/bg_ilhas_perdidas.webp", accent: "#00b4d8" },
+  { id: "dragon_world", icon: "🐉", minLevel: 75, image: "/images/islands/regiao_mundo_dragoes.png", bg: "/images/map_bg/bg_mundo_dragoes.webp", accent: "#ef4444" },
+  { id: "demon_realm", icon: "👹", minLevel: 90, image: "/images/islands/regiao_reino_demoniaco.png", bg: "/images/map_bg/bg_reino_demoniaco.webp", accent: "#c026d3" },
+  { id: "celestial_temple", icon: "⛪", minLevel: 100, image: "/images/islands/regiao_templo_celestial.png", bg: "/images/map_bg/bg_templo_celestial.webp", accent: "#facc15" },
 ] as const;
 
 export type RegionId = (typeof REGIONS)[number]["id"];
@@ -368,8 +369,12 @@ export const PVP_LEAGUES = [
   { id: "emperor", minRating: 2800, icon: "🔱", image: "/images/icons/liga_imperador.png" },
 ] as const;
 
+// Curva de XP: exige mais XP por nível para o up não ser tão rápido.
+// A curva antiga (130 * 1.17) deixava subir fácil demais; a atual (165 * 1.18)
+// pede ~+40% no meio do jogo (ex.: Lv15 1.170 → 1.674) e escala mais nas fases
+// altas — ritmo "nem tão fácil, nem tão difícil".
 export function xpForLevel(level: number): number {
-  return Math.floor(100 * Math.pow(1.15, level - 1));
+  return Math.floor(165 * Math.pow(1.18, level - 1));
 }
 
 /**
@@ -378,10 +383,10 @@ export function xpForLevel(level: number): number {
  * Em vez de um valor fixo (que fica irrelevante em níveis altos), a recompensa
  * escala com a curva de níveis: uma missão rende ~MISSION_XP_RATIO do XP
  * necessário para subir de nível no nível da própria missão. Isso mantém um
- * ritmo consistente (~2-3 missões do seu tier ≈ 1 nível) — nem fácil demais
+ * ritmo consistente (~3-4 missões do seu tier ≈ 1 nível) — nem fácil demais
  * no fim do jogo, nem impossível no começo.
  */
-const MISSION_XP_RATIO = 0.32;
+const MISSION_XP_RATIO = 0.26;
 export function missionXpReward(mission: { minLevel?: number; xpReward?: number }): number {
   const lv = Math.max(1, mission.minLevel ?? 1);
   const scaled = Math.floor(xpForLevel(lv) * MISSION_XP_RATIO);

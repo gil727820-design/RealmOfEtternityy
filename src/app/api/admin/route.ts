@@ -9,9 +9,12 @@ import { equipmentBonus } from "@/game/forge";
 import type { ClassName } from "@/game/constants";
 
 // Admin auth middleware
+// A chave vem SOMENTE do env ADMIN_KEY (nunca hardcoded). Se não configurada,
+// o painel recusa o acesso — não existe senha padrão que funcione em produção.
 async function checkAdmin(req: NextRequest) {
   const adminKey = req.headers.get("x-admin-key");
-  const validKey = process.env.ADMIN_KEY || "PereiraAdmin2026@";
+  const validKey = process.env.ADMIN_KEY;
+  if (!validKey) return false;
   return adminKey === validKey;
 }
 

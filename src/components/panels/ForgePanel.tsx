@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
-import { MAX_ENHANCE, ENCHANT_POOL, enhanceCost, enhanceChance, enchantById } from "@/game/forge";
+import { MAX_ENHANCE, ENCHANT_COST, enchantPoolForClass, enhanceCost, enhanceChance, enchantById, enchantName } from "@/game/forge";
 import ItemIcon from "@/components/ui/ItemIcon";
 
 type ForgeTab = "enhance" | "enchant" | "craft" | "refine";
@@ -11,7 +11,7 @@ type ForgeTab = "enhance" | "enchant" | "craft" | "refine";
 const FORGE_MAINTENANCE = false;
 
 export default function ForgePanel() {
-  const { characterId, inventory, locale, notify, setCharacter, setInventory } = useGameStore();
+  const { characterId, inventory, locale, notify, setCharacter, setInventory, character } = useGameStore();
   const [tab, setTab] = useState<ForgeTab>("enhance");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -58,7 +58,7 @@ export default function ForgePanel() {
         if (d.enhanced) notify(`✅ ${t("forge.enhance.success", locale)} +${d.newLevel} (-${d.cost} 💰)`, "success");
         else notify(`😱 ${t("forge.enhance.fail", locale)} (-${d.cost} 💰)`, "error");
       } else {
-        notify(`✨ ${t("forge.enchant.success", locale)} ${d.enchanted.icon} ${t(d.enchanted.labelKey, locale)}!`, "success");
+        notify(`✨ ${t("forge.enchant.success", locale)} ${d.enchanted.icon} ${enchantName(d.enchanted, locale)}!`, "success");
       }
       await refresh();
     } catch {
@@ -76,6 +76,7 @@ export default function ForgePanel() {
 
   const enh = (selItem?.enhanceLevel as number) || 0;
   const ench = selItem?.enchant ? enchantById(String(selItem.enchant)) : null;
+  const cls = (character?.classType as string) || "warrior";
   return (
     <div className="space-y-6 animate-fadeIn">
       <h2 className="text-3xl font-black flex items-center gap-3">
@@ -158,7 +159,7 @@ export default function ForgePanel() {
                             <span className="text-[10px] font-black bg-[#f97316]/20 border border-[#f97316]/40 text-orange-300 rounded-full px-2 py-0.5">+{lvl}</span>
                           )}
                           {!!enc && (
-                            <span className="text-[10px] font-black bg-purple-500/20 border border-purple-500/40 text-purple-300 rounded-full px-2 py-0.5" title={t(enc.labelKey, locale)}>{enc.icon}</span>
+                            <span className="text-[10px] font-black bg-purple-500/20 border border-purple-500/40 text-purple-300 rounded-full px-2 py-0.5" title={enchantName(enc, locale)}>{enc.icon}</span>
                           )}
                           {!!item.equipped && <span className="text-[10px] bg-green-500/20 text-green-300 rounded-full px-2 py-0.5">✓</span>}
                         </div>
@@ -192,7 +193,7 @@ export default function ForgePanel() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-black text-2xl bg-gradient-to-r from-[#f97316] to-[#ffd700] bg-clip-text text-transparent">+{enh}</span>
                     <span className="text-[10px] font-bold bg-[#f97316]/20 border border-[#f97316]/40 text-orange-300 rounded-full px-2 py-0.5">
-                      +{enh * 10}% {t("forge.enhance.desc.up", locale)}
+                      +{enh * 5}% {t("forge.enhance.desc.up", locale)}
                     </span>
                   </div>
                 )}
@@ -200,7 +201,7 @@ export default function ForgePanel() {
                 {!!ench && (
                   <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-3">
                     <div className="text-xs text-purple-300 font-bold mb-1">{t("forge.enchantLabel", locale)}</div>
-                    <div className="text-sm text-white">{ench.icon} {t(ench.labelKey, locale)}</div>
+                    <div className="text-sm text-white">{ench.icon} {enchantName(ench, locale)}</div>
                     <div className="text-[11px] text-gray-400">{t("forge.enchant.effect", locale)}: +{ench.amount} {t(`stat.${ench.stat}`, locale)}</div>
                   </div>
                 )}
@@ -217,15 +218,29 @@ export default function ForgePanel() {
                         <div className="font-black text-[#ffd700]">💰 {enh >= MAX_ENHANCE ? "—" : enhanceCost(enh).toLocaleString()}</div>
                       </div>
                     </div>
+                    {/* Runas (1 a 5) */}
+                    <div className="flex items-center justify-center gap-1.5">
+                      {Array.from({ length: MAX_ENHANCE }).map((_, i) => (
+                        <span
+                          key={i}
+                          className={`w-3 h-3 rounded-full transition-all ${
+                            i < enh
+                              ? "bg-gradient-to-br from-[#f97316] to-[#ffd700] shadow-[0_0_8px_rgba(249,115,22,0.7)]"
+                              : "bg-white/15"
+                          }`}
+                        />
+                      ))}
+                      <span className="text-[10px] text-gray-500 ml-1">Runa {enh}/{MAX_ENHANCE}</span>
+                    </div>
                     <button
                       onClick={() => doForge("enhance")}
-                      disabled={busy || enh >= MAX_ENHANCE || !!ench}
+                      disabled={busy || enh >= MAX_ENHANCE}
                       className={`w-full py-3 text-sm font-black rounded-xl bg-gradient-to-r from-[#f97316] to-[#ffd700] text-black disabled:opacity-40`}
                     >
-                      {busy ? t("forge.busy", locale) : enh >= MAX_ENHANCE ? `${t("forge.max", locale)} (+20)` : `${t("forge.enhance.btn", locale)}`}
+                      {busy ? t("forge.busy", locale) : enh >= MAX_ENHANCE ? `${t("forge.max", locale)} (+${MAX_ENHANCE})` : `${t("forge.enhance.btn", locale)}`}
                     </button>
                     {enh >= MAX_ENHANCE && <p className="text-xs text-center text-[#ffd700]">{t("forge.enhance.locked", locale)}</p>}
-                    {!!ench && <p className="text-xs text-center text-purple-300">{t("forge.enchant.locked", locale)}</p>}
+                    {!!ench && <p className="text-xs text-center text-purple-300">✨ {t("forge.enchant.combo", locale)}</p>}
                   </>
                 )}
 
@@ -238,11 +253,11 @@ export default function ForgePanel() {
                       </div>
                       <div className="bg-[#0a0a12] rounded-xl p-3 border border-white/10">
                         <div className="text-xs text-gray-500">{t("forge.cost", locale)}</div>
-                        <div className="font-black text-[#ffd700]">💰 3.000</div>
+                        <div className="font-black text-[#ffd700]">💰 {ENCHANT_COST.toLocaleString()}</div>
                       </div>
                     </div>
                     <div className="text-xs text-gray-400">
-                      {ENCHANT_POOL.map((en) => `${en.icon} ${t(en.labelKey, locale)}`).join(" · ")}
+                      {enchantPoolForClass(cls).map((en) => `${en.icon} ${enchantName(en, locale)}`).join(" · ")}
                     </div>
                     <button
                       onClick={() => doForge("enchant")}

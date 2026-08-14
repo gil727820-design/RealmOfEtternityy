@@ -39,7 +39,7 @@ export default function DonatePanel() {
   return (
     <div className="animate-fadeInUp">
       <div className="section-header">
-        <span className="text-4xl">💖</span>
+        <img src="/images/sidebar/menu_doar.png" alt={t("donate.title", locale)} className="w-10 h-10 object-contain" />
         <h2 className="gradient-text text-3xl font-black">{t("donate.title", locale)}</h2>
       </div>
 

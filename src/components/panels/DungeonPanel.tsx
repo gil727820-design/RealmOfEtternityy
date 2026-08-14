@@ -115,7 +115,7 @@ export default function DungeonPanel() {
     <div className="space-y-6 animate-fadeIn">
       <div className="animate-fadeInDown">
         <h2 className="text-3xl font-black flex items-center gap-3">
-          <span className="text-4xl animate-float">🕳️</span>
+          <img src="/images/sidebar/menu_masmorras.png" alt={t("dungeon.title", locale)} className="w-10 h-10 object-contain animate-float" />
           <span className="bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent">{t("dungeon.title", locale)}</span>
         </h2>
         <p className="text-gray-400 text-sm max-w-md mt-1">{t("dungeon.sub", locale)}</p>
