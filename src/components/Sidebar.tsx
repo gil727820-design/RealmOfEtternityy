@@ -155,11 +155,17 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
 function FloatingToggle({ onClick }: { onClick: () => void }) {
   const [pos, setPos] = useState({ x: 12, y: 16 });
   const drag = useRef<{ startX: number; startY: number; baseX: number; baseY: number; moved: boolean } | null>(null);
+  const draggedRef = useRef(false);
+  const openedRef = useRef(false);
 
   const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), Math.max(min, max));
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
-    e.currentTarget.setPointerCapture(e.pointerId);
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch { /* não suportado (safari antigo) */ }
+    draggedRef.current = false;
+    openedRef.current = false;
     drag.current = { startX: e.clientX, startY: e.clientY, baseX: pos.x, baseY: pos.y, moved: false };
   };
 
@@ -167,7 +173,11 @@ function FloatingToggle({ onClick }: { onClick: () => void }) {
     if (!drag.current) return;
     const dx = e.clientX - drag.current.startX;
     const dy = e.clientY - drag.current.startY;
-    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) drag.current.moved = true;
+    // Limiar maior (10px): evita que um "tap" com micro-movimento vire drag no celular.
+    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+      drag.current.moved = true;
+      draggedRef.current = true;
+    }
     setPos({
       x: clamp(drag.current.baseX + dx, 4, window.innerWidth - 56),
       y: clamp(drag.current.baseY + dy, 4, window.innerHeight - 56),
@@ -175,12 +185,31 @@ function FloatingToggle({ onClick }: { onClick: () => void }) {
   };
 
   const handlePointerUp = (e: ReactPointerEvent<HTMLButtonElement>) => {
-    const wasMoved = drag.current?.moved ?? false;
+    if (drag.current?.moved) draggedRef.current = true;
     drag.current = null;
-    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-      e.currentTarget.releasePointerCapture(e.pointerId);
+    try {
+      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      }
+    } catch { /* não suportado */ }
+    if (!openedRef.current && !draggedRef.current) {
+      // Fallback para navegadores onde `click` não é disparado após pointer capture.
+      openedRef.current = true;
+      onClick();
     }
-    if (!wasMoved) onClick();
+  };
+
+  const handleClick = () => {
+    if (draggedRef.current) {
+      draggedRef.current = false;
+      return;
+    }
+    if (openedRef.current) {
+      // Já abriu pelo pointerup — apenas limpa o flag (evita abrir 2x).
+      openedRef.current = false;
+      return;
+    }
+    onClick();
   };
 
   return (
@@ -189,6 +218,7 @@ function FloatingToggle({ onClick }: { onClick: () => void }) {
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={() => { drag.current = null; }}
+      onClick={handleClick}
       aria-label="Open sidebar"
       title="Arraste para mover • Clique para abrir o menu"
       className="fixed z-50 bg-[#1a1a2e]/90 border border-white/10 rounded-xl p-2.5 flex flex-col gap-1.5 items-center hover:border-accent/40 hover:scale-105 transition-transform duration-150 shadow-xl backdrop-blur-md cursor-grab active:cursor-grabbing select-none touch-none"
