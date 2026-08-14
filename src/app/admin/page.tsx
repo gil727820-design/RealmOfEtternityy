@@ -1854,7 +1854,6 @@ export default function AdminPage() {
                                 {p.createdAt ? new Date(String(p.createdAt)).toLocaleString("pt-BR") : "—"}
                               </span>
                             </div>
-                            <p className="text-[11px] text-gray-400 mb-1.5">📝 {String(p.note || "—")}</p>
                             <div className="flex flex-wrap items-center gap-2">
                               {p.screenshotUrl ? (
                                 <a href={String(p.screenshotUrl)} target="_blank" rel="noreferrer"

@@ -1,0 +1,162 @@
+================================================================
+            UPDATE LOG — REALM OF ETERNITY
+            (Resumo de todas as novidades recentes)
+================================================================
+
+
+1) BALANCEAMENTO DE XP (subir de nível)
+------------------------------------------------
+- Subir de nível ficou mais difícil (não é mais tão rápido).
+- A curva foi ajustada para um meio-termo: nem fácil demais,
+  nem travado.
+- Antes: era muito fácil subir. Agora exige um pouco mais de
+  tempo/jogo.
+
+------------------------------------------------
+2) RECOMPENSAS AFK (nerf pesado)
+------------------------------------------------
+- As recompensas de ficar AFK foram REDUZIDAS bastante.
+- Antes: em 3 minutos você ganhava +297 ouro e +612 XP.
+- Agora: esse tipo de ganho só acontece depois de ~1 hora.
+- Motivo: não quebrar a economia do jogo. Deixar o jogo aberto
+  por 1 semana não gera mais vantagem absurda.
+
+------------------------------------------------
+3) ABA AFK CORRIGIDA
+------------------------------------------------
+- A aba AFK estava com bugs e foi atualizada:
+  * Agora mostra um COOLDOWN com o tempo que você ficou offline.
+  * Depois de coletar, não inicia sozinha de novo — pede
+    confirmação para voltar ao AFK.
+  * Exibe o tempo correto de ausência.
+
+------------------------------------------------
+4) ATRIBUTOS (revisão completa)
+------------------------------------------------
+- TODOS os atributos foram verificados e os que não faziam nada
+  agora funcionam de verdade:
+
+  * VELOCIDADE → agora dá CHANCE DE ATAQUE EXTRA no combate
+    (ataca 2x na rodada, até 50% de chance se você for bem mais
+    rápido que o inimigo).
+  * RESISTÊNCIA → agora REDUZ O DANO RECEBIDO (até ~30% no cap
+    da classe).
+  * Ataque, Defesa, Vida, Mana, Crítico, Precisão e Esquiva já
+    funcionavam — confirmados e consistentes.
+
+------------------------------------------------
+5) IA NO PVP (oponentes mais espertos)
+------------------------------------------------
+- Antes: o oponente agia no sorteio puro (toda luta igual).
+- Agora: o oponente DECIDE olhando o contexto:
+  * Se você está com pouca vida → ele tenta te "rematar".
+  * Se ELE está com pouca vida → ele se defende.
+  * Mana cheia → usa o golpe especial.
+  * Lutas longas (25+ rodadas) → fica agressivo.
+- Oponentes de liga alta (Imperador, Lenda...) jogam MAIS ESPERTO
+  que os de liga baixa (Bronze).
+- Corrigido também: a defesa do oponente agora realmente reduz o
+  dano do seu próximo golpe (antes não fazia nada).
+- A IA não desbalanceia o jogo — só deixa as lutas menos repetitivas.
+
+------------------------------------------------
+6) ÁRVORE DE HABILIDADES (visual nova)
+------------------------------------------------
+- A aba de habilidades virou uma ÁRVORE DE VERDADE:
+  * Nós (orbs) interligados por linhas que ACENDEM em verde
+    conforme você aprende as habilidades.
+  * O tronco se divide em ramos e converge no golpe exclusivo
+    da sua classe (nó dourado no fim).
+  * Cores por tier: roxo → rosa → dourado.
+  * Painel de detalhes ao clicar em cada habilidade (efeito,
+    requisito, botão Aprender).
+  * Legenda de estados: bloqueada, disponível, aprendida, máxima.
+
+------------------------------------------------
+7) MAESTRIA DA CLASSE (buff + animação)
+------------------------------------------------
+- Quando você MAXIMIZA as 10 habilidades da árvore (30 pontos),
+  sua classe desperta:
+  * Ganha um BUFF TEMÁTICO PERMANENTE (ex.: Guerreiro +12% dano,
+    Paladino -10% dano recebido, Assassino +10% crítico,
+    Berserker +18% dano...).
+  * Toca uma ANIMAÇÃO DE DESPERTAR em tela cheia (coroa + brilho).
+  * Ganha um título temático (Arquimago, Sombra Lendária...).
+- Se você resetar a árvore, o buff some (calculado ao vivo).
+- Vale na Torre e no PvP (os dois lados).
+
+------------------------------------------------
+8) MERCADO ENTRE JOGADORES (novo)
+------------------------------------------------
+- Nova aba "Mercado" na sidebar (com ícone novo).
+- 3 abas: Mercado (comprar), Vender (anunciar) e Anúncios de Troca.
+
+  * MERCADO: compre itens de outros jogadores com OURO ou DIAMANTES.
+    O dinheiro vai direto para o vendedor. Atualiza sozinho a cada 15s.
+  * VENDER: anuncie seus itens por ouro ou diamantes.
+    - Consumíveis podem ser anunciados em parte do stack.
+    - Taxa de anúncio: 5% em ouro (mín 10, máx 1.000) ou 2 diamantes.
+    - Máximo: 8 anúncios por personagem, 300 no servidor.
+    - Seção "Seus anúncios ativos" com botão REMOVER (item volta).
+  * ANÚNCIOS DE TROCA: crie anúncio público com título + item que
+    você oferece + o que você quer receber.
+
+- Proteções: nível mínimo 5, servidor valida tudo, item anunciado
+  fica no "cofre" até ser comprado ou removido.
+- Botões de remover adicionados em TODOS os anúncios (venda e troca).
+
+------------------------------------------------
+9) CHAT PRIVADO NOS ANÚNCIOS DE TROCA
+------------------------------------------------
+- Cada jogador que chama no seu anúncio tem a PRÓPRIA conversa
+  com você — ninguém vê a conversa de outro.
+- O dono do anúncio vê um seletor de conversas (uma aba por jogador).
+- Dentro do chat tem o botão "🔁 INICIAR TRADE".
+
+------------------------------------------------
+10) SALA DE TROCA 1x1 (player to player)
+------------------------------------------------
+- Os dois jogadores entram em uma sala de troca:
+  * Cada um adiciona seus itens (grade do inventário).
+  * Atualiza em TEMPO REAL (sincroniza a cada 2s).
+  * Chat dentro da sala para negociar.
+  * CONFIRMAÇÃO DUPLA: cada um confirma o próprio lado.
+    A troca SÓ executa quando os DOIS confirmaram.
+  * TROCA ATÔMICA: os itens são validados de novo e movidos ao
+    mesmo tempo — sem dupe, sem perda.
+  * Botão de cancelar a sala a qualquer momento.
+
+------------------------------------------------
+11) PRÉ-VISUALIZAÇÃO DE ITENS
+------------------------------------------------
+- Nos anúncios do mercado, anúncios de troca e na sala de troca,
+  os itens agora mostram ÍCONE + NOME (antes era só o nome).
+- Clicando no item abre uma FICHA COMPLETA:
+  * Ícone grande, raridade colorida, nível, slot, classe.
+  * Todos os status (Ataque, Defesa, HP, Mana, Velocidade, Crítico).
+  * Efeitos de consumível + descrição.
+- O preço sugerido de venda foi REMOVIDO (não aparece mais).
+
+------------------------------------------------
+12) MÚLTIPLOS PERSONAGENS POR CONTA (até 3)
+------------------------------------------------
+- Agora cada conta pode ter até 3 PERSONAGENS (principal + 2 alts).
+- Fluxo novo:
+  * Login → aparece a tela "ESCOLHA SEU PERSONAGEM".
+  * Cada personagem é um card (imagem, classe, nível, poder).
+  * Clique em "Entrar" para jogar com ele.
+  * Botão "+ Criar novo personagem" para criar outro (nome,
+    sexo, classe — tudo normal).
+  * Botão "Sair da conta" embaixo.
+- A tela mostra "Você tem X de 3 personagens" e o botão de criar
+  some ao atingir o limite.
+- Cada personagem tem progresso SEPARADO (inventário, XP, etc.).
+- Botão "← VOLTAR" adicionado na tela de criação de personagem
+  (caso clique errado — volta para a seleção ou para o login).
+
+================================================================
+OBSERVAÇÕES:
+- Depois das atualizações, reinicie o servidor (npm run dev) e
+  dê Ctrl+F5 no navegador para limpar o cache do jogo.
+- Tudo testado: typecheck ok, rotas respondendo no servidor real.
+================================================================

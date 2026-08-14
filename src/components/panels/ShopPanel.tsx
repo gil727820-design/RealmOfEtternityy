@@ -39,7 +39,6 @@ export default function ShopPanel() {
   // Config PIX (diamantes): chave, QR e conversão por real vindos do admin.
   const [pixSettings, setPixSettings] = useState<{ pixKey: string; qr: string; diamondsPerReal: number }>({ pixKey: "", qr: "", diamondsPerReal: 1000 });
   const [pixPack, setPixPack] = useState<number | null>(null);
-  const [proofNote, setProofNote] = useState("");
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -111,7 +110,7 @@ export default function ShopPanel() {
 
   const submitPix = async () => {
     if (!pixPack || submitting) return;
-    if (proofNote.trim().length < 3) {
+    if (!proofFile) {
       notify(t("pix.proofRequired", locale), "error");
       return;
     }
@@ -120,8 +119,7 @@ export default function ShopPanel() {
       const fd = new FormData();
       fd.append("characterId", String(character.id));
       fd.append("valueBRL", String(pixPack));
-      fd.append("note", proofNote.trim());
-      if (proofFile) fd.append("screenshot", proofFile);
+      fd.append("screenshot", proofFile);
       const res = await fetch("/api/pix/purchase", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok) {
@@ -130,7 +128,6 @@ export default function ShopPanel() {
       }
       notify(t("pix.submitted", locale), "success");
       setPixPack(null);
-      setProofNote("");
       setProofFile(null);
     } catch (e) {
       notify(t("general.error", locale), "error");
@@ -344,17 +341,9 @@ export default function ShopPanel() {
               )}
 
               <div className="mt-5 text-left">
-                <label className="block text-xs text-gray-400 mb-1 font-bold">{t("pix.proofLabel", locale)}</label>
-                <textarea
-                  value={proofNote}
-                  onChange={(e) => setProofNote(e.target.value)}
-                  rows={2}
-                  placeholder={t("pix.proofPlaceholder", locale)}
-                  className="w-full bg-bg-surface rounded-lg p-3 text-sm border border-white/10 focus:outline-none focus:border-purple-400"
-                />
-                <label className="mt-3 block text-center cursor-pointer rounded-xl border border-dashed border-purple-400/40 hover:border-purple-400 transition p-3 text-xs text-purple-300 font-bold">
+                <label className="block text-center cursor-pointer rounded-xl border border-dashed border-purple-400/40 hover:border-purple-400 transition p-3 text-xs text-purple-300 font-bold">
                   {proofFile ? `✅ ${proofFile.name}` : "📤 " + t("pix.upload", locale)}
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => setProofFile(e.target.files?.[0] || null)} />
+                  <input type="file" className="hidden" onChange={(e) => setProofFile(e.target.files?.[0] || null)} />
                 </label>
               </div>
 

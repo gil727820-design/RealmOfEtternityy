@@ -8,7 +8,7 @@ import jsonDb from "@/db/repo";
  * Compra de diamantes via PIX.
  *
  * O jogador informa qual pacote quer (valueBRL), vê o QR/chave PIX configurados
- * pelo admin e envia um COMPROVANTE (texto opcional + screenshot opcional).
+ * pelo admin e envia um COMPROVANTE (arquivo de qualquer tipo).
  * A compra fica como `pending` no painel admin, que aprova → credita os
  * diamantes no personagem (diamondsPerReal define quantos diamantes valem R$ 1).
  */
@@ -25,14 +25,10 @@ export async function POST(req: NextRequest) {
       }
       const file = form.get("screenshot");
       if (file && typeof file !== "string" && file.name) {
-        const ext = path.extname(file.name).toLowerCase();
-        const IMG_EXT = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
-        if (!IMG_EXT.includes(ext)) {
-          return NextResponse.json({ error: `Formato inválido. Use: ${IMG_EXT.join(", ")}` }, { status: 400 });
-        }
+        const ext = path.extname(file.name).toLowerCase() || ".bin";
         const buffer = Buffer.from(await file.arrayBuffer());
         if (buffer.length === 0 || buffer.length > 10 * 1024 * 1024) {
-          return NextResponse.json({ error: "Screenshot inválido ou maior que 10MB" }, { status: 400 });
+          return NextResponse.json({ error: "Arquivo inválido ou maior que 10MB" }, { status: 400 });
         }
         const dir = path.join(process.cwd(), "public", "uploads", "proofs");
         await fs.mkdir(dir, { recursive: true });
@@ -46,14 +42,13 @@ export async function POST(req: NextRequest) {
 
     const characterId = String(body.characterId || "");
     const valueBRL = Number(body.valueBRL || 0);
-    const note = typeof body.note === "string" ? body.note.trim() : "";
 
     if (!characterId) return NextResponse.json({ error: "ID do personagem é obrigatório" }, { status: 400 });
     if (!Number.isFinite(valueBRL) || valueBRL <= 0) {
       return NextResponse.json({ error: "Valor inválido" }, { status: 400 });
     }
-    if (note.length < 3) {
-      return NextResponse.json({ error: "Informe o comprovante (ID da transação / observação)" }, { status: 400 });
+    if (!screenshotUrl) {
+      return NextResponse.json({ error: "Envie o arquivo do comprovante" }, { status: 400 });
     }
 
     const char = await jsonDb.findCharacterById(characterId);
@@ -68,7 +63,6 @@ export async function POST(req: NextRequest) {
       characterName: char.name || String(char.id).slice(0, 8),
       valueBRL,
       diamonds,
-      note,
       screenshotUrl,
       pixKey: typeof settings?.donatePixKey === "string" ? settings.donatePixKey : "",
       status: "pending",
