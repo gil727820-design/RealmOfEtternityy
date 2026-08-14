@@ -391,6 +391,8 @@ const en: Record<string, string> = {
   "pix.copied": "PIX key copied!",
   "pix.copy": "Copy",
   "pix.proofRequired": "Please upload the transfer receipt file.",
+  "pix.proofLabel": "Payment proof (transaction ID / note):",
+  "pix.proofPlaceholder": "Ex.: transaction ID, receipt name...",
   "pix.upload": "Upload receipt file",
   "pix.sendProof": "Send receipt for review",
   "pix.submitted": "Receipt sent! Wait for the admin to approve.",

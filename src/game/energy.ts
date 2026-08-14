@@ -37,7 +37,8 @@ export function computeEnergyRegen(
   now: Date = new Date(),
   multiplier: number = 1
 ): EnergyRegenResult {
-  const rate = Math.max(1, multiplier | 0) || 1;
+  // Multiplicador pode ser fracionário (VIP: 1.05–1.4; boost de código: 2).
+  const rate = Math.max(1, multiplier || 1);
   const maxEnergy = Number(char.maxEnergy) || 100;
   let energy = Number(char.energy);
   if (Number.isNaN(energy)) energy = maxEnergy;
@@ -53,7 +54,7 @@ export function computeEnergyRegen(
 
   const elapsed = Math.max(0, now.getTime() - startTs);
   const intervals = Math.floor(elapsed / ENERGY_REGEN_MS);
-  const points = intervals * rate;
+  const points = Math.floor(intervals * rate);
 
   if (points <= 0) {
     const msToNext = Math.max(0, startTs + ENERGY_REGEN_MS - now.getTime());

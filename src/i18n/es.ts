@@ -421,6 +421,8 @@ const es: Record<string, string> = {
   "pix.copied": "¡Clave PIX copiada!",
   "pix.copy": "Copiar",
   "pix.proofRequired": "Sube el archivo del comprobante de la transferencia.",
+  "pix.proofLabel": "Comprobante (ID de transacción / nota):",
+  "pix.proofPlaceholder": "Ej.: ID de transacción, nombre del recibo...",
   "pix.upload": "Subir archivo del comprobante",
   "pix.sendProof": "Enviar comprobante para revisión",
   "pix.submitted": "¡Comprobante enviado! Espera a que el admin lo apruebe.",
