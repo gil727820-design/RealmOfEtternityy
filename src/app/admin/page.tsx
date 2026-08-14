@@ -4,6 +4,12 @@ import { RARITY_COLORS, CLASS_ICONS, REGIONS } from "@/game/constants";
 import type { ClassName } from "@/game/constants";
 import { SKIN_CATALOG } from "@/game/skins";
 import { VIP_TIERS, currentVipTier } from "@/game/vip";
+
+/** Nomes bonitos dos tiers VIP exibidos no painel. */
+const VIP_LABELS: Record<string, string> = {
+  bronze: "Bronze", silver: "Prata", gold: "Ouro", platinum: "Platina",
+  diamond: "Diamante", master: "Mestre", legend: "Lenda", emperor: "Imperador",
+};
 import type { SkinTemplate } from "@/game/skins";
 import { t } from "@/i18n";
 
@@ -328,7 +334,8 @@ export default function AdminPage() {
       return;
     }
     const name = String(c.name);
-    if (!window.confirm(`👑 Ativar VIP ${tier} para "${name}"? (30 dias)`)) return;
+    const tierLabel = VIP_LABELS[tier] || tier;
+    if (!window.confirm(`👑 Ativar VIP ${tierLabel} para "${name}"? (30 dias)`)) return;
     setBusy(`vip_set_${String(c.id)}`);
     const d = await callAdmin({ action: "set_vip", characterId: c.id, tier });
     setMessage(d.success ? `✅ ${d.message || "VIP ativado!"}` : `❌ ${d.error || "Falha"}`);
@@ -1113,7 +1120,7 @@ export default function AdminPage() {
                           {(() => {
                             const active = currentVipTier(c);
                             if (active) {
-                              const label = active.id.charAt(0).toUpperCase() + active.id.slice(1);
+                              const label = VIP_LABELS[active.id] || active.id;
                               return (
                                 <span className="text-[#ffd700] font-bold">
                                   {label} até {new Date(String(c.vipUntil)).toLocaleDateString("pt-BR")}
@@ -1132,9 +1139,9 @@ export default function AdminPage() {
                           onChange={(e) => setVipSelects((s) => ({ ...s, [String(c.id)]: e.target.value }))}
                           className="bg-[#0a0a12] border border-gray-700 rounded-lg px-2 py-1 text-xs text-white focus:border-[#ffd700] focus:outline-none"
                         >
-                          <option value="">Tier...</option>
+                          <option value="">Selecione o tier...</option>
                           {VIP_TIERS.map((tier) => (
-                            <option key={tier.id} value={tier.id}>{tier.id}</option>
+                            <option key={tier.id} value={tier.id}>{VIP_LABELS[tier.id] || tier.id}</option>
                           ))}
                         </select>
                         <button

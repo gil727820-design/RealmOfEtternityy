@@ -16,6 +16,9 @@ function fmt(n: number | undefined | null): string {
   return Number(n || 0).toLocaleString("pt-BR");
 }
 
+/** Ordem das raridades usada nos filtros do mercado (comum → suprema). */
+const MARKET_RARITIES = ["common", "uncommon", "rare", "epic", "legendary", "mythic", "divine", "ancestral", "supreme"];
+
 function rarityLabel(rarity: string | undefined, locale: string): string {
   if (!rarity) return "—";
   const key = `rarity.${rarity}`;
@@ -45,6 +48,8 @@ function BrowseTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
   const [preview, setPreview] = useState<PreviewItem | null>(null);
+  const [query, setQuery] = useState("");
+  const [rarity, setRarity] = useState("");
   const timers = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
@@ -123,6 +128,17 @@ function BrowseTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
     (e: any) => e.listing?.sellerId === characterId && e.listing?.status === "active"
   ).length;
 
+  // Filtro local: busca por nome (ignora acentos/maiúsculas) + raridade.
+  const filtered = useMemo(() => {
+    const q = normalize(query);
+    return listings.filter((e: any) => {
+      const tpl = e.template || {};
+      if (rarity && tpl.rarity !== rarity) return false;
+      if (q && !normalize(itemName(tpl, locale)).includes(q)) return false;
+      return true;
+    });
+  }, [listings, query, rarity, locale]);
+
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
@@ -135,6 +151,49 @@ function BrowseTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
         </button>
       </div>
 
+      {/* Busca por nome + filtro por raridade */}
+      {listings.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <div className="relative">
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="🔍 Buscar item..."
+              className="w-full rounded-xl border border-white/10 bg-bg-surface px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:border-[#ffd700] focus:outline-none"
+            />
+            {query && (
+              <button
+                onClick={() => setQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition"
+                title="Limpar busca"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <button onClick={() => setRarity("")} className={chipCls(rarity === "")}>
+              ✨ Todos
+            </button>
+            {MARKET_RARITIES.map((r) => (
+              <button
+                key={r}
+                onClick={() => setRarity(rarity === r ? "" : r)}
+                className={chipCls(rarity === r)}
+                title={rarityLabel(r, locale)}
+              >
+                <span className="mr-1.5 inline-block h-2 w-2 rounded-full align-middle" style={{ background: RARITY_COLORS[r] }} />
+                {rarityLabel(r, locale)}
+              </button>
+            ))}
+          </div>
+          <p className="text-[10px] text-gray-500">
+            {filtered.length} {filtered.length === 1 ? "anúncio" : "anúncios"}{" "}
+            {(query || rarity) && `(filtrado de ${listings.length})`}
+          </p>
+        </div>
+      )}
+
       {loading ? (
         <div className="grid place-items-center py-16">
           <span className="animate-bounce text-3xl">🏪</span>
@@ -144,9 +203,17 @@ function BrowseTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
           <span className="text-4xl opacity-50">📦</span>
           <p className="text-sm">O mercado está vazio — seja o primeiro a anunciar!</p>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-white/15 py-14 text-gray-500">
+          <span className="text-4xl opacity-50">🔍</span>
+          <p className="text-sm">Nenhum item encontrado para sua busca.</p>
+          <button onClick={() => { setQuery(""); setRarity(""); }} className="text-xs text-[#ffd700] hover:underline">
+            Limpar busca e filtros
+          </button>
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {listings.map((entry: any) => {
+          {filtered.map((entry: any) => {
             const l = entry.listing;
             const tpl = entry.template || {};
             const seller = entry.seller;

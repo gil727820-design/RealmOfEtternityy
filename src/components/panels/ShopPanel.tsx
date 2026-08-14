@@ -228,11 +228,18 @@ export default function ShopPanel() {
             ) : (
               <p className="text-sm text-gray-400 col-span-full">{t("vip.none", locale)}</p>
             )}
+            {currentVip && (
+              <p className="text-xs text-amber-300/90 col-span-full">
+                🔒 {t("vip.lockedHint", locale)} <b className="text-amber-400">{t(currentVip.nameKey, locale)}</b>
+              </p>
+            )}
             {VIP_TIERS.map((tier) => {
               const owned = currentVip?.id === tier.id;
               const lower = !!currentVip && VIP_TIERS.indexOf(currentVip) < VIP_TIERS.indexOf(tier);
+              // Inferiores ao VIP atual ficam bloqueados (não pode comprar pior do que já tem).
+              const inferior = !!currentVip && VIP_TIERS.indexOf(tier) < VIP_TIERS.indexOf(currentVip);
               return (
-                <div key={tier.id} className="game-card p-6 flex flex-col items-center text-center gap-4 hover-lift">
+                <div key={tier.id} className={`game-card p-6 flex flex-col items-center text-center gap-4 ${inferior ? "opacity-45 saturate-50" : "hover-lift"}`}>
                   <img src={tier.image} alt={t(tier.nameKey, locale)} className="w-24 h-24 object-contain drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]" />
                   <h3 className="text-xl font-bold">{t(tier.nameKey, locale)}</h3>
                   <p className="text-sm text-gray-400 flex-1">{t(tier.descKey, locale)}</p>
@@ -241,10 +248,10 @@ export default function ShopPanel() {
                   </p>
                   <button
                     onClick={() => buyItem(`vip_${tier.id}`, tier.nameKey, "diamond", tier.price)}
-                    disabled={buying === `vip_${tier.id}`}
-                    className={`game-btn w-full ${owned ? "game-btn-gold" : "game-btn-purple"} ${buying === `vip_${tier.id}` ? "opacity-50" : ""}`}
+                    disabled={buying === `vip_${tier.id}` || inferior}
+                    className={`game-btn w-full ${owned ? "game-btn-gold" : "game-btn-purple"} ${buying === `vip_${tier.id}` || inferior ? "opacity-50 cursor-not-allowed" : ""}`}
                   >
-                    {owned ? `✅ ${t("vip.owned", locale)}` : `💎 ${tier.price} · 30 ${t("general.days", locale)}${lower ? ` (${t("vip.upgrade", locale)})` : ""}`}
+                    {inferior ? `🔒 ${t("vip.inferior", locale)}` : owned ? `✅ ${t("vip.owned", locale)}` : `💎 ${tier.price} · 30 ${t("general.days", locale)}${lower ? ` (${t("vip.upgrade", locale)})` : ""}`}
                   </button>
                 </div>
               );

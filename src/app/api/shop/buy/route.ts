@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { VIP_TIERS } from "@/game/vip";
+import { VIP_TIERS, currentVipTier } from "@/game/vip";
 
 const SHOP_ITEMS: Record<string, { price: number; currency: "gold"|"diamonds"; type: string; value: number; value2?: number; value3?: string }> = {
   // Baús
@@ -31,6 +31,12 @@ const SHOP_ITEMS: Record<string, { price: number; currency: "gold"|"diamonds"; t
 };
 
 const RARITY_ORDER = ["common","uncommon","rare","epic","legendary","mythic","divine","ancestral","supreme"];
+
+/** Nomes amigáveis dos tiers VIP para mensagens de erro (pt-BR). */
+const VIP_NAMES: Record<string, string> = {
+  bronze: "Bronze", silver: "Prata", gold: "Ouro", platinum: "Platina",
+  diamond: "Diamante", master: "Mestre", legend: "Lenda", emperor: "Imperador",
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -141,6 +147,17 @@ export async function POST(req: NextRequest) {
     if (shopItem.type === "vip") {
       const tier = VIP_TIERS[shopItem.value];
       if (!tier) return NextResponse.json({ error: "VIP não encontrado" }, { status: 404 });
+      // Só permite comprar VIP ACIMA do atual — tiers inferiores/iguais ficam bloqueados.
+      const current = currentVipTier(char);
+      if (current) {
+        const currentIdx = VIP_TIERS.indexOf(current);
+        const buyIdx = VIP_TIERS.indexOf(tier);
+        if (buyIdx <= currentIdx) {
+          return NextResponse.json({
+            error: `Você já possui o VIP ${VIP_NAMES[current.id] || current.id} — só é possível comprar VIPs acima do seu atual.`,
+          }, { status: 400 });
+        }
+      }
       const now = new Date();
       const vipUntil = new Date(now.getTime() + tier.days * 24 * 3600 * 1000).toISOString();
       await jsonDb.updateCharacter(characterId, {

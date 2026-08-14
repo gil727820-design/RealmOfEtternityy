@@ -377,6 +377,8 @@ const en: Record<string, string> = {
   "vip.none": "You don't have VIP yet. Pick a tier below!",
   "vip.owned": "Active",
   "vip.upgrade": "upgrade to this",
+  "vip.inferior": "Lower VIP (locked)",
+  "vip.lockedHint": "You can only buy VIPs above your current one:",
 
   // Diamonds via PIX
   "pix.title": "Diamonds",

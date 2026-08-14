@@ -458,6 +458,8 @@ const ptBR: Record<string, string> = {
   "vip.none": "Você ainda não tem VIP. Escolha um nível abaixo!",
   "vip.owned": "Ativo",
   "vip.upgrade": "melhorar para este",
+  "vip.inferior": "VIP inferior (bloqueado)",
+  "vip.lockedHint": "Você só pode comprar VIPs acima do seu atual:",
 
   // Diamantes via PIX
   "pix.title": "Diamantes",
