@@ -34,6 +34,14 @@ export default function GameScreen() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  // Inicia com o menu recolhido no celular (onde a sidebar cobriria a tela),
+  // deixando o botão flutuante visível em vez de abrir o painel por padrão.
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setCollapsed(true);
+    }
+  }, []);
+
   const loadCharData = useCallback(async () => {
     if (!characterId) {
       setInitialLoading(false);

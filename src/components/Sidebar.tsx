@@ -154,71 +154,51 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
  */
 function FloatingToggle({ onClick }: { onClick: () => void }) {
   const [pos, setPos] = useState({ x: 12, y: 16 });
-  const drag = useRef<{ startX: number; startY: number; baseX: number; baseY: number; moved: boolean } | null>(null);
+  const drag = useRef<{ startX: number; startY: number; baseX: number; baseY: number } | null>(null);
+  // Flag PERSISTENTE de arrasto: sobrevive ao pointerup, para o `click` saber
+  // se o gesto foi um drag (não abre o menu nesse caso).
   const draggedRef = useRef(false);
-  const openedRef = useRef(false);
 
   const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), Math.max(min, max));
 
   const handlePointerDown = (e: ReactPointerEvent<HTMLButtonElement>) => {
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch { /* não suportado (safari antigo) */ }
+    drag.current = { startX: e.clientX, startY: e.clientY, baseX: pos.x, baseY: pos.y };
     draggedRef.current = false;
-    openedRef.current = false;
-    drag.current = { startX: e.clientX, startY: e.clientY, baseX: pos.x, baseY: pos.y, moved: false };
+    window.addEventListener("pointermove", handleWindowMove);
+    window.addEventListener("pointerup", handleWindowUp, { once: true });
+    window.addEventListener("pointercancel", handleWindowUp, { once: true });
   };
 
-  const handlePointerMove = (e: ReactPointerEvent<HTMLButtonElement>) => {
+  const handleWindowMove = (e: globalThis.PointerEvent) => {
     if (!drag.current) return;
     const dx = e.clientX - drag.current.startX;
     const dy = e.clientY - drag.current.startY;
-    // Limiar maior (10px): evita que um "tap" com micro-movimento vire drag no celular.
-    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
-      drag.current.moved = true;
-      draggedRef.current = true;
-    }
+    // Limiar de 10px: um "tap" com micro-movimento no celular não vira drag.
+    if (Math.abs(dx) > 10 || Math.abs(dy) > 10) draggedRef.current = true;
     setPos({
       x: clamp(drag.current.baseX + dx, 4, window.innerWidth - 56),
       y: clamp(drag.current.baseY + dy, 4, window.innerHeight - 56),
     });
   };
 
-  const handlePointerUp = (e: ReactPointerEvent<HTMLButtonElement>) => {
-    if (drag.current?.moved) draggedRef.current = true;
+  const handleWindowUp = () => {
+    window.removeEventListener("pointermove", handleWindowMove);
+    window.removeEventListener("pointerup", handleWindowUp);
+    window.removeEventListener("pointercancel", handleWindowUp);
     drag.current = null;
-    try {
-      if (e.currentTarget.hasPointerCapture(e.pointerId)) {
-        e.currentTarget.releasePointerCapture(e.pointerId);
-      }
-    } catch { /* não suportado */ }
-    if (!openedRef.current && !draggedRef.current) {
-      // Fallback para navegadores onde `click` não é disparado após pointer capture.
-      openedRef.current = true;
-      onClick();
-    }
-  };
-
-  const handleClick = () => {
-    if (draggedRef.current) {
-      draggedRef.current = false;
-      return;
-    }
-    if (openedRef.current) {
-      // Já abriu pelo pointerup — apenas limpa o flag (evita abrir 2x).
-      openedRef.current = false;
-      return;
-    }
-    onClick();
   };
 
   return (
     <button
       onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={() => { drag.current = null; }}
-      onClick={handleClick}
+      onClick={() => {
+        // Só abre se o gesto não foi um arrasto.
+        if (draggedRef.current) {
+          draggedRef.current = false;
+          return;
+        }
+        onClick();
+      }}
       aria-label="Open sidebar"
       title="Arraste para mover • Clique para abrir o menu"
       className="fixed z-50 bg-[#1a1a2e]/90 border border-white/10 rounded-xl p-2.5 flex flex-col gap-1.5 items-center hover:border-accent/40 hover:scale-105 transition-transform duration-150 shadow-xl backdrop-blur-md cursor-grab active:cursor-grabbing select-none touch-none"
