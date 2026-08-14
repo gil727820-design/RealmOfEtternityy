@@ -37,6 +37,14 @@ export default function ServerNotice() {
   const [popupVisible, setPopupVisible] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const seenRef = useRef<string[]>([]);
+  // Modo teste do admin: ignora a manutenção e mostra um selo 🧪 no jogo.
+  const [testMode, setTestMode] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("adminTestMode") === "1";
+    } catch {
+      return false;
+    }
+  });
 
   // Lê os popups já vistos neste navegador (persiste entre recarregamentos).
   useEffect(() => {
@@ -91,7 +99,16 @@ export default function ServerNotice() {
     return () => clearInterval(id);
   }, [hasCountdown]);
 
-  // ---- Manutenção ativa: bloqueia o jogo para todos ----
+  // ---- Manutenção ativa: bloqueia o jogo para todos (exceto modo teste do admin) ----
+  if (settings?.maintenance && testMode) {
+    return (
+      <div className="fixed top-2 left-2 z-[95] flex items-center gap-2 bg-[#4ecdc4]/15 border border-[#4ecdc4]/50 text-[#4ecdc4] rounded-full px-3 py-1.5 text-[11px] font-bold backdrop-blur-md shadow-[0_0_20px_rgba(78,205,196,0.25)] animate-fadeInDown">
+        <span>🧪</span>
+        <span>Modo teste — manutenção ignorada</span>
+      </div>
+    );
+  }
+
   if (settings?.maintenance) {
     const remainingMs = maintenanceUntilMs ? maintenanceUntilMs - now : 0;
     return (

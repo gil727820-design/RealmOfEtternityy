@@ -20,7 +20,7 @@ function isoToLocalInput(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-type Tab = "dash" | "users" | "characters" | "guilds" | "skins" | "send" | "excluded" | "music" | "server" | "codes" | "reports" | "donate" | "pix";
+type Tab = "dash" | "users" | "characters" | "guilds" | "skins" | "send" | "excluded" | "music" | "server" | "codes" | "reports" | "donate" | "pix" | "test";
 type SkinChar = { id: string; name: string; level: number; classType: string; skins: string[] };
 
 /** Recursos que o ADM pode presentear pelo correio. */
@@ -71,6 +71,14 @@ export default function AdminPage() {
   const [infiniteEnergy, setInfiniteEnergy] = useState(false);
   const [resetConfirm, setResetConfirm] = useState("");
   const [serverLoaded, setServerLoaded] = useState(false);
+  // Modo teste — ignora a manutenção para o admin testar o jogo
+  const [testMode, setTestMode] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("adminTestMode") === "1";
+    } catch {
+      return false;
+    }
+  });
   // Donate (PIX + QR Code)
   const [donatePixKey, setDonatePixKey] = useState("");
   const [donateQrCode, setDonateQrCode] = useState("");
@@ -543,6 +551,21 @@ export default function AdminPage() {
     setBusy(null);
   };
 
+  /** Liga/desliga o modo teste (jogar mesmo em manutenção). */
+  const toggleTestMode = () => {
+    const next = !testMode;
+    setTestMode(next);
+    try {
+      if (next) localStorage.setItem("adminTestMode", "1");
+      else localStorage.removeItem("adminTestMode");
+    } catch { /* ignora */ }
+    setMessage(
+      next
+        ? "🧪 Modo teste ATIVADO — abra o jogo para jogar mesmo em manutenção."
+        : "Modo teste desativado — jogadores voltam a ver a manutenção."
+    );
+  };
+
   /** Envia/atualiza a mensagem global (banner ou popup). */
   const saveServerSettings = async () => {
     setBusy("server");
@@ -713,6 +736,7 @@ export default function AdminPage() {
     { id: "reports", label: "Reportes", icon: "📝" },
     { id: "donate", label: "Donate (PIX)", icon: "💖" },
     { id: "pix", label: "Compras PIX", icon: "💎" },
+    { id: "test", label: "Modo Teste", icon: "🧪" },
   ];
 
   const dash = data as Record<string, number>;
@@ -1634,6 +1658,44 @@ export default function AdminPage() {
                       🗑️ Remover QR Code
                     </button>
                   )}
+                </div>
+              </div>
+            )}
+            {tab === "test" && (
+              <div className="space-y-4">
+                {/* Ativar/desativar modo teste */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <h3 className="text-sm font-bold text-[#4ecdc4] mb-1">🧪 Modo Teste — jogar durante a manutenção</h3>
+                  <p className="text-xs text-gray-400 mb-4">
+                    Ativa uma <b className="text-[#4ecdc4]">rota de teste</b> neste navegador: mesmo com o servidor em
+                    <b className="text-red-400"> manutenção</b>, você consegue abrir e jogar normalmente para testar
+                    funcionalidades. Só vale neste computador (localStorage) — jogadores continuam bloqueados.
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button onClick={toggleTestMode}
+                      className={`px-5 py-2.5 rounded-xl font-bold text-sm transition ${testMode ? "bg-[#4ecdc4] text-black shadow-lg" : "bg-white/10 hover:bg-white/20 text-white"}`}>
+                      {testMode ? "🟢 Modo teste ATIVO" : "⚪ Ativar modo teste"}
+                    </button>
+                    <a href="/" target="_blank" rel="noreferrer"
+                      className="px-5 py-2.5 rounded-xl font-bold text-sm bg-[#ff6b6b] hover:bg-[#ff5252] text-white">
+                      ▶️ Abrir o jogo
+                    </a>
+                  </div>
+                  <p className="text-[11px] text-gray-500 mt-3">
+                    {testMode
+                      ? "✅ Ativo neste navegador. A tela de manutenção é ignorada e um selo 🧪 aparece no canto do jogo."
+                      : "Ao ativar, abra o jogo em nova aba — a manutenção não vai bloquear sua sessão de teste."}
+                  </p>
+                </div>
+
+                {/* Como funciona */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <h3 className="text-sm font-bold text-white mb-2">ℹ️ Como funciona</h3>
+                  <ul className="text-xs text-gray-400 space-y-1.5 list-disc pl-4">
+                    <li>O bloqueio de manutenção é só visual (tela do ServerNotice) — as APIs do jogo continuam no ar.</li>
+                    <li>Com o modo teste ativo, a tela de manutenção some e você joga normalmente, com um selo 🧪 no canto.</li>
+                    <li>Desative depois de testar para os jogadores voltarem a ver a manutenção normalmente.</li>
+                  </ul>
                 </div>
               </div>
             )}
