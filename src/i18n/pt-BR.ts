@@ -25,6 +25,13 @@ const ptBR: Record<string, string> = {
   "char.eyeColor": "Cor dos Olhos",
   "char.avatar": "Avatar",
   "char.confirm": "Criar Herói",
+  "char.select.title": "Escolha seu personagem",
+  "char.select.subtitle": "Você tem {0} de {1} personagens nesta conta",
+  "char.select.enter": "Entrar",
+  "char.select.create": "Criar novo personagem",
+  "char.select.slot": "vaga restante",
+  "char.select.back": "Sair da conta",
+  "char.create.back": "Voltar",
 
   // Classes
   "class.warrior": "Guerreiro",
@@ -109,6 +116,7 @@ const ptBR: Record<string, string> = {
   "nav.pvp": "Arena PvP",
   "nav.guild": "Guilda",
   "nav.shop": "Loja",
+  "nav.market": "Mercado",
   "nav.rankings": "Rankings",
   "nav.forge": "Forja",
   "nav.achievements": "Conquistas",

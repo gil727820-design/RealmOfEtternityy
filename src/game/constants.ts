@@ -3,6 +3,9 @@ export const CLASS_LIST = [
   "hunter","monk","samurai","knight","summoner","templar","archer"
 ] as const;
 
+/** Quantos personagens cada conta pode ter (principal + alts). */
+export const MAX_CHARACTERS_PER_ACCOUNT = 3;
+
 export type ClassName = typeof CLASS_LIST[number];
 
 export const CLASS_ICONS: Record<ClassName, string> = {

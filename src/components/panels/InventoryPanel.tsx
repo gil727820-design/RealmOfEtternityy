@@ -1065,9 +1065,6 @@ const categories = [
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-[11px] text-gray-400">
-                    {t("inv.sellPrice", locale)} {fmt(selected.template?.sellPrice ?? 0)} 🪙
-                  </p>
                 </div>
               </div>
 

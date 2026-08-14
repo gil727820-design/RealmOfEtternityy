@@ -114,3 +114,12 @@ export const reports = pgTable("reports", {
   id: uuid("id").primaryKey(),
   data: jsonb("data").notNull(),
 });
+
+// Mercado entre jogadores: anúncios de venda (`kind = "listing"`) e propostas
+// de troca (`kind = "trade"`). A coluna `kind` discrimina os dois fluxos.
+export const marketplace = pgTable("marketplace", {
+  id: uuid("id").primaryKey(),
+  characterId: uuid("character_id"),
+  kind: text("kind"),
+  data: jsonb("data").notNull(),
+});

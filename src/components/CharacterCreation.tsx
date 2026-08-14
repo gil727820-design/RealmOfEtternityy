@@ -6,7 +6,7 @@ import { CLASS_LIST, CLASS_ICONS, CLASS_BASE_STATS, classImage, type ClassName }
 
 
 export default function CharacterCreation() {
-  const { userId, locale, setCharacter } = useGameStore();
+  const { userId, locale, characters, setCharacter, setCharacters, setCreatingCharacter, setShowCharacterSelect, logout } = useGameStore();
   const [name, setName] = useState("");
   const [sex, setSex] = useState<"male" | "female">("male");
   const [classType, setClassType] = useState<ClassName>("warrior");
@@ -29,11 +29,25 @@ export default function CharacterCreation() {
       const data = await res.json();
       if (!res.ok) { setError(data.error); setLoading(false); return; }
       setCharacter(data.character);
+      // Sincroniza a lista da conta (o novo personagem entra na seleção).
+      if (Array.isArray(data.characters)) setCharacters(data.characters);
+      setCreatingCharacter(false);
     } catch {
       setError(t("map.connectionError", locale));
-    }
-    setLoading(false);
+    }    setLoading(false);
   };
+
+  // Volta para a seleção de personagens (se a conta já tem) ou para o login
+  // (se foi clicado sem querer na primeira criação).
+  const goBack = () => {
+    if (characters && characters.length > 0) {
+      setCreatingCharacter(false);
+      setShowCharacterSelect(true);
+    } else {
+      logout();
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-[#050505] relative overflow-hidden p-4 flex items-center justify-center font-sans">
@@ -41,6 +55,14 @@ export default function CharacterCreation() {
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-900/20 rounded-full blur-[120px] animate-float"></div>
 
       <div className="w-full max-w-4xl relative z-10 animate-fadeInUp">
+        <button
+          onClick={goBack}
+          disabled={loading}
+          className="mb-4 inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 text-sm font-bold text-gray-300 transition-all hover:bg-white/20 hover:text-white disabled:opacity-50"
+        >
+          ← {t("char.create.back", locale)}
+        </button>
+
         <h1 className="text-4xl font-bold text-center mb-8 gradient-text">
           {t("char.create", locale)} ⚔️
         </h1>

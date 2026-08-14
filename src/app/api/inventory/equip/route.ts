@@ -49,6 +49,12 @@ export async function POST(req: NextRequest) {
     }
 
     const template = entry.template || {};
+    if (entry.item.listed) {
+      return NextResponse.json({ error: "Cancele o anúncio no mercado antes de equipar." }, { status: 400 });
+    }
+    if (entry.item.reservedFor) {
+      return NextResponse.json({ error: "Este item está reservado em uma troca pendente." }, { status: 400 });
+    }
     if (template.type === "consumable") {
       return NextResponse.json({ error: "Este item não pode ser equipado" }, { status: 400 });
     }

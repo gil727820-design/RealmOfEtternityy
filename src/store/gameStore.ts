@@ -2,12 +2,18 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-export type GameTab = "dashboard" | "character" | "missions" | "inventory" | "map" | "tower" | "pvp" | "guild" | "shop" | "rankings" | "forge" | "achievements" | "afk" | "dungeon" | "skills" | "mailbox" | "code" | "report" | "donate" | "settings";
+export type GameTab = "dashboard" | "character" | "missions" | "inventory" | "map" | "tower" | "pvp" | "guild" | "shop" | "market" | "rankings" | "forge" | "achievements" | "afk" | "dungeon" | "skills" | "mailbox" | "code" | "report" | "donate" | "settings";
 
 interface GameState {
   userId: string | null;
   characterId: string | null;
   character: Record<string, unknown> | null;
+  /** Todos os personagens da conta (para a tela de seleção). */
+  characters: Array<Record<string, unknown>>;
+  /** True enquanto a tela de escolha de personagem deve aparecer. */
+  showCharacterSelect: boolean;
+  /** True enquanto a tela de criação deve aparecer (inclusive para criar um 2º/3º personagem). */
+  creatingCharacter: boolean;
   inventory: Array<Record<string, unknown>>;
   activeMissions: Array<Record<string, unknown>>;
   availableMissions: Array<Record<string, unknown>>;
@@ -26,6 +32,9 @@ interface GameState {
 
   setUser: (userId: string, locale?: string) => void;
   setCharacter: (char: Record<string, unknown>) => void;
+  setCharacters: (chars: Array<Record<string, unknown>>) => void;
+  setShowCharacterSelect: (show: boolean) => void;
+  setCreatingCharacter: (v: boolean) => void;
   setTab: (tab: GameTab) => void;
   setLocale: (l: string) => void;
   setLoading: (l: boolean) => void;
@@ -49,6 +58,9 @@ const initialState = {
   userId: null as string | null,
   characterId: null as string | null,
   character: null as Record<string, unknown> | null,
+  characters: [] as Array<Record<string, unknown>>,
+  showCharacterSelect: false,
+  creatingCharacter: false,
   inventory: [] as Array<Record<string, unknown>>,
   activeMissions: [] as Array<Record<string, unknown>>,
   availableMissions: [] as Array<Record<string, unknown>>,
@@ -72,7 +84,12 @@ export const useGameStore = create<GameState>()(
       ...initialState,
 
       setUser: (userId, locale) => set({ userId, isLoggedIn: true, locale: locale || "pt-BR" }),
-      setCharacter: (char) => set({ character: char, characterId: char?.id as string, hasCharacter: true }),
+      setCharacter: (char) =>
+        set({ character: char, characterId: char?.id as string, hasCharacter: true, showCharacterSelect: false }),
+      setCharacters: (chars) =>
+        set({ characters: chars, hasCharacter: chars.length > 0, creatingCharacter: false }),
+      setShowCharacterSelect: (show) => set({ showCharacterSelect: show }),
+      setCreatingCharacter: (v) => set({ creatingCharacter: v, showCharacterSelect: v ? false : undefined }),
       setTab: (tab) => set({ activeTab: tab }),
       setLocale: (locale) => set({ locale }),
       setLoading: (loading) => set({ loading }),
@@ -90,6 +107,9 @@ export const useGameStore = create<GameState>()(
       resetSession: () => set({
         character: null,
         characterId: null,
+        characters: [],
+        showCharacterSelect: false,
+        creatingCharacter: false,
         hasCharacter: false,
         inventory: [],
         activeMissions: [],
@@ -109,6 +129,9 @@ export const useGameStore = create<GameState>()(
         userId: state.userId,
         characterId: state.characterId,
         character: state.character,
+        characters: state.characters,
+        showCharacterSelect: state.showCharacterSelect,
+        creatingCharacter: state.creatingCharacter,
         inventory: state.inventory,
         activeMissions: state.activeMissions,
         availableMissions: state.availableMissions,

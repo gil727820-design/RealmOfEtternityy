@@ -10,7 +10,7 @@ export default function AuthScreen() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { setUser, setCharacter, setMailboxCount, resetSession, locale, setLocale, setVolume } = useGameStore();
+  const { setUser, setCharacters, setShowCharacterSelect, setMailboxCount, resetSession, locale, setLocale, setVolume } = useGameStore();
 
   useEffect(() => {
     setMounted(true);
@@ -51,11 +51,14 @@ export default function AuthScreen() {
       }
 
       setUser(data.userId, data.locale);
-      // Autenticação: entra SEMPRE no personagem único da conta logada.
-      // Se a conta não tem personagem, zera qualquer estado antigo que possa
-      // ter sobrado de outra conta no navegador.
-      if (data.hasCharacter && data.character) {
-        setCharacter(data.character);
+      // Autenticação: com múltiplos personagens por conta, mostra a tela de
+      // seleção para o jogador escolher com quem entrar (ou criar outro).
+      // Contas sem personagem seguem direto para a criação.
+      const charList = Array.isArray(data.characters) ? data.characters : data.character ? [data.character] : [];
+      if (charList.length > 0) {
+        setCharacters(charList);
+        // Mostra a tela de seleção para o jogador escolher com quem entrar.
+        setShowCharacterSelect(true);
         setMailboxCount(Number(data.mailboxCount) || 0);
       } else {
         resetSession();

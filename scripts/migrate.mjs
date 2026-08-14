@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS region_audio (region_id text PRIMARY KEY, data jsonb 
 CREATE TABLE IF NOT EXISTS server_settings (key text PRIMARY KEY, data jsonb NOT NULL);
 CREATE TABLE IF NOT EXISTS codes (id uuid PRIMARY KEY, code text, data jsonb NOT NULL);
 CREATE TABLE IF NOT EXISTS reports (id uuid PRIMARY KEY, data jsonb NOT NULL);
+CREATE TABLE IF NOT EXISTS marketplace (id uuid PRIMARY KEY, character_id uuid, kind text, data jsonb NOT NULL);
 `;
 
 function readJson(name) {

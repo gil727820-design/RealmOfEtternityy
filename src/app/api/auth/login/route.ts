@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
     await jsonDb.updateUser(user.id, { lastLogin: new Date().toISOString() });
 
-    // Personagem único da conta (o primeiro criado é o personagem principal).
+    // Todos os personagens da conta (o primeiro criado é o principal).
     const chars = (await jsonDb.getCharactersByUserId(user.id)).sort((a: any, b: any) =>
       (a.createdAt || "").localeCompare(b.createdAt || "")
     );
@@ -51,6 +51,15 @@ export async function POST(req: NextRequest) {
       locale: user.locale,
       hasCharacter: chars.length > 0,
       character: main,
+      characters: chars.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        level: c.level,
+        classType: c.classType,
+        sex: c.sex,
+        power: c.power,
+        currentRegion: c.currentRegion,
+      })),
       mailboxCount,
     });
   } catch (e: unknown) {

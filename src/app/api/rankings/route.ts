@@ -5,6 +5,27 @@ export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const type = url.searchParams.get("type") || "power";
+    const search = url.searchParams.get("search") || "";
+
+    // Busca por nome (usado na troca entre jogadores): normaliza acentos.
+    if (search) {
+      const norm = (s: string) =>
+        (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+      const q = norm(search);
+      const chars = await jsonDb.listCharacters("", 500);
+      const matches = chars
+        .filter((c: any) => norm(c.name).includes(q))
+        .slice(0, 10)
+        .map((c: any) => ({
+          id: c.id,
+          name: c.name,
+          classType: c.classType || "warrior",
+          sex: c.sex || "male",
+          level: c.level || 1,
+          power: c.power || 0,
+        }));
+      return NextResponse.json({ rankings: matches, type: "search" });
+    }
 
     const chars = await jsonDb.listCharacters("", 100);
     const normalized = chars.map((c: any) => ({

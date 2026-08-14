@@ -91,6 +91,12 @@ CREATE TABLE IF NOT EXISTS reports (
   id uuid PRIMARY KEY,
   data jsonb NOT NULL
 );
+CREATE TABLE IF NOT EXISTS marketplace (
+  id uuid PRIMARY KEY,
+  character_id uuid,
+  kind text,
+  data jsonb NOT NULL
+);
 `;
 
 try {

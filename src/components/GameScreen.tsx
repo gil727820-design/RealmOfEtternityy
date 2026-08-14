@@ -13,6 +13,7 @@ import TowerPanel from "./panels/TowerPanel";
 import PvPPanel from "./panels/PvPPanel";
 import GuildPanel from "./panels/GuildPanel";
 import ShopPanel from "./panels/ShopPanel";
+import MarketPanel from "./panels/MarketPanel";
 import RankingsPanel from "./panels/RankingsPanel";
 import ForgePanel from "./panels/ForgePanel";
 import AchievementsPanel from "./panels/AchievementsPanel";
@@ -154,6 +155,7 @@ export default function GameScreen() {
       case "pvp": return <PvPPanel />;
       case "guild": return <GuildPanel />;
       case "shop": return <ShopPanel />;
+      case "market": return <MarketPanel />;
       case "rankings": return <RankingsPanel />;
       case "forge": return <ForgePanel />;
       case "achievements": return <AchievementsPanel />;

@@ -15,6 +15,7 @@ const NAV_ITEMS: { tab: GameTab; icon: string; image: string; labelKey: string; 
   { tab: "pvp", icon: "⚔️", image: "/images/sidebar/menu_arena.png", labelKey: "nav.pvp", color: "#ef4444" },
   { tab: "guild", icon: "🏰", image: "/images/sidebar/menu_guilda.png", labelKey: "nav.guild", color: "#3b82f6" },
   { tab: "shop", icon: "🛒", image: "/images/sidebar/menu_loja.png", labelKey: "nav.shop", color: "#ec4899" },
+  { tab: "market", icon: "🏪", image: "/images/marketplace/icone_marketplace.png", labelKey: "nav.market", color: "#f59e0b" },
   { tab: "rankings", icon: "🏆", image: "/images/sidebar/menu_rankings.png", labelKey: "nav.rankings", color: "#f59e0b" },
   { tab: "forge", icon: "🔨", image: "/images/sidebar/menu_forja.png", labelKey: "nav.forge", color: "#f97316" },
   { tab: "achievements", icon: "🏅", image: "/images/sidebar/menu_conquistas.png", labelKey: "nav.achievements", color: "#8b5cf6" },

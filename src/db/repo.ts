@@ -5,6 +5,7 @@ import {
   users, characters, itemTemplates, inventoryItems, missionTemplates,
   activeMissions, afkRewards, battles, guilds, guildInvites, guildChats,
   mailbox, excludedUsers, regionAudio, serverSettings, codes, reports,
+  marketplace,
 } from "./schema";
 import { skinById } from "@/game/skins";
 
@@ -928,6 +929,165 @@ export async function updatePurchase(id: string, patch: any) {
   return next.find((p: any) => p.id === id) ?? null;
 }
 
+/* ─── Mercado entre jogadores (anúncios + trocas) ─── */
+
+// UUID "fantasma" (não pertence a nenhum personagem real): guarda os itens
+// que estão ANUNCIADOS no mercado enquanto ninguém compra. A coluna
+// character_id é uuid no Postgres, então precisa ser um UUID válido.
+export const MARKET_SYSTEM_ID = "00000000-0000-0000-0000-00000000dead";
+
+/** Insere um registro no marketplace (anúncio, proposta de troca, anúncio de troca ou sala). */
+export async function insertMarketRec(
+  rec: any,
+  kind: "listing" | "trade" | "tradeAd" | "tradeSession",
+  characterId?: string
+) {
+  const full = {
+    id: uuidv4(),
+    characterId: characterId ?? rec.sellerId ?? rec.proposerId ?? null,
+    kind,
+    createdAt: new Date().toISOString(),
+    status: "active",
+    ...rec,
+  };
+  await insertRec(marketplace, full, [["characterId", "characterId"], ["kind", "kind"]]);
+  return full;
+}
+
+export async function getMarketRecById(id: string) {
+  return getRec(marketplace, id);
+}
+
+export async function updateMarketRec(id: string, patch: any) {
+  return updateRec(marketplace, id, patch, [["characterId", "characterId"], ["kind", "kind"]]);
+}
+
+export async function deleteMarketRec(id: string) {
+  const existing = await getRec(marketplace, id);
+  if (!existing) return false;
+  await deleteRec(marketplace, id);
+  return true;
+}
+
+/** Anúncios ATIVOS (à venda) com dados do vendedor + template do item. */
+export async function listActiveListings(limit = 300) {
+  const all = (await rowsOf(marketplace)).filter(
+    (m: any) => m.kind === "listing" && m.status === "active"
+  );
+  const templates = await rowsOf(itemTemplates);
+  const chars = await rowsOf(characters);
+  return all
+    .sort((a: any, b: any) => (b.createdAt || "").localeCompare(a.createdAt || ""))
+    .slice(0, limit)
+    .map((m: any) => {
+      const template = templates.find((tp: any) => tp.id === m.templateId) ?? null;
+      const seller = chars.find((c: any) => c.id === m.sellerId) ?? null;
+      return { listing: m, template, seller: seller ? { id: seller.id, name: seller.name, level: seller.level } : null };
+    });
+}
+
+/** Anúncios de um personagem (todos os estados). */
+export async function getListingsByCharacter(characterId: string) {
+  return (await rowsOf(marketplace))
+    .filter((m: any) => m.kind === "listing" && m.sellerId === characterId)
+    .sort((a: any, b: any) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+}
+
+/** Lista itens de um characterId que estão marcados como listados. */
+export async function getListedItemsByCharacter(characterId: string) {
+  const items = (await rowsOf(inventoryItems)).filter(
+    (i: any) => i.characterId === characterId && i.listed === true
+  );
+  const templates = await rowsOf(itemTemplates);
+  return items.map((it: any) => {
+    const template = templates.find((t: any) => t.id === it.templateId) ?? null;
+    return { item: it, template, quantity: it.quantity || 1 };
+  });
+}
+
+/* ─── Anúncios de troca + salas de troca (marketplace) ─── */
+
+/** Identifica um registro como anúncio de troca ATIVO (kind no registro). */
+function isTradeAd(m: any): boolean {
+  return (m.kind === "tradeAd" || m.recKind === "tradeAd") && m.status === "active";
+}
+
+/** Expande itens com o template (nome/raridade/etc.). */
+function expandItems(items: any[], templates: any[]): any[] {
+  return (items || []).map((it: any) => {
+    const template = templates.find((t: any) => t.id === it.templateId) ?? null;
+    return { ...it, template };
+  });
+}
+
+/** Lista os anúncios de troca ATIVOS (com dados do dono + templates). */
+export async function listTradeAds(limit = 100) {
+  const all = await rowsOf(marketplace);
+  const templates = await rowsOf(itemTemplates);
+  const chars = await rowsOf(characters);
+  return all
+    .filter(isTradeAd)
+    .sort((a: any, b: any) => (b.createdAt || "").localeCompare(a.createdAt || ""))
+    .slice(0, limit)
+    .map((m: any) => {
+      const poster = chars.find((c: any) => c.id === m.posterId) ?? null;
+      return {
+        record: m,
+        poster: poster ? { id: poster.id, name: poster.name, level: poster.level } : null,
+        offeredItems: expandItems(m.offeredItems, templates),
+      };
+    });
+}
+
+/** Anúncios de troca de um personagem (ativos). */
+export async function getTradeAdsByCharacter(characterId: string) {
+  const all = await rowsOf(marketplace);
+  return all.filter((m: any) => isTradeAd(m) && m.posterId === characterId);
+}
+
+/** Busca um registro do marketplace (anúncio ou sala) com templates. */
+export async function getMarketRecExpanded(id: string) {
+  const m = await getRec(marketplace, id);
+  if (!m) return null;
+  const templates = await rowsOf(itemTemplates);
+  const chars = await rowsOf(characters);
+  const poster = chars.find((c: any) => c.id === m.posterId) ?? null;
+  return {
+    record: m,
+    poster: poster ? { id: poster.id, name: poster.name, level: poster.level } : null,
+    offeredItems: expandItems(m.offeredItems, templates),
+  };
+}
+
+/** Sessões de troca ativas que envolvem um personagem (perspectiva dele). */
+export async function getSessionsByCharacter(characterId: string) {
+  const all = await rowsOf(marketplace);
+  const templates = await rowsOf(itemTemplates);
+  const chars = await rowsOf(characters);
+  return all
+    .filter(
+      (m: any) =>
+        (m.kind === "tradeSession" || m.recKind === "tradeSession") &&
+        m.status === "active" &&
+        (m.playerAId === characterId || m.playerBId === characterId)
+    )
+    .sort((a: any, b: any) => (b.createdAt || "").localeCompare(a.createdAt || ""))
+    .map((m: any) => {
+      const otherId = m.playerAId === characterId ? m.playerBId : m.playerAId;
+      const other = chars.find((c: any) => c.id === otherId) ?? null;
+      const isA = m.playerAId === characterId;
+      return {
+        record: m,
+        other: other ? { id: other.id, name: other.name, level: other.level } : null,
+        isA,
+        myConfirmed: isA ? !!m.aConfirmed : !!m.bConfirmed,
+        otherConfirmed: isA ? !!m.bConfirmed : !!m.aConfirmed,
+        myOffers: expandItems(isA ? m.aOffers : m.bOffers, templates),
+        otherOffers: expandItems(isA ? m.bOffers : m.aOffers, templates),
+      };
+    });
+}
+
 /* ─── Reset do jogo (administrador) ─── */
 
 /**
@@ -952,6 +1112,7 @@ export async function resetGameData() {
     excludedUsers,
     codes,
     reports,
+    marketplace,
   ]) {
     await db.delete(table);
   }
@@ -1059,6 +1220,20 @@ export default {
   listReports,
   createReport,
   deleteReport,
+  // mercado entre jogadores
+  insertMarketRec,
+  getMarketRecById,
+  updateMarketRec,
+  deleteMarketRec,
+  listActiveListings,
+  getListingsByCharacter,
+  getListedItemsByCharacter,
+  // anúncios de troca + salas de troca
+  listTradeAds,
+  getTradeAdsByCharacter,
+  getMarketRecExpanded,
+  getSessionsByCharacter,
+  MARKET_SYSTEM_ID,
   // compras PIX (diamantes)
   listPurchases,
   createPurchase,

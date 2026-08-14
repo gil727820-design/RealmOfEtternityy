@@ -25,6 +25,13 @@ const es: Record<string, string> = {
   "char.eyeColor": "Color de Ojos",
   "char.avatar": "Avatar",
   "char.confirm": "Crear Héroe",
+  "char.select.title": "Elige tu personaje",
+  "char.select.subtitle": "Tienes {0} de {1} personajes en esta cuenta",
+  "char.select.enter": "Entrar",
+  "char.select.create": "Crear nuevo personaje",
+  "char.select.slot": "espacio restante",
+  "char.select.back": "Cerrar sesión",
+  "char.create.back": "Volver",
 
   // Classes
   "class.warrior": "Guerrero",
@@ -109,6 +116,7 @@ const es: Record<string, string> = {
   "nav.pvp": "Arena PvP",
   "nav.guild": "Gremio",
   "nav.shop": "Tienda",
+  "nav.market": "Mercado",
   "nav.rankings": "Rankings",
   "nav.forge": "Forja",
   "nav.achievements": "Logros",

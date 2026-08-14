@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { CLASS_BASE_STATS, powerCalc, xpForLevel } from "@/game/constants";
+import { CLASS_BASE_STATS, powerCalc, xpForLevel, MAX_CHARACTERS_PER_ACCOUNT } from "@/game/constants";
 import type { ClassName } from "@/game/constants";
 import { isValidUsername } from "@/game/profanityFilter";
 
@@ -23,9 +23,13 @@ export async function POST(req: NextRequest) {
     if (existingName) {
       return NextResponse.json({ error: "Nome de personagem já está em uso" }, { status: 409 });
     }
-    const existing = await jsonDb.findCharacterByUserId(userId);
-    if (existing) {
-      return NextResponse.json({ error: "Já possui personagem" }, { status: 409 });
+    // Limite de personagens por conta (até 3 no total, incluindo o principal).
+    const mine = await jsonDb.getCharactersByUserId(userId);
+    if (mine.length >= MAX_CHARACTERS_PER_ACCOUNT) {
+      return NextResponse.json(
+        { error: `Limite de ${MAX_CHARACTERS_PER_ACCOUNT} personagens por conta` },
+        { status: 409 }
+      );
     }
     const stats = CLASS_BASE_STATS[classType as ClassName] ?? CLASS_BASE_STATS.warrior;
     const power = powerCalc({ ...stats, level: 1 });
@@ -109,7 +113,23 @@ export async function POST(req: NextRequest) {
     // Itens removidos do jogo por enquanto — novos personagens não recebem
     // poções de boas-vindas.
 
-    return NextResponse.json({ character: char });
+    // Lista completa da conta (atualizada) para o cliente sincronizar.
+    const allChars = (await jsonDb.getCharactersByUserId(userId)).sort((a: any, b: any) =>
+      (a.createdAt || "").localeCompare(b.createdAt || "")
+    );
+
+    return NextResponse.json({
+      character: char,
+      characters: allChars.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        level: c.level,
+        classType: c.classType,
+        sex: c.sex,
+        power: c.power,
+        currentRegion: c.currentRegion,
+      })),
+    });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erro interno";
     return NextResponse.json({ error: msg }, { status: 500 });
