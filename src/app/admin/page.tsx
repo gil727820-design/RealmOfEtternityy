@@ -31,6 +31,24 @@ function isoToLocalInput(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+/**
+ * Converte um horário "HH:MM" do SERVIDOR para o fuso LOCAL do navegador.
+ * serverOffsetMin = offset do servidor em minutos (leste de UTC = positivo).
+ * Usado para o admin já ver, ao lado de cada horário agendado, a que horas
+ * isso corresponde no relógio dele.
+ */
+function serverTimeToLocal(hhmm: string, serverOffsetMin: number): string {
+  const m = /^(\d{1,2}):(\d{2})$/i.exec(hhmm.trim());
+  if (!m) return hhmm;
+  const h = Number(m[1]);
+  const min = Number(m[2]);
+  const localOffsetMin = -new Date().getTimezoneOffset();
+  let total = h * 60 + min + (localOffsetMin - serverOffsetMin);
+  total = ((total % 1440) + 1440) % 1440;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(Math.floor(total / 60))}:${pad(total % 60)}`;
+}
+
 type Tab = "dash" | "users" | "characters" | "guilds" | "send" | "excluded" | "music" | "server" | "codes" | "logs" | "donate" | "pix" | "ghost" | "worldboss" | "test";
 type SkinChar = { id: string; name: string; level: number; classType: string; skins: string[] };
 
@@ -100,6 +118,9 @@ export default function AdminPage() {
   const [ghostItems, setGhostItems] = useState<Array<{ templateId: number; price: string; quantity: string }>>([]);
   const [ghostItemSearch, setGhostItemSearch] = useState("");
   const [ghostLoaded, setGhostLoaded] = useState(false);
+  // Offsets (min, leste de UTC positivo) do servidor e do navegador, para
+  // mostrar cada horário agendado também convertido pro fuso local do admin.
+  const [serverOffsetMin, setServerOffsetMin] = useState(0);
   // Evento Global (Boss Mundial)
   const [wbEnabled, setWbEnabled] = useState(false);
   const [wbSchedule, setWbSchedule] = useState<string[]>(["12:00", "18:00", "21:00"]);
@@ -559,6 +580,7 @@ export default function AdminPage() {
       const res = await fetch(`/api/admin?action=settings`, { headers });
       const d = await res.json();
       const s = (d.settings || {}) as Record<string, unknown>;
+      if (typeof d.serverOffsetMinutes === "number") setServerOffsetMin(d.serverOffsetMinutes);
       const gs = (s.ghostShop || {}) as Record<string, unknown>;
       setGhostEnabled(!!gs.enabled);
       setGhostSchedule(Array.isArray(gs.schedule) ? (gs.schedule as string[]) : []);
@@ -649,6 +671,7 @@ export default function AdminPage() {
       const res = await fetch(`/api/admin?action=settings`, { headers });
       const d = await res.json();
       const s = (d.settings || {}) as Record<string, unknown>;
+      if (typeof d.serverOffsetMinutes === "number") setServerOffsetMin(d.serverOffsetMinutes);
       const wb = (s.worldBoss || {}) as Record<string, unknown>;
       const boss = (wb.boss || {}) as Record<string, unknown>;
       const rewards = (wb.rewards || {}) as Record<string, unknown>;
@@ -1136,6 +1159,7 @@ export default function AdminPage() {
                   </span>
                 </h1>
                 <p className="text-xs text-gray-400 mt-0.5">Realm of Eternity — gerenciamento do servidor</p>
+                <div className="mt-1.5"><ServerClock headers={headers} /></div>
               </div>
             </div>
             <button
@@ -2020,18 +2044,22 @@ export default function AdminPage() {
                       </p>
                     ) : (
                       <div className="flex flex-wrap gap-2">
-                        {ghostSchedule.map((hhmm) => (
-                          <span key={hhmm} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#7c5cfc]/10 border border-[#7c5cfc]/40 text-purple-200 font-mono text-sm">
-                            🕐 {hhmm}
-                            <button
-                              onClick={() => setGhostSchedule((prev) => prev.filter((t) => t !== hhmm))}
-                              className="text-purple-300 hover:text-red-400 transition"
-                              title="Remover horário"
-                            >
-                              ✕
-                            </button>
-                          </span>
-                        ))}
+                        {ghostSchedule.map((hhmm) => {
+                          const local = serverTimeToLocal(hhmm, serverOffsetMin);
+                          return (
+                            <span key={hhmm} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#7c5cfc]/10 border border-[#7c5cfc]/40 text-purple-200 font-mono text-sm">
+                              🕐 {hhmm}
+                              <span className="text-[10px] text-purple-400/80">→ {local} (seu fuso)</span>
+                              <button
+                                onClick={() => setGhostSchedule((prev) => prev.filter((t) => t !== hhmm))}
+                                className="text-purple-300 hover:text-red-400 transition"
+                                title="Remover horário"
+                              >
+                                ✕
+                              </button>
+                            </span>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -2216,18 +2244,22 @@ export default function AdminPage() {
                       </p>
                     ) : (
                       <div className="flex flex-wrap gap-2">
-                        {wbSchedule.map((hhmm) => (
-                          <span key={hhmm} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#ef4444]/10 border border-[#ef4444]/40 text-red-200 font-mono text-sm">
-                            🕐 {hhmm}
-                            <button
-                              onClick={() => setWbSchedule((prev) => prev.filter((x) => x !== hhmm))}
-                              className="text-red-300 hover:text-white transition"
-                              title="Remover horário"
-                            >
-                              ✕
-                            </button>
-                          </span>
-                        ))}
+                        {wbSchedule.map((hhmm) => {
+                          const local = serverTimeToLocal(hhmm, serverOffsetMin);
+                          return (
+                            <span key={hhmm} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#ef4444]/10 border border-[#ef4444]/40 text-red-200 font-mono text-sm">
+                              🕐 {hhmm}
+                              <span className="text-[10px] text-red-400/70">→ {local} (seu fuso)</span>
+                              <button
+                                onClick={() => setWbSchedule((prev) => prev.filter((x) => x !== hhmm))}
+                                className="text-red-300 hover:text-white transition"
+                                title="Remover horário"
+                              >
+                                ✕
+                              </button>
+                            </span>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -2754,19 +2786,37 @@ function ServerClock({ headers }: { headers: Record<string, string> }) {
     return <span className="text-[11px] text-gray-600">🕐 buscando relógio do servidor...</span>;
   }
 
-  const server = new Date(now - skew);
-  const offsetLabel =
-    offsetMinutes === 0 ? "UTC" : `UTC${offsetMinutes > 0 ? "+" : ""}${offsetMinutes / 60}`;
+  // "Agora" do servidor em ms (UTC). O agendamento é na HORA LOCAL do servidor,
+  // então somamos o offset dele para obter o relógio de parede do servidor —
+  // e formatamos lendo os campos UTC (sem converter pro fuso do navegador).
+  const serverLocal = new Date(now - skew + offsetMinutes * 60_000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const dateStr = `${pad(serverLocal.getUTCDate())}/${pad(serverLocal.getUTCMonth() + 1)}/${serverLocal.getUTCFullYear()}`;
+  const timeStr = `${pad(serverLocal.getUTCHours())}:${pad(serverLocal.getUTCMinutes())}:${pad(serverLocal.getUTCSeconds())}`;
+  const weekday = serverLocal.toLocaleDateString("pt-BR", { weekday: "short", timeZone: "UTC" });
 
-  const dateStr = server.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
-  const timeStr = server.toLocaleTimeString("pt-BR", { hour12: false });
+  const off = Math.round(offsetMinutes);
+  const sign = off < 0 ? "-" : "+";
+  const abs = Math.abs(off);
+  const odd = abs % 60;
+  const offsetLabel =
+    off === 0 ? "UTC" : `UTC${sign}${Math.floor(abs / 60)}${odd ? `:${pad(odd)}` : ""}`;
+
+  // Diferença para o fuso do navegador (o admin vê o relógio de parede dele).
+  const browserOff = -Math.round(new Date().getTimezoneOffset());
+  const diffMin = off - browserOff;
+  const diffLabel =
+    diffMin === 0
+      ? "mesmo fuso que o seu"
+      : `${diffMin > 0 ? "+" : ""}${diffMin / 60}h ${diffMin > 0 ? "à frente" : "atrás"} do seu relógio`;
 
   return (
     <div className="text-[11px] text-gray-400 bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 inline-flex items-center gap-2 flex-wrap">
       <span>🕐 Relógio do servidor:</span>
       <b className="font-mono text-white tabular-nums">
-        {dateStr} {timeStr} ({offsetLabel})
+        {weekday}, {dateStr} {timeStr} ({offsetLabel})
       </b>
+      <span className="text-gray-500">· seu relógio: {diffLabel}</span>
       <span className="text-gray-600">— configure os horários por esse relógio (HORA DO SERVIDOR)</span>
     </div>
   );
