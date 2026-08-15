@@ -1897,6 +1897,10 @@ export default function AdminPage() {
                   <p className="text-xs text-gray-400 mb-4">
                     O jogador envia o comprovante pelo jogo (aba Diamantes). <b className="text-green-400">Aprovar</b> credita os diamantes no personagem; <b className="text-red-400">Rejeitar</b> recusa sem creditar.
                   </p>
+                  <button onClick={loadPurchases} disabled={loading}
+                    className="mb-3 text-[11px] bg-white/10 hover:bg-white/20 text-white rounded-lg px-3 py-1.5 font-bold disabled:opacity-40">
+                    🔄 Atualizar lista
+                  </button>
                   {loading && purchases.length === 0 ? (
                     <div className="text-center text-gray-500 text-sm py-10">Carregando...</div>
                   ) : purchases.length === 0 ? (
@@ -1924,7 +1928,15 @@ export default function AdminPage() {
                               </span>
                             </div>
                             <div className="flex flex-wrap items-center gap-2">
-                              {p.screenshotUrl ? (
+                              {p.screenshotData ? (
+                                <details className="w-full">
+                                  <summary className="text-[11px] bg-white/10 hover:bg-white/20 text-white rounded-lg px-2.5 py-1 font-bold inline-block cursor-pointer">
+                                    🖼️ Ver comprovante
+                                  </summary>
+                                  <img src={String(p.screenshotData)} alt="Comprovante PIX"
+                                    className="mt-2 max-h-64 rounded-lg border border-white/10 object-contain bg-black/40" />
+                                </details>
+                              ) : p.screenshotUrl ? (
                                 <a href={String(p.screenshotUrl)} target="_blank" rel="noreferrer"
                                   className="text-[11px] bg-white/10 hover:bg-white/20 text-white rounded-lg px-2.5 py-1 font-bold">
                                   🖼️ Ver comprovante

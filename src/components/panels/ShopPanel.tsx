@@ -19,6 +19,48 @@ const CHESTS = [
 /** Pacotes de diamantes vendidos por PIX (valores em reais). */
 const PIX_PACKS = [5, 10, 20, 50, 100];
 
+const MAX_PROOF_BASE64 = 6 * 1024 * 1024; // 6MB de base64 (~4.5MB de imagem) — limite do servidor
+
+/**
+ * Lê o comprovante no navegador e devolve um Data URL JPEG redimensionado.
+ * Guardar como base64 (e não em arquivo em public/) funciona em qualquer
+ * hospedagem — inclusive serverless, onde o disco é somente leitura.
+ */
+function proofToDataUrl(file: File, maxSide = 1200, quality = 0.88): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("read-failed"));
+    reader.onload = () => {
+      const raw = String(reader.result || "");
+      if (!raw.startsWith("data:image/")) { reject(new Error("not-image")); return; }
+      const img = new Image();
+      img.onerror = () => reject(new Error("decode-failed"));
+      img.onload = () => {
+        try {
+          const scale = Math.min(1, maxSide / Math.max(img.width || 1, img.height || 1));
+          const w = Math.max(1, Math.round((img.width || 1) * scale));
+          const h = Math.max(1, Math.round((img.height || 1) * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) { resolve(raw); return; }
+          // Fundo branco (comprovantes PIX costumam ter fundo claro).
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, w, h);
+          ctx.drawImage(img, 0, 0, w, h);
+          const out = canvas.toDataURL("image/jpeg", quality);
+          resolve(out && out.startsWith("data:image/") ? out : raw);
+        } catch {
+          reject(new Error("draw-failed"));
+        }
+      };
+      img.src = raw;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 // Loja reaberta: baús, poções, VIP e diamantes (PIX) disponíveis novamente.
 const SHOP_MAINTENANCE_TABS: string[] = [];
 
@@ -116,11 +158,18 @@ export default function ShopPanel() {
     }
     setSubmitting(true);
     try {
-      const fd = new FormData();
-      fd.append("characterId", String(character.id));
-      fd.append("valueBRL", String(pixPack));
-      fd.append("screenshot", proofFile);
-      const res = await fetch("/api/pix/purchase", { method: "POST", body: fd });
+      // Converte o arquivo para Data URL no navegador (redimensionado) e envia
+      // por JSON — funciona também em serverless, onde gravar em public/ falha.
+      const screenshotData = await proofToDataUrl(proofFile);
+      if (screenshotData.length > MAX_PROOF_BASE64) {
+        notify(t("general.error", locale), "error");
+        return;
+      }
+      const res = await fetch("/api/pix/purchase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characterId: character.id, valueBRL: pixPack, screenshotData }),
+      });
       const data = await res.json();
       if (!res.ok) {
         notify(data.error || t("general.error", locale), "error");

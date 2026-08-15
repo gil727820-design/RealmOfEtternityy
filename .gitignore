@@ -36,3 +36,9 @@ Thumbs.db
 
 # Temporários
 _typecheck.txt
+
+# Uploads gerados em runtime (comprovantes PIX, QR codes)
+# Obs.: as músicas de ilha (public/uploads/music) são assets versionados e
+# ficam de fora desta regra.
+/public/uploads/proofs/
+/public/uploads/donate/
