@@ -346,7 +346,7 @@ export default function DashboardPanel() {
           )}
 
           {/* Prestígio / Renascimento */}
-          {(c.level as number) >= 100 && (
+          {(c.level as number) >= 999 && (
             <button
               onClick={() => {
                 if (!window.confirm(t("prestige.confirm", locale).replace("{n}", String(c.prestige || 0)).replace("{n2}", String((Number(c.prestige) || 0) + 1)))) return;

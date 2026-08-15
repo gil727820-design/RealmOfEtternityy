@@ -1042,7 +1042,7 @@ const en: Record<string, string> = {
   "guide.market.l2": "To SELL, climb to tower floor 10 — that unlocks the auction.",
   "guide.market.l3": "Trade items directly with other players (trade rooms).",
   "guide.prestige": "Prestige",
-  "guide.prestige.l1": "At level 100 you can REBIRTH: back to level 1 with +15% base stats per prestige.",
+  "guide.prestige.l1": "At the maximum level (999) you can REBIRTH: back to level 1 with +1% base stats per prestige.",
   "guide.prestige.l2": "Items, currencies and progress are kept — prestige shows in rankings.",
   "guide.achievements": "Achievements",
   "guide.achievements.l1": "Complete objectives and CLAIM rewards (gold, crystals) in the panel.",
@@ -1079,9 +1079,9 @@ const en: Record<string, string> = {
 
   // Prestige
   "prestige.title": "Prestige (Rebirth)",
-  "prestige.desc": "At level 100, rebirth to gain +15% base stats per prestige. Level returns to 1, but items, currencies and progress are kept.",
+  "prestige.desc": "At the maximum level (999), rebirth to gain +1% base stats per prestige. Level returns to 1, but items, currencies and progress are kept.",
   "prestige.btn": "🌟 Rebirth (Prestige)",
-  "prestige.confirm": "Are you sure? You'll go back to level 1 to permanently gain +15% base stats (prestige {n} → {n2}).",
+  "prestige.confirm": "Are you sure? You'll go back to level 1 to permanently gain +1% base stats (prestige {n} → {n2}).",
 
   // PvP Season
   "pvp.season": "Season",

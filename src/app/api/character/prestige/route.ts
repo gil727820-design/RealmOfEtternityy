@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       success: true,
       character: updated,
       prestige: updated.prestige,
-      message: `🌟 Renasceu! Agora com prestígio ${updated.prestige} (+15% de atributos base por prestígio).`,
+      message: `🌟 Renasceu! Agora com prestígio ${updated.prestige} (+1% de atributos base por prestígio).`,
     });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erro interno";

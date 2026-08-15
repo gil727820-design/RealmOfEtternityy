@@ -15,11 +15,11 @@
 
 import { CLASS_BASE_STATS, powerCalc, xpForLevel, type ClassName } from "./constants";
 
-/** Nível mínimo para prestigiar. */
-export const PRESTIGE_MIN_LEVEL = 100;
+/** Nível máximo (999) — prestigiar exige alcançar o teto. */
+export const PRESTIGE_MIN_LEVEL = 999;
 
 /** Bônus % por prestígio sobre os atributos base da classe. */
-export const PRESTIGE_STAT_BONUS_PCT = 0.15;
+export const PRESTIGE_STAT_BONUS_PCT = 0.01;
 
 /** Diz se o personagem pode prestigiar agora. */
 export function canPrestige(char: any): { ok: boolean; reason?: string } {

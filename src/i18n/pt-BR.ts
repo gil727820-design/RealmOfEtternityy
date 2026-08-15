@@ -1106,7 +1106,7 @@ const ptBR: Record<string, string> = {
   "guide.market.l2": "Para VENDER, suba até o andar 10 da torre — assim o leilão libera.",
   "guide.market.l3": "Troque itens diretamente com outros jogadores (salas de troca).",
   "guide.prestige": "Prestígio",
-  "guide.prestige.l1": "Ao chegar no nível 100, você pode RENASCER: volta ao nível 1 com +15% de atributos base por prestígio.",
+  "guide.prestige.l1": "Ao chegar no nível máximo (999), você pode RENASCER: volta ao nível 1 com +1% de atributos base por prestígio.",
   "guide.prestige.l2": "Itens, moedas e progresso são mantidos — o prestígio aparece no ranking.",
   "guide.achievements": "Conquistas",
   "guide.achievements.l1": "Complete objetivos e COLEte as recompensas (ouro, cristais) no painel.",
@@ -1143,9 +1143,9 @@ const ptBR: Record<string, string> = {
 
   // Prestígio
   "prestige.title": "Prestígio (Renascimento)",
-  "prestige.desc": "Ao chegar no nível 100, renasça para ganhar +15% de atributos base por prestígio. Nível volta a 1, mas itens, moedas e progresso são mantidos.",
+  "prestige.desc": "Ao chegar no nível máximo (999), renasça para ganhar +1% de atributos base por prestígio. Nível volta a 1, mas itens, moedas e progresso são mantidos.",
   "prestige.btn": "🌟 Renascer (Prestígio)",
-  "prestige.confirm": "Tem certeza? Você voltará ao nível 1 para ganhar +15% de atributos base permanentemente (prestígio {n} → {n2}).",
+  "prestige.confirm": "Tem certeza? Você voltará ao nível 1 para ganhar +1% de atributos base permanentemente (prestígio {n} → {n2}).",
 
   // Temporada PvP
   "pvp.season": "Temporada",
