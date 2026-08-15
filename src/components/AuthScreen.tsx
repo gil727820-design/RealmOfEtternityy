@@ -12,8 +12,28 @@ export default function AuthScreen() {
   const [loading, setLoading] = useState(false);
   const { setUser, setCharacters, setShowCharacterSelect, setMailboxCount, resetSession, locale, setLocale, setVolume } = useGameStore();
 
+  // Restaura a sessão pelo cookie httpOnly (sem cache local). Se houver sessão
+  // válida, entra direto; senão, mostra o formulário de login.
   useEffect(() => {
     setMounted(true);
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (!res.ok) return;
+        const data = await res.json();
+        setUser(data.userId, data.locale);
+        const charList = Array.isArray(data.characters) ? data.characters : data.character ? [data.character] : [];
+        if (charList.length > 0) {
+          setCharacters(charList);
+          setShowCharacterSelect(true);
+          setMailboxCount(Number(data.mailboxCount) || 0);
+        } else {
+          resetSession();
+        }
+      } catch {
+        /* sem sessão — mostra o formulário */
+      }
+    })();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

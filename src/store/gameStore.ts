@@ -127,24 +127,16 @@ export const useGameStore = create<GameState>()(
       },
     }),
     {
-      name: "realm-of-eternity-storage",
+      // v2: NÃO guarda mais dados de jogo no localStorage (personagem,
+      // inventário, missões, aba ativa...). Isso causava "cache velho": ao
+      // reentrar, o jogo exibia dados antigos em vez de buscar do servidor
+      // (ex.: mercado bloqueado por nível desatualizado, updates sumindo).
+      // Agora só preferências persistem; a sessão é restaurada via cookie
+      // httpOnly (rota /api/auth/me) e os dados vêm frescos do banco.
+      name: "realm-of-eternity-storage-v2",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
-        userId: state.userId,
-        characterId: state.characterId,
-        character: state.character,
-        characters: state.characters,
-        showCharacterSelect: state.showCharacterSelect,
-        creatingCharacter: state.creatingCharacter,
-        inventory: state.inventory,
-        activeMissions: state.activeMissions,
-        availableMissions: state.availableMissions,
-        afkRewards: state.afkRewards,
         locale: state.locale,
-        activeTab: state.activeTab,
-        isLoggedIn: state.isLoggedIn,
-        hasCharacter: state.hasCharacter,
-        mailboxCount: state.mailboxCount,
         soundOn: state.soundOn,
         volume: state.volume,
       }),
