@@ -16,6 +16,14 @@ export default function AuthScreen() {
   // válida, entra direto; senão, mostra o formulário de login.
   useEffect(() => {
     setMounted(true);
+    // Limpa o cache antigo do jogo (localStorage da storage `...-v1`) que
+    // guardava personagem/inventário/missões. A partir da v2 nada de jogo é
+    // persistido — esta chave só sobra como lixo no navegador.
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("realm-of-eternity-storage");
+      }
+    } catch { /* ignora */ }
     (async () => {
       try {
         const res = await fetch("/api/auth/me");
