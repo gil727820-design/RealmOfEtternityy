@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { participantFromChar, requireOpenEvent } from "../_state";
 import jsonDb from "@/db/repo";
-import { powerCalc } from "@/game/constants";
+import { powerCalc, resolveMaxLevel } from "@/game/constants";
 import {
   applyXp,
   computeBossHit,
@@ -16,6 +16,10 @@ async function distributeRewards(event: WorldBossEventState, cfg: WorldBossConfi
   const total = Math.max(1, event.totalDamage);
   const granted: Array<{ characterId: string; name: string; gold: number; xp: number; towerCoins: number; levelUp: boolean; newLevel: number }> = [];
 
+  // Nível máximo configurado no painel admin (0 = padrão 999).
+  const settings = await jsonDb.getServerSettings();
+  const maxLevel = resolveMaxLevel(Number(settings?.maxLevel) || 0);
+
   for (const p of Object.values(event.participants)) {
     const char = await jsonDb.findCharacterById(p.characterId);
     if (!char) continue;
@@ -24,7 +28,7 @@ async function distributeRewards(event: WorldBossEventState, cfg: WorldBossConfi
     const xp = Math.floor(cfg.rewards.xp * share);
     const coins = Math.floor(cfg.rewards.towerCoins);
 
-    const { patch, newLevel } = applyXp(char, xp);
+    const { patch, newLevel } = applyXp(char, xp, maxLevel);
     const power = powerCalc({
       attack: Number(char.attack) || 0,
       defense: Number(char.defense) || 0,

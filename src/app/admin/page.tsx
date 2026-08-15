@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { RARITY_COLORS, CLASS_ICONS, REGIONS, TOWER_BOSS_KINDS } from "@/game/constants";
+import { RARITY_COLORS, CLASS_ICONS, REGIONS, TOWER_BOSS_KINDS, MAX_LEVEL } from "@/game/constants";
 import type { ClassName } from "@/game/constants";
 import { SKIN_CATALOG } from "@/game/skins";
 import { VIP_TIERS, currentVipTier } from "@/game/vip";
@@ -111,6 +111,10 @@ export default function AdminPage() {
   const [serverMaintenanceMsg, setServerMaintenanceMsg] = useState("");
   const [serverMaintenanceUntil, setServerMaintenanceUntil] = useState("");
   const [infiniteEnergy, setInfiniteEnergy] = useState(false);
+  // Limites/balanceamento: torre (andar máx.), nível máx. e XP da torre
+  const [limitMaxTowerFloor, setLimitMaxTowerFloor] = useState("0");
+  const [limitMaxLevel, setLimitMaxLevel] = useState("0");
+  const [limitTowerXpMult, setLimitTowerXpMult] = useState("1");
   const [resetConfirm, setResetConfirm] = useState("");
   const [serverLoaded, setServerLoaded] = useState(false);
   // Modo teste — ignora a manutenção para o admin testar o jogo
@@ -735,6 +739,9 @@ export default function AdminPage() {
       setServerMaintenanceMsg(typeof s.maintenanceMessage === "string" ? s.maintenanceMessage : "");
       setServerMaintenanceUntil(typeof s.maintenanceUntil === "string" ? isoToLocalInput(s.maintenanceUntil) : "");
       setInfiniteEnergy(!!s.infiniteEnergy);
+      setLimitMaxTowerFloor(typeof s.maxTowerFloor === "number" ? String(s.maxTowerFloor) : "0");
+      setLimitMaxLevel(typeof s.maxLevel === "number" ? String(s.maxLevel) : "0");
+      setLimitTowerXpMult(typeof s.towerXpMult === "number" ? String(s.towerXpMult) : "1");
       setDonatePixKey(typeof s.donatePixKey === "string" ? s.donatePixKey : "");
       setDonateQrCode(typeof s.donateQrCode === "string" ? s.donateQrCode : "");
       setServerLoaded(true);
@@ -824,6 +831,23 @@ export default function AdminPage() {
     setMessage(
       d.success
         ? "✅ Mensagem enviada! Os jogadores já podem ver (popup aparece uma única vez)."
+        : `❌ ${d.error || "Erro"}`
+    );
+    setBusy(null);
+  };
+
+  /** Salva os limites/balanceamento (torre, nível e XP da torre). */
+  const saveBalanceLimits = async () => {
+    setBusy("balance_limits");
+    const d = await callAdmin({
+      action: "update_server_settings",
+      maxTowerFloor: Math.max(0, Math.floor(Number(limitMaxTowerFloor) || 0)),
+      maxLevel: Math.max(0, Math.floor(Number(limitMaxLevel) || 0)),
+      towerXpMult: Math.min(2, Math.max(0.01, Number(limitTowerXpMult) || 1)),
+    });
+    setMessage(
+      d.success
+        ? "✅ Limites e balanceamento salvos! (0 = sem limite próprio — usa o padrão do jogo)"
         : `❌ ${d.error || "Erro"}`
     );
     setBusy(null);
@@ -1224,7 +1248,7 @@ export default function AdminPage() {
                   <h3 className="text-sm font-bold text-[#ffd700] mb-3">⚡ Editar Personagem (use o ID da lista abaixo)</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
                     <input value={editCharId} onChange={(e) => setEditCharId(e.target.value)} placeholder="ID do personagem" className="bg-[#0a0a12] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#ff6b6b] focus:outline-none" />
-                    {["gold", "diamonds", "energy", "maxEnergy", "level", "attack", "defense", "power", "vipLevel"].map((f) => (
+                    {["gold", "diamonds", "towerCoins", "energy", "maxEnergy", "level", "towerFloor", "attack", "defense", "power", "vipLevel"].map((f) => (
                       <input key={f} value={editFields[f] || ""} onChange={(e) => setEditFields({ ...editFields, [f]: e.target.value })} placeholder={f}
                         type="number" className="bg-[#0a0a12] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#ff6b6b] focus:outline-none" />
                     ))}
@@ -1244,7 +1268,7 @@ export default function AdminPage() {
                             <div className="text-[11px] text-gray-500 font-mono">{String(c.id)}</div>
                           </div>
                           <div className="text-xs text-[#ffd700] font-bold">Lv.{String(c.level)}</div>
-                          <div className="text-xs text-gray-400">💰 {Number(c.gold || 0).toLocaleString()} • 💎 {Number(c.diamonds || 0)}</div>
+                          <div className="text-xs text-gray-400">💰 {Number(c.gold || 0).toLocaleString()} • 💎 {Number(c.diamonds || 0)} • 🗼 {Number(c.towerCoins || 0).toLocaleString()} • 🏯 Andar {Number(c.towerFloor || 1)}</div>
                         </div>
                         <div className="flex gap-2">
                           <button
@@ -1732,6 +1756,61 @@ export default function AdminPage() {
                   <div className={`mt-3 text-center rounded-xl py-2 text-sm font-black ${infiniteEnergy ? "bg-[#ffd700]/15 border border-[#ffd700]/40 text-[#ffd700]" : "bg-[#0a0a12] border border-gray-700 text-gray-500"}`}>
                     {infiniteEnergy ? "⚡ ATIVA — energia infinita para todos" : "❄️ Desativada — custo de energia normal"}
                   </div>
+                </div>
+
+                {/* Limites da torre & balanceamento */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10 md:col-span-2">
+                  <h3 className="text-sm font-bold text-[#7c5cfc] mb-1">🗼 Limites da Torre & Balanceamento</h3>
+                  <p className="text-xs text-gray-400 mb-4">
+                    Controle o progresso da torre e o ganho de nível. <b className="text-gray-300">0 = sem limite próprio</b> (usa o padrão do jogo).
+                  </p>
+                  <div className="grid sm:grid-cols-3 gap-3 mb-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">🏯 Limite de andar da torre</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={limitMaxTowerFloor}
+                        onChange={(e) => setLimitMaxTowerFloor(e.target.value)}
+                        placeholder="0 = sem limite"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#7c5cfc] focus:outline-none"
+                      />
+                      <p className="text-[10px] text-gray-500 mt-1">O jogador não passa deste andar.</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">⬆️ Limite de nível</label>
+                      <input
+                        type="number"
+                        min={0}
+                        value={limitMaxLevel}
+                        onChange={(e) => setLimitMaxLevel(e.target.value)}
+                        placeholder={`0 = ${MAX_LEVEL}`}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#7c5cfc] focus:outline-none"
+                      />
+                      <p className="text-[10px] text-gray-500 mt-1">Nenhuma fonte de XP passa deste nível.</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">⚡ XP da torre (multiplicador)</label>
+                      <input
+                        type="number"
+                        min={0.01}
+                        max={2}
+                        step={0.05}
+                        value={limitTowerXpMult}
+                        onChange={(e) => setLimitTowerXpMult(e.target.value)}
+                        placeholder="1 = normal"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#7c5cfc] focus:outline-none"
+                      />
+                      <p className="text-[10px] text-gray-500 mt-1">Ex.: 0.3 = só 30% do XP por andar (torre menos apelona).</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={saveBalanceLimits}
+                    disabled={busy === "balance_limits"}
+                    className="bg-[#7c5cfc] hover:bg-[#6b4fd8] text-white rounded-xl px-4 py-2.5 font-bold text-sm disabled:opacity-40"
+                  >
+                    {busy === "balance_limits" ? "Salvando..." : "💾 Salvar limites e balanceamento"}
+                  </button>
                 </div>
               </div>
             )}

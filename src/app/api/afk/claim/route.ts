@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { xpForLevel, powerCalc, MAX_LEVEL } from "@/game/constants";
+import { xpForLevel, powerCalc, resolveMaxLevel } from "@/game/constants";
 import { computeEnergyRegen } from "@/game/energy";
 import { xpMultiplier, energyMultiplier, goldMultiplier } from "@/game/boosts";
 import { computeAfkRewards } from "@/game/afk";
@@ -13,6 +13,10 @@ export async function POST(req: NextRequest) {
     const auth = await requireCharacterAuth(req, characterId);
     if (!auth.ok) return auth.response;
     const char = auth.char;
+
+    // Nível máximo configurado no painel admin (0 = padrão 999).
+    const settings = await jsonDb.getServerSettings();
+    const maxLevel = resolveMaxLevel(Number(settings?.maxLevel) || 0);
 
     // Só existe o que coletar se uma sessão AFK estiver ativa (afkSince setado).
     // Após coletar a rota zera afkSince — o jogador escolhe se quer descansar
@@ -37,7 +41,7 @@ export async function POST(req: NextRequest) {
     let newStatPoints = char.unspentStatPoints || 0;
     let newSkillPoints = char.skillPoints || 0;
     let levelsGained = 0;
-    while (newLevel < MAX_LEVEL && newXp >= newXpToNext) {
+    while (newLevel < maxLevel && newXp >= newXpToNext) {
       newXp -= newXpToNext;
       newLevel++;
       newXpToNext = xpForLevel(newLevel);

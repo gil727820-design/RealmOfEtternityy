@@ -28,6 +28,10 @@ export default function TowerPanel() {
   const fx = useBattleFx();
   const autoStop = useRef(false);
   const floatId = useRef(0);
+  // Guarda contra cliques duplicados no botão de lutar: sem isso, dois "start"
+  // simultâneos criam duas batalhas concorrentes no MESMO andar e o andar acaba
+  // avançando de 2 em 2 (a 2ª vitória lê o andar já incrementado pela 1ª).
+  const starting = useRef(false);
 
   // Automático contínuo: cooldown entre andares + ref de controle (leitura segura no timeout)
   const [nextIn, setNextIn] = useState(0);
@@ -123,13 +127,14 @@ export default function TowerPanel() {
   };
 
   const startBattle = async () => {
+    if (starting.current) return; // ignora chamadas duplicadas enquanto inicia
+    starting.current = true;
     cancelAutoNext();
     setBusy(true);
     try {
       const data = await sendAction("start", null);
       if (data.error) {
         notify(data.error, "error");
-        setBusy(false);
         return;
       }
       setBattle(data.battle);
@@ -142,8 +147,10 @@ export default function TowerPanel() {
       setTimeout(() => autoLoop(data.battle), 900);
     } catch {
       notify(t("map.connectionError", locale), "error");
+    } finally {
+      starting.current = false;
+      setBusy(false);
     }
-    setBusy(false);
   };
 
   // Luta automática: dispara ações sozinho até o fim

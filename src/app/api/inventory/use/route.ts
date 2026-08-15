@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { applyBoostPatch, xpMultiplier, energyMultiplier, type Boosts } from "@/game/boosts";
-import { xpForLevel, MAX_LEVEL } from "@/game/constants";
+import { xpForLevel, resolveMaxLevel } from "@/game/constants";
 import { requireCharacterAuth } from "@/game/auth";
 
 /**
@@ -22,6 +22,10 @@ export async function POST(req: NextRequest) {
     const auth = await requireCharacterAuth(req, characterId);
     if (!auth.ok) return auth.response;
     const char = auth.char;
+
+    // Nível máximo configurado no painel admin (0 = padrão 999).
+    const settings = await jsonDb.getServerSettings();
+    const maxLevel = resolveMaxLevel(Number(settings?.maxLevel) || 0);
 
     const entry = await jsonDb.getInventoryItemById(itemId);
     if (!entry) return NextResponse.json({ error: "Item não encontrado" }, { status: 404 });
@@ -87,7 +91,7 @@ export async function POST(req: NextRequest) {
 
     let leveledUp = 0;
     xp = newXp;
-    while (level < MAX_LEVEL && xp >= xpToNext) {
+    while (level < maxLevel && xp >= xpToNext) {
       xp -= xpToNext;
       level += 1;
       leveledUp += 1;

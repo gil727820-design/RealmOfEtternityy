@@ -7,6 +7,7 @@ import {
   towerMonsterImage,
   isTowerMonsterKind,
   TOWER_MONSTER_NAMES,
+  resolveMaxLevel,
   type TowerMonsterKind,
   type TowerBossKind,
 } from "@/game/constants";
@@ -109,6 +110,15 @@ export async function POST(req: NextRequest) {
     if (!auth.ok) return auth.response;
     const char = auth.char;
 
+    // Limites/balanceamento configurados no painel admin (server_settings).
+    const settings = await jsonDb.getServerSettings();
+    // Multiplicador de XP da torre (ex.: 0.3 = só 30% do XP — "torre apelona").
+    const towerXpMult = Math.max(0.01, Number(settings?.towerXpMult) || 1);
+    // Andar máximo da torre (0 = sem limite).
+    const maxTowerFloor = Math.max(0, Number(settings?.maxTowerFloor) || 0);
+    // Nível máximo que o personagem pode alcançar (0 = padrão 999).
+    const maxLevel = resolveMaxLevel(Number(settings?.maxLevel) || 0);
+
     const ca = getCharCombat(char);
     // Buff ativado pela skin equipada (só ativa se for da própria classe)
     const skinBuff = getSkinClassBuff(char.classType, char.activeSkinId);
@@ -120,6 +130,12 @@ export async function POST(req: NextRequest) {
     const critAdd = (skinBuff ? skinBuff.critBonus : 0) + (mastery ? mastery.critBonus : 0);
     const takenFactor = (skinBuff ? skinBuff.takenMult : 1) * (mastery ? mastery.takenMult : 1);
     const floor = Number(char.towerFloor) || 1;
+    // Andar REAL da batalha em andamento: no "start" é o andar atual do
+    // personagem; nas ações de combate é o andar do próprio estado da batalha.
+    // Usar o andar da batalha (e não o valor do banco no momento da requisição)
+    // garante que uma vitória avance exatamente 1 andar, mesmo se duas batalhas
+    // do mesmo andar chegarem ao fim concorrentemente (evita pular de 2 em 2).
+    const battleFloor = action === "start" ? floor : Math.max(1, Number(state?.floor) || floor);
 
     // ---- Iniciar batalha (spawn do NPC) ----
     if (action === "start") {
@@ -351,13 +367,13 @@ export async function POST(req: NextRequest) {
     let rewards: any;
     if (won || lost) {
       if (won) {
-        const xpEarned = mon.xpReward * xpMultiplier(char);
+        const xpEarned = mon.xpReward * xpMultiplier(char) * towerXpMult;
         let newXp = (char.xp || 0) + xpEarned;
         let newLevel = char.level || 1;
         let newXpToNext = char.xpToNext || 100;
         let newStatPoints = char.unspentStatPoints || 0;
         let newSkillPoints = char.skillPoints || 0;
-        while (newXp >= newXpToNext) {
+        while (newLevel < maxLevel && newXp >= newXpToNext) {
           newXp -= newXpToNext;
           newLevel++;
           newXpToNext = xpForLevel(newLevel);
@@ -366,7 +382,8 @@ export async function POST(req: NextRequest) {
         }
         const newGold = (char.gold || 0) + Math.floor(mon.goldReward * goldMultiplier(char));
         const newCoins = (char.towerCoins || 0) + mon.coinsReward;
-        const newTowerFloor = floor + 1;
+        // Avança 1 andar por vitória, respeitando o limite configurado no admin.
+        const newTowerFloor = maxTowerFloor > 0 ? Math.min(maxTowerFloor, battleFloor + 1) : battleFloor + 1;
         const power = powerCalc({
           attack: ca.attack,
           defense: ca.defense,
@@ -407,7 +424,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       action,
-      floor,
+      floor: battleFloor,
       round,
       won,
       lost,

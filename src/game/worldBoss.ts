@@ -226,7 +226,8 @@ export function fmtBig(n: number): string {
  */
 export function applyXp(
   char: { xp?: number; level?: number; xpToNext?: number; unspentStatPoints?: number; skillPoints?: number },
-  xpGain: number
+  xpGain: number,
+  maxLevel = MAX_LEVEL
 ): { patch: Record<string, number>; newLevel: number } {
   const xpForLevel = (lv: number) => Math.floor(165 * Math.pow(1.18, lv - 1));
   let xp = (char.xp || 0) + Math.floor(xpGain);
@@ -235,7 +236,7 @@ export function applyXp(
   let statPoints = char.unspentStatPoints || 0;
   let skillPoints = char.skillPoints || 0;
 
-  while (level < MAX_LEVEL && xp >= xpToNext) {
+  while (level < maxLevel && xp >= xpToNext) {
     xp -= xpToNext;
     level++;
     xpToNext = xpForLevel(level);

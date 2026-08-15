@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { xpForLevel, powerCalc, missionXpReward, MAX_LEVEL } from "@/game/constants";
+import { xpForLevel, powerCalc, missionXpReward, resolveMaxLevel } from "@/game/constants";
 import { computeEnergyRegen } from "@/game/energy";
 import { xpMultiplier, energyMultiplier, goldMultiplier } from "@/game/boosts";
 import { requireCharacterAuth } from "@/game/auth";
@@ -20,6 +20,10 @@ export async function POST(req: NextRequest) {
     if (!auth.ok) return auth.response;
     const char = auth.char;
 
+    // Nível máximo configurado no painel admin (0 = padrão 999).
+    const settings = await jsonDb.getServerSettings();
+    const maxLevel = resolveMaxLevel(Number(settings?.maxLevel) || 0);
+
     const mission = await jsonDb.getMissionTemplateById(am.missionId);
 
     // Recarga passiva de energia (o tempo decorrido enquanto a missão rodava)
@@ -34,7 +38,7 @@ export async function POST(req: NextRequest) {
     let newSkillPoints = char.skillPoints || 0;
 
     // Level up check
-    while (newLevel < MAX_LEVEL && newXp >= newXpToNext) {
+    while (newLevel < maxLevel && newXp >= newXpToNext) {
       newXp -= newXpToNext;
       newLevel++;
       newXpToNext = xpForLevel(newLevel);

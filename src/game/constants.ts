@@ -383,6 +383,15 @@ export const PVP_LEAGUES = [
 // Nível máximo que um personagem pode alcançar.
 export const MAX_LEVEL = 999;
 
+/**
+ * Nível máximo efetivo: usa o limite configurado no painel admin (`maxLevel`
+ * em server_settings) quando > 0; senão volta ao padrão `MAX_LEVEL`.
+ */
+export function resolveMaxLevel(configuredMaxLevel?: number): number {
+  const v = Math.max(0, Number(configuredMaxLevel) || 0);
+  return v > 0 ? v : MAX_LEVEL;
+}
+
 // Curva de XP: exige mais XP por nível para o up não ser tão rápido.
 // A curva antiga (130 * 1.17) deixava subir fácil demais; a atual (165 * 1.18)
 // pede ~+40% no meio do jogo (ex.: Lv15 1.170 → 1.674) e escala mais nas fases

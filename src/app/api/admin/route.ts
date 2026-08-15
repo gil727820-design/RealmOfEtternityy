@@ -644,6 +644,18 @@ export async function POST(req: NextRequest) {
       if (typeof body.diamondsPerReal === "number" && Number.isFinite(body.diamondsPerReal)) {
         patch.diamondsPerReal = Math.max(1, Math.floor(body.diamondsPerReal));
       }
+      // Limites e balanceamento: torre (andar máx.), nível máx. e XP da torre.
+      // 0 = sem limite próprio (usa o padrão do jogo).
+      if (body.maxTowerFloor !== undefined) {
+        patch.maxTowerFloor = Math.max(0, Math.floor(Number(body.maxTowerFloor) || 0));
+      }
+      if (body.maxLevel !== undefined) {
+        patch.maxLevel = Math.max(0, Math.floor(Number(body.maxLevel) || 0));
+      }
+      // Multiplicador de XP ganho na torre (0.01–2; ex.: 0.3 = só 30% do XP).
+      if (body.towerXpMult !== undefined) {
+        patch.towerXpMult = Math.min(2, Math.max(0.01, Number(body.towerXpMult) || 1));
+      }
       // Loja Fantasma (moedas da torre): configuração completa (horários, duração, itens).
       if (body.ghostShop !== undefined) {
         const { sanitizeGhostShopConfig } = await import("@/game/ghostShop");
