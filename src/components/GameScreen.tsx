@@ -56,13 +56,10 @@ export default function GameScreen() {
     
     try {
       const res = await fetch(`/api/character/${characterId}`);
-      if (res.status === 403) {
-        // Conta banida — volta ao login.
-        logout();
-        return false;
-      }
-      if (res.status === 404) {
-        // Personagem não existe mais (foi deletado/deslogado) — volta ao login.
+      if (res.status === 401 || res.status === 403 || res.status === 404) {
+        // 401 = sessão inválida/expirada, 403 = conta banida, 404 = personagem
+        // removido. Em todos os casos volta ao login — sem travar numa tela de
+        // erro com retry que nunca resolve.
         logout();
         return false;
       }

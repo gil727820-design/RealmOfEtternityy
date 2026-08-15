@@ -43,6 +43,10 @@ export async function GET(req: NextRequest) {
       otherConfirmed: isA ? !!session.bConfirmed : !!session.aConfirmed,
       myOffers: await expand(isA ? session.aOffers : session.bOffers),
       otherOffers: await expand(isA ? session.bOffers : session.aOffers),
+      myGold: isA ? Number(session.aGold) || 0 : Number(session.bGold) || 0,
+      myDiamonds: isA ? Number(session.aDiamonds) || 0 : Number(session.bDiamonds) || 0,
+      otherGold: isA ? Number(session.bGold) || 0 : Number(session.aGold) || 0,
+      otherDiamonds: isA ? Number(session.bDiamonds) || 0 : Number(session.aDiamonds) || 0,
       chat: Array.isArray(session.chat) ? session.chat : [],
       completed: session.status === "completed",
     });

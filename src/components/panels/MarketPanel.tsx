@@ -11,6 +11,7 @@ import {
   listingFee,
 } from "@/game/market";
 import { MAX_TRADE_ADS_PER_CHAR } from "@/game/tradeAds";
+import { fmtNum } from "@/game/format";
 
 function fmt(n: number | undefined | null): string {
   return Number(n || 0).toLocaleString("pt-BR");
@@ -621,7 +622,13 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
   const [confirming, setConfirming] = useState(false);
   const [done, setDone] = useState(false);
   const [preview, setPreview] = useState<PreviewItem | null>(null);
+  const [myGold, setMyGold] = useState("");
+  const [myDiamonds, setMyDiamonds] = useState("");
   const myName = (character as any)?.name || "Você";
+  const goldNum = Math.max(0, Math.floor(Number(myGold) || 0));
+  const diamondsNum = Math.max(0, Math.floor(Number(myDiamonds) || 0));
+  const myGoldBal = Math.max(0, Number((character as any)?.gold) || 0);
+  const myDiamBal = Math.max(0, Number((character as any)?.diamonds) || 0);
 
   // Inventário disponível para oferecer nesta sala
   const inventory = useGameStore((s) => s.inventory);
@@ -659,6 +666,9 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
         });
         setMySel(sel);
       }
+      // Sincroniza ouro/diamantes já oferecidos
+      if (typeof data.myGold === "number") setMyGold(data.myGold > 0 ? String(data.myGold) : "");
+      if (typeof data.myDiamonds === "number") setMyDiamonds(data.myDiamonds > 0 ? String(data.myDiamonds) : "");
     } catch {
       /* silencioso */
     }
@@ -707,11 +717,11 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
       const res = await fetch("/api/trade-session/select", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ characterId, sessionId, items }),
+        body: JSON.stringify({ characterId, sessionId, items, gold: goldNum, diamonds: diamondsNum }),
       });
       const data = await res.json();
       if (!res.ok) notify(data.error || "Erro", "error");
-      else notify("✅ Itens atualizados. Confirme quando estiver pronto!", "success");
+      else notify("✅ Oferta atualizada. Confirme quando estiver pronto!", "success");
       await load();
     } catch {
       notify("Erro ao atualizar itens", "error");
@@ -722,11 +732,9 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
 
   const confirmSide = async () => {
     if (!characterId || busy) return;
-    const count = Object.keys(mySel).filter((k) => Number(mySel[k]) > 0).length;
-    if (count === 0) {
-      notify("Selecione os itens que você vai dar primeiro", "error");
-      return;
-    }
+    // Troca de um lado só é permitida: dá para confirmar mesmo sem oferecer
+    // nada (presente) — quem recebe só confirma. O servidor valida se pelo
+    // menos UM lado ofereceu algo.
     setConfirming(true);
     setBusy(true);
     try {
@@ -740,7 +748,7 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
       await fetch("/api/trade-session/select", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ characterId, sessionId, items }),
+        body: JSON.stringify({ characterId, sessionId, items, gold: goldNum, diamonds: diamondsNum }),
       });
       const res = await fetch("/api/trade-session/confirm", {
         method: "POST",
@@ -828,7 +836,7 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
         <div>
           <h3 className="text-lg font-black">🔁 Sala de Troca</h3>
           <p className="text-[11px] text-gray-400">
-            Com <b className="text-[#7c5cfc]">{state?.otherName ?? "Jogador"}</b> · os dois precisam confirmar para a troca acontecer
+            Com <b className="text-[#7c5cfc]">{state?.otherName ?? "Jogador"}</b> · os dois precisam confirmar · troca de um lado só é permitida
           </p>
         </div>
         <button onClick={cancelSession} className="rounded-lg bg-white/5 px-3 py-1.5 text-xs font-bold text-gray-300 hover:bg-white/10">
@@ -851,10 +859,22 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
           </div>
           {myConfirmed ? (
             <div className="flex flex-wrap gap-1.5">
-              {state?.myOffers?.length === 0 && <p className="text-xs text-gray-500">Seus itens enviados ✓</p>}
+              {state?.myOffers?.length === 0 && state?.myGold <= 0 && state?.myDiamonds <= 0 && (
+                <p className="text-xs text-gray-500">Você não enviou nada (recebendo apenas) ✓</p>
+              )}
               {state?.myOffers?.map((o: any, i: number) => (
                 <ItemChip key={i} item={{ template: o.template, quantity: o.quantity }} locale={locale} />
               ))}
+              {Number(state?.myGold) > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-lg bg-[#ffd700]/15 px-2 py-1 text-[11px] font-bold text-[#ffd700]">
+                  💰 {fmtNum(Number(state?.myGold))}
+                </span>
+              )}
+              {Number(state?.myDiamonds) > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-lg bg-[#00d4ff]/15 px-2 py-1 text-[11px] font-bold text-[#00d4ff]">
+                  💎 {fmtNum(Number(state?.myDiamonds))}
+                </span>
+              )}
             </div>
           ) : (
             <>
@@ -898,12 +918,41 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
                   );
                 })}
               </div>
+              {/* Moedas na troca: pode oferecer ouro e/ou diamantes da conta */}
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <div className="flex flex-col gap-1 rounded-xl border border-[#ffd700]/20 bg-[#ffd700]/5 p-2">
+                  <span className="text-[10px] font-bold text-[#ffd700]">💰 Ouro</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={myGoldBal}
+                    value={myGold}
+                    onChange={(e) => setMyGold(e.target.value)}
+                    placeholder="0"
+                    className="w-full rounded bg-[#0f141f] px-2 py-1 text-xs text-white placeholder:text-gray-600"
+                  />
+                  <span className="text-[9px] text-gray-500">Saldo: {fmtNum(myGoldBal)}</span>
+                </div>
+                <div className="flex flex-col gap-1 rounded-xl border border-[#00d4ff]/20 bg-[#00d4ff]/5 p-2">
+                  <span className="text-[10px] font-bold text-[#00d4ff]">💎 Diamantes</span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={myDiamBal}
+                    value={myDiamonds}
+                    onChange={(e) => setMyDiamonds(e.target.value)}
+                    placeholder="0"
+                    className="w-full rounded bg-[#0f141f] px-2 py-1 text-xs text-white placeholder:text-gray-600"
+                  />
+                  <span className="text-[9px] text-gray-500">Saldo: {fmtNum(myDiamBal)}</span>
+                </div>
+              </div>
               <button
                 onClick={pushSelection}
                 disabled={busy}
                 className="mt-2 w-full rounded-lg bg-gradient-to-r from-[#7c5cfc] to-[#e94560] py-2 text-xs font-black text-white disabled:opacity-50"
               >
-                {busy ? "…" : "📦 Salvar itens"}
+                {busy ? "…" : "📦 Salvar oferta"}
               </button>
             </>
           )}
@@ -920,12 +969,27 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
             )}
           </div>
           <div className="flex flex-wrap gap-1.5">
-            {otherOffers.length === 0 ? (
-              <p className="text-xs text-gray-500">O outro jogador ainda não selecionou itens.</p>
+            {otherOffers.length === 0 && Number(state?.otherGold) <= 0 && Number(state?.otherDiamonds) <= 0 ? (
+              <p className="text-xs text-gray-500">O outro jogador ainda não selecionou nada.</p>
             ) : (
-              otherOffers.map((o: any, i: number) => (
-                <ItemChip key={i} item={{ template: o.template, quantity: o.quantity }} locale={locale} />
-              ))
+              <>
+                {otherOffers.map((o: any, i: number) => (
+                  <ItemChip key={i} item={{ template: o.template, quantity: o.quantity }} locale={locale} />
+                ))}
+                {Number(state?.otherGold) > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-lg bg-[#ffd700]/15 px-2 py-1 text-[11px] font-bold text-[#ffd700]">
+                    💰 {fmtNum(Number(state?.otherGold))}
+                  </span>
+                )}
+                {Number(state?.otherDiamonds) > 0 && (
+                  <span className="inline-flex items-center gap-1 rounded-lg bg-[#00d4ff]/15 px-2 py-1 text-[11px] font-bold text-[#00d4ff]">
+                    💎 {fmtNum(Number(state?.otherDiamonds))}
+                  </span>
+                )}
+                {otherOffers.length === 0 && (
+                  <p className="w-full text-[10px] text-gray-500">Sem itens — só moedas.</p>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -965,7 +1029,8 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
       {/* Confirmação dupla */}
       <div className="flex flex-col items-center gap-2 rounded-2xl border border-[#ffd700]/30 bg-[#ffd700]/5 p-3">
         <p className="text-[11px] text-gray-400">
-          Quando os <b className="text-white">dois</b> confirmarem, a troca acontece automaticamente.
+          Quando os <b className="text-white">dois</b> confirmarem, a troca acontece automaticamente. Quem
+          recebe pode confirmar sem enviar nada — só o outro lado precisa oferecer itens ou moedas.
           {myConfirmed && !otherConfirmed && " Aguardando a confirmação do outro jogador..."}
         </p>
         <button

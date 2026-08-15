@@ -288,6 +288,10 @@ export const CLASS_BASE_STATS: Record<ClassName, {hp:number;attack:number;defens
  * um mago não pode virar tanque, um cavaleiro não alcança o DPS de um berserker
  * etc. O valor é o MÁXIMO alcançável em cada status (base da classe + pontos
  * investidos, SEM contar itens equipados — equipamentos ainda somam por cima).
+ *
+ * ATENÇÃO: ATAQUE, HP e DEFESA são ILIMITADOS para todas as classes (Infinity),
+ * como solicitado. Apenas os demais status (velocidade, mana, crítico, precisão,
+ * esquiva, resistência) permanecem com limite por classe.
  */
 export type AllocStatKey =
   | "attack" | "defense" | "speed" | "hp" | "mana"
@@ -295,28 +299,32 @@ export type AllocStatKey =
 
 export const CLASS_STAT_CAPS: Record<ClassName, Record<AllocStatKey, number>> = {
   // DPS puro: ataque/crítico altos, frágil
-  berserker:   { attack: 190, defense: 55,  speed: 85,  hp: 400, mana: 160, critical: 65, precision: 25, dodge: 25, resistance: 20 },
-  samurai:     { attack: 180, defense: 90,  speed: 100, hp: 450, mana: 220, critical: 55, precision: 35, dodge: 35, resistance: 35 },
-  assassin:    { attack: 160, defense: 45,  speed: 130, hp: 280, mana: 220, critical: 60, precision: 45, dodge: 50, resistance: 20 },
-  archer:      { attack: 160, defense: 55,  speed: 110, hp: 320, mana: 200, critical: 55, precision: 55, dodge: 45, resistance: 25 },
-  hunter:      { attack: 150, defense: 65,  speed: 100, hp: 340, mana: 220, critical: 50, precision: 50, dodge: 35, resistance: 25 },
+  berserker:   { attack: Infinity, defense: Infinity, speed: 85,  hp: Infinity, mana: 160, critical: 65, precision: 25, dodge: 25, resistance: 20 },
+  samurai:     { attack: Infinity, defense: Infinity, speed: 100, hp: Infinity, mana: 220, critical: 55, precision: 35, dodge: 35, resistance: 35 },
+  assassin:    { attack: Infinity, defense: Infinity, speed: 130, hp: Infinity, mana: 220, critical: 60, precision: 45, dodge: 50, resistance: 20 },
+  archer:      { attack: Infinity, defense: Infinity, speed: 110, hp: Infinity, mana: 200, critical: 55, precision: 55, dodge: 45, resistance: 25 },
+  hunter:      { attack: Infinity, defense: Infinity, speed: 100, hp: Infinity, mana: 220, critical: 50, precision: 50, dodge: 35, resistance: 25 },
   // Híbrido / equilibrado
-  warrior:     { attack: 140, defense: 120, speed: 70,  hp: 550, mana: 220, critical: 45, precision: 35, dodge: 35, resistance: 35 },
-  monk:        { attack: 110, defense: 140, speed: 100, hp: 550, mana: 270, critical: 40, precision: 35, dodge: 40, resistance: 50 },
+  warrior:     { attack: Infinity, defense: Infinity, speed: 70,  hp: Infinity, mana: 220, critical: 45, precision: 35, dodge: 35, resistance: 35 },
+  monk:        { attack: Infinity, defense: Infinity, speed: 100, hp: Infinity, mana: 270, critical: 40, precision: 35, dodge: 40, resistance: 50 },
   // Caster / suporte: mana altíssima, frágil fisicamente
-  mage:        { attack: 160, defense: 45,  speed: 65,  hp: 280, mana: 520, critical: 40, precision: 25, dodge: 20, resistance: 25 },
-  necromancer: { attack: 140, defense: 55,  speed: 55,  hp: 320, mana: 470, critical: 35, precision: 25, dodge: 20, resistance: 30 },
-  summoner:    { attack: 130, defense: 55,  speed: 65,  hp: 300, mana: 500, critical: 35, precision: 25, dodge: 20, resistance: 30 },
+  mage:        { attack: Infinity, defense: Infinity, speed: 65,  hp: Infinity, mana: 520, critical: 40, precision: 25, dodge: 20, resistance: 25 },
+  necromancer: { attack: Infinity, defense: Infinity, speed: 55,  hp: Infinity, mana: 470, critical: 35, precision: 25, dodge: 20, resistance: 30 },
+  summoner:    { attack: Infinity, defense: Infinity, speed: 65,  hp: Infinity, mana: 500, critical: 35, precision: 25, dodge: 20, resistance: 30 },
   // Tank: defesa/vida altíssimas, ataque baixo
-  knight:      { attack: 75,  defense: 210, speed: 35,  hp: 850, mana: 160, critical: 20, precision: 15, dodge: 15, resistance: 90 },
-  paladin:     { attack: 90,  defense: 170, speed: 45,  hp: 750, mana: 320, critical: 25, precision: 20, dodge: 20, resistance: 70 },
-  templar:     { attack: 90,  defense: 170, speed: 50,  hp: 700, mana: 340, critical: 25, precision: 20, dodge: 20, resistance: 80 },
+  knight:      { attack: Infinity, defense: Infinity, speed: 35,  hp: Infinity, mana: 160, critical: 20, precision: 15, dodge: 15, resistance: 90 },
+  paladin:     { attack: Infinity, defense: Infinity, speed: 45,  hp: Infinity, mana: 320, critical: 25, precision: 20, dodge: 20, resistance: 70 },
+  templar:     { attack: Infinity, defense: Infinity, speed: 50,  hp: Infinity, mana: 340, critical: 25, precision: 20, dodge: 20, resistance: 80 },
 };
 
-/** Cap de um status específico para uma classe (retorna null se não houver limite). */
+/**
+ * Cap de um status específico para uma classe.
+ * Retorna null quando NÃO há limite (ex.: ataque, HP e defesa — ilimitados).
+ */
 export function classStatCap(classType: ClassName | string, stat: AllocStatKey): number | null {
   const caps = CLASS_STAT_CAPS[(classType as ClassName) ?? "warrior"];
-  return caps?.[stat] ?? null;
+  const v = caps?.[stat];
+  return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
 // Custo (em ouro) do botão de resetar atributos (Dashboard).

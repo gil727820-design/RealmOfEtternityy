@@ -76,9 +76,18 @@ export async function POST(req: NextRequest) {
     // ---- TROCA ATÔMICA ----
     const aOffers = Array.isArray(after.aOffers) ? after.aOffers : [];
     const bOffers = Array.isArray(after.bOffers) ? after.bOffers : [];
-    if (aOffers.length === 0 || bOffers.length === 0) {
+    const aGold = Math.max(0, Math.floor(Number(after.aGold) || 0));
+    const aDiamonds = Math.max(0, Math.floor(Number(after.aDiamonds) || 0));
+    const bGold = Math.max(0, Math.floor(Number(after.bGold) || 0));
+    const bDiamonds = Math.max(0, Math.floor(Number(after.bDiamonds) || 0));
+
+    // Troca unilateral é permitida: basta UM lado oferecer algo (itens ou
+    // moedas). O outro pode confirmar sem enviar nada (presente).
+    const aHas = aOffers.length > 0 || aGold > 0 || aDiamonds > 0;
+    const bHas = bOffers.length > 0 || bGold > 0 || bDiamonds > 0;
+    if (!aHas && !bHas) {
       await jsonDb.updateMarketRec(sessionId, { aConfirmed: false, bConfirmed: false });
-      return NextResponse.json({ error: "Os dois lados precisam oferecer itens. Confirme novamente." }, { status: 400 });
+      return NextResponse.json({ error: "Nenhum dos lados ofereceu itens ou moedas." }, { status: 400 });
     }
 
     for (const o of aOffers) {
@@ -96,6 +105,28 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Valida o saldo de moedas dos DOIS lados (leitura fresca) antes de mover
+    // qualquer coisa — evita oferecer ouro/diamantes que já não existem mais.
+    const charA = await jsonDb.findCharacterById(session.playerAId);
+    const charB = await jsonDb.findCharacterById(session.playerBId);
+    if (aGold > 0 && (!charA || (Number(charA.gold) || 0) < aGold)) {
+      await jsonDb.updateMarketRec(sessionId, { aConfirmed: false, bConfirmed: false });
+      return NextResponse.json({ error: "Seu ouro mudou desde a seleção. Revise e confirme de novo." }, { status: 400 });
+    }
+    if (aDiamonds > 0 && (!charA || (Number(charA.diamonds) || 0) < aDiamonds)) {
+      await jsonDb.updateMarketRec(sessionId, { aConfirmed: false, bConfirmed: false });
+      return NextResponse.json({ error: "Seus diamantes mudaram desde a seleção. Revise e confirme de novo." }, { status: 400 });
+    }
+    if (bGold > 0 && (!charB || (Number(charB.gold) || 0) < bGold)) {
+      await jsonDb.updateMarketRec(sessionId, { aConfirmed: false, bConfirmed: false });
+      return NextResponse.json({ error: "O ouro do outro jogador mudou desde a seleção." }, { status: 400 });
+    }
+    if (bDiamonds > 0 && (!charB || (Number(charB.diamonds) || 0) < bDiamonds)) {
+      await jsonDb.updateMarketRec(sessionId, { aConfirmed: false, bConfirmed: false });
+      return NextResponse.json({ error: "Os diamantes do outro jogador mudaram desde a seleção." }, { status: 400 });
+    }
+
+    // Move os itens dos dois lados
     for (const o of aOffers) {
       await moveItem(o.inventoryItemId, session.playerAId, session.playerBId, o.quantity || 1);
     }
@@ -103,12 +134,26 @@ export async function POST(req: NextRequest) {
       await moveItem(o.inventoryItemId, session.playerBId, session.playerAId, o.quantity || 1);
     }
 
+    // Transfere ouro/diamantes (quem ofereceu paga; quem recebeu ganha)
+    if (aGold > 0 || bGold > 0) {
+      const newA = (Number(charA?.gold) || 0) - aGold + bGold;
+      const newB = (Number(charB?.gold) || 0) - bGold + aGold;
+      await jsonDb.updateCharacter(session.playerAId, { gold: Math.max(0, newA) });
+      await jsonDb.updateCharacter(session.playerBId, { gold: Math.max(0, newB) });
+    }
+    if (aDiamonds > 0 || bDiamonds > 0) {
+      const newA = (Number(charA?.diamonds) || 0) - aDiamonds + bDiamonds;
+      const newB = (Number(charB?.diamonds) || 0) - bDiamonds + aDiamonds;
+      await jsonDb.updateCharacter(session.playerAId, { diamonds: Math.max(0, newA) });
+      await jsonDb.updateCharacter(session.playerBId, { diamonds: Math.max(0, newB) });
+    }
+
     await jsonDb.updateMarketRec(sessionId, { status: "completed", completedAt: new Date().toISOString() });
 
     return NextResponse.json({
       success: true,
       completed: true,
-      message: "🎉 TROCA CONCLUÍDA! Os itens foram trocados.",
+      message: "🎉 TROCA CONCLUÍDA! Os itens e moedas foram trocados.",
       character: await jsonDb.findCharacterById(characterId),
     });
   } catch (e: unknown) {

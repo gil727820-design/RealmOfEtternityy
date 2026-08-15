@@ -10,6 +10,9 @@ export async function POST(req: NextRequest) {
     const characterId = body?.characterId as string;
     const sessionId = body?.sessionId as string;
     const items = Array.isArray(body?.items) ? body.items : [];
+    // Ouro/diamantes oferecidos na troca (0 = não oferece moedas).
+    const gold = Math.max(0, Math.floor(Number(body?.gold) || 0));
+    const diamonds = Math.max(0, Math.floor(Number(body?.diamonds) || 0));
 
     if (!characterId || !sessionId) {
       return NextResponse.json({ error: "Personagem e sala são obrigatórios" }, { status: 400 });
@@ -17,8 +20,16 @@ export async function POST(req: NextRequest) {
     // Só o dono pode definir os itens que o próprio personagem oferece.
     const auth = await requireCharacterAuth(req, characterId);
     if (!auth.ok) return auth.response;
+    const char = auth.char;
     if (items.length > MAX_SESSION_ITEMS_PER_SIDE) {
       return NextResponse.json({ error: `Máximo de ${MAX_SESSION_ITEMS_PER_SIDE} itens por lado` }, { status: 400 });
+    }
+    // Não pode oferecer mais moedas do que tem na conta.
+    if (gold > 0 && gold > (Number(char.gold) || 0)) {
+      return NextResponse.json({ error: "Ouro insuficiente na sua conta" }, { status: 400 });
+    }
+    if (diamonds > 0 && diamonds > (Number(char.diamonds) || 0)) {
+      return NextResponse.json({ error: "Diamantes insuficientes na sua conta" }, { status: 400 });
     }
 
     const session = await jsonDb.getMarketRecById(sessionId);
@@ -55,7 +66,9 @@ export async function POST(req: NextRequest) {
       resolved.push({ inventoryItemId: invId, templateId: Number(entry.item.templateId) || 0, quantity: qty });
     }
 
-    const patch: Record<string, unknown> = isA ? { aOffers: resolved, aConfirmed: false } : { bOffers: resolved, bConfirmed: false };
+    const patch: Record<string, unknown> = isA
+      ? { aOffers: resolved, aGold: gold, aDiamonds: diamonds, aConfirmed: false }
+      : { bOffers: resolved, bGold: gold, bDiamonds: diamonds, bConfirmed: false };
     const updated = await jsonDb.updateMarketRec(sessionId, patch);
 
     return NextResponse.json({ success: true, session: updated });
