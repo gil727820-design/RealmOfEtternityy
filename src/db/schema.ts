@@ -109,11 +109,6 @@ export const codes = pgTable("codes", {
   data: jsonb("data").notNull(),
 });
 
-// Reportes de bug / feedback enviados pelos jogadores
-export const reports = pgTable("reports", {
-  id: uuid("id").primaryKey(),
-  data: jsonb("data").notNull(),
-});
 
 // Mercado entre jogadores: anúncios de venda (`kind = "listing"`) e propostas
 // de troca (`kind = "trade"`). A coluna `kind` discrimina os dois fluxos.

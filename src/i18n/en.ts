@@ -115,7 +115,6 @@ const en: Record<string, string> = {
   "nav.skills": "Skills",
   "nav.mailbox": "Mailbox",
   "nav.code": "Use Code",
-  "nav.report": "Report / Feedback",
   "nav.donate": "Donate",
   "nav.battlepass": "Battle Pass",
   "nav.pets": "Pets",

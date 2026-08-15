@@ -128,7 +128,6 @@ const es: Record<string, string> = {
   "nav.skills": "Habilidades",
   "nav.mailbox": "Buzón",
   "nav.code": "Usar Código",
-  "nav.report": "Informe / Feedback",
   "nav.donate": "Donar",
   "nav.battlepass": "Pase de Batalla",
   "nav.pets": "Mascotas",

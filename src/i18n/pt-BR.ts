@@ -128,7 +128,6 @@ const ptBR: Record<string, string> = {
   "nav.skills": "Habilidades",
   "nav.mailbox": "Correio",
   "nav.code": "Usar Código",
-  "nav.report": "Reporte / Feedback",
   "nav.donate": "Doar",
   "nav.battlepass": "Passe de Batalha",
   "nav.pets": "Pets",

@@ -32,7 +32,7 @@ function isoToLocalInput(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-type Tab = "dash" | "users" | "characters" | "guilds" | "skins" | "send" | "excluded" | "music" | "server" | "codes" | "reports" | "donate" | "pix" | "test";
+type Tab = "dash" | "users" | "characters" | "guilds" | "skins" | "send" | "excluded" | "music" | "server" | "codes" | "donate" | "pix" | "test";
 type SkinChar = { id: string; name: string; level: number; classType: string; skins: string[] };
 
 /** Recursos que o ADM pode presentear pelo correio. */
@@ -231,16 +231,6 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  const loadReports = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/admin?action=reports`, { headers });
-      const d = await res.json();
-      setData({ ...d });
-    } catch { /* ignore */ }
-    setLoading(false);
-  };
-
   const createCode = async () => {
     setBusy("create_code");
     const d = await callAdmin({
@@ -269,15 +259,6 @@ export default function AdminPage() {
     setBusy(null);
   };
 
-  const deleteReport = async (id: string) => {
-    if (!window.confirm("Excluir este reporte?")) return;
-    setBusy(`delrep_${id}`);
-    const d = await callAdmin({ action: "delete_report", id });
-    setMessage(d.success ? `✅ ${d.message}` : `❌ ${d.error || "Erro"}`);
-    await loadReports();
-    setBusy(null);
-  };
-
   useEffect(() => {
     if (!authenticated) return;
     const run = ({
@@ -291,7 +272,6 @@ export default function AdminPage() {
       music: loadMusic,
       server: undefined,
       codes: loadCodes,
-      reports: loadReports,
       donate: loadDonateSettings,
       pix: loadPurchases,
     } as Record<Tab, (() => Promise<void>) | undefined>)[tab];
@@ -395,7 +375,7 @@ export default function AdminPage() {
   const resetGame = async () => {
     if (resetConfirm !== "RESETAR") return setMessage("❌ Digite RESETAR para confirmar.");
     if (!window.confirm(
-      `⚠️ TEM CERTEZA ABSOLUTA?\n\nIsso apaga TODOS os jogadores, personagens, guildas, inventário, correio, códigos usados e reportes.\nO catálogo de itens e missões é mantido.\n\nNÃO há como desfazer!`
+      `⚠️ TEM CERTEZA ABSOLUTA?\n\nIsso apaga TODOS os jogadores, personagens, guildas, inventário, correio e códigos usados.\nO catálogo de itens e missões é mantido.\n\nNÃO há como desfazer!`
     )) return;
     setBusy("reset_game");
     const d = await callAdmin({ action: "reset_game" });
@@ -823,7 +803,6 @@ export default function AdminPage() {
     { id: "music", label: "Músicas das Ilhas", icon: "🎵" },
     { id: "server", label: "Mensagem Global", icon: "📢" },
     { id: "codes", label: "Códigos", icon: "🎟️" },
-    { id: "reports", label: "Reportes", icon: "📝" },
     { id: "donate", label: "Donate (PIX)", icon: "💖" },
     { id: "pix", label: "Compras PIX", icon: "💎" },
     { id: "test", label: "Modo Teste", icon: "🧪" },
@@ -916,7 +895,7 @@ export default function AdminPage() {
               <div className="mt-6 bg-[#1a1a2e] rounded-2xl p-5 border border-red-500/30">
                 <h3 className="text-sm font-bold text-red-400 mb-1">♻️ Resetar o Jogo (começar do zero)</h3>
                 <p className="text-xs text-gray-400 mb-4">
-                  Apaga <b className="text-red-300">TODOS os jogadores</b> (contas, personagens, guildas, inventário, correio, códigos usados e reportes). O catálogo de itens e missões é mantido.
+                  Apaga <b className="text-red-300">TODOS os jogadores</b> (contas, personagens, guildas, inventário, correio e códigos usados). O catálogo de itens e missões é mantido.
                 </p>
                 <div className="flex gap-3 flex-wrap items-center">
                   <input
@@ -1963,42 +1942,6 @@ export default function AdminPage() {
                     </div>
                   )}
                 </div>
-              </div>
-            )}
-            {tab === "reports" && (
-              <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
-                <h3 className="text-sm font-bold text-white mb-4">
-                  📝 Reportes dos jogadores ({((data.reports as unknown[]) || []).length})
-                </h3>
-                {loading ? (
-                  <div className="text-center text-gray-500 text-sm py-10">Carregando...</div>
-                ) : !Array.isArray(data.reports) || data.reports.length === 0 ? (
-                  <div className="text-center text-gray-500 text-sm py-10">Nenhum reporte enviado ainda.</div>
-                ) : (
-                  <div className="space-y-3">
-                    {(data.reports as Record<string, unknown>[]).map((r) => (
-                      <div key={r.id as string} className={`rounded-xl border p-3 ${r.type === "bug" ? "border-red-500/40 bg-red-500/5" : "border-[#4ecdc4]/40 bg-[#4ecdc4]/5"}`}>
-                        <div className="flex items-center justify-between gap-2 mb-1">
-                          <span className={`text-xs font-bold ${r.type === "bug" ? "text-red-300" : "text-[#4ecdc4]"}`}>
-                            {r.type === "bug" ? "🐛 Bug" : "💡 Feedback"}
-                          </span>
-                          <span className="text-[10px] text-gray-500">{new Date(r.createdAt as string).toLocaleString("pt-BR")}</span>
-                        </div>
-                        <div className="flex items-center gap-2 mb-1.5 text-[11px] text-gray-400">
-                          <span className="font-bold text-white">{String(r.characterName || "—")}</span>
-                          <span>Lv.{String(r.level ?? "—")}</span>
-                          <span>{String(r.classType || "")}</span>
-                          {r.category ? <span className="px-1.5 py-0.5 rounded bg-white/10">{String(r.category)}</span> : null}
-                        </div>
-                        <p className="text-sm text-gray-300 whitespace-pre-wrap mb-2">{String(r.message || "")}</p>
-                        <button onClick={() => deleteReport(String(r.id))} disabled={busy === `delrep_${r.id}`}
-                          className="text-[11px] text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500 rounded-lg px-2.5 py-1 disabled:opacity-40">
-                          {busy === `delrep_${r.id}` ? "Excluindo..." : "🗑️ Excluir"}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             )}
       </div>

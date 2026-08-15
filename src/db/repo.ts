@@ -4,7 +4,7 @@ import { db } from "@/db";
 import {
   users, characters, itemTemplates, inventoryItems, missionTemplates,
   activeMissions, afkRewards, battles, guilds, guildInvites, guildChats,
-  mailbox, excludedUsers, regionAudio, serverSettings, codes, reports,
+  mailbox, excludedUsers, regionAudio, serverSettings, codes,
   marketplace,
 } from "./schema";
 import { skinById } from "@/game/skins";
@@ -881,26 +881,6 @@ export async function updateCode(id: string, patch: any) {
   return updateRec(codes, id, patch, [["code", "code"]]);
 }
 
-/* ─── Reportes (bug / feedback) ─── */
-
-export async function listReports() {
-  const all = await rowsOf(reports);
-  return all.sort((a: any, b: any) => (b.createdAt || "").localeCompare(a.createdAt || ""));
-}
-
-export async function createReport(rec: any) {
-  const full = { id: uuidv4(), createdAt: new Date().toISOString(), ...rec };
-  await insertRec(reports, full);
-  return full;
-}
-
-export async function deleteReport(id: string) {
-  const existing = await getRec(reports, id);
-  if (!existing) return false;
-  await deleteRec(reports, id);
-  return true;
-}
-
 /* ─── Compras PIX (diamantes) — comprovantes aguardando aprovação ─── */
 
 async function getPurchasesData(): Promise<any[]> {
@@ -1093,8 +1073,8 @@ export async function getSessionsByCharacter(characterId: string) {
  * Apaga TODOS os dados de jogadores para "começar do zero".
  * Mantém o catálogo de itens, missões, músicas das ilhas e as configurações
  * do servidor (anúncio/manutenção/PIX) intactos — só o progresso dos
- * jogadores (contas, personagens, inventário, guildas, correio, códigos
- * usados, reportes etc.) é zerado.
+ * jogadores (contas, personagens, inventário, guildas, correio e códigos
+ * usados etc.) é zerado.
  */
 export async function resetGameData() {
   for (const table of [
@@ -1110,7 +1090,6 @@ export async function resetGameData() {
     mailbox,
     excludedUsers,
     codes,
-    reports,
     marketplace,
   ]) {
     await db.delete(table);
@@ -1215,10 +1194,6 @@ export default {
   createCode,
   deleteCode,
   updateCode,
-  // reportes (bug / feedback)
-  listReports,
-  createReport,
-  deleteReport,
   // mercado entre jogadores
   insertMarketRec,
   getMarketRecById,

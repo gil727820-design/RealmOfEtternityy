@@ -150,11 +150,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ codes });
     }
 
-    if (action === "reports") {
-      const reports = await jsonDb.listReports();
-      return NextResponse.json({ reports });
-    }
-
     if (action === "purchases") {
       const purchases = await jsonDb.listPurchases();
       return NextResponse.json({ purchases });
@@ -709,16 +704,6 @@ export async function POST(req: NextRequest) {
       const done = await jsonDb.deleteCode(String(id));
       if (!done) return NextResponse.json({ error: "Código não encontrado" }, { status: 404 });
       return NextResponse.json({ success: true, message: "Código excluído." });
-    }
-
-    // ---- Reportes (bug / feedback) ----
-
-    if (action === "delete_report") {
-      const { id } = body;
-      if (!id) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
-      const done = await jsonDb.deleteReport(String(id));
-      if (!done) return NextResponse.json({ error: "Reporte não encontrado" }, { status: 404 });
-      return NextResponse.json({ success: true, message: "Reporte excluído." });
     }
 
     return NextResponse.json({ error: "Ação inválida" }, { status: 400 });

@@ -22,7 +22,6 @@ import DungeonPanel from "./panels/DungeonPanel";
 import SkillTreePanel from "./panels/SkillTreePanel";
 import MailboxPanel from "./panels/MailboxPanel";
 import CodePanel from "./panels/CodePanel";
-import ReportPanel from "./panels/ReportPanel";
 import DonatePanel from "./panels/DonatePanel";
 import SettingsPanel from "./panels/SettingsPanel";
 import MusicController from "./MusicController";
@@ -164,7 +163,6 @@ export default function GameScreen() {
       case "skills": return <SkillTreePanel />;
       case "mailbox": return <MailboxPanel />;
       case "code": return <CodePanel />;
-      case "report": return <ReportPanel />;
       case "donate": return <DonatePanel />;
       case "settings": return <SettingsPanel />;
       default: return <DashboardPanel />;
