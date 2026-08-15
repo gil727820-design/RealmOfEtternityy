@@ -1988,6 +1988,7 @@ export default function AdminPage() {
                   <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
                     <h3 className="text-sm font-bold text-white mb-1">🕐 Horários de abertura (horário do servidor)</h3>
                     <div className="mb-3"><ServerClock headers={headers} /></div>
+                    <TimezoneWarning />
                     <p className="text-xs text-gray-400 mb-3">
                       A loja abre todos os dias nos horários abaixo e fica aberta por <b className="text-gray-300">{Math.max(1, Math.floor(Number(ghostDuration) || 60))} min</b>.
                     </p>
@@ -2183,6 +2184,7 @@ export default function AdminPage() {
                   <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
                     <h3 className="text-sm font-bold text-white mb-1">🕐 Horários do evento (horário do servidor)</h3>
                     <div className="mb-3"><ServerClock headers={headers} /></div>
+                    <TimezoneWarning />
                     <p className="text-xs text-gray-400 mb-3">
                       O evento abre todos os dias nos horários abaixo e fica disponível por <b className="text-gray-300">{Math.max(1, Math.floor(Number(wbDuration) || 60))} min</b>.
                     </p>
@@ -2756,13 +2758,28 @@ function ServerClock({ headers }: { headers: Record<string, string> }) {
   const offsetLabel =
     offsetMinutes === 0 ? "UTC" : `UTC${offsetMinutes > 0 ? "+" : ""}${offsetMinutes / 60}`;
 
+  const dateStr = server.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+  const timeStr = server.toLocaleTimeString("pt-BR", { hour12: false });
+
   return (
     <div className="text-[11px] text-gray-400 bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 inline-flex items-center gap-2 flex-wrap">
       <span>🕐 Relógio do servidor:</span>
       <b className="font-mono text-white tabular-nums">
-        {server.toLocaleTimeString("pt-BR", { hour12: false })} ({offsetLabel})
+        {dateStr} {timeStr} ({offsetLabel})
       </b>
-      <span className="text-gray-600">— configure os horários por esse relógio</span>
+      <span className="text-gray-600">— configure os horários por esse relógio (HORA DO SERVIDOR)</span>
     </div>
+  );
+}
+
+/** Aviso de fuso horário para inputs de horário (HH:MM) */
+function TimezoneWarning() {
+  return (
+    <p className="text-[10px] text-yellow-400 bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-3 py-2 mt-2">
+      ⚠️ <b>ATENÇÃO:</b> Os horários abaixo são interpretados na <b>HORA DO SERVIDOR</b> (acima).
+      Se o servidor estiver em fuso diferente do seu (ex.: servidor em UTC, você no Brasil -3h),
+      configure o horário convertendo para o fuso do servidor. Ex.: quer abrir às 18:00 do Brasil
+      e o servidor é UTC? Coloque 21:00 aqui.
+    </p>
   );
 }
