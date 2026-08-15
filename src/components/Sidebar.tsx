@@ -6,7 +6,7 @@ import { classImage, type ClassName } from "@/game/constants";
 import { skinById } from "@/game/skins";
 import PreloadImages from "./ui/PreloadImages";
 
-type NavItem = { tab: GameTab; icon: string; image: string; labelKey: string; color: string; isNew?: boolean };
+type NavItem = { tab: GameTab; icon: string; image?: string; labelKey: string; color: string; isNew?: boolean };
 type NavSection = { titleKey?: string; items: NavItem[] };
 
 /** Navegação organizada em seções: Aventura / Combate / Economia / Conta. */
@@ -25,6 +25,7 @@ const NAV_SECTIONS: NavSection[] = [
     titleKey: "nav.sec.combate",
     items: [
       { tab: "pvp", icon: "⚔️", image: "/images/sidebar/menu_arena.png", labelKey: "nav.pvp", color: "#ef4444" },
+      { tab: "worldboss", icon: "🌍", labelKey: "nav.worldBoss", color: "#ef4444", isNew: true },
       { tab: "dungeon", icon: "🕳️", image: "/images/sidebar/menu_masmorras.png", labelKey: "nav.dungeon", color: "#8b5cf6" },
       { tab: "guild", icon: "🏰", image: "/images/sidebar/menu_guilda.png", labelKey: "nav.guild", color: "#3b82f6" },
       { tab: "rankings", icon: "🏆", image: "/images/sidebar/menu_rankings.png", labelKey: "nav.rankings", color: "#f59e0b" },
@@ -34,7 +35,7 @@ const NAV_SECTIONS: NavSection[] = [
     titleKey: "nav.sec.economia",
     items: [
       { tab: "shop", icon: "🛒", image: "/images/sidebar/menu_loja.png", labelKey: "nav.shop", color: "#ec4899" },
-      { tab: "market", icon: "🏪", image: "/images/marketplace/icone_marketplace.png", labelKey: "nav.market", color: "#f59e0b", isNew: true },
+      { tab: "market", icon: "🏪", image: "/images/marketplace/icone_marketplace.png", labelKey: "nav.market", color: "#f59e0b" },
       { tab: "forge", icon: "🔨", image: "/images/sidebar/menu_forja.png", labelKey: "nav.forge", color: "#f97316" },
       { tab: "afk", icon: "💤", image: "/images/sidebar/menu_afk.png", labelKey: "nav.afk", color: "#06b6d4" },
       { tab: "skills", icon: "🌳", image: "/images/sidebar/menu_habilidades.png", labelKey: "nav.skills", color: "#a855f7" },
@@ -55,6 +56,11 @@ const NAV_SECTIONS: NavSection[] = [
 export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const { activeTab, setTab, locale, character, logout, mailboxCount } = useGameStore();
 
+  // Loja Fantasma 👻 e Evento Global 🌍 ficam SEMPRE visíveis na navegação.
+  // O painel de cada um mostra o estado real (aberta, fechada com contagem
+  // regressiva ou "ainda não está aberta") conforme a configuração do admin.
+  const visibleSections = NAV_SECTIONS;
+
   const xpPct = character ? Math.min(100, ((typeof character.xp === "number" ? character.xp : 0) / Math.max(1, typeof character.xpToNext === "number" ? character.xpToNext : 100)) * 100) : 0;
 
   // Avatar: usa a skin equipada se houver, senão a imagem padrão da classe.
@@ -65,7 +71,7 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
     })() ||
     classImage(((character?.classType as ClassName) || "warrior"), (character?.sex as string) || "male");
 
-  const navImages = NAV_SECTIONS.flatMap((s) => s.items).map((n) => n.image);
+  const navImages = visibleSections.flatMap((s) => s.items).map((n) => n.image).filter(Boolean) as string[];
 
   return (
     <>
@@ -133,7 +139,7 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
 
         {/* Navegação em seções */}
         <nav className="flex-1 overflow-y-auto sidebar-scroll py-3 px-2 space-y-5">
-          {NAV_SECTIONS.map((section) => (
+          {visibleSections.map((section) => (
             <div key={section.titleKey ?? section.items[0].tab} className="space-y-1">
               {!collapsed && section.titleKey && (
                 <>
@@ -164,12 +170,18 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
                       />
                     )}
                     <span className="relative shrink-0">
-                      <img
-                        src={item.image}
-                        alt={t(item.labelKey, locale)}
-                        className="w-7 h-7 object-contain transition-transform group-hover:scale-110"
-                        draggable={false}
-                      />
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={t(item.labelKey, locale)}
+                          className="w-7 h-7 object-contain transition-transform group-hover:scale-110"
+                          draggable={false}
+                        />
+                      ) : (
+                        <span className="w-7 h-7 flex items-center justify-center text-xl transition-transform group-hover:scale-110">
+                          {item.icon}
+                        </span>
+                      )}
                       {!collapsed && item.isNew && (
                         <span className="absolute -top-1 -right-2 px-1 py-px rounded-full text-[8px] font-black bg-[#f59e0b] text-black shadow-[0_0_8px_rgba(245,158,11,0.7)]">
                           {t("nav.badge.new", locale)}

@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import {
   users, characters, itemTemplates, inventoryItems, missionTemplates,
@@ -908,6 +908,42 @@ export async function updatePurchase(id: string, patch: any) {
   return next.find((p: any) => p.id === id) ?? null;
 }
 
+/* ─── Evento Global — Boss Mundial ─── */
+
+/** Lê o estado atual do evento (ou null se ainda não começou). */
+export async function getWorldBossEvent() {
+  const settings = await getServerSettings();
+  return settings?.worldBossEvent ?? null;
+}
+
+/** Salva o estado do evento em server_settings.worldBossEvent. */
+export async function saveWorldBossEvent(event: any) {
+  const saved = await updateServerSettings({ worldBossEvent: event });
+  return saved?.worldBossEvent ?? event;
+}
+
+/**
+ * Aplica dano ao HP do boss de forma ATÔMICA (evita corrida entre jogadores
+ * atacando ao mesmo tempo). Retorna o estado do evento ATUALIZADO (ou null).
+ */
+export async function decrementWorldBossHp(damage: number) {
+  const rows = await db.execute(sql`
+    UPDATE server_settings
+    SET data = jsonb_set(
+      data,
+      '{worldBossEvent,bossHp}',
+      to_jsonb(GREATEST(0, (data #>> '{worldBossEvent,bossHp}')::bigint - ${Math.max(1, Math.floor(damage))})),
+      true
+    )
+    WHERE key = 'core'
+    RETURNING data
+  `);
+  const row = (rows as any).rows?.[0];
+  if (!row) return null;
+  const data = typeof row.data === "string" ? JSON.parse(row.data) : row.data;
+  return data?.worldBossEvent ?? null;
+}
+
 /* ─── Mercado entre jogadores (anúncios + trocas) ─── */
 
 // UUID "fantasma" (não pertence a nenhum personagem real): guarda os itens
@@ -1212,5 +1248,9 @@ export default {
   listPurchases,
   createPurchase,
   updatePurchase,
+  // evento global — Boss Mundial
+  getWorldBossEvent,
+  saveWorldBossEvent,
+  decrementWorldBossHp,
   resetGameData,
 };

@@ -15,7 +15,7 @@ import Confetti from "@/components/ui/Confetti";
 const AUTO_NEXT_COOLDOWN_MS = 4000;
 
 export default function TowerPanel() {
-  const { characterId, character, locale, notify, setCharacter } = useGameStore();
+  const { characterId, character, locale, notify, setCharacter, setTab } = useGameStore();
   const [stage, setStage] = useState<"arena" | "battle" | "result">("arena");
   const [battle, setBattle] = useState<any>(null);
   const [result, setResult] = useState<any>(null);
@@ -224,12 +224,20 @@ export default function TowerPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-3">
         <h2 className="text-3xl font-black flex items-center gap-3">
           <img src="/images/sidebar/menu_torre.png" alt={t("tower.title", locale)} className="w-10 h-10 object-contain" /> {t("tower.title", locale)}
         </h2>
-        <div className="text-sm bg-purple-900/50 px-3 py-1 rounded-full border border-purple-500">
-          {t("tower.coins", locale)}: {towerCoins} 🪙
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setTab("ghostshop")}
+            className="flex items-center gap-2 rounded-xl px-4 py-2 border border-[#7c5cfc]/50 bg-[#7c5cfc]/10 text-purple-200 hover:bg-[#7c5cfc]/20 hover:text-white transition-colors text-sm font-bold cursor-pointer"
+          >
+            👻 {t("nav.ghostShop", locale)}
+          </button>
+          <div className="text-sm bg-purple-900/50 px-3 py-1 rounded-full border border-purple-500">
+            {t("tower.coins", locale)}: {towerCoins} 🪙
+          </div>
         </div>
       </div>
 

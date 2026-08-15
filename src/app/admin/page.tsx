@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { RARITY_COLORS, CLASS_ICONS, REGIONS } from "@/game/constants";
+import { RARITY_COLORS, CLASS_ICONS, REGIONS, TOWER_BOSS_KINDS } from "@/game/constants";
 import type { ClassName } from "@/game/constants";
 import { SKIN_CATALOG } from "@/game/skins";
 import { VIP_TIERS, currentVipTier } from "@/game/vip";
@@ -10,7 +10,6 @@ const VIP_LABELS: Record<string, string> = {
   bronze: "Bronze", silver: "Prata", gold: "Ouro", platinum: "Platina",
   diamond: "Diamante", master: "Mestre", legend: "Lenda", emperor: "Imperador",
 };
-import type { SkinTemplate } from "@/game/skins";
 import { t } from "@/i18n";
 
 // A chave NÃO fica mais no cliente: o /api/admin/login valida no servidor e
@@ -32,7 +31,7 @@ function isoToLocalInput(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-type Tab = "dash" | "users" | "characters" | "guilds" | "skins" | "send" | "excluded" | "music" | "server" | "codes" | "donate" | "pix" | "test";
+type Tab = "dash" | "users" | "characters" | "guilds" | "send" | "excluded" | "music" | "server" | "codes" | "donate" | "pix" | "ghost" | "worldboss" | "test";
 type SkinChar = { id: string; name: string; level: number; classType: string; skins: string[] };
 
 /** Recursos que o ADM pode presentear pelo correio. */
@@ -68,9 +67,31 @@ export default function AdminPage() {
   const [editFields, setEditFields] = useState<Record<string, string>>({});
   // VIP por personagem (tier selecionado em cada linha)
   const [vipSelects, setVipSelects] = useState<Record<string, string>>({});
-  // Skins
-  const [skinCharId, setSkinCharId] = useState("");
-  const [skinMsg, setSkinMsg] = useState("");
+  // Loja Fantasma (moedas da torre)
+  const [ghostEnabled, setGhostEnabled] = useState(false);
+  const [ghostSchedule, setGhostSchedule] = useState<string[]>(["12:00", "18:00", "21:00"]);
+  const [ghostTime, setGhostTime] = useState("12:00");
+  const [ghostDuration, setGhostDuration] = useState("60");
+  const [ghostItems, setGhostItems] = useState<Array<{ templateId: number; price: string; quantity: string }>>([]);
+  const [ghostItemSearch, setGhostItemSearch] = useState("");
+  const [ghostLoaded, setGhostLoaded] = useState(false);
+  // Evento Global (Boss Mundial)
+  const [wbEnabled, setWbEnabled] = useState(false);
+  const [wbSchedule, setWbSchedule] = useState<string[]>(["12:00", "18:00", "21:00"]);
+  const [wbTime, setWbTime] = useState("12:00");
+  const [wbDuration, setWbDuration] = useState("60");
+  const [wbBossKind, setWbBossKind] = useState("void_wyrm");
+  const [wbMaxHp, setWbMaxHp] = useState("10000000");
+  const [wbAttack, setWbAttack] = useState("260");
+  const [wbDefense, setWbDefense] = useState("120");
+  const [wbSpeed, setWbSpeed] = useState("8");
+  const [wbCritical, setWbCritical] = useState("12");
+  const [wbGold, setWbGold] = useState("500000");
+  const [wbXp, setWbXp] = useState("60000");
+  const [wbCoins, setWbCoins] = useState("1000");
+  const [wbSquadSize, setWbSquadSize] = useState("4");
+  const [wbCooldown, setWbCooldown] = useState("5");
+  const [wbLoaded, setWbLoaded] = useState(false);
   // Enviar (presentes → correio)
   const [sendCharId, setSendCharId] = useState("");
   const [sendKind, setSendKind] = useState<"resource" | "item" | "skin">("resource");
@@ -193,16 +214,6 @@ export default function AdminPage() {
     setLoading(false);
   };
 
-  const loadSkins = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/admin?action=skins&search=${encodeURIComponent(search)}`, { headers });
-      const d = await res.json();
-      setData((prev) => ({ ...prev, characters: Array.isArray(d.characters) ? d.characters : [] }));
-    } catch { /* ignore */ }
-    setLoading(false);
-  };
-
   const loadMusic = async () => {
     setLoading(true);
     try {
@@ -266,8 +277,9 @@ export default function AdminPage() {
       users: loadUsers,
       characters: loadCharacters,
       guilds: loadGuilds,
-      skins: loadSkins,
       send: async () => { await loadCharacters(); await loadItems(); },
+      ghost: loadGhostShop,
+      worldboss: loadWorldBoss,
       excluded: loadExcluded,
       music: loadMusic,
       server: undefined,
@@ -446,35 +458,223 @@ export default function AdminPage() {
     await loadUsers();
     setBusy(null);
   };
-  const grantSkin = async (characterId: string, skinId: string) => {
-    const d = await callAdmin({ action: "give_skin", characterId, skinId });
-    setMessage(d.success ? "✅ Skin concedida!" : `❌ ${d.error || "Erro"}`);
-    await loadSkins();
+  // ---- Loja Fantasma (moedas da torre) ----
+
+  /** Carrega a configuração da Loja Fantasma + catálogo de itens para o seletor. */
+  const loadGhostShop = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin?action=settings`, { headers });
+      const d = await res.json();
+      const s = (d.settings || {}) as Record<string, unknown>;
+      const gs = (s.ghostShop || {}) as Record<string, unknown>;
+      setGhostEnabled(!!gs.enabled);
+      setGhostSchedule(Array.isArray(gs.schedule) ? (gs.schedule as string[]) : []);
+      setGhostDuration(String(Math.max(1, Math.floor(Number(gs.durationMinutes) || 60))));
+      setGhostItems(
+        Array.isArray(gs.items)
+          ? (gs.items as Array<Record<string, unknown>>).map((it) => ({
+              templateId: Number(it.templateId),
+              price: String(Number(it.price) || 0),
+              quantity: String(Math.max(1, Math.floor(Number(it.quantity) || 1))),
+            }))
+          : []
+      );
+    } catch { /* ignora */ }
+    await loadItems();
+    setGhostLoaded(true);
+    setLoading(false);
   };
 
-  const removeSkin = async (characterId: string, skinId: string) => {
-    const d = await callAdmin({ action: "remove_skin", characterId, skinId });
-    setMessage(d.success ? "✅ Skin removida." : `❌ ${d.error || "Erro"}`);
-    await loadSkins();
+  /** Adiciona um horário de abertura (HH:MM) à lista. */
+  const addGhostTime = () => {
+    const tVal = ghostTime.trim();
+    if (!/^\d{1,2}:\d{2}$/.test(tVal)) {
+      setMessage("❌ Horário inválido — use o formato HH:MM.");
+      return;
+    }
+    const [h, m] = tVal.split(":").map(Number);
+    if (h < 0 || h > 23 || m < 0 || m > 59) {
+      setMessage("❌ Horário fora do intervalo válido (00:00–23:59).");
+      return;
+    }
+    const normalized = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    if (ghostSchedule.includes(normalized)) {
+      setMessage("⚠️ Esse horário já está na lista.");
+      return;
+    }
+    setGhostSchedule((prev) => [...prev, normalized].sort());
+    setMessage("");
   };
 
-  const grantAllSkins = async (characterId: string) => {
-    const d = await callAdmin({ action: "give_all_skins", characterId });
-    setMessage(d.success ? `✅ ${d.count} skins entregues!` : `❌ ${d.error || "Erro"}`);
-    await loadSkins();
+  /** Adiciona um item do catálogo à lista da loja (com preço em moedas da torre). */
+  const addGhostItem = (templateId: number) => {
+    if (ghostItems.some((it) => it.templateId === templateId)) {
+      setMessage("⚠️ Esse item já está na loja.");
+      return;
+    }
+    setGhostItems((prev) => [...prev, { templateId, price: "500", quantity: "1" }]);
+    setMessage("");
   };
 
-  /** Envia uma skin para o correio do personagem com a mensagem digitada. */
-  const sendSkinToMail = async (characterId: string, skinId: string) => {
-    const d = await callAdmin({ action: "send_skin_mail", characterId, skinId, note: skinMsg });
-    setMessage(d.success ? `✅ Skin enviada ao correio! (com mensagem)` : `❌ ${d.error || "Erro"}`);
-    await loadSkins();
+  /** Salva a configuração completa da Loja Fantasma no servidor. */
+  const saveGhostShop = async () => {
+    if (ghostSchedule.length === 0) {
+      setMessage("❌ Adicione ao menos 1 horário de abertura.");
+      return;
+    }
+    setBusy("ghost");
+    const items = ghostItems.map((it) => ({
+      templateId: it.templateId,
+      price: Math.max(0, Math.floor(Number(it.price) || 0)),
+      quantity: Math.max(1, Math.floor(Number(it.quantity) || 1)),
+    }));
+    const d = await callAdmin({
+      action: "update_server_settings",
+      ghostShop: {
+        enabled: ghostEnabled,
+        schedule: ghostSchedule,
+        durationMinutes: Math.max(1, Math.floor(Number(ghostDuration) || 60)),
+        items,
+      },
+    });
+    setMessage(
+      d.success
+        ? ghostEnabled
+          ? `✅ Loja Fantasma salva! Abre às ${ghostSchedule.join(", ")} por ${Math.max(1, Math.floor(Number(ghostDuration) || 60))} min (${items.length} item(ns)).`
+          : "✅ Loja Fantasma salva (DESATIVADA — os jogadores veem a tela de fechada)."
+        : `❌ ${d.error || "Erro"}`
+    );
+    setBusy(null);
   };
 
-  const sendAllSkinsToMail = async (characterId: string) => {
-    const d = await callAdmin({ action: "send_all_skins_mail", characterId, note: skinMsg });
-    setMessage(d.success ? `✅ ${d.count} skins enviadas ao correio!` : `❌ ${d.error || "Erro"}`);
-    await loadSkins();
+  // ---- Evento Global (Boss Mundial) ----
+
+  /** Carrega a configuração do Boss Mundial salva no servidor. */
+  const loadWorldBoss = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin?action=settings`, { headers });
+      const d = await res.json();
+      const s = (d.settings || {}) as Record<string, unknown>;
+      const wb = (s.worldBoss || {}) as Record<string, unknown>;
+      const boss = (wb.boss || {}) as Record<string, unknown>;
+      const rewards = (wb.rewards || {}) as Record<string, unknown>;
+      setWbEnabled(!!wb.enabled);
+      setWbSchedule(Array.isArray(wb.schedule) ? (wb.schedule as string[]) : []);
+      setWbDuration(String(Math.max(1, Math.floor(Number(wb.durationMinutes) || 60))));
+      setWbBossKind(String(boss.kind || "void_wyrm"));
+      setWbMaxHp(String(Number(boss.maxHp) || 10000000));
+      setWbAttack(String(Number(boss.attack) || 260));
+      setWbDefense(String(Number(boss.defense) || 120));
+      setWbSpeed(String(Number(boss.speed) || 8));
+      setWbCritical(String(Number(boss.critical) || 12));
+      setWbGold(String(Number(rewards.gold) || 500000));
+      setWbXp(String(Number(rewards.xp) || 60000));
+      setWbCoins(String(Number(rewards.towerCoins) || 1000));
+      setWbSquadSize(String(Math.max(2, Math.floor(Number(wb.maxSquadSize) || 4))));
+      setWbCooldown(String(Math.max(1, Math.floor(Number(wb.attackCooldownSec) || 5))));
+    } catch { /* ignora */ }
+    setWbLoaded(true);
+    setLoading(false);
+  };
+
+  /** Adiciona um horário do evento à lista. */
+  const addWbTime = () => {
+    const tv = wbTime.trim();
+    if (!/^\d{1,2}:\d{2}$/.test(tv)) {
+      setMessage("❌ Horário inválido — use o formato HH:MM.");
+      return;
+    }
+    const [h, m] = tv.split(":").map(Number);
+    if (h < 0 || h > 23 || m < 0 || m > 59) {
+      setMessage("❌ Horário fora do intervalo válido (00:00–23:59).");
+      return;
+    }
+    const norm = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+    if (wbSchedule.includes(norm)) {
+      setMessage("⚠️ Esse horário já está na lista.");
+      return;
+    }
+    setWbSchedule((prev) => [...prev, norm].sort());
+    setMessage("");
+  };
+
+  /** Salva a configuração do Evento Global. */
+  const saveWorldBoss = async () => {
+    if (wbSchedule.length === 0) {
+      setMessage("❌ Adicione ao menos 1 horário para o evento acontecer.");
+      return;
+    }
+    setBusy("worldboss");
+    const d = await callAdmin({
+      action: "update_server_settings",
+      worldBoss: {
+        enabled: wbEnabled,
+        schedule: wbSchedule,
+        durationMinutes: Math.max(1, Math.floor(Number(wbDuration) || 60)),
+        boss: {
+          kind: wbBossKind,
+          maxHp: Math.max(100000, Math.floor(Number(wbMaxHp) || 10000000)),
+          attack: Math.max(1, Math.floor(Number(wbAttack) || 260)),
+          defense: Math.max(0, Math.floor(Number(wbDefense) || 120)),
+          speed: Math.max(0, Math.floor(Number(wbSpeed) || 8)),
+          critical: Math.min(100, Math.max(0, Math.floor(Number(wbCritical) || 12))),
+        },
+        rewards: {
+          gold: Math.max(0, Math.floor(Number(wbGold) || 0)),
+          xp: Math.max(0, Math.floor(Number(wbXp) || 0)),
+          towerCoins: Math.max(0, Math.floor(Number(wbCoins) || 0)),
+        },
+        maxSquadSize: Math.max(2, Math.floor(Number(wbSquadSize) || 4)),
+        attackCooldownSec: Math.max(1, Math.floor(Number(wbCooldown) || 5)),
+      },
+    });
+    setMessage(
+      d.success
+        ? wbEnabled
+          ? `✅ Evento salvo! Boss ${wbBossKind} com ${Number(wbMaxHp).toLocaleString()} HP — abre às ${wbSchedule.join(", ")}.`
+          : "✅ Evento salvo (DESATIVADO)."
+        : `❌ ${d.error || "Erro"}`
+    );
+    setBusy(null);
+  };
+
+  /** Zera o evento em andamento (boss volta com HP cheio na próxima abertura). */
+  const resetWorldBoss = async () => {
+    if (!window.confirm("Zerar o evento ATUAL? O boss volta com HP cheio na próxima abertura.")) return;
+    setBusy("wb_reset");
+    const d = await callAdmin({ action: "reset_world_boss" });
+    setMessage(d.success ? `✅ ${d.message}` : `❌ ${d.error || "Erro"}`);
+    setBusy(null);
+  };
+
+  /** Liga/desliga a Loja Fantasma imediatamente (1 clique) — preserva horários, duração e itens. */
+  const toggleGhostEnabled = async () => {
+    if (busy) return;
+    setBusy("ghost_toggle");
+    const d = await callAdmin({ action: "toggle_ghost_shop", enabled: !ghostEnabled });
+    if (d.success) {
+      setGhostEnabled(d.enabled);
+      setMessage(`✅ ${d.message || (d.enabled ? "👻 Loja Fantasma ATIVADA!" : "👻 Loja Fantasma DESATIVADA.")}`);
+    } else {
+      setMessage(`❌ ${d.error || "Erro ao alternar"}`);
+    }
+    setBusy(null);
+  };
+
+  /** Liga/desliga o Evento Global imediatamente (1 clique) — preserva horários, boss e recompensas. */
+  const toggleWbEnabled = async () => {
+    if (busy) return;
+    setBusy("worldboss_toggle");
+    const d = await callAdmin({ action: "toggle_world_boss", enabled: !wbEnabled });
+    if (d.success) {
+      setWbEnabled(d.enabled);
+      setMessage(`✅ ${d.message || (d.enabled ? "🌍 Evento Global ATIVADO!" : "🌍 Evento Global DESATIVADO.")}`);
+    } else {
+      setMessage(`❌ ${d.error || "Erro ao alternar"}`);
+    }
+    setBusy(null);
   };
 
   /** Envia um presente (recurso/item/skin) para o correio — 1 por 1 ou com quantidade. */
@@ -701,17 +901,9 @@ export default function AdminPage() {
     if (tab === "server" && !serverLoaded) loadServerSettings();
     if (tab === "donate" && !donateLoaded) loadDonateSettings();
     if (tab === "pix" && !pixLoaded) loadPurchases();
-  }, [tab, serverLoaded, donateLoaded, pixLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const skinChars = (Array.isArray(data.characters) ? data.characters : []).map((c) => ({ ...c, skins: Array.isArray(c.skins) ? c.skins : [] })) as SkinChar[];
-  const selectedSkinChar = skinChars.find((c) => c.id === skinCharId) || null;
-
-  const classGroups: { className: ClassName; skins: SkinTemplate[] }[] = [];
-  for (const s of SKIN_CATALOG) {
-    const g = classGroups.find((x) => x.className === s.className);
-    if (g) g.skins.push(s);
-    else classGroups.push({ className: s.className, skins: [s] });
-  }
+    if (tab === "ghost" && !ghostLoaded) loadGhostShop();
+    if (tab === "worldboss" && !wbLoaded) loadWorldBoss();
+  }, [tab, serverLoaded, donateLoaded, pixLoaded, ghostLoaded, wbLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const audioList = (Array.isArray(data.audio) ? data.audio : []) as Array<Record<string, unknown>>;
   const audioByRegion = Object.fromEntries(audioList.map((a) => [String(a.regionId), a]));
@@ -797,7 +989,6 @@ export default function AdminPage() {
     { id: "users", label: "Usuários", icon: "👤" },
     { id: "characters", label: "Personagens", icon: "🗡️" },
     { id: "guilds", label: "Guildas", icon: "🏰" },
-    { id: "skins", label: "Skins", icon: "🎨" },
     { id: "send", label: "Enviar", icon: "📦" },
     { id: "excluded", label: "Excluídos", icon: "🚫" },
     { id: "music", label: "Músicas das Ilhas", icon: "🎵" },
@@ -805,6 +996,8 @@ export default function AdminPage() {
     { id: "codes", label: "Códigos", icon: "🎟️" },
     { id: "donate", label: "Donate (PIX)", icon: "💖" },
     { id: "pix", label: "Compras PIX", icon: "💎" },
+    { id: "ghost", label: "Loja Fantasma", icon: "👻" },
+    { id: "worldboss", label: "Evento Global", icon: "🌍" },
     { id: "test", label: "Modo Teste", icon: "🧪" },
   ];
 
@@ -1124,117 +1317,6 @@ export default function AdminPage() {
                       </div>
                     </div>
                   ))}
-                  </div>
-                )}
-              </div>
-            )}
-            {tab === "skins" && (
-              <div>
-                <div className="flex gap-3 mb-4">
-                  <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar personagem..."
-                    className="flex-1 bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2 text-white focus:border-[#ff6b6b] focus:outline-none"
-                    onKeyDown={(e) => e.key === "Enter" && loadSkins()} />
-                  <button onClick={loadSkins} className="bg-[#ff6b6b] text-white rounded-xl px-4 py-2 font-bold">🔍</button>
-                </div>
-
-                {loading ? <div className="text-center py-10 text-gray-400">Carregando...</div> : (
-                  <div className="grid md:grid-cols-3 gap-4">
-                    {/* Seletor de personagem */}
-                    <div className="md:col-span-1 space-y-2">
-                      <h3 className="text-sm font-bold text-white mb-2">👤 Personagens</h3>
-                      {skinChars.map((c) => (
-                        <button key={c.id} onClick={() => setSkinCharId(c.id)}
-                          className={`w-full text-left p-3 rounded-xl border transition ${skinCharId === c.id ? "border-[#ffd700] bg-[#ffd700]/10" : "border-white/10 bg-[#1a1a2e] hover:border-white/30"}`}>
-                          <div className="font-bold text-white text-sm">{c.name}</div>
-                          <div className="text-xs text-gray-400">{CLASS_ICONS[(c.classType as ClassName) || "warrior"]} Lv.{c.level}</div>
-                          <div className="text-[11px] text-[#ffd700]">{c.skins.length}/{SKIN_CATALOG.length} skins</div>
-                        </button>
-                      ))}
-                      {skinChars.length === 0 && <div className="text-gray-500 text-sm py-6 text-center">Nenhum personagem encontrado.</div>}
-                    </div>
-
-                    {/* Catálogo */}
-                    <div className="md:col-span-2">
-                      {!selectedSkinChar ? (
-                        <div className="bg-[#1a1a2e] border border-dashed border-gray-700 rounded-2xl p-10 text-center text-gray-500">
-                          Selecione um personagem ao lado para conceder/remover skins. 👈
-                        </div>
-                      ) : (
-                        <div>
-                          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-                            <p className="text-xs text-gray-400">
-                              Concedendo para <span className="text-white font-bold">{selectedSkinChar.name}</span> (Lv.{selectedSkinChar.level}) —{" "}
-                              <span className="text-[#ffd700] font-bold">{selectedSkinChar.skins.length}/{SKIN_CATALOG.length}</span> skins.
-                            </p>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-2 mb-4 bg-[#0a0a12] rounded-xl border border-white/10 p-3">
-                            <input
-                              value={skinMsg}
-                              onChange={(e) => setSkinMsg(e.target.value)}
-                              placeholder="📝 Mensagem do ADM (vai junto no correio)"
-                              className="flex-1 min-w-[200px] bg-transparent text-sm text-white placeholder-gray-600 focus:outline-none"
-                            />
-                            <button onClick={() => sendAllSkinsToMail(selectedSkinChar.id)} className="text-xs bg-[#4ecdc4] text-black rounded-lg px-3 py-2 font-bold hover:opacity-90">
-                              📬 Enviar TODAS no correio
-                            </button>
-                            <button onClick={() => grantAllSkins(selectedSkinChar.id)} className="text-xs bg-[#ffd700] text-black rounded-lg px-3 py-2 font-bold hover:opacity-90">
-                              🎁 Conceder TODAS
-                            </button>
-                          </div>
-                          <div className="space-y-6">
-                            {classGroups.map((g) => (
-                              <div key={g.className}>
-                                <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
-                                  <span className="text-lg">{CLASS_ICONS[g.className]}</span>
-                                  {t(`class.${g.className}`)}
-                                  <span className="text-gray-500 text-xs font-normal">({g.skins.length})</span>
-                                </h3>
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                                  {g.skins.map((s) => {
-                                    const owned = selectedSkinChar.skins.includes(s.id);
-                                    return (
-                                      <div key={s.id} className={`bg-[#0a0a12] rounded-lg overflow-hidden border ${owned ? "border-green-500/50" : "border-white/10"}`}>
-                                        <div className="relative">
-                                          <img src={s.image} alt={t(s.nameKey)} loading="lazy" className="w-full h-36 object-cover" />
-                                          <span className="absolute top-2 left-2 text-[10px] font-black px-2 py-0.5 rounded-full text-black"
-                                            style={{ background: RARITY_COLORS[s.rarity] }}>
-                                            {s.rarity.toUpperCase()}
-                                          </span>
-                                        </div>
-                                        <div className="p-2">
-                                          <div className="font-bold text-white text-xs truncate">{t(s.nameKey)}</div>
-                                          <div className="text-[10px] text-gray-500 mb-1">
-                                            {CLASS_ICONS[s.className]} {t(`class.${s.className}`)}
-                                          </div>
-                                          {owned ? (
-                                            <div className="flex gap-1">
-                                              <span className="flex-1 text-center text-[10px] font-bold bg-green-500/20 border border-green-500/40 text-green-300 rounded-lg py-2">✓ Possui</span>
-                                              <button onClick={() => removeSkin(selectedSkinChar.id, s.id)}
-                                                className="text-[10px] bg-red-600/80 hover:bg-red-600 text-white rounded-lg px-2 py-2 font-bold" title="Remover skin">✕</button>
-                                            </div>
-                                          ) : (
-                                            <div className="flex gap-1">
-                                              <button onClick={() => grantSkin(selectedSkinChar.id, s.id)}
-                                                className="flex-1 text-[10px] font-bold bg-[#ffd700] text-black rounded-lg py-2 hover:opacity-90" title="Conceder direto">
-                                                📦 Dar
-                                              </button>
-                                              <button onClick={() => sendSkinToMail(selectedSkinChar.id, s.id)}
-                                                className="flex-1 text-[10px] font-bold bg-[#4ecdc4] text-black rounded-lg py-2 hover:opacity-90" title="Enviar para o correio">
-                                                📬 Correio
-                                              </button>
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
                   </div>
                 )}
               </div>
@@ -1653,6 +1735,372 @@ export default function AdminPage() {
                 </div>
               </div>
             )}
+            {tab === "ghost" && (
+              <div className="space-y-4">
+                {/* Ativar/desativar + horários + duração */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  {/* Ligar/desligar */}
+                  <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                    <div className="flex items-center justify-between mb-1 gap-2">
+                      <h3 className="text-sm font-bold text-[#7c5cfc]">👻 Loja Fantasma</h3>
+                      <button
+                        onClick={toggleGhostEnabled}
+                        disabled={busy === "ghost_toggle"}
+                        className={`px-4 py-2 rounded-xl text-sm font-black transition flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-wait ${
+                          ghostEnabled
+                            ? "bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30"
+                            : "bg-[#7c5cfc] hover:bg-[#6b4fd8] text-white"
+                        }`}
+                      >
+                        {busy === "ghost_toggle" ? "⏳ Aguarde..." : ghostEnabled ? "⛔ Desativar agora" : "✅ Ativar agora"}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-400 mb-4">
+                      Loja temporária paga com <b className="text-purple-300">moedas da torre (towerCoins)</b>. Quando ativada, abre nos horários abaixo e fica disponível pelo tempo configurado. Fechada, os jogadores veem a contagem regressiva para a próxima abertura.
+                    </p>
+                    <div className={`mt-3 text-center rounded-xl py-2 text-sm font-black ${ghostEnabled ? "bg-[#7c5cfc]/15 border border-[#7c5cfc]/40 text-[#7c5cfc]" : "bg-[#0a0a12] border border-gray-700 text-gray-500"}`}>
+                      {ghostEnabled ? "🟢 ATIVA — a loja abre nos horários agendados" : "⚪ DESATIVADA — ninguém vê a loja"}
+                    </div>
+                  </div>
+
+                  {/* Horários + duração */}
+                  <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                    <h3 className="text-sm font-bold text-white mb-1">🕐 Horários de abertura (horário do servidor)</h3>
+                    <div className="mb-3"><ServerClock headers={headers} /></div>
+                    <p className="text-xs text-gray-400 mb-3">
+                      A loja abre todos os dias nos horários abaixo e fica aberta por <b className="text-gray-300">{Math.max(1, Math.floor(Number(ghostDuration) || 60))} min</b>.
+                    </p>
+                    <div className="flex gap-2 mb-3">
+                      <input
+                        type="time"
+                        value={ghostTime}
+                        onChange={(e) => setGhostTime(e.target.value)}
+                        className="bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white focus:border-[#7c5cfc] focus:outline-none"
+                      />
+                      <button onClick={addGhostTime} className="bg-[#7c5cfc] hover:bg-[#6b4fd8] text-white rounded-xl px-4 py-2 text-sm font-bold">
+                        ➕ Adicionar
+                      </button>
+                      <div className="ml-auto flex items-center gap-2">
+                        <span className="text-xs text-gray-500">Duração (min):</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={1440}
+                          value={ghostDuration}
+                          onChange={(e) => setGhostDuration(e.target.value)}
+                          className="w-20 bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white focus:border-[#7c5cfc] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    {ghostSchedule.length === 0 ? (
+                      <p className="text-xs text-gray-600 bg-[#0a0a12] border border-dashed border-gray-700 rounded-xl p-3 text-center">
+                        Nenhum horário — adicione pelo menos 1 para a loja poder abrir.
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {ghostSchedule.map((hhmm) => (
+                          <span key={hhmm} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#7c5cfc]/10 border border-[#7c5cfc]/40 text-purple-200 font-mono text-sm">
+                            🕐 {hhmm}
+                            <button
+                              onClick={() => setGhostSchedule((prev) => prev.filter((t) => t !== hhmm))}
+                              className="text-purple-300 hover:text-red-400 transition"
+                              title="Remover horário"
+                            >
+                              ✕
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Itens da loja */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <h3 className="text-sm font-bold text-white mb-1">🧪 Itens à venda ({ghostItems.length})</h3>
+                  <p className="text-xs text-gray-400 mb-4">
+                    Clique em um item do catálogo para adicioná-lo. O <b className="text-purple-300">preço</b> é em moedas da torre e a <b className="text-gray-300">quantidade</b> é quantas unidades o jogador recebe por compra.
+                  </p>
+
+                  {/* Itens já configurados */}
+                  {ghostItems.length > 0 && (
+                    <div className="space-y-2 mb-5">
+                      {ghostItems.map((it) => {
+                        const tpl = itemCatalog.find((x) => Number(x.id) === it.templateId) as Record<string, unknown> | undefined;
+                        const rarity = String(tpl?.rarity || "common");
+                        const color = RARITY_COLORS[rarity] ?? "#9ca3af";
+                        return (
+                          <div key={it.templateId} className="flex flex-wrap items-center gap-3 bg-[#0a0a12] rounded-xl border border-white/10 p-3">
+                            {tpl?.image ? (
+                              <img src={String(tpl.image)} alt="" className="w-10 h-10 object-contain" />
+                            ) : (
+                              <span className="text-2xl">{String(tpl?.icon || "🗡️")}</span>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-bold text-white truncate">
+                                {tpl ? t(String(tpl.nameKey)) : `Item #${it.templateId}`}
+                              </div>
+                              <div className="text-[10px] font-bold uppercase" style={{ color }}>{rarity}</div>
+                            </div>
+                            <label className="text-xs text-gray-500 flex items-center gap-1.5">🪙 Preço
+                              <input
+                                type="number"
+                                min={0}
+                                value={it.price}
+                                onChange={(e) => setGhostItems((prev) => prev.map((x) => x.templateId === it.templateId ? { ...x, price: e.target.value } : x))}
+                                className="w-24 bg-[#1a1a2e] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-sm focus:border-[#7c5cfc] focus:outline-none"
+                              />
+                            </label>
+                            <label className="text-xs text-gray-500 flex items-center gap-1.5">Qtd
+                              <input
+                                type="number"
+                                min={1}
+                                value={it.quantity}
+                                onChange={(e) => setGhostItems((prev) => prev.map((x) => x.templateId === it.templateId ? { ...x, quantity: e.target.value } : x))}
+                                className="w-16 bg-[#1a1a2e] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-sm focus:border-[#7c5cfc] focus:outline-none"
+                              />
+                            </label>
+                            <button
+                              onClick={() => setGhostItems((prev) => prev.filter((x) => x.templateId !== it.templateId))}
+                              className="text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {/* Seletor de itens do catálogo */}
+                  <input
+                    value={ghostItemSearch}
+                    onChange={(e) => setGhostItemSearch(e.target.value)}
+                    placeholder="🔍 Buscar item no catálogo para adicionar..."
+                    className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:border-[#7c5cfc] focus:outline-none mb-3"
+                  />
+                  {loading && itemCatalog.length === 0 ? (
+                    <div className="text-center text-gray-500 text-sm py-8">Carregando catálogo...</div>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 max-h-[360px] overflow-y-auto pr-1">
+                      {itemCatalog.filter((it) => {
+                        if (ghostItemSearch.trim()) {
+                          const q = ghostItemSearch.trim().toLowerCase();
+                          const name = t(String(it.nameKey)).toLowerCase();
+                          if (!name.includes(q)) return false;
+                        }
+                        return true;
+                      }).map((it) => {
+                        const id = Number(it.id);
+                        const isSel = ghostItems.some((x) => x.templateId === id);
+                        const rarity = String(it.rarity || "common");
+                        const color = RARITY_COLORS[rarity] ?? "#9ca3af";
+                        return (
+                          <button
+                            key={id}
+                            onClick={() => addGhostItem(id)}
+                            disabled={isSel}
+                            className={`relative flex flex-col items-center gap-1 rounded-xl border bg-[#0a0a12] p-2.5 text-center transition-all ${
+                              isSel ? "opacity-40 border-green-500/40" : "border-white/10 hover:border-[#7c5cfc]/60 hover:bg-[#7c5cfc]/5"
+                            }`}
+                            style={{ borderColor: isSel ? undefined : color + "33" }}
+                            title={isSel ? "Já está na loja" : "Adicionar à loja"}
+                          >
+                            {isSel && <span className="absolute top-1 right-1 text-[10px] font-black text-green-400">✓</span>}
+                            {it.image ? (
+                              <img src={String(it.image)} alt="" loading="lazy" decoding="async" className="h-11 w-11 object-contain" />
+                            ) : (
+                              <span className="text-2xl">{String(it.icon || "🗡️")}</span>
+                            )}
+                            <span className="w-full truncate text-[10px] font-bold text-white">{t(String(it.nameKey))}</span>
+                            <span className="text-[9px] font-bold uppercase" style={{ color }}>{rarity}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Salvar */}
+                <button onClick={saveGhostShop} disabled={busy === "ghost"}
+                  className="w-full bg-[#7c5cfc] hover:bg-[#6b4fd8] text-white rounded-xl px-4 py-3 font-black text-sm disabled:opacity-40 transition">
+                  {busy === "ghost" ? "Salvando..." : "💾 Salvar Loja Fantasma"}
+                </button>
+              </div>
+            )}
+            {tab === "worldboss" && (
+              <div className="space-y-4">
+                {/* Ativar/desativar + horários */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                    <div className="flex items-center justify-between mb-1 gap-2">
+                      <h3 className="text-sm font-bold text-[#ef4444]">🌍 Evento Global (Boss Mundial)</h3>
+                      <button
+                        onClick={toggleWbEnabled}
+                        disabled={busy === "worldboss_toggle"}
+                        className={`px-4 py-2 rounded-xl text-sm font-black transition flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-wait ${
+                          wbEnabled
+                            ? "bg-red-500/20 border border-red-500/50 text-red-400 hover:bg-red-500/30"
+                            : "bg-[#ef4444] hover:bg-[#d33838] text-white"
+                        }`}
+                      >
+                        {busy === "worldboss_toggle" ? "⏳ Aguarde..." : wbEnabled ? "⛔ Desativar agora" : "✅ Ativar agora"}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-400 mb-4">
+                      Batalha conjunta contra um boss com HP gigante. Os jogadores formam <b className="text-red-300">squads de até {Math.max(2, Math.floor(Number(wbSquadSize) || 4))}</b>, atacam juntos e, se derrubarem o boss, todos recebem recompensas proporcionais ao dano.
+                    </p>
+                    <div className={`mt-3 text-center rounded-xl py-2 text-sm font-black ${wbEnabled ? "bg-[#ef4444]/15 border border-[#ef4444]/40 text-[#ef4444]" : "bg-[#0a0a12] border border-gray-700 text-gray-500"}`}>
+                      {wbEnabled ? "🟢 ATIVO — o evento abre nos horários agendados" : "⚪ DESATIVADO — ninguém vê o evento"}
+                    </div>
+                    <button onClick={resetWorldBoss} disabled={busy === "wb_reset"}
+                      className="mt-3 w-full text-red-400 hover:text-red-300 text-xs border border-red-500/30 hover:border-red-500 rounded-xl px-4 py-2 font-bold disabled:opacity-40">
+                      {busy === "wb_reset" ? "Zerando..." : "🔄 Zerar evento atual (boss volta com HP cheio)"}
+                    </button>
+                  </div>
+
+                  <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                    <h3 className="text-sm font-bold text-white mb-1">🕐 Horários do evento (horário do servidor)</h3>
+                    <div className="mb-3"><ServerClock headers={headers} /></div>
+                    <p className="text-xs text-gray-400 mb-3">
+                      O evento abre todos os dias nos horários abaixo e fica disponível por <b className="text-gray-300">{Math.max(1, Math.floor(Number(wbDuration) || 60))} min</b>.
+                    </p>
+                    <div className="flex gap-2 mb-3 flex-wrap">
+                      <input
+                        type="time"
+                        value={wbTime}
+                        onChange={(e) => setWbTime(e.target.value)}
+                        className="bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white focus:border-[#ef4444] focus:outline-none"
+                      />
+                      <button onClick={addWbTime} className="bg-[#ef4444] hover:bg-[#e03030] text-white rounded-xl px-4 py-2 text-sm font-bold">
+                        ➕ Adicionar
+                      </button>
+                      <div className="ml-auto flex items-center gap-2">
+                        <span className="text-xs text-gray-500">Duração (min):</span>
+                        <input
+                          type="number"
+                          min={1}
+                          max={1440}
+                          value={wbDuration}
+                          onChange={(e) => setWbDuration(e.target.value)}
+                          className="w-20 bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white focus:border-[#ef4444] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    {wbSchedule.length === 0 ? (
+                      <p className="text-xs text-gray-600 bg-[#0a0a12] border border-dashed border-gray-700 rounded-xl p-3 text-center">
+                        Nenhum horário — adicione pelo menos 1 para o evento acontecer.
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {wbSchedule.map((hhmm) => (
+                          <span key={hhmm} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#ef4444]/10 border border-[#ef4444]/40 text-red-200 font-mono text-sm">
+                            🕐 {hhmm}
+                            <button
+                              onClick={() => setWbSchedule((prev) => prev.filter((x) => x !== hhmm))}
+                              className="text-red-300 hover:text-white transition"
+                              title="Remover horário"
+                            >
+                              ✕
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Boss + recompensas */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <h3 className="text-sm font-bold text-white mb-3">👹 O Boss</h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+                    <div className="md:col-span-2">
+                      <label className="block text-xs text-gray-500 mb-1">Tipo do boss (visual da torre)</label>
+                      <select value={wbBossKind} onChange={(e) => setWbBossKind(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none">
+                        {TOWER_BOSS_KINDS.map((k) => (
+                          <option key={k} value={k}>{k}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">❤️ HP máximo</label>
+                      <input type="number" min={100000} value={wbMaxHp} onChange={(e) => setWbMaxHp(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">⚔️ Ataque</label>
+                      <input type="number" min={1} value={wbAttack} onChange={(e) => setWbAttack(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">🛡️ Defesa</label>
+                      <input type="number" min={0} value={wbDefense} onChange={(e) => setWbDefense(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">💨 Velocidade</label>
+                      <input type="number" min={0} value={wbSpeed} onChange={(e) => setWbSpeed(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">🎯 Crítico %</label>
+                      <input type="number" min={0} max={100} value={wbCritical} onChange={(e) => setWbCritical(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  {/* Recompensas */}
+                  <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                    <h3 className="text-sm font-bold text-[#ffd700] mb-3">🎁 Recompensas (piscina dividida pelo dano)</h3>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">💰 Ouro total</label>
+                        <input type="number" min={0} value={wbGold} onChange={(e) => setWbGold(e.target.value)}
+                          className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">⚡ XP total</label>
+                        <input type="number" min={0} value={wbXp} onChange={(e) => setWbXp(e.target.value)}
+                          className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">🗼 Moedas torre (fixo)</label>
+                        <input type="number" min={0} value={wbCoins} onChange={(e) => setWbCoins(e.target.value)}
+                          className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Regras */}
+                  <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                    <h3 className="text-sm font-bold text-white mb-3">⚙️ Regras da batalha</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">Máx. jogadores por squad</label>
+                        <input type="number" min={2} max={20} value={wbSquadSize} onChange={(e) => setWbSquadSize(e.target.value)}
+                          className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">Cooldown entre ataques (s)</label>
+                        <input type="number" min={1} max={3600} value={wbCooldown} onChange={(e) => setWbCooldown(e.target.value)}
+                          className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none" />
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-gray-500 mt-3">
+                      O HP do jogador na batalha regenera 100% em 60s. Cada ataque dá dano baseado em ataque+nível (com chance de crítico). Quando o boss morre, todos os participantes recebem ouro/XP da piscina (proporcional ao dano) + as moedas da torre fixas.
+                    </p>
+                  </div>
+                </div>
+
+                <button onClick={saveWorldBoss} disabled={busy === "worldboss"}
+                  className="w-full bg-[#ef4444] hover:bg-[#e03030] text-white rounded-xl px-4 py-3 font-black text-sm disabled:opacity-40 transition">
+                  {busy === "worldboss" ? "Salvando..." : "💾 Salvar Evento Global"}
+                </button>
+              </div>
+            )}
 {tab === "codes" && (
               <div className="grid lg:grid-cols-2 gap-4">
                 <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
@@ -1945,6 +2393,55 @@ export default function AdminPage() {
               </div>
             )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Relógio AO VIVO do servidor — os horários dos eventos são interpretados na
+ * HORA DO SERVIDOR. Se o servidor estiver em outro fuso (ex.: Vercel em UTC e
+ * você no Brasil), configurar 18:00 abriria às 15:00 do seu relógio. Este
+ * relógio mostra a hora exata do servidor para calibrar os horários certos.
+ */
+function ServerClock({ headers }: { headers: Record<string, string> }) {
+  const [serverTime, setServerTime] = useState<string | null>(null);
+  const [offsetMinutes, setOffsetMinutes] = useState(0);
+  const [skew, setSkew] = useState(0);
+  const [now, setNow] = useState(Date.now());
+
+  useEffect(() => {
+    let stopped = false;
+    fetch("/api/admin?action=settings", { headers })
+      .then((r) => r.json())
+      .then((d) => {
+        if (stopped || !d.serverTime) return;
+        setServerTime(d.serverTime);
+        setOffsetMinutes(Number(d.serverOffsetMinutes) || 0);
+        setSkew(Date.now() - new Date(d.serverTime).getTime());
+      })
+      .catch(() => {});
+    const tick = setInterval(() => setNow(Date.now()), 1000);
+    return () => {
+      stopped = true;
+      clearInterval(tick);
+    };
+  }, [headers]);
+
+  if (!serverTime) {
+    return <span className="text-[11px] text-gray-600">🕐 buscando relógio do servidor...</span>;
+  }
+
+  const server = new Date(now - skew);
+  const offsetLabel =
+    offsetMinutes === 0 ? "UTC" : `UTC${offsetMinutes > 0 ? "+" : ""}${offsetMinutes / 60}`;
+
+  return (
+    <div className="text-[11px] text-gray-400 bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 inline-flex items-center gap-2 flex-wrap">
+      <span>🕐 Relógio do servidor:</span>
+      <b className="font-mono text-white tabular-nums">
+        {server.toLocaleTimeString("pt-BR", { hour12: false })} ({offsetLabel})
+      </b>
+      <span className="text-gray-600">— configure os horários por esse relógio</span>
     </div>
   );
 }

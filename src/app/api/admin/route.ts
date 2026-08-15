@@ -108,24 +108,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ guilds: allGuilds });
     }
 
-    if (action === "skins") {
-      const search = url.searchParams.get("search") || "";
-      const allChars = await jsonDb.listCharacters(search, 50);
-      const characters = await Promise.all(
-        allChars.map(async (c: any) => {
-          const full = await jsonDb.findCharacterById(c.id);
-          return {
-            id: c.id,
-            name: c.name,
-            level: c.level,
-            classType: c.classType || "warrior",
-            skins: (full?.skins || []) as string[],
-          };
-        })
-      );
-      return NextResponse.json({ characters, count: SKIN_CATALOG.length });
-    }
-
     if (action === "audio") {
       const regionAudio = await jsonDb.listRegionAudio();
       return NextResponse.json({
@@ -142,7 +124,15 @@ export async function GET(req: NextRequest) {
 
     if (action === "settings") {
       const settings = await jsonDb.getServerSettings();
-      return NextResponse.json({ settings });
+      // serverTime/serverOffsetMinutes: relógio do SERVIDOR, para o admin
+      // calibrar os horários dos eventos (o agendamento usa hora do servidor;
+      // se o servidor estiver em outro fuso que não o do admin, os horários
+      // "HH:MM" configurados abrem em horas diferentes das esperadas).
+      return NextResponse.json({
+        settings,
+        serverTime: new Date().toISOString(),
+        serverOffsetMinutes: -new Date().getTimezoneOffset(),
+      });
     }
 
     if (action === "codes") {
@@ -654,8 +644,52 @@ export async function POST(req: NextRequest) {
       if (typeof body.diamondsPerReal === "number" && Number.isFinite(body.diamondsPerReal)) {
         patch.diamondsPerReal = Math.max(1, Math.floor(body.diamondsPerReal));
       }
+      // Loja Fantasma (moedas da torre): configuração completa (horários, duração, itens).
+      if (body.ghostShop !== undefined) {
+        const { sanitizeGhostShopConfig } = await import("@/game/ghostShop");
+        patch.ghostShop = sanitizeGhostShopConfig(body.ghostShop);
+      }
+      // Evento Global (Boss Mundial): configuração completa (horários, boss, recompensas).
+      if (body.worldBoss !== undefined) {
+        const { sanitizeWorldBossConfig } = await import("@/game/worldBoss");
+        patch.worldBoss = sanitizeWorldBossConfig(body.worldBoss);
+      }
       const saved = await jsonDb.updateServerSettings(patch);
       return NextResponse.json({ success: true, settings: saved });
+    }
+
+    // ---- Loja Fantasma / Evento Global: ligar/desligar na hora (1 clique) ----
+    // Só inverte o "enabled" preservando toda a config já salva (horários, itens, boss...).
+    if (action === "toggle_ghost_shop") {
+      const { enabled } = body;
+      const settings = await getServerSettingsData();
+      const cur = (settings.ghostShop || {}) as Record<string, unknown>;
+      const newValue = typeof enabled === "boolean" ? enabled : !cur.enabled;
+      const { sanitizeGhostShopConfig } = await import("@/game/ghostShop");
+      const saved = await jsonDb.updateServerSettings({
+        ghostShop: sanitizeGhostShopConfig({ ...cur, enabled: newValue }),
+      });
+      return NextResponse.json({
+        success: true,
+        enabled: !!saved?.ghostShop?.enabled,
+        message: newValue ? "👻 Loja Fantasma ATIVADA!" : "👻 Loja Fantasma DESATIVADA.",
+      });
+    }
+
+    if (action === "toggle_world_boss") {
+      const { enabled } = body;
+      const settings = await getServerSettingsData();
+      const cur = (settings.worldBoss || {}) as Record<string, unknown>;
+      const newValue = typeof enabled === "boolean" ? enabled : !cur.enabled;
+      const { sanitizeWorldBossConfig } = await import("@/game/worldBoss");
+      const saved = await jsonDb.updateServerSettings({
+        worldBoss: sanitizeWorldBossConfig({ ...cur, enabled: newValue }),
+      });
+      return NextResponse.json({
+        success: true,
+        enabled: !!saved?.worldBoss?.enabled,
+        message: newValue ? "🌍 Evento Global ATIVADO!" : "🌍 Evento Global DESATIVADO.",
+      });
     }
 
     // ---- Códigos de resgate (gerar / excluir) ----
@@ -696,6 +730,12 @@ export async function POST(req: NextRequest) {
         createdAt: new Date().toISOString(),
       });
       return NextResponse.json({ success: true, code: rec, message: `Código gerado: ${codeValue}` });
+    }
+
+    // ---- Evento Global (Boss Mundial): resetar o evento em andamento ----
+    if (action === "reset_world_boss") {
+      const saved = await jsonDb.updateServerSettings({ worldBossEvent: null });
+      return NextResponse.json({ success: true, message: "Evento atual zerado — o próximo começa com o boss com HP cheio." });
     }
 
     if (action === "delete_code") {

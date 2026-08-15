@@ -7,7 +7,7 @@ import type { ClassName } from "@/game/constants";
 import { TITLES } from "@/game/titles";
 import { skinById } from "@/game/skins";
 
-export default function TopBar() {
+export default function TopBar({ onRefresh, refreshing }: { onRefresh?: () => void; refreshing?: boolean }) {
   const { character, locale, mailboxCount, setTab } = useGameStore();
   if (!character) return null;
 
@@ -96,6 +96,19 @@ export default function TopBar() {
           />
           <span className="hidden lg:block text-sm font-bold text-white">{(character.name as string) || "Player"}</span>
         </div>
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            disabled={refreshing}
+            title={t("general.refresh", locale)}
+            className="flex items-center gap-2 rounded-xl px-4 py-2 border border-white/10 hover:border-[#ff6b6b]/50 transition-colors group cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+          >
+            <span className={`text-xl ${refreshing ? "animate-spin" : "group-hover:animate-bounceIn"}`}>🔄</span>
+            <span className="text-sm font-bold text-gray-300 group-hover:text-white hidden sm:inline">
+              {refreshing ? t("general.loading", locale) : t("general.refresh", locale)}
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );

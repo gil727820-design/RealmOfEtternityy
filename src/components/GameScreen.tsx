@@ -13,6 +13,8 @@ import TowerPanel from "./panels/TowerPanel";
 import PvPPanel from "./panels/PvPPanel";
 import GuildPanel from "./panels/GuildPanel";
 import ShopPanel from "./panels/ShopPanel";
+import GhostShopPanel from "./panels/GhostShopPanel";
+import WorldBossPanel from "./panels/WorldBossPanel";
 import MarketPanel from "./panels/MarketPanel";
 import RankingsPanel from "./panels/RankingsPanel";
 import ForgePanel from "./panels/ForgePanel";
@@ -29,10 +31,14 @@ import PreloadImages from "./ui/PreloadImages";
 import { skinById } from "@/game/skins";
 
 export default function GameScreen() {
-  const { activeTab, characterId, setCharacter, character, notification, clearNotification, setInventory, setActiveMissions, setAvailableMissions, setAfkRewards, setMailboxCount, logout, locale } = useGameStore();
+  const { activeTab, characterId, setCharacter, character, notification, clearNotification, setInventory, setActiveMissions, setAvailableMissions, setAfkRewards, setMailboxCount, notify, logout, locale } = useGameStore();
   const [collapsed, setCollapsed] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  // Chave usada para remontar o painel atual após o refresh (cada painel
+  // busca dados frescos do servidor ao montar).
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Inicia com o menu recolhido no celular (onde a sidebar cobriria a tela),
   // deixando o botão flutuante visível em vez de abrir o painel por padrão.
@@ -42,10 +48,10 @@ export default function GameScreen() {
     }
   }, []);
 
-  const loadCharData = useCallback(async () => {
+  const loadCharData = useCallback(async (): Promise<boolean> => {
     if (!characterId) {
       setInitialLoading(false);
-      return;
+      return false;
     }
     
     try {
@@ -53,12 +59,12 @@ export default function GameScreen() {
       if (res.status === 403) {
         // Conta banida — volta ao login.
         logout();
-        return;
+        return false;
       }
       if (res.status === 404) {
         // Personagem não existe mais (foi deletado/deslogado) — volta ao login.
         logout();
-        return;
+        return false;
       }
       if (!res.ok) {
         const data = await res.json();
@@ -72,15 +78,34 @@ export default function GameScreen() {
       if (data.afkRewards) setAfkRewards(data.afkRewards);
       if (typeof data.mailboxCount === "number") setMailboxCount(data.mailboxCount);
       setLoadError(null);
+      return true;
     } catch (e) {
       console.error("Load error:", e);
       setLoadError(e instanceof Error ? e.message : t("general.loadDataError", locale));
+      return false;
     } finally {
       setInitialLoading(false);
     }
   }, [characterId, setCharacter, setInventory, setActiveMissions, setAvailableMissions, setAfkRewards, setMailboxCount, logout]);
 
   useEffect(() => { loadCharData(); }, [loadCharData]);
+
+  // Refresh manual: recarrega os dados do servidor e remonta o painel atual
+  // (mercado, correio, rankings etc. buscam dados frescos ao montar) — sem
+  // precisar recarregar a página inteira.
+  const refreshGame = useCallback(async () => {
+    if (refreshing || !characterId) return;
+    setRefreshing(true);
+    try {
+      const ok = await loadCharData();
+      if (ok) {
+        setRefreshKey((k) => k + 1);
+        notify(t("general.refreshed", locale), "success");
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refreshing, characterId, loadCharData, notify, locale]);
 
   useEffect(() => {
     if (notification) {
@@ -154,6 +179,8 @@ export default function GameScreen() {
       case "pvp": return <PvPPanel />;
       case "guild": return <GuildPanel />;
       case "shop": return <ShopPanel />;
+      case "ghostshop": return <GhostShopPanel />;
+      case "worldboss": return <WorldBossPanel />;
       case "market": return <MarketPanel />;
       case "rankings": return <RankingsPanel />;
       case "forge": return <ForgePanel />;
@@ -228,11 +255,12 @@ export default function GameScreen() {
             boxShadow: `0 1px 0 ${regionWithAlpha(regionAccent, 0.15)}, 0 8px 30px ${regionWithAlpha(regionAccent, 0.06)}`,
           }}
         >
-          <TopBar />
+          <TopBar onRefresh={refreshGame} refreshing={refreshing} />
         </header>
 
         <main className="p-6 max-w-7xl mx-auto">
-          {renderPanel()}
+          {/* key={refreshKey} remonta o painel após o refresh para buscar dados novos */}
+          <div key={refreshKey}>{renderPanel()}</div>
         </main>
       </div>
 
