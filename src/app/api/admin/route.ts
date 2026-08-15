@@ -728,6 +728,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, mailId: sent.id });
     }
 
+    // --- Remover / ajustar itens do inventário direto do personagem ---
+    // quantidade <= 0 apaga o item; > 0 define a quantidade da stack.
+    if (action === "set_inventory_quantity") {
+      const { characterId, inventoryItemId, quantity } = body;
+      if (!characterId || !inventoryItemId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
+      const existing = await jsonDb.getInventoryItemById(String(inventoryItemId));
+      if (!existing) return NextResponse.json({ error: "Item não encontrado" }, { status: 404 });
+      if (existing.item.characterId !== characterId) {
+        return NextResponse.json({ error: "Este item não pertence a esse personagem" }, { status: 400 });
+      }
+      const q = Math.floor(Number(quantity));
+      if (!Number.isFinite(q)) return NextResponse.json({ error: "Quantidade inválida" }, { status: 400 });
+      if (q <= 0) {
+        await jsonDb.removeInventoryItem(String(inventoryItemId));
+      } else {
+        await jsonDb.updateInventoryItem(String(inventoryItemId), { quantity: q });
+      }
+      return NextResponse.json({ success: true });
+    }
+
+    // Apaga todos os itens do inventário de um personagem (cuidado: irreversível).
+    if (action === "clear_inventory") {
+      const { characterId } = body;
+      if (!characterId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
+      const char = await jsonDb.findCharacterById(String(characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+      const inventory = await jsonDb.getInventoryForCharacter(String(characterId));
+      for (const entry of inventory) {
+        await jsonDb.removeInventoryItem(entry.item.id);
+      }
+      return NextResponse.json({ success: true, removed: inventory.length });
+    }
+
     // ---- Compras PIX: aprovar / rejeitar comprovantes ----
 
     if (action === "approve_purchase") {

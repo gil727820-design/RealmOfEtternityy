@@ -49,7 +49,7 @@ function serverTimeToLocal(hhmm: string, serverOffsetMin: number): string {
   return `${pad(Math.floor(total / 60))}:${pad(total % 60)}`;
 }
 
-type Tab = "dash" | "users" | "characters" | "guilds" | "send" | "excluded" | "music" | "server" | "codes" | "logs" | "donate" | "pix" | "ghost" | "worldboss" | "test";
+type Tab = "dash" | "users" | "characters" | "guilds" | "send" | "excluded" | "music" | "server" | "codes" | "logs" | "donate" | "pix" | "ghost" | "worldboss" | "test" | "inventory";
 type SkinChar = { id: string; name: string; level: number; classType: string; skins: string[] };
 
 /** Recursos que o ADM pode presentear pelo correio. */
@@ -152,6 +152,11 @@ export default function AdminPage() {
   const [itemFilter, setItemFilter] = useState("");
   const [itemFilterRarity, setItemFilterRarity] = useState("");
   const [itemFilterSlot, setItemFilterSlot] = useState("");
+  // Inventário do personagem selecionado (remover/ajustar itens)
+  const [invCharId, setInvCharId] = useState("");
+  const [invItems, setInvItems] = useState<Record<string, unknown>[]>([]);
+  const [invCharacter, setInvCharacter] = useState<Record<string, unknown> | null>(null);
+  const [invChanged, setInvChanged] = useState(false);
   // Mensagem global / manutenção
   const [serverAnnouncement, setServerAnnouncement] = useState("");
   const [serverStyle, setServerStyle] = useState<"banner" | "popup">("banner");
@@ -817,6 +822,45 @@ export default function AdminPage() {
     setMessage(d.success ? `📨 Presente enviado para ${targetName} — aparece no CORREIO do jogador!` : `❌ ${d.error || "Erro"}`);
   };
 
+  /** Carrega o inventário do personagem selecionado (para remover/ajustar). */
+  const loadInventory = async (characterId: string = invCharId) => {
+    if (!characterId) return setInvItems([]);
+    setBusy(`inv_${characterId}`);
+    try {
+      const res = await fetch(`/api/admin?action=inventory&characterId=${encodeURIComponent(characterId)}`, { headers });
+      const d = await res.json();
+      if (d.inventory) {
+        setInvCharacter(d.character || null);
+        setInvItems(Array.isArray(d.inventory) ? (d.inventory as Record<string, unknown>[]) : []);
+        setMessage(`✅ ${(d.inventory as unknown[]).length} itens no inventário de ${String(d.character?.name || "?")}.`);
+      } else {
+        setMessage(`❌ ${d.error || "Falha ao carregar inventário"}`);
+        setInvItems([]);
+      }
+    } catch {
+      setMessage("❌ Erro ao carregar inventário");
+      setInvItems([]);
+    }
+    setBusy(null);
+  };
+
+  /** Define a quantidade de um item do inventário (0 = remove o item). */
+  const setInventoryQuantity = async (invId: string, quantity: number, charId: string) => {
+    const d = await callAdmin({ action: "set_inventory_quantity", characterId: charId, inventoryItemId: invId, quantity });
+    setMessage(d.success
+      ? (quantity <= 0 ? `🗑️ Item removido do inventário de ${String(invCharacter?.name || "?")}!` : `✅ Quantidade atualizada para ${quantity}!`)
+      : `❌ ${d.error || "Falha"}`);
+    await loadInventory(charId);
+  };
+
+  /** Apaga TODO o inventário de um personagem. */
+  const clearInventory = async (charId: string, charName: string) => {
+    if (!window.confirm(`Apagar TODO o inventário de "${charName}"? Isso é irreversível!`)) return;
+    const d = await callAdmin({ action: "clear_inventory", characterId: charId });
+    setMessage(d.success ? `🗑️ ${d.removed} itens removidos de ${charName}!` : `❌ ${d.error || "Falha"}`);
+    await loadInventory(charId);
+  };
+
   const uploadMusic = async (regionId: string, file: File) => {
     if (!file) return;
     setBusy(`music_${regionId}`);
@@ -1140,6 +1184,7 @@ export default function AdminPage() {
     { id: "pix", label: "Compras PIX", icon: "💎" },
     { id: "ghost", label: "Loja Fantasma", icon: "👻" },
     { id: "worldboss", label: "Evento Global", icon: "🌍" },
+    { id: "inventory", label: "Inventário", icon: "🎒" },
     { id: "test", label: "Modo Teste", icon: "🧪" },
   ];
 
@@ -2370,6 +2415,109 @@ export default function AdminPage() {
                   className="w-full bg-[#ef4444] hover:bg-[#e03030] text-white rounded-xl px-4 py-3 font-black text-sm disabled:opacity-40 transition">
                   {busy === "worldboss" ? "Salvando..." : "💾 Salvar Evento Global"}
                 </button>
+              </div>
+            )}
+            {tab === "inventory" && (
+              <div className="space-y-4">
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <h3 className="text-sm font-bold text-white mb-1">🎒 Inventário de itens</h3>
+                  <p className="text-xs text-gray-400 mb-4">
+                    Selecione um personagem para ver o inventário, ajustar a quantidade de cada item (0 = remover) ou apagar todo o inventário.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <select value={invCharId} onChange={(e) => {
+                      setInvCharId(e.target.value);
+                      setInvItems([]);
+                      setInvCharacter(null);
+                      if (e.target.value) loadInventory(e.target.value);
+                    }}
+                      className="flex-1 min-w-[240px] bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#ffd700] focus:outline-none">
+                      <option value="">— selecionar personagem —</option>
+                      {((data.characters as SkinChar[]) ?? []).map((c) => (
+                        <option key={c.id} value={c.id}>{c.name} (Lv.{c.level} · {CLASS_ICONS[(c.classType as ClassName) || "warrior"]})</option>
+                      ))}
+                    </select>
+                    <button onClick={() => loadInventory()} disabled={!invCharId || busy === `inv_${invCharId}`}
+                      className="bg-[#ffd700] hover:bg-[#e6c200] text-black rounded-xl px-4 py-3 text-sm font-black disabled:opacity-40 transition">
+                      {busy === `inv_${invCharId}` ? "Carregando..." : "🔄 Atualizar"}
+                    </button>
+                  </div>
+                  {invCharacter && (
+                    <p className="text-xs text-white mb-3">
+                      👤 <b>{String(invCharacter.name)}</b> (Nv. {String(invCharacter.level)}) — {invItems.length} itens no inventário.
+                      <button onClick={() => clearInventory(String(invCharacter.id), String(invCharacter.name))}
+                        className="ml-3 text-red-400 hover:text-red-300 underline underline-offset-2 text-xs font-bold">
+                        🗑️ Apagar TODO o inventário
+                      </button>
+                    </p>
+                  )}
+                </div>
+
+                {invItems.length > 0 ? (
+                  <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10 space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {invItems.map((entry) => {
+                        const it = (entry.item as Record<string, unknown>) || {};
+                        const tpl = (entry.template as Record<string, unknown> | null) || null;
+                        const rarity = String(tpl?.rarity || "common");
+                        const color = RARITY_COLORS[rarity] ?? "#9ca3af";
+                        const qty = Number(entry.quantity) || 1;
+                        const stackable = !!entry.stackable;
+                        return (
+                          <div key={String(it.id)} className="flex items-center gap-3 bg-[#0a0a12] rounded-xl border border-white/10 p-3">
+                            {tpl?.image ? (
+                              <img src={String(tpl.image)} alt="" className="w-10 h-10 object-contain" />
+                            ) : (
+                              <span className="text-2xl">{String(tpl?.icon || "🗡️")}</span>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-bold text-white truncate">
+                                {tpl ? t(String(tpl.nameKey)) : `Item #${String(it.templateId)}`}
+                              </div>
+                              <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                                <span className="font-bold uppercase" style={{ color }}>{rarity}</span>
+                                {!stackable && <span className="text-[10px] text-gray-500">(equipamento)</span>}
+                              </div>
+                              <div className="text-[10px] text-gray-500 font-mono">#{String(it.id).slice(0, 8)}</div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="number"
+                                min={0}
+                                defaultValue={qty}
+                                key={`${String(it.id)}_${qty}`}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    const v = Math.floor(Number((e.target as HTMLInputElement).value));
+                                    if (Number.isFinite(v) && v >= 0) setInventoryQuantity(String(it.id), v, String(invCharId));
+                                  }
+                                }}
+                                className="w-20 bg-[#1a1a2e] border border-gray-700 rounded-lg px-2 py-1.5 text-white text-sm focus:border-[#ffd700] focus:outline-none"
+                                title={stackable ? "Quantidade (Enter para salvar)" : `Remover este ${tpl ? t(String(tpl.nameKey)) : "item"} digitando 0 e Enter`}
+                              />
+                              <button
+                                onClick={() => setInventoryQuantity(String(it.id), 0, String(invCharId))}
+                                className="text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500 rounded-lg px-2.5 py-1.5 text-xs font-bold"
+                                title="Remover item"
+                              >
+                                🗑️
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] text-gray-500">
+                      💡 Digite a quantidade e aperte <b className="text-white">Enter</b> para salvar, ou use o 🗑️ para remover o item. Digite <b className="text-white">1</b> para deixar apenas 1 unidade.
+                    </p>
+                  </div>
+                ) : (
+                  invCharId && (
+                    <div className="text-center py-10 text-gray-500 bg-[#1a1a2e] rounded-2xl border border-white/10">
+                      {busy === `inv_${invCharId}` ? "Carregando..." : "Inventário vazio."}
+                    </div>
+                  )
+                )}
               </div>
             )}
 {tab === "codes" && (
