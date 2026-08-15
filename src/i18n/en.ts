@@ -121,6 +121,14 @@ const en: Record<string, string> = {
   "nav.pets": "Pets",
   "nav.mounts": "Mounts",
   "nav.admin": "Admin",
+
+  // Sidebar sections
+  "nav.sec.aventura": "Adventure",
+  "nav.sec.combate": "Combat",
+  "nav.sec.economia": "Economy",
+  "nav.sec.conta": "Account",
+  "nav.badge.new": "NEW",
+
   "currency.gold": "Gold",
   "currency.diamonds": "Diamonds",
   "currency.crystals": "Crystals",

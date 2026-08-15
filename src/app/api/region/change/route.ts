@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { REGIONS } from "@/game/constants";
+import { requireCharacterAuth } from "@/game/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,8 +19,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Região inexistente" }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono pode trocar a região do próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const level = typeof char.level === "number" ? char.level : 1;
     if (level < region.minLevel) {

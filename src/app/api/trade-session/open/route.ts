@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
+import { requireCharacterAuth } from "@/game/auth";
 
 /**
  * Abre uma sala de troca a partir de um anúncio: { characterId, adId, targetId? }.
@@ -18,8 +19,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Personagem e anúncio são obrigatórios" }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono do personagem pode abrir sala de troca com ele.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const ad = await jsonDb.getMarketRecById(adId);
     if (!ad || ad.kind !== "tradeAd") {

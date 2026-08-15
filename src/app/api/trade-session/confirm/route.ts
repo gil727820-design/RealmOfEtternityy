@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import jsonDb from "@/db/repo";
+import { requireCharacterAuth } from "@/game/auth";
 
 async function validateItem(inventoryItemId: string, ownerId: string, qty: number): Promise<{ ok: boolean; reason?: string; stackable?: boolean }> {
   const entry = await jsonDb.getInventoryItemById(inventoryItemId);
@@ -41,6 +42,10 @@ export async function POST(req: NextRequest) {
     if (!characterId || !sessionId) {
       return NextResponse.json({ error: "Personagem e sala são obrigatórios" }, { status: 400 });
     }
+
+    // Só o dono pode confirmar o lado do próprio personagem na troca.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
 
     const session = await jsonDb.getMarketRecById(sessionId);
     if (!session || session.kind !== "tradeSession") {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
+import { requireCharacterAuth } from "@/game/auth";
 
 const MAX_TEXT = 300;
 
@@ -27,8 +28,10 @@ export async function POST(req: NextRequest) {
     if (!characterId || !guildId || !text || !String(text).trim()) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
     }
-    const char = await jsonDb.findCharacterById(String(characterId));
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono pode falar no chat com o próprio personagem.
+    const auth = await requireCharacterAuth(req, String(characterId));
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
     if (!char.guildId || String(char.guildId) !== String(guildId)) {
       return NextResponse.json({ error: "Você não é membro desta guilda" }, { status: 403 });
     }

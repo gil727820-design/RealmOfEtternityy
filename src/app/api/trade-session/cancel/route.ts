@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
+import { requireCharacterAuth } from "@/game/auth";
 
 /** Abandona/cancela a sala de troca: { characterId, sessionId }. */
 export async function POST(req: NextRequest) {
@@ -11,6 +12,10 @@ export async function POST(req: NextRequest) {
     if (!characterId || !sessionId) {
       return NextResponse.json({ error: "Personagem e sala são obrigatórios" }, { status: 400 });
     }
+
+    // Só o dono pode encerrar a sala em que o próprio personagem participa.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
 
     const session = await jsonDb.getMarketRecById(sessionId);
     if (!session || session.kind !== "tradeSession") {

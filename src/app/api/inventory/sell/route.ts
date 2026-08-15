@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
+import { requireCharacterAuth } from "@/game/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,8 +13,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono pode vender itens do próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const entry = await jsonDb.getInventoryItemById(itemId);
     if (!entry) return NextResponse.json({ error: "Item não encontrado" }, { status: 404 });

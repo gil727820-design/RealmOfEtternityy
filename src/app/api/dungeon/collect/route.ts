@@ -10,6 +10,7 @@ import {
   dungeonRollRarity,
   dungeonMaxRarityIdx,
 } from "@/game/dungeons";
+import { requireCharacterAuth } from "@/game/auth";
 
 /** Rola `rolls` itens compatíveis com o nível e a profundidade da expedição. */
 async function rollDungeonDrops(
@@ -52,8 +53,10 @@ async function rollDungeonDrops(
 export async function POST(req: NextRequest) {
   try {
     const { characterId } = await req.json();
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    // Só o dono pode coletar as recompensas da masmorra do próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const now = new Date();
     const status = computeDungeonStatus(char, now);

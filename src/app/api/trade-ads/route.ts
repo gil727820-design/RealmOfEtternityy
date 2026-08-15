@@ -7,6 +7,7 @@ import {
   MAX_CHAT_MESSAGES,
   TRADE_AD_TTL_HOURS,
 } from "@/game/tradeAds";
+import { requireCharacterAuth } from "@/game/auth";
 
 /** Lista os anúncios de troca ativos (mais recentes primeiro). */
 export async function GET() {
@@ -39,6 +40,9 @@ export async function POST(req: NextRequest) {
     if (!characterId) {
       return NextResponse.json({ error: "Personagem é obrigatório" }, { status: 400 });
     }
+    // Só o dono pode criar anúncios de troca com itens do próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
     if (title.length < 3) {
       return NextResponse.json({ error: "Dê um título ao anúncio (mín. 3 letras)" }, { status: 400 });
     }
@@ -49,8 +53,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Máximo de 8 itens por anúncio" }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    const char = auth.char;
     if ((Number(char.level) || 0) < TRADE_AD_MIN_LEVEL) {
       return NextResponse.json({ error: `Nível mínimo para criar anúncios: ${TRADE_AD_MIN_LEVEL}` }, { status: 400 });
     }

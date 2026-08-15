@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { MAX_CHAT_MESSAGES } from "@/game/tradeAds";
+import { requireCharacterAuth, requireSession } from "@/game/auth";
 
 /**
  * Chat PRIVADO do anúncio de troca.
@@ -26,6 +27,16 @@ export async function GET(req: NextRequest) {
     const adId = req.nextUrl.searchParams.get("adId") as string;
     const characterId = req.nextUrl.searchParams.get("characterId") as string;
     if (!adId) return NextResponse.json({ error: "Anúncio é obrigatório" }, { status: 400 });
+
+    // Só o dono do personagem pode ler as conversas dele.
+    if (characterId) {
+      const auth = await requireCharacterAuth(req, characterId);
+      if (!auth.ok) return auth.response;
+    } else {
+      // Sem characterId, exige ao menos uma sessão válida (leitura pública limitada).
+      const sess = requireSession(req);
+      if (!sess.ok) return sess.response;
+    }
 
     const ad = await jsonDb.getMarketRecById(adId);
     if (!ad || ad.kind !== "tradeAd") {
@@ -79,8 +90,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Mensagem vazia" }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono do personagem pode enviar mensagens como ele.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const ad = await jsonDb.getMarketRecById(adId);
     if (!ad || ad.kind !== "tradeAd") {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jsonDb from "@/db/repo";
+import { setSessionCookie } from "@/game/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -44,7 +45,9 @@ export async function POST(req: NextRequest) {
       ? await jsonDb.countUnclaimedMails(main.id)
       : 0;
 
-    return NextResponse.json({
+    // Grava a sessão autenticada em cookie httpOnly (a partir de agora as rotas
+    // de jogo validam a propriedade dos personagens via esta sessão).
+    const res = NextResponse.json({
       userId: user.id,
       username: user.username,
       role: user.role,
@@ -62,6 +65,8 @@ export async function POST(req: NextRequest) {
       })),
       mailboxCount,
     });
+    setSessionCookie(res, user.id);
+    return res;
   } catch (e: unknown) {
     console.error("Login error:", e);
     const msg = e instanceof Error ? e.message : "Erro interno do servidor";

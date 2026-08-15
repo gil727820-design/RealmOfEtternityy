@@ -135,6 +135,13 @@ const es: Record<string, string> = {
   "nav.mounts": "Monturas",
   "nav.admin": "Admin",
 
+  // Sidebar sections
+  "nav.sec.aventura": "Aventura",
+  "nav.sec.combate": "Combate",
+  "nav.sec.economia": "Economía",
+  "nav.sec.conta": "Cuenta",
+  "nav.badge.new": "NUEVO",
+
   // Currencies
   "currency.gold": "Oro",
   "currency.diamonds": "Diamantes",

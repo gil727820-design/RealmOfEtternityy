@@ -9,6 +9,7 @@ import {
   MAX_PRICE_DIAMONDS,
   listingFee,
 } from "@/game/market";
+import { requireCharacterAuth } from "@/game/auth";
 
 /** Lista os anúncios ativos do mercado (mais recentes primeiro). */
 export async function GET() {
@@ -40,6 +41,9 @@ export async function POST(req: NextRequest) {
     if (!characterId || !inventoryItemId) {
       return NextResponse.json({ error: "Personagem e item são obrigatórios" }, { status: 400 });
     }
+    // Só o dono pode anunciar itens do próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
     if (price < 1) {
       return NextResponse.json({ error: "Preço inválido" }, { status: 400 });
     }
@@ -50,8 +54,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Preço máximo por item: ${MAX_PRICE_DIAMONDS.toLocaleString("pt-BR")} diamantes` }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    const char = auth.char;
     if ((Number(char.level) || 0) < MARKET_MIN_LEVEL) {
       return NextResponse.json({ error: `Nível mínimo para usar o mercado: ${MARKET_MIN_LEVEL}` }, { status: 400 });
     }

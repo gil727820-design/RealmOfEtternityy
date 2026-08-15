@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
+import { requireCharacterAuth } from "@/game/auth";
 
 const MAX_MEMBERS = 10;
 
@@ -33,8 +34,10 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    const char = await jsonDb.findCharacterById(String(characterId));
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono pode ver as guildas na perspectiva do próprio personagem.
+    const auth = await requireCharacterAuth(req, String(characterId));
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const myGuild = guilds.find((g: any) => {
       const members = Array.isArray(g.members) ? g.members : [];
@@ -82,6 +85,18 @@ export async function POST(req: NextRequest) {
     }
     const { action } = body;
 
+    // Todas as ações de guilda agem em nome de um personagem — exige sessão e
+    // que o personagem pertença ao usuário autenticado (exceto upload_logo, que
+    // valida por sessão + membro abaixo).
+    const actorId = body.characterId ? String(body.characterId) : "";
+    let actorChar: any = null;
+    if (action !== "upload_logo") {
+      if (!actorId) return NextResponse.json({ error: "Personagem é obrigatório" }, { status: 400 });
+      const auth = await requireCharacterAuth(req, actorId);
+      if (!auth.ok) return auth.response;
+      actorChar = auth.char;
+    }
+
     // ---------- UPLOAD da foto da guilda ----------
     // A logo é salva como Data URL (base64) direto no banco (Postgres/Supabase),
     // sem gravar arquivos no disco — funciona em qualquer hospedagem (inclusive
@@ -109,8 +124,17 @@ export async function POST(req: NextRequest) {
 
       const guildId = body.guildId ? String(body.guildId) : "";
       if (guildId) {
+        // Só membro da guilda pode trocar a foto (e o painel envia characterId).
+        const auth = await requireCharacterAuth(req, body.characterId ? String(body.characterId) : "");
+        if (!auth.ok) return auth.response;
         const guild = await jsonDb.findGuildById(guildId);
         if (!guild) return NextResponse.json({ error: "Guilda não encontrada" }, { status: 404 });
+        const isMember = (Array.isArray(guild.members) ? guild.members : []).some(
+          (m: any) => m.id === String(body.characterId)
+        );
+        if (!isMember) {
+          return NextResponse.json({ error: "Você não é membro desta guilda" }, { status: 403 });
+        }
         const updated = await jsonDb.updateGuild(guildId, { logo: logoData });
         return NextResponse.json({ success: true, logo: logoData, url: logoData, guild: updated });
       }

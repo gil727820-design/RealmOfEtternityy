@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 import jsonDb from "@/db/repo";
+import { requireCharacterAuth } from "@/game/auth";
 
 /**
  * Compra de diamantes via PIX.
@@ -51,8 +52,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Envie o arquivo do comprovante" }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono do personagem pode registrar uma compra para ele.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const settings = await jsonDb.getServerSettings();
     const diamondsPerReal = Number(settings?.diamondsPerReal) > 0 ? Number(settings.diamondsPerReal) : 1000;

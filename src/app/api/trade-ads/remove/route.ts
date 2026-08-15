@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
+import { requireCharacterAuth } from "@/game/auth";
 
 /**
  * Remove um anúncio de troca: { characterId, adId }.
@@ -15,6 +16,10 @@ export async function POST(req: NextRequest) {
     if (!characterId || !adId) {
       return NextResponse.json({ error: "Personagem e anúncio são obrigatórios" }, { status: 400 });
     }
+
+    // Só o dono do personagem pode remover o anúncio (a rota valida o posterId).
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
 
     const ad = await jsonDb.getMarketRecById(adId);
     if (!ad || ad.kind !== "tradeAd") {

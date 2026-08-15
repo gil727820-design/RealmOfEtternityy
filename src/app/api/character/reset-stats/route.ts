@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { CLASS_BASE_STATS, powerCalc, STAT_RESET_COST, type ClassName } from "@/game/constants";
 import { equipmentBonus } from "@/game/forge";
+import { requireCharacterAuth } from "@/game/auth";
 
 // Config de cada status: como descobrir quantos pontos foram investidos.
 // perPoint precisa ser idêntico ao do /api/character/allocate.
@@ -49,10 +50,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) {
-      return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
-    }
+    // Só o dono pode resetar os atributos do próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const gold = Number(char.gold) || 0;
     if (gold < STAT_RESET_COST) {

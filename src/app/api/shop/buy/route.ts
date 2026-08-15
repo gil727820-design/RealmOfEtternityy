@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { VIP_TIERS, currentVipTier } from "@/game/vip";
+import { requireCharacterAuth } from "@/game/auth";
 
 const SHOP_ITEMS: Record<string, { price: number; currency: "gold"|"diamonds"; type: string; value: number; value2?: number; value3?: string }> = {
   // Baús
@@ -46,8 +47,10 @@ export async function POST(req: NextRequest) {
     const shopItem = SHOP_ITEMS[itemId];
     if (!shopItem) return NextResponse.json({ error: "Item não encontrado" }, { status: 404 });
     
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono pode gastar o ouro/diamantes do próprio personagem na loja.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
     
     // Validação de saldo (server-side)
     if (shopItem.currency === "gold" && (char.gold || 0) < shopItem.price) {

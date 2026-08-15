@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import { randomUUID } from "crypto";
 import jsonDb from "@/db/repo";
+import { getAdminSession } from "@/game/auth";
 import { SKIN_CATALOG, skinById } from "@/game/skins";
 import { VIP_TIERS, vipTierById } from "@/game/vip";
 import { CLASS_BASE_STATS, powerCalc, REGIONS } from "@/game/constants";
@@ -12,7 +13,14 @@ import type { ClassName } from "@/game/constants";
 // Admin auth middleware
 // A chave vem SOMENTE do env ADMIN_KEY (nunca hardcoded). Se não configurada,
 // o painel recusa o acesso — não existe senha padrão que funcione em produção.
+//
+// Aceita (em ordem):
+//   1. cookie httpOnly `roe_admin` (novo padrão — a chave não fica mais no
+//      navegador/localStorage; o /api/admin/login grava esse cookie);
+//   2. header `x-admin-key` (compatibilidade com sessões antigas).
 async function checkAdmin(req: NextRequest) {
+  const session = getAdminSession(req);
+  if (session) return true;
   const adminKey = req.headers.get("x-admin-key");
   const validKey = process.env.ADMIN_KEY;
   if (!validKey) return false;
@@ -73,7 +81,9 @@ export async function GET(req: NextRequest) {
       const allUsers = await jsonDb.listUsers(search, 50);
       const result = await Promise.all(allUsers.map(async (u: any) => {
         const chars = await jsonDb.getCharactersByUserId(u.id);
-        return { ...u, characters: chars };
+        // Nunca expõe senha (nem o hash bcrypt, nem qualquer resíduo de texto puro).
+        const { password, passwordPlain, ...safe } = u;
+        return { ...safe, characters: chars };
       }));
       return NextResponse.json({ users: result });
     }

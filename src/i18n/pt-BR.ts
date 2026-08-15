@@ -135,6 +135,13 @@ const ptBR: Record<string, string> = {
   "nav.mounts": "Montarias",
   "nav.admin": "Admin",
 
+  // Sidebar sections
+  "nav.sec.aventura": "Aventura",
+  "nav.sec.combate": "Combate",
+  "nav.sec.economia": "Economia",
+  "nav.sec.conta": "Conta",
+  "nav.badge.new": "NOVO",
+
   // Currencies
   "currency.gold": "Ouro",
   "currency.diamonds": "Diamantes",

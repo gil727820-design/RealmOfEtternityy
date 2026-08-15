@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { MAX_CHAT_MESSAGES } from "@/game/tradeAds";
+import { requireCharacterAuth } from "@/game/auth";
 
 /** Estado da sala (para polling): mensagens + ofertas + confirmações. */
 export async function GET(req: NextRequest) {
@@ -10,6 +11,10 @@ export async function GET(req: NextRequest) {
     if (!sessionId || !characterId) {
       return NextResponse.json({ error: "Sala e personagem são obrigatórios" }, { status: 400 });
     }
+
+    // Só o dono do personagem pode ver as salas em que ele participa.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
 
     const session = await jsonDb.getMarketRecById(sessionId);
     if (!session || session.kind !== "tradeSession") {
@@ -60,8 +65,10 @@ export async function POST(req: NextRequest) {
     }
     if (!text) return NextResponse.json({ error: "Mensagem vazia" }, { status: 400 });
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono do personagem pode mandar mensagem como ele.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const session = await jsonDb.getMarketRecById(sessionId);
     if (!session || session.kind !== "tradeSession") {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
+import { requireCharacterAuth } from "@/game/auth";
 
 /** Janela (minutos) em que um heartbeat recente conta como "online". */
 const ONLINE_WINDOW_MIN = 3;
@@ -23,6 +24,9 @@ export async function POST(req: NextRequest) {
   try {
     const body = (await req.json().catch(() => ({}))) as { characterId?: string };
     if (body.characterId) {
+      // Só o dono do personagem pode marcar a própria presença.
+      const auth = await requireCharacterAuth(req, body.characterId);
+      if (!auth.ok) return auth.response;
       await jsonDb.updateCharacter(String(body.characterId), { lastActivity: new Date().toISOString() });
     }
     return NextResponse.json({ ok: true });

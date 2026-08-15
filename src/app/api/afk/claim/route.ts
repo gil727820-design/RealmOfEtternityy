@@ -4,12 +4,15 @@ import { xpForLevel, powerCalc } from "@/game/constants";
 import { computeEnergyRegen } from "@/game/energy";
 import { xpMultiplier, energyMultiplier, goldMultiplier } from "@/game/boosts";
 import { computeAfkRewards } from "@/game/afk";
+import { requireCharacterAuth } from "@/game/auth";
 
 export async function POST(req: NextRequest) {
   try {
     const { characterId } = await req.json();
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    // Só o dono pode coletar as recompensas AFK do próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     // Só existe o que coletar se uma sessão AFK estiver ativa (afkSince setado).
     // Após coletar a rota zera afkSince — o jogador escolhe se quer descansar

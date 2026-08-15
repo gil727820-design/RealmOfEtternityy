@@ -373,25 +373,6 @@ body {
 .hover-lift:hover { transform: translateY(-4px); box-shadow: 0 14px 28px rgba(0, 0, 0, 0.4); }
 .toast { background: rgba(13, 15, 28, 0.88); }
 
-/* Navegação lateral */
-.nav-item {
-  position: relative;
-  border-radius: 0.6rem;
-  margin: 0 0.5rem 0.15rem;
-  color: #9ca3af;
-  transition: all 0.2s ease;
-}
-.nav-item:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.06);
-}
-.nav-item.active {
-  color: #fff;
-  font-weight: 700;
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow: inset 2px 0 0 var(--region-accent, #e94560);
-}
-
 /* Stagger de entrada (Rankings etc.) */
 .animate-stagger-1 { animation: fadeInUp 0.5s ease both; animation-delay: 0.05s; }
 .animate-stagger-2 { animation: fadeInUp 0.5s ease both; animation-delay: 0.1s; }
@@ -539,3 +520,11 @@ body {
   z-index: 5;
   animation: confettiFall linear infinite;
 }
+
+
+/* ---- Sidebar: scrollbar fina integrada ao tema ---- */
+.sidebar-scroll::-webkit-scrollbar { width: 6px; }
+.sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
+.sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 999px; }
+.sidebar-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
+.sidebar-scroll { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.12) transparent; }

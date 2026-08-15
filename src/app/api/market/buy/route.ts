@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import jsonDb, { MARKET_SYSTEM_ID } from "@/db/repo";
 import { MARKET_MIN_LEVEL } from "@/game/market";
+import { requireCharacterAuth } from "@/game/auth";
 
 /**
  * Compra um anúncio: { characterId, listingId }.
@@ -19,8 +20,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Personagem e anúncio são obrigatórios" }, { status: 400 });
     }
 
-    const buyer = await jsonDb.findCharacterById(characterId);
-    if (!buyer) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono pode comprar com o ouro/diamantes do próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const buyer = auth.char;
     if ((Number(buyer.level) || 0) < MARKET_MIN_LEVEL) {
       return NextResponse.json({ error: `Nível mínimo para usar o mercado: ${MARKET_MIN_LEVEL}` }, { status: 400 });
     }

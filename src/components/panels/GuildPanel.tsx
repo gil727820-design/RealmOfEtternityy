@@ -251,7 +251,7 @@ export default function GuildPanel() {
     setBusy("logo");
     try {
       const logoData = await fileToDataUrl(f);
-      const d = await call({ action: "upload_logo", guildId: String(myGuild.id), logoData });
+      const d = await call({ action: "upload_logo", characterId, guildId: String(myGuild.id), logoData });
       if (!d.success) { notify(d.error || "Falha ao enviar a foto", "error"); return; }
       notify("✅ Foto da guilda atualizada!", "success");
       await load();

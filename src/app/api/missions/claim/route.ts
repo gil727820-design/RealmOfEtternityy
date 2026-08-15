@@ -3,6 +3,7 @@ import jsonDb from "@/db/repo";
 import { xpForLevel, powerCalc, missionXpReward } from "@/game/constants";
 import { computeEnergyRegen } from "@/game/energy";
 import { xpMultiplier, energyMultiplier, goldMultiplier } from "@/game/boosts";
+import { requireCharacterAuth } from "@/game/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,8 +15,10 @@ export async function POST(req: NextRequest) {
     const now = new Date();
     if (now < new Date(am.endsAt)) return NextResponse.json({ error: "Missão ainda em andamento" }, { status: 400 });
 
-    const char = await jsonDb.findCharacterById(am.characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono do personagem pode coletar a recompensa da missão dele.
+    const auth = await requireCharacterAuth(req, am.characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const mission = await jsonDb.getMissionTemplateById(am.missionId);
 

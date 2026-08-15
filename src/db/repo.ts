@@ -780,13 +780,12 @@ export async function hardDeleteUser(userId: string) {
   return { user, deletedCharacters: charIds.length };
 }
 
-/** Redefine a senha de um usuário: guarda o hash bcrypt E o texto puro (para exibição no Admin). */
+/** Redefine a senha de um usuário: guarda apenas o hash bcrypt (NUNCA o texto puro). */
 export async function resetUserPassword(userId: string, plain: string) {
   const bcrypt = await import("bcryptjs");
   const hashed = await bcrypt.hash(plain, 10);
   await updateUser(userId, {
     password: hashed,
-    passwordPlain: plain,
     passwordResetAt: new Date().toISOString(),
   });
   return true;

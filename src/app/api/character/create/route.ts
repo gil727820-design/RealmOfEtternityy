@@ -3,14 +3,21 @@ import jsonDb from "@/db/repo";
 import { CLASS_BASE_STATS, powerCalc, xpForLevel, MAX_CHARACTERS_PER_ACCOUNT } from "@/game/constants";
 import type { ClassName } from "@/game/constants";
 import { isValidUsername } from "@/game/profanityFilter";
+import { requireSession } from "@/game/auth";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { userId, name, sex, classType, avatarId } = body;
-    if (!userId || !name || !classType) {
+    const { name, sex, classType, avatarId } = body;
+    if (!name || !classType) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
     }
+
+    // O dono da conta vem da SESSÃO autenticada (cookie httpOnly), nunca do
+    // corpo da requisição — impede criar personagem na conta de outro usuário.
+    const sess = requireSession(req);
+    if (!sess.ok) return sess.response;
+    const userId = sess.session.sub;
     
     // Validar nome do personagem
     const validation = isValidUsername(name);

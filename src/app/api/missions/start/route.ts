@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { computeEnergyRegen } from "@/game/energy";
 import { energyMultiplier } from "@/game/boosts";
+import { requireCharacterAuth } from "@/game/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,11 +11,11 @@ export async function POST(req: NextRequest) {
     if (!characterId || !missionId) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
     }
-    
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) {
-      return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
-    }
+
+    // Só o dono pode iniciar missão no próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     // VERIFICAR SE JÁ TEM UMA MISSÃO ATIVA (NÃO CONCLUÍDA)
     const existingMission = await jsonDb.findActiveMissionByCharacterId(characterId);

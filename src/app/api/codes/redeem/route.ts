@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { getBoosts, boostSummary, type Boosts } from "@/game/boosts";
+import { requireCharacterAuth } from "@/game/auth";
 
 /**
  * POST /api/codes/redeem
@@ -14,10 +15,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(String(characterId));
-    if (!char) {
-      return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
-    }
+    // Só o dono pode resgatar código no próprio personagem.
+    const auth = await requireCharacterAuth(req, String(characterId));
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const rec = await jsonDb.findCodeByCodeValue(String(code));
     if (!rec) {

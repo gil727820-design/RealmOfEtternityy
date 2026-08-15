@@ -6,6 +6,7 @@ import { energyMultiplier, xpMultiplier } from "@/game/boosts";
 import { computeAfkRewards } from "@/game/afk";
 import { computeDungeonStatus } from "@/game/dungeons";
 import { missingRegionMissions } from "@/game/generatedMissions";
+import { requireCharacterAuth } from "@/game/auth";
 
 // Calculate AFK rewards (buffado — fórmula compartilhada via @/game/afk).
 // Expõe também as taxas por minuto para o painel atualizar o preview ao vivo.
@@ -23,8 +24,11 @@ function calcAfkRewards(char: any) {
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const char = await jsonDb.findCharacterById(id);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+
+    // Só o dono do personagem pode carregar os dados dele.
+    const auth = await requireCharacterAuth(req, id);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     // Conta banida? Bloqueia o acesso imediatamente (logout no cliente).
     const owner = char.userId ? await jsonDb.findUserById(char.userId) : null;

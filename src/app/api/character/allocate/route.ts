@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { powerCalc, classStatCap, type ClassName, type AllocStatKey } from "@/game/constants";
 import { equipmentBonus } from "@/game/forge";
+import { requireCharacterAuth } from "@/game/auth";
 
 // Configuração de cada status: quanto vale 1 ponto investido
 const STAT_CONFIG: Record<string, { field: string; perPoint: number; cap?: number; bonusKey?: "atk" | "def" | "hp" | "spd" | "crit" }> = {
@@ -40,6 +41,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
     }
 
+    // Só o dono pode alocar pontos no próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+
     const config = STAT_CONFIG[stat as string];
     if (!config) {
       return NextResponse.json({ error: "Status inválido" }, { status: 400 });
@@ -50,10 +55,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Quantidade inválida" }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) {
-      return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
-    }
+    const char = auth.char;
 
     const points = char.unspentStatPoints || 0;
     if (points < qty) {

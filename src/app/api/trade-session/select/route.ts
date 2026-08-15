@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { MAX_SESSION_ITEMS_PER_SIDE } from "@/game/tradeAds";
+import { requireCharacterAuth } from "@/game/auth";
 
 /** Define os itens que VOCÊ oferece: { characterId, sessionId, items }. */
 export async function POST(req: NextRequest) {
@@ -13,6 +14,9 @@ export async function POST(req: NextRequest) {
     if (!characterId || !sessionId) {
       return NextResponse.json({ error: "Personagem e sala são obrigatórios" }, { status: 400 });
     }
+    // Só o dono pode definir os itens que o próprio personagem oferece.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
     if (items.length > MAX_SESSION_ITEMS_PER_SIDE) {
       return NextResponse.json({ error: `Máximo de ${MAX_SESSION_ITEMS_PER_SIDE} itens por lado` }, { status: 400 });
     }

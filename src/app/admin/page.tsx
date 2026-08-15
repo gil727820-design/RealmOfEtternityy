@@ -13,10 +13,12 @@ const VIP_LABELS: Record<string, string> = {
 import type { SkinTemplate } from "@/game/skins";
 import { t } from "@/i18n";
 
-// A chave NÃO fica mais hardcoded aqui (vazava a senha para qualquer visitante
-// no bundle JS). O login valida no servidor (/api/admin/login) e a chave só
-// existe em memória (ou no localStorage se o admin marcar "lembrar de mim").
-const ADMIN_KEY_STORAGE = "realm_admin_key";
+// A chave NÃO fica mais no cliente: o /api/admin/login valida no servidor e
+// grava um cookie httpOnly (`roe_admin`). O navegador nunca guarda a chave
+// (nem em memória, nem em localStorage) — “lembrar de mim” só prolonga o
+// cookie no servidor. O header x-admin-key foi mantido apenas por
+// compatibilidade com sessões antigas.
+const ADMIN_KEY_STORAGE_LEGACY = "realm_admin_key";
 
 const RARITY_ORDER = ["common", "uncommon", "rare", "epic", "legendary", "mythic", "divine", "ancestral", "supreme"];
 const SLOTS = ["weapon", "shield", "helmet", "armor", "gloves", "boots", "ring", "amulet", "relic", "artifact"];
@@ -48,22 +50,11 @@ export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [showKey, setShowKey] = useState(false);
-  const [rememberMe, setRememberMe] = useState<boolean>(() => {
-    try {
-      return !!localStorage.getItem(ADMIN_KEY_STORAGE);
-    } catch {
-      return false;
-    }
-  });
-  // A chave digitada — guardada em memória (e no localStorage se "lembrar").
-  // Lazy initializer: restaura a chave salva sem setState no effect.
-  const [adminKey, setAdminKey] = useState<string>(() => {
-    try {
-      return localStorage.getItem(ADMIN_KEY_STORAGE) ?? "";
-    } catch {
-      return "";
-    }
-  });
+  // "Lembrar de mim" agora só controla a validade do cookie httpOnly no
+  // servidor (30 dias vs. sessão do navegador) — a chave não fica no localStorage.
+  const [rememberMe, setRememberMe] = useState(false);
+  // Chave digitada, usada apenas para o login (não é persistida).
+  const [adminKey, setAdminKey] = useState<string>("");
   const keyRef = useRef<HTMLInputElement>(null);
   const [tab, setTab] = useState<Tab>("dash");
   const [data, setData] = useState<Record<string, unknown>>({});
@@ -137,21 +128,19 @@ export default function AdminPage() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: typed }),
+        body: JSON.stringify({ key: typed, rememberMe }),
       });
       const d = await res.json();
       if (!res.ok) {
         setMessage(d.error || "Chave inválida!");
         return;
       }
-      setAdminKey(typed);
+      // A sessão vira cookie httpOnly no servidor — nada de chave no navegador.
+      setAdminKey("");
       setAuthenticated(true);
       setMessage("");
-      // Lembrar de mim: salva a chave com segurança básica no localStorage.
-      try {
-        if (rememberMe) localStorage.setItem(ADMIN_KEY_STORAGE, typed);
-        else localStorage.removeItem(ADMIN_KEY_STORAGE);
-      } catch { /* ignora */ }
+      // Limpa a chave antiga que ficava no localStorage (migração).
+      try { localStorage.removeItem(ADMIN_KEY_STORAGE_LEGACY); } catch { /* ignora */ }
     } catch {
       setMessage("Erro de conexão — tente novamente.");
     } finally {
@@ -473,7 +462,7 @@ export default function AdminPage() {
     if (!pw || pw.length < 4) return setMessage("❌ Senha muito curta (mín. 4).");
     setBusy(`pw_${userId}`);
     const d = await callAdmin({ action: "reset_password", userId, password: pw });
-    setMessage(d.success ? `✅ Senha de "${username}" trocada para "${pw}"` : `❌ ${d.error || "Falha"}`);
+    setMessage(d.success ? `✅ Senha de "${username}" redefinida com sucesso!` : `❌ ${d.error || "Falha"}`);
     await loadUsers();
     setBusy(null);
   };
@@ -866,10 +855,12 @@ export default function AdminPage() {
             </div>
             <button
               onClick={() => {
+                // Limpa o cookie httpOnly do admin no servidor antes de sair.
+                fetch("/api/admin/logout", { method: "POST" }).catch(() => {});
                 setAuthenticated(false);
                 setAdminKey("");
                 setMessage("");
-                try { localStorage.removeItem(ADMIN_KEY_STORAGE); } catch { /* ignora */ }
+                try { localStorage.removeItem(ADMIN_KEY_STORAGE_LEGACY); } catch { /* ignora */ }
               }}
               className="text-xs px-4 py-2 rounded-xl border border-white/10 text-gray-400 hover:text-[#ff6b6b] hover:border-[#ff6b6b]/40 bg-white/5 transition"
             >
@@ -962,7 +953,8 @@ export default function AdminPage() {
                       const main = chars[0] || null;
                       const isBanned = !!u.banned;
                       const isDeleted = !!u.deleted;
-                      const pw = typeof u.passwordPlain === "string" && u.passwordPlain ? String(u.passwordPlain) : null;
+                      // Senha nunca é armazenada em texto puro — só o hash bcrypt.
+                      // O admin define uma nova senha pelo botão "🔑 Senha".
                       const lastLogin = u.lastLogin ? new Date(u.lastLogin as string).toLocaleString() : "—";
                       const lastActivity = main?.lastActivity ? new Date(main.lastActivity as string).toLocaleString() : "—";
                       return (
@@ -992,15 +984,9 @@ export default function AdminPage() {
                               ) : (
                                 <span className="text-[10px] text-gray-600">sem personagem</span>
                               )}
-                              {pw ? (
-                                <span className="text-[10px] bg-green-500/10 border border-green-500/30 rounded-lg px-2 py-1 text-green-300" title="Senha provisória exibida porque a conta foi criada nesta versão">
-                                  🔑 senha: <b className="font-mono">{pw}</b>
-                                </span>
-                              ) : (
-                                <span className="text-[10px] bg-gray-800 rounded-lg px-2 py-1 text-gray-500" title="Conta antiga com hash bcrypt — use 'Redefinir senha' para definir uma nova.">
-                                  🔒 hash (definir nova)
-                                </span>
-                              )}
+                              <span className="text-[10px] bg-gray-800 rounded-lg px-2 py-1 text-gray-500" title="Senhas são guardadas apenas como hash bcrypt. Use 'Redefinir senha' para definir uma nova.">
+                                🔒 hash (definir nova)
+                              </span>
                             </div>
                           </div>
                           <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-3">

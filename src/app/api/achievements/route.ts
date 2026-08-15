@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { ACHIEVEMENTS, getAchievementById } from "@/game/achievements";
 import { TITLES, getUnlockedTitles } from "@/game/titles";
+import { requireCharacterAuth } from "@/game/auth";
 
 export async function GET(req: NextRequest) {
   try {
@@ -9,8 +10,10 @@ export async function GET(req: NextRequest) {
     const characterId = url.searchParams.get("characterId");
     if (!characterId) return NextResponse.json({ error: "characterId necessário" }, { status: 400 });
 
-    const char = await jsonDb.findCharacterById(String(characterId));
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono pode ver as conquistas/títulos do próprio personagem.
+    const auth = await requireCharacterAuth(req, String(characterId));
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const claimed = Array.isArray(char.achievements) ? (char.achievements as string[]) : [];
     const ownedTitles = Array.isArray(char.titles) ? (char.titles as string[]) : [];
@@ -54,8 +57,11 @@ export async function POST(req: NextRequest) {
     const { action } = body;
     const { characterId } = body;
     if (!characterId) return NextResponse.json({ error: "characterId necessário" }, { status: 400 });
-    const char = await jsonDb.findCharacterById(String(characterId));
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+
+    // Só o dono pode coletar conquistas/equipar títulos do próprio personagem.
+    const auth = await requireCharacterAuth(req, String(characterId));
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     // ---- Coletar recompensa de conquista ----
     if (action === "claim") {

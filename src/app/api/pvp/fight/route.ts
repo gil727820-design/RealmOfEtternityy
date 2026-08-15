@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { leagueForRating, CLASS_LIST } from "@/game/constants";
+import { requireCharacterAuth } from "@/game/auth";
 
 function simulateBattle(attacker: any, defender: { hp: number; attack: number; defense: number; speed: number; critical: number; dodge: number; name: string }) {
   let aHp = attacker.maxHp;
@@ -98,8 +99,10 @@ function generateBots(charLevel: number, charPower: number, baseRating: number):
 export async function POST(req: NextRequest) {
   try {
     const { attackerId, defenderId, isBot } = await req.json();
-    const attacker = await jsonDb.findCharacterById(attackerId);
-    if (!attacker) return NextResponse.json({ error: "Jogador não encontrado" }, { status: 404 });
+    // Só o dono do personagem pode lutar PvP com ele.
+    const auth = await requireCharacterAuth(req, attackerId);
+    if (!auth.ok) return auth.response;
+    const attacker = auth.char;
 
     let defenderStats: { hp: number; attack: number; defense: number; speed: number; critical: number; dodge: number; name: string };
     let defenderRating: number;
@@ -161,8 +164,10 @@ export async function GET(req: NextRequest) {
     const characterId = url.searchParams.get("characterId");
     if (!characterId) return NextResponse.json({ error: "Missing characterId" }, { status: 400 });
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    // Só o dono pode ver o matchmaking do próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     // Matchmaking por nível e poder: oponentes na mesma faixa do jogador
     const allChars = await jsonDb.listCharacters("", 999999);

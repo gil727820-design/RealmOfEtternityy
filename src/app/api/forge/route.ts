@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { MAX_ENHANCE, ENCHANT_COST, enchantPoolForClass, enhanceCost, enhanceChance, equipmentBonus } from "@/game/forge";
 import { powerCalc } from "@/game/constants";
+import { requireCharacterAuth } from "@/game/auth";
 
 /** Soma os bônus de todos os itens equipados (forja + encanto). */
 function sumEquippedBonuses(entries: any[]) {
@@ -79,8 +80,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(String(characterId));
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono pode forjar itens do próprio personagem (gasta ouro dele).
+    const auth = await requireCharacterAuth(req, String(characterId));
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const entry = await jsonDb.getInventoryItemById(String(itemId));
     if (!entry || !entry.template) {

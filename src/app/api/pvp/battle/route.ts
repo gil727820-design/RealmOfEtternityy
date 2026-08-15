@@ -7,6 +7,7 @@ import { computePvpDaily, PVP_DAILY_MAX, pvpDateKey } from "@/game/pvp";
 import { skillTreeDebuff, DEBUFF_LOG } from "@/game/skillTree";
 import { decideEnemyAction } from "@/game/battleAI";
 import { masteryBuff } from "@/game/mastery";
+import { requireCharacterAuth } from "@/game/auth";
 
 const SKILL_COST = 15;
 const MAX_ROUNDS = 40;
@@ -53,8 +54,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Oponente inválido" }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono pode lutar na arena com o próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const ca = getCharCombat(char);
 

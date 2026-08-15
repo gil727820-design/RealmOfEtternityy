@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
+import { requireCharacterAuth } from "@/game/auth";
 
 /**
  * POST /api/reports
@@ -21,10 +22,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Descreva o ocorrido (mínimo 5 caracteres)." }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(String(characterId));
-    if (!char) {
-      return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
-    }
+    // Só o dono do personagem pode enviar reporte como ele.
+    const auth = await requireCharacterAuth(req, String(characterId));
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const rec = await jsonDb.createReport({
       characterId: String(characterId),

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import jsonDb, { MARKET_SYSTEM_ID } from "@/db/repo";
+import { requireCharacterAuth } from "@/game/auth";
 
 /**
  * Cancela um anúncio: { characterId, listingId }.
@@ -16,8 +17,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Personagem e anúncio são obrigatórios" }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono pode cancelar o próprio anúncio.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const listing = await jsonDb.getMarketRecById(listingId);
     if (!listing || listing.kind !== "listing") {

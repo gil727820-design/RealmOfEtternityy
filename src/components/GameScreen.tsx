@@ -222,7 +222,7 @@ export default function GameScreen() {
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
       <MusicController />
 
-      <div className={"relative z-10 transition-all duration-500 ease-in-out " + (collapsed ? "md:pl-0" : "md:pl-56")}>
+      <div className={"relative z-10 transition-all duration-500 ease-in-out " + (collapsed ? "md:pl-0" : "md:pl-60")}>
         <header
           className="sticky top-0 z-30 px-6 py-4 border-b glass-effect transition-colors duration-700"
           style={{

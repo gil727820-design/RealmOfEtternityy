@@ -3,6 +3,7 @@ import jsonDb from "@/db/repo";
 import { powerCalc, type ClassName } from "@/game/constants";
 import { skillTreeForClass, skillTreeTotalRanks } from "@/game/skillTree";
 import { masteryBuff, masteryTitle } from "@/game/mastery";
+import { requireCharacterAuth } from "@/game/auth";
 
 /**
  * Árvore de Habilidades:
@@ -20,8 +21,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "ID do personagem é obrigatório" }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono pode evoluir a árvore de habilidades do próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     // ---- Reset: devolve todos os pontos investidos por 25k de ouro ----
     if (reset === true) {

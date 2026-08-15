@@ -120,7 +120,11 @@ export const useGameStore = create<GameState>()(
         battleLog: [],
         activeTab: "dashboard",
       }),
-      logout: () => set({ ...initialState }),
+      logout: () => {
+        // Limpa a sessão no servidor (cookie httpOnly) e o estado local.
+        fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+        set({ ...initialState });
+      },
     }),
     {
       name: "realm-of-eternity-storage",

@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
+import { requireCharacterAuth } from "@/game/auth";
 
 export async function POST(req: NextRequest) {
   try {
     const { characterId } = await req.json();
     if (!characterId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono pode ativar o AFK do próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     // Protege contra começar de novo com recompensas ainda pendentes
     // (perderia o tempo acumulado ao zerar o afkSince).

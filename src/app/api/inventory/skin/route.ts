@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { skinById } from "@/game/skins";
 import { skinBuffDesc } from "@/game/skinBuffs";
+import { requireCharacterAuth } from "@/game/auth";
 
 /**
  * Equipa / desequipa uma SKIN no personagem.
@@ -21,8 +22,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
     }
 
-    const char = await jsonDb.findCharacterById(characterId);
-    if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+    // Só o dono pode equipar/remover skins do próprio personagem.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+    const char = auth.char;
 
     const owned: string[] = Array.isArray(char.skins) ? (char.skins as string[]) : [];
 

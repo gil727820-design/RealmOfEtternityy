@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
+import { requireCharacterAuth } from "@/game/auth";
 
 export async function GET(req: NextRequest) {
   try {
@@ -8,6 +9,11 @@ export async function GET(req: NextRequest) {
     if (!characterId) {
       return NextResponse.json({ error: "ID do personagem é obrigatório" }, { status: 400 });
     }
+
+    // Só o dono pode ver o próprio histórico de batalhas.
+    const auth = await requireCharacterAuth(req, characterId);
+    if (!auth.ok) return auth.response;
+
     const limit = Math.min(100, Math.max(1, Number(searchParams.get("limit")) || 50));
     const battles = await jsonDb.getBattlesByCharacterId(characterId, limit);
     return NextResponse.json({ battles });

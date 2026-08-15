@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import jsonDb from "@/db/repo";
 import { isValidUsername } from "@/game/profanityFilter";
+import { setSessionCookie } from "@/game/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,11 +30,14 @@ export async function POST(req: NextRequest) {
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    // Guardamos TAMBÉM o texto puro (passwordPlain) para o painel Admin poder
-    // exibir "senha provisória" das contas criadas. Nunca mostramos o hash bcrypt.
-    const user = await jsonDb.insertUser({ username: uname, password: hashed, passwordPlain: password, role: "player", locale: "pt-BR", banned: false, deleted: false });
+    // NOTA: apenas o hash bcrypt é armazenado. A senha em texto puro NÃO é
+    // salva (anti-padrão de segurança) — o admin redefine senha quando preciso.
+    const user = await jsonDb.insertUser({ username: uname, password: hashed, role: "player", locale: "pt-BR", banned: false, deleted: false });
 
-    return NextResponse.json({ userId: user.id, username: user.username });
+    // Já autentica o registro (cookie de sessão) — o cliente pode seguir direto.
+    const res = NextResponse.json({ userId: user.id, username: user.username });
+    setSessionCookie(res, user.id);
+    return res;
   } catch (e: unknown) {
     console.error("Register error:", e);
     const msg = e instanceof Error ? e.message : "Erro interno do servidor";
