@@ -526,7 +526,7 @@ const en: Record<string, string> = {
   "forge.refine": "Refine",
   "forge.cost": "Cost",
   "forge.success": "Success rate",
-  "forge.result": "Result",  "forge.enhance.desc": "Engrave runes on the equipment (rune 1 to 5, +5% stats per rune)",
+  "forge.result": "Result",  "forge.enhance.desc": "Engrave runes on the equipment (rune 1 to 15, +5% stats per rune — gets harder and pricier as it goes up)",
   "forge.enchant.desc": "Add magical effects",
   "forge.craft.desc": "Create new items",
   "forge.refine.desc": "Reroll stats",
@@ -689,7 +689,7 @@ const en: Record<string, string> = {
   "title.noble": "Noble",
   "title.diamond_hoarder": "Diamond Hoarder",
   "title.crystal_collector": "Crystal Collector",
-  "title.emperor_pvp": "Arena Emperor",
+  "title.emperor_pvp": "Arena Emperor",
   "nav.titles": "Titles",
 
   // Inventory v2
@@ -824,7 +824,7 @@ const en: Record<string, string> = {
   "forge.enhance.level": "Enhancement",
   "forge.enhance.success": "Enhancement successful!",
   "forge.enhance.fail": "Enhancement failed. Try again.",
-  "forge.enhance.locked": "This item reached +20.",
+  "forge.enhance.locked": "This item reached +15.",
   "forge.enhance.noGold": "Not enough gold.",
   "forge.enchant.success": "The item is now enchanted with",
   "forge.enchant.needEnhance": "The item is already enchanted. Refund it or pick another.",  "forge.enchant.locked": "Enchanted items cannot be enhanced again.",

@@ -218,7 +218,7 @@ export default function ForgePanel() {
                         <div className="font-black text-[#ffd700]">💰 {enh >= MAX_ENHANCE ? "—" : enhanceCost(enh).toLocaleString()}</div>
                       </div>
                     </div>
-                    {/* Runas (1 a 5) */}
+                    {/* Runas (1 a 15) */}
                     <div className="flex items-center justify-center gap-1.5">
                       {Array.from({ length: MAX_ENHANCE }).map((_, i) => (
                         <span

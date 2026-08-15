@@ -577,7 +577,7 @@ const ptBR: Record<string, string> = {
   "forge.refine": "REFINAR",
   "forge.cost": "Custo",
   "forge.success": "Taxa de sucesso",
-  "forge.result": "Resultado",  "forge.enhance.desc": "Gravar runas no equipamento (runa 1 a 5, +5% de atributos por runa)",
+  "forge.result": "Resultado",  "forge.enhance.desc": "Gravar runas no equipamento (runa 1 a 15, +5% de atributos por runa — fica mais difícil e caro conforme sobe)",
   "forge.enchant.desc": "Adicionar efeitos mágicos",
   "forge.craft.desc": "Criar novos itens",
   "forge.refine.desc": "Reroll de stats",
@@ -751,7 +751,7 @@ const ptBR: Record<string, string> = {
   "title.noble": "Nobre",
   "title.diamond_hoarder": "Colecionador de Diamantes",
   "title.crystal_collector": "Colecionador de Cristais",
-  "title.emperor_pvp": "Imperador da Arena",
+  "title.emperor_pvp": "Imperador da Arena",
 
   // Nav extra
   "nav.titles": "Títulos",
@@ -888,7 +888,7 @@ const ptBR: Record<string, string> = {
   "forge.enhance.level": "Aprimoramento",
   "forge.enhance.success": "Aprimoramento com sucesso!",
   "forge.enhance.fail": "O aprimoramento falhou. Tente novamente.",
-  "forge.enhance.locked": "Este item já atingiu +20.",
+  "forge.enhance.locked": "Este item já atingiu +15.",
   "forge.enhance.noGold": "Ouro insuficiente.",
   "forge.enchant.success": "O item agora está encantado com",
   "forge.enchant.needEnhance": "O item já está encantado. Refunda ou use outro.",  "forge.enchant.locked": "Itens encantados não podem ser aprimorados novamente.",

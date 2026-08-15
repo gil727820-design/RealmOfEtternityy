@@ -1,8 +1,9 @@
 /**
  * Regras da Forja (compartilhadas entre a API e o cálculo de bônus de equipamento).
  *
- * - RUNA (aprimorar): +1 nível de runa (1 → 5, limite), +5% de atributos por
- *   nível — um aumento pequeno, como gravar uma runa no item.
+ * - RUNA (aprimorar): +1 nível de runa (1 → 15, limite), +5% de atributos por
+ *   nível. Fica cada vez mais difícil (chance cai) e mais caro (custo explode)
+ *   conforme sobe — as runas altas são conquista de quem tem muito ouro.
  * - ENCANTAR: aplica um encantamento do POOL DA CLASSE (15 por classe), cada
  *   um com bônus fixo e nome exclusivo. Runa e encanto funcionam JUNTOS no
  *   mesmo equipamento (encantar não bloqueia mais aprimorar).
@@ -22,7 +23,7 @@ export interface EnchantDef {
 }
 
 /** Limite de runas (aprimoramento) por item. */
-export const MAX_ENHANCE = 5;
+export const MAX_ENHANCE = 15;
 
 /** Custo em ouro para encantar. */
 export const ENCHANT_COST = 5000;
@@ -294,15 +295,25 @@ export function enchantById(id: string): EnchantDef | undefined {
   return undefined;
 }
 
-/** Custo em ouro para gravar a runa `level` → `level + 1`. */
+/**
+ * Custo em ouro para gravar a runa `level` → `level + 1`.
+ * Cresce rápido (×1.6 por nível) e parte de 1.000 — as runas altas ficam
+ * caras de verdade, dando à forja um bom destino para o ouro do jogador.
+ * Ex.: +0 → 1.000 · +5 → ~10.500 · +10 → ~110.000 · +14 → ~720.000
+ */
 export function enhanceCost(level: number): number {
-  return Math.floor(500 * Math.pow(1.5, Math.min(level, MAX_ENHANCE)));
+  return Math.floor(1000 * Math.pow(1.6, Math.min(level, MAX_ENHANCE)));
 }
 
-/** Chance de sucesso (%) ao gravar a runa do nível `level`. */
+/**
+ * Chance de sucesso (%) ao gravar a runa do nível `level`.
+ * Começa garantida (100%) e cai ~6,5 pontos por nível até o piso de 10% —
+ * aprimorar até +15 exige sorte (ou muitas tentativas) além de ouro.
+ * Ex.: +0 → 100% · +5 → ~68% · +10 → ~35% · +14 → 10%
+ */
 export function enhanceChance(level: number): number {
   if (level >= MAX_ENHANCE) return 0;
-  return Math.round(Math.max(55, 100 - level * 9));
+  return Math.max(10, Math.round(100 - level * 6.5));
 }
 
 /** Bônus de atributos de um item de equipamento considerando runas + encanto. */

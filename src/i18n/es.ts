@@ -668,7 +668,7 @@ const es: Record<string, string> = {
   "title.noble": "Noble",
   "title.diamond_hoarder": "Acaparador de Diamantes",
   "title.crystal_collector": "Coleccionista de Cristales",
-  "title.emperor_pvp": "Emperador de la Arena",
+  "title.emperor_pvp": "Emperador de la Arena",
   "nav.titles": "Títulos",
 
   // Inventory v2
@@ -799,7 +799,7 @@ const es: Record<string, string> = {
   "mailbox.done": "Recibido",
   // Forja
   "forge.title": "Forja",
-  "forge.enhance": "Mejorar",  "forge.enhance.desc": "Graba runas en el objeto (runa 1 a 5, +5% de estadísticas por runa)",
+  "forge.enhance": "Mejorar",  "forge.enhance.desc": "Graba runas en el objeto (runa 1 a 15, +5% de estadísticas por runa — cada vez más difícil y caro)",
   "forge.enchant": "Encantar",
   "forge.enchant.desc": "Aplica un encantamiento aleatorio al objeto (fuego, hielo, veneno, luz, tormenta o sagrado).",
   "forge.craft": "Fabricar",
@@ -815,7 +815,7 @@ const es: Record<string, string> = {
   "forge.enhance.level": "Refuerzo",
   "forge.enhance.success": "¡Mejora exitosa!",
   "forge.enhance.fail": "La mejora falló. Inténtalo de nuevo.",
-  "forge.enhance.locked": "Este objeto ya alcanzó +20.",
+  "forge.enhance.locked": "Este objeto ya alcanzó +15.",
   "forge.enhance.noGold": "Oro insuficiente.",
   "forge.enchant.success": "El objeto ahora está encantado con",
   "forge.enchant.needEnhance": "El objeto ya está encantado. Refunde o usa otro.",  "forge.enchant.locked": "Los objetos encantados no se pueden mejorar de nuevo.",
