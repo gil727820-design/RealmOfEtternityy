@@ -122,6 +122,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ items });
     }
 
+    if (action === "inventory") {
+      // Inventário de um personagem (para o admin remover/ajustar itens).
+      const characterId = url.searchParams.get("characterId") || "";
+      if (!characterId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
+      const char = await jsonDb.findCharacterById(characterId);
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+      const inventory = await jsonDb.getInventoryForCharacter(characterId);
+      return NextResponse.json({
+        character: { id: char.id, name: char.name, level: char.level },
+        inventory,
+      });
+    }
+
     if (action === "settings") {
       const settings = await jsonDb.getServerSettings();
       // serverTime/serverOffsetMinutes: relógio do SERVIDOR, para o admin

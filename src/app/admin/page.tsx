@@ -137,6 +137,8 @@ export default function AdminPage() {
   const [wbCoins, setWbCoins] = useState("1000");
   const [wbSquadSize, setWbSquadSize] = useState("4");
   const [wbCooldown, setWbCooldown] = useState("5");
+  const [wbRegen, setWbRegen] = useState("60");
+  const [wbRespawn, setWbRespawn] = useState("20");
   const [wbLoaded, setWbLoaded] = useState(false);
   // Enviar (presentes → correio)
   const [sendCharId, setSendCharId] = useState("");
@@ -689,6 +691,8 @@ export default function AdminPage() {
       setWbCoins(String(Number(rewards.towerCoins) || 1000));
       setWbSquadSize(String(Math.max(2, Math.floor(Number(wb.maxSquadSize) || 4))));
       setWbCooldown(String(Math.max(1, Math.floor(Number(wb.attackCooldownSec) || 5))));
+      setWbRegen(String(Math.max(5, Math.floor(Number(wb.regenSec) || 60))));
+      setWbRespawn(String(Math.max(1, Math.floor(Number(wb.respawnSec) || 10))));
     } catch { /* ignora */ }
     setWbLoaded(true);
     setLoading(false);
@@ -743,6 +747,8 @@ export default function AdminPage() {
         },
         maxSquadSize: Math.max(2, Math.floor(Number(wbSquadSize) || 4)),
         attackCooldownSec: Math.max(1, Math.floor(Number(wbCooldown) || 5)),
+        regenSec: Math.max(5, Math.floor(Number(wbRegen) || 60)),
+        respawnSec: Math.max(1, Math.floor(Number(wbRespawn) || 10)),
       },
     });
     setMessage(
@@ -2343,9 +2349,19 @@ export default function AdminPage() {
                         <input type="number" min={1} max={3600} value={wbCooldown} onChange={(e) => setWbCooldown(e.target.value)}
                           className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none" />
                       </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">Regeneração de HP (s p/ 100%)</label>
+                        <input type="number" min={5} max={3600} value={wbRegen} onChange={(e) => setWbRegen(e.target.value)}
+                          className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">Respawn do jogador após morrer (s)</label>
+                        <input type="number" min={1} max={600} value={wbRespawn} onChange={(e) => setWbRespawn(e.target.value)}
+                          className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none" />
+                      </div>
                     </div>
                     <p className="text-[11px] text-gray-500 mt-3">
-                      O HP do jogador na batalha regenera 100% em 60s. Cada ataque dá dano baseado em ataque+nível (com chance de crítico). Quando o boss morre, todos os participantes recebem ouro/XP da piscina (proporcional ao dano) + as moedas da torre fixas.
+                      O HP do jogador na batalha regenera 100% em {Math.max(5, Math.floor(Number(wbRegen) || 60))}s. Uma vez derrotado pelo boss, o jogador RENASCE em {Math.max(1, Math.floor(Number(wbRespawn) || 10))}s com HP cheio e volta a atacar. Cada ataque dá dano baseado em ataque+nível (com chance de crítico). Quando o boss morre, todos os participantes recebem ouro/XP da piscina (proporcional ao dano) + as moedas da torre fixas.
                     </p>
                   </div>
                 </div>

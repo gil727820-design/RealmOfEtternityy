@@ -47,6 +47,8 @@ export interface WorldBossConfig {
   attackCooldownSec: number;
   /** Segundos para regenerar 100% do HP do jogador na batalha. */
   regenSec: number;
+  /** Segundos para um jogador morto na batalha RENASCER (respaw) com HP cheio. */
+  respawnSec: number;
 }
 
 export const DEFAULT_WORLD_BOSS: WorldBossConfig = {
@@ -65,6 +67,7 @@ export const DEFAULT_WORLD_BOSS: WorldBossConfig = {
   maxSquadSize: 4,
   attackCooldownSec: 5,
   regenSec: 60,
+  respawnSec: 10,
 };
 
 /* ─── Estado do evento (persistido em server_settings.worldBossEvent) ─── */
@@ -82,6 +85,8 @@ export interface WorldBossParticipant {
   maxHp: number;
   /** Epoch ms do último ataque (cooldown). */
   lastAttackAt: number;
+  /** Epoch ms em que o jogador MORREU na batalha (null = vivo). Usado para o respawn. */
+  deadAt: number | null;
   joinedAt: string;
 }
 
@@ -143,6 +148,7 @@ export function sanitizeWorldBossConfig(raw: unknown): WorldBossConfig {
     maxSquadSize: Math.max(2, num(g.maxSquadSize, 4, 2, 20)),
     attackCooldownSec: num(g.attackCooldownSec, 5, 1, 3600),
     regenSec: num(g.regenSec, 60, 5, 3600),
+    respawnSec: num(g.respawnSec, 10, 1, 600),
   };
 }
 
@@ -200,15 +206,22 @@ export function computePlayerDamage(
   return { damage: dmg, crit };
 }
 
-/** Dano que o boss causa no jogador (revide). */
+/** Dano que o boss causa no jogador (revide) — PROPORCIONAL ao HP do jogador:
+ * sem defesa ~12% do HP máximo por golpe; defesa alta reduz até ~2-4%.
+ * Assim o boss é ameaçador em qualquer nível (não fica em "1" com defesa alta). */
 export function computeBossHit(
   cfg: WorldBossConfig,
-  playerDefense = 0
+  player: { defense?: number; maxHp?: number } = {}
 ): { damage: number; crit: boolean } {
+  const maxHp = Math.max(1, Number(player.maxHp) || 100);
+  const def = Math.max(0, Number(player.defense) || 0);
+  // Mitigação: defesa igual ao ataque do boss corta o dano pela metade (~6% HP).
+  const mit = 1 - Math.min(0.9, def / (def + (cfg.boss.attack || 100)));
+  const pct = Math.max(0.025, 0.12 * mit);
   const variance = 0.85 + Math.random() * 0.3;
   const crit = Math.random() * 100 < (cfg.boss.critical || 0);
-  const base = Math.max(1, (cfg.boss.attack || 100) - Number(playerDefense) * 0.4);
-  return { damage: Math.max(1, Math.floor(base * (crit ? 1.8 : 1) * variance)), crit };
+  const dmg = Math.max(1, Math.floor(maxHp * pct * (crit ? 1.5 : 1) * variance));
+  return { damage: dmg, crit };
 }
 
 /** Formata números grandes (ex.: 12.4M, 850K). */
@@ -216,6 +229,26 @@ export function fmtBig(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 100_000 ? 0 : 1)}K`;
   return String(Math.floor(n));
+}
+
+/**
+ * Próxima abertura agendada a partir de `from`, mesmo que exista uma janela
+ * aberta agora (usado quando o boss foi derrotado e queremos avisar quando
+ * será o próximo evento). Retorna ISO ou null.
+ */
+export function nextWorldBossOpening(cfg: WorldBossConfig, from: Date = new Date()): string | null {
+  const clean = (cfg.schedule || []).filter(isValidScheduleTime).map(normalizeScheduleTime).sort();
+  const t = from.getTime();
+  let next: number | null = null;
+  for (const hhmm of clean) {
+    const [h, m] = hhmm.split(":").map(Number);
+    const d = new Date(from);
+    d.setHours(h, m, 0, 0);
+    let start = d.getTime();
+    if (start <= t) start += 24 * 3600_000;
+    if (next === null || start < next) next = start;
+  }
+  return next !== null ? new Date(next).toISOString() : null;
 }
 
 /* ─── Level up (recompensas) ─── */

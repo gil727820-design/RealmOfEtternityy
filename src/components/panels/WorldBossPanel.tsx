@@ -33,6 +33,7 @@ interface SquadInfo {
 interface WorldBossData {
   enabled: boolean;
   open: boolean;
+  won: boolean;
   startsAt: string | null;
   endsAt: string | null;
   nextOpening: string | null;
@@ -44,6 +45,7 @@ interface WorldBossData {
   maxSquadSize: number;
   attackCooldownSec: number;
   regenSec: number;
+  respawnSec?: number;
   event: {
     status: string;
     bossHp: number;
@@ -54,7 +56,7 @@ interface WorldBossData {
     squads: SquadInfo[];
     log: string[];
   } | null;
-  me: { characterId: string; name: string; damageDealt: number; hits: number; hp: number; maxHp: number } | null;
+  me: { characterId: string; name: string; damageDealt: number; hits: number; hp: number; maxHp: number; deadAt: number | null } | null;
   mySquad: SquadInfo | null;
   myInvites: Array<{ squadId: string; leaderName: string; leaderLevel: number }>;
   serverTime?: string | null;
@@ -73,7 +75,14 @@ export default function WorldBossPanel() {
   const [inviteName, setInviteName] = useState("");
   const [cooldownMs, setCooldownMs] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [auto, setAuto] = useState(true);
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const attackRef = useRef<() => Promise<void>>(async () => {});
+  const dataRef = useRef<WorldBossData | null>(null);
+  const autoRef = useRef(true);
+  const canAutoRef = useRef(false);
+  autoRef.current = auto;
 
   const load = useCallback(async () => {
     if (!character) return;
@@ -82,6 +91,7 @@ export default function WorldBossPanel() {
       if (!res.ok) return;
       const d = await res.json();
       setData(d);
+      dataRef.current = d;
       setSkew(computeClockSkew(d.serverTime));
     } catch {
       /* mantém o estado anterior */
@@ -114,6 +124,20 @@ export default function WorldBossPanel() {
       if (cooldownTimer.current) clearInterval(cooldownTimer.current);
     };
   }, [cooldownMs]);
+
+  // AUTO-ATAQUE: enquanto ativado, evento aberto e boss vivo, ataca sempre que
+  // possível. O `attackRef` aponta para a função `attack` corrente; também
+  // re-dispara imediatamente quando o cooldown do cliente zera.
+  useEffect(() => {
+    autoTimer.current = setInterval(() => {
+      if (autoRef.current && canAutoRef.current) {
+        void attackRef.current();
+      }
+    }, 800);
+    return () => {
+      if (autoTimer.current) clearInterval(autoTimer.current);
+    };
+  }, []);
 
   if (!character) return null;
 
@@ -191,24 +215,51 @@ export default function WorldBossPanel() {
       });
       const d = await res.json();
       if (!res.ok) {
-        notify(d.error || t("general.error", locale), "error");
+        // Erros esperados durante o auto-ataque (cooldown/defeito) não geram
+        // notificação — o fluxo automático reconecta sozinho quando puder.
+        // Aproveita o cooldown informado pelo servidor p/ não ficar golpeando no escuro.
+        if (typeof d?.cooldownMs === "number" && d.cooldownMs > 0) setCooldownMs(d.cooldownMs);
+        if (!autoRef.current) notify(d.error || t("general.error", locale), "error");
         return;
       }
       setCooldownMs(d.cooldownMs || 0);
       await load();
       if (!d.bossAlive) {
-        notify(t("worldBoss.defeated", locale), "success");
+        let msg = t("worldBoss.defeated", locale);
+        const my = d.rewards?.find?.((r: any) => r.characterId === character.id);
+        if (my) {
+          msg = `${msg}\n🪙 ${my.gold.toLocaleString()} · ⚡ ${my.xp.toLocaleString()} XP · 🗼 ${my.towerCoins}`;
+        }
+        notify(msg, "success");
+        setAuto(false);
       }
     } catch {
-      notify(t("general.error", locale), "error");
+      if (!autoRef.current) notify(t("general.error", locale), "error");
     } finally {
       setBusy(false);
     }
   };
+  attackRef.current = attack;
 
   const mySquad = data?.mySquad ?? null;
   const me = data?.me ?? null;
   const isLeader = mySquad ? mySquad.leaderId === character.id : false;
+
+  // Tempo (ms) até o JOGADOR renascer (morreu na batalha e aguarda respawn).
+  const playerRespawnMs = me?.deadAt ? Math.max(0, (me.deadAt + (data?.respawnSec ?? 10) * 1000) - serverNow) : null;
+  const respawnActive = playerRespawnMs != null && playerRespawnMs > 0;
+  const deadButRespawnReady = me?.deadAt != null && playerRespawnMs != null && playerRespawnMs <= 0;
+
+  // Condição do auto-ataque: só ataca se o jogador está apto (vivo OU com o
+  // respawn já pronto) e o boss está de pé — para não ficar batendo em evento morto.
+  const canAuto =
+    !!data?.open &&
+    !data?.won &&
+    !!bossAlive &&
+    !!me &&
+    !respawnActive &&
+    (me.hp > 0 || deadButRespawnReady);
+  canAutoRef.current = canAuto;
 
   return (
     <div className="animate-fadeInUp space-y-6">
@@ -229,9 +280,13 @@ export default function WorldBossPanel() {
         <div className="game-card p-10 text-center relative overflow-hidden border-red-900">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.08),transparent_70%)]" />
           <div className="relative flex flex-col items-center gap-3">
-            <span className="text-6xl opacity-40 animate-pulse-soft">👹</span>
-            <h3 className="text-2xl font-black text-red-300">{t("worldBoss.closed", locale)}</h3>
-            <p className="text-sm text-gray-400 max-w-md">{t("worldBoss.subtitle", locale)}</p>
+            <span className={`text-6xl opacity-40 animate-pulse-soft ${data?.won ? "" : ""}`}>{data?.won ? "🏆" : "👹"}</span>
+            <h3 className="text-2xl font-black text-red-300">
+              {data?.won ? t("worldBoss.won", locale) : t("worldBoss.closed", locale)}
+            </h3>
+            <p className="text-sm text-gray-400 max-w-md">
+              {data?.won ? t("worldBoss.wonSub", locale) : t("worldBoss.subtitle", locale)}
+            </p>
             {countdown !== null && (
               <div className="mt-2 text-3xl font-black tabular-nums text-red-200 animate-glow-pulse">
                 {countdownLabel} {fmtCountdown(countdown)}
@@ -271,17 +326,17 @@ export default function WorldBossPanel() {
                 className="w-36 h-36 rounded-2xl border-2 border-red-500/60 object-cover shadow-[0_0_35px_rgba(239,68,68,0.4)] animate-floatSlow"
               />
               <div className="flex-1 w-full">
-                <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
-                  <div>
-                    <div className="text-2xl font-black text-red-300">{t(`monster.${bossKind}`, locale)}</div>
-                    <div className="text-[11px] text-gray-500 uppercase tracking-widest">🌍 {t("worldBoss.title", locale)}</div>
-                  </div>
-                  {!bossAlive && (
+<div className="flex items-center justify-between flex-wrap gap-2 mb-1">
+                    <div>
+                      <div className="text-2xl font-black text-red-300">{t(`monster.${bossKind}`, locale)}</div>
+                      <div className="text-[11px] text-gray-500 uppercase tracking-widest">🌍 {t("worldBoss.title", locale)}</div>
+                    </div>
+                    {!bossAlive && (
                     <span className="px-3 py-1 rounded-full bg-green-500/20 border border-green-500/50 text-green-300 font-bold text-sm">
                       🏆 {t("worldBoss.defeated", locale)}
                     </span>
                   )}
-                </div>
+                  </div>
                 {/* HP do boss */}
                 <div className="mt-3">
                   <div className="flex justify-between text-[11px] text-gray-400 mb-1">
@@ -347,13 +402,28 @@ export default function WorldBossPanel() {
                     <div className="text-[10px] text-gray-500">{t("worldBoss.hits", locale)}</div>
                   </div>
                 </div>
+
+                <button
+                  onClick={() => setAuto((a) => !a)}
+                  className={`w-full text-xs py-2 rounded-xl border transition ${
+                    auto
+                      ? "bg-red-500/15 border-red-500/40 text-red-300"
+                      : "bg-white/5 border-white/10 text-gray-400"
+                  }`}
+                >
+                  {auto ? "🔁 Auto-ataque LIGADO" : "🔁 Auto-ataque desligado"}
+                </button>
                 <button
                   onClick={attack}
-                  disabled={busy || cooldownMs > 0 || me.hp <= 0}
-                  className={`game-btn w-full py-3 text-base ${cooldownMs > 0 ? "opacity-60 cursor-not-allowed" : "game-btn-red"}`}
+                  disabled={busy || cooldownMs > 0 || respawnActive || (me.hp <= 0 && !deadButRespawnReady)}
+                  className={`game-btn w-full py-3 text-base ${cooldownMs > 0 || respawnActive ? "opacity-60 cursor-not-allowed" : "game-btn-red"}`}
                 >
                   {cooldownMs > 0
                     ? `⏳ ${t("worldBoss.cooldown", locale)} ${fmtCountdown(cooldownMs)}`
+                    : respawnActive
+                    ? `⏳ ${t("worldBoss.respawnIn", locale)} ${fmtCountdown(playerRespawnMs!)}`
+                    : deadButRespawnReady
+                    ? `⚔️ ${t("worldBoss.attack", locale)}`
                     : me.hp <= 0
                     ? `💀 ${t("worldBoss.defeatedYou", locale)}`
                     : `⚔️ ${t("worldBoss.attack", locale)}`}

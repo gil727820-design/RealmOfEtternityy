@@ -33,6 +33,7 @@ export function participantFromChar(char: any): WorldBossParticipant {
     hp: maxHp,
     maxHp,
     lastAttackAt: 0,
+    deadAt: null,
     joinedAt: new Date().toISOString(),
   };
 }

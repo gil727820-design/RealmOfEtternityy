@@ -21,40 +21,44 @@ async function distributeRewards(event: WorldBossEventState, cfg: WorldBossConfi
   const maxLevel = resolveMaxLevel(Number(settings?.maxLevel) || 0);
 
   for (const p of Object.values(event.participants)) {
-    const char = await jsonDb.findCharacterById(p.characterId);
-    if (!char) continue;
-    const share = p.damageDealt / total;
-    const gold = Math.floor(cfg.rewards.gold * share);
-    const xp = Math.floor(cfg.rewards.xp * share);
-    const coins = Math.floor(cfg.rewards.towerCoins);
+    try {
+      const char = await jsonDb.findCharacterById(p.characterId);
+      if (!char) continue;
+      const share = p.damageDealt / total;
+      const gold = Math.floor(cfg.rewards.gold * share);
+      const xp = Math.floor(cfg.rewards.xp * share);
+      const coins = Math.floor(cfg.rewards.towerCoins);
 
-    const { patch, newLevel } = applyXp(char, xp, maxLevel);
-    const power = powerCalc({
-      attack: Number(char.attack) || 0,
-      defense: Number(char.defense) || 0,
-      hp: Number(char.maxHp) || 0,
-      speed: Number(char.speed) || 0,
-      critical: Number(char.critical) || 0,
-      level: newLevel,
-    });
+      const { patch, newLevel } = applyXp(char, xp, maxLevel);
+      const power = powerCalc({
+        attack: Number(char.attack) || 0,
+        defense: Number(char.defense) || 0,
+        hp: Number(char.maxHp) || 0,
+        speed: Number(char.speed) || 0,
+        critical: Number(char.critical) || 0,
+        level: newLevel,
+      });
 
-    await jsonDb.updateCharacter(p.characterId, {
-      ...patch,
-      gold: (Number(char.gold) || 0) + gold,
-      towerCoins: (Number(char.towerCoins) || 0) + coins,
-      power,
-      lastActivity: new Date(nowMs).toISOString(),
-    });
+      await jsonDb.updateCharacter(p.characterId, {
+        ...patch,
+        gold: (Number(char.gold) || 0) + gold,
+        towerCoins: (Number(char.towerCoins) || 0) + coins,
+        power,
+        lastActivity: new Date(nowMs).toISOString(),
+      });
 
-    granted.push({
-      characterId: p.characterId,
-      name: p.name,
-      gold,
-      xp,
-      towerCoins: coins,
-      levelUp: newLevel > (Number(char.level) || 1),
-      newLevel,
-    });
+      granted.push({
+        characterId: p.characterId,
+        name: p.name,
+        gold,
+        xp,
+        towerCoins: coins,
+        levelUp: newLevel > (Number(char.level) || 1),
+        newLevel,
+      });
+    } catch (e) {
+      console.error(`[world-boss] falha ao recompensar ${p.characterId}:`, e);
+    }
   }
   return granted;
 }
@@ -83,6 +87,24 @@ export async function POST(req: NextRequest) {
     // Participante (entra automaticamente no primeiro ataque).
     let me = event.participants[auth.char.id] ?? participantFromChar(auth.char);
 
+    // Respawn: jogador morto espera `respawnSec` segundos e volta com HP cheio.
+    if (me.deadAt != null) {
+      const respawnInMs = me.deadAt + cfg.respawnSec * 1000 - now;
+      if (respawnInMs > 0) {
+        return NextResponse.json(
+          { error: `Você morreu! Renascerá em ${Math.ceil(respawnInMs / 1000)}s.`, respawnInMs },
+          { status: 400 }
+        );
+      }
+      me.hp = me.maxHp;
+      me.deadAt = null;
+      me.lastAttackAt = 0;
+      me.joinedAt = new Date(now).toISOString();
+      // Persiste o respawn ANTES do decrement atômico, para o estado recarregado
+      // (`cur`) já refletir o jogador vivo de volta na batalha.
+      await jsonDb.saveWorldBossEvent(event);
+    }
+
     // Cooldown entre ataques do mesmo jogador.
     const cooldownMs = cfg.attackCooldownSec * 1000;
     const sinceLast = now - (me.lastAttackAt || 0);
@@ -98,8 +120,11 @@ export async function POST(req: NextRequest) {
       me.hp = Math.min(me.maxHp, me.hp + (me.maxHp * sinceLast) / (cfg.regenSec * 1000));
     }
     if (me.hp <= 0) {
+      me.deadAt = now;
+      event.participants[auth.char.id] = me;
+      await jsonDb.saveWorldBossEvent(event);
       return NextResponse.json(
-        { error: "Você foi derrotado pelo boss! Aguarde o HP regenerar para atacar de novo." },
+        { error: "Você foi derrotado pelo boss! Você renascerá logo.", deadAt: now, respawnInMs: cfg.respawnSec * 1000 },
         { status: 400 }
       );
     }
@@ -138,8 +163,10 @@ export async function POST(req: NextRequest) {
     me.lastAttackAt = now;
 
     // Revide do boss no jogador.
-    const bossHit = computeBossHit(cfg, Number(auth.char.defense) || 0);
+    const bossHit = computeBossHit(cfg, { defense: Number(auth.char.defense) || 0, maxHp: me.maxHp });
     me.hp = Math.max(0, Math.round(me.hp - bossHit.damage));
+    if (me.hp <= 0) me.deadAt = now;
+    else me.deadAt = null;
 
     cur.totalDamage += damage;
     cur.participants[auth.char.id] = me;
@@ -156,6 +183,7 @@ export async function POST(req: NextRequest) {
       rewards = await distributeRewards(cur, cfg, now);
       cur.log.push(`🏆 O BOSS MUNDIAL FOI DERROTADO! Todos os participantes receberam recompensas!`);
     }
+    if (cur.log.length > 30) cur.log = cur.log.slice(-30);
 
     await jsonDb.saveWorldBossEvent(cur);
 
@@ -171,6 +199,8 @@ export async function POST(req: NextRequest) {
       playerMaxHp: me.maxHp,
       eventStatus: cur.status,
       cooldownMs,
+      playerDead: me.deadAt != null,
+      respawnSec: cfg.respawnSec,
       rewards,
     });
   } catch (e: unknown) {

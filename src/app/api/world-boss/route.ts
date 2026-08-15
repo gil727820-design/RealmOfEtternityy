@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loadCtx } from "./_state";
-import { fmtBig } from "@/game/worldBoss";
+import { fmtBig, nextWorldBossOpening } from "@/game/worldBoss";
 
 /**
  * Estado público do Evento Global (Boss Mundial).
@@ -15,6 +15,11 @@ export async function GET(req: NextRequest) {
     const characterId = new URL(req.url).searchParams.get("characterId") || null;
 
     const bossImage = ""; // resolvido no cliente via towerMonsterImage(kind)
+
+    // Evento CLOSED se o boss já foi derrotado (não respawna na mesma janela).
+    // Nesse caso `nextOpening` aponta para a próxima abertura agendada.
+    const won = event?.status === "won";
+    const nextOpening = won ? nextWorldBossOpening(cfg) : status.nextOpening;
 
     const squadsPublic = event
       ? event.squads.map((s) => ({
@@ -65,12 +70,12 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({
       enabled: cfg.enabled,
-      // Fechado se desativado OU fora do horário — desativar no admin esconde
-      // o evento da sidebar dos jogadores na hora (status.open ignora enabled).
-      open: cfg.enabled && status.open,
+      // Fechado se desativado, fora do horário OU boss derrotado (won).
+      open: cfg.enabled && status.open && !won,
+      won,
       startsAt: status.startsAt,
       endsAt: status.endsAt,
-      nextOpening: status.nextOpening,
+      nextOpening,
       closingInMs: status.closingInMs,
       schedule: status.schedule,
       durationMinutes: cfg.durationMinutes,
@@ -91,6 +96,7 @@ export async function GET(req: NextRequest) {
       maxSquadSize: cfg.maxSquadSize,
       attackCooldownSec: cfg.attackCooldownSec,
       regenSec: cfg.regenSec,
+      respawnSec: cfg.respawnSec,
       bossImage,
       event: publicEvent,
       me,
