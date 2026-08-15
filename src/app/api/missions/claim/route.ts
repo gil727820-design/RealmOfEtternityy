@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { xpForLevel, powerCalc, missionXpReward } from "@/game/constants";
+import { xpForLevel, powerCalc, missionXpReward, MAX_LEVEL } from "@/game/constants";
 import { computeEnergyRegen } from "@/game/energy";
 import { xpMultiplier, energyMultiplier, goldMultiplier } from "@/game/boosts";
 import { requireCharacterAuth } from "@/game/auth";
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     let newSkillPoints = char.skillPoints || 0;
 
     // Level up check
-    while (newXp >= newXpToNext) {
+    while (newLevel < MAX_LEVEL && newXp >= newXpToNext) {
       newXp -= newXpToNext;
       newLevel++;
       newXpToNext = xpForLevel(newLevel);

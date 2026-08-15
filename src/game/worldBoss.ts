@@ -20,6 +20,7 @@ import {
   normalizeScheduleTime,
   type DailyWindowStatus,
 } from "./schedule";
+import { MAX_LEVEL } from "./constants";
 
 export interface WorldBossStats {
   kind: string;
@@ -234,7 +235,7 @@ export function applyXp(
   let statPoints = char.unspentStatPoints || 0;
   let skillPoints = char.skillPoints || 0;
 
-  while (xp >= xpToNext) {
+  while (level < MAX_LEVEL && xp >= xpToNext) {
     xp -= xpToNext;
     level++;
     xpToNext = xpForLevel(level);

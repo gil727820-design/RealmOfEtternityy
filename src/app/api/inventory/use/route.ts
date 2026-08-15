@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { applyBoostPatch, xpMultiplier, energyMultiplier, type Boosts } from "@/game/boosts";
-import { xpForLevel } from "@/game/constants";
+import { xpForLevel, MAX_LEVEL } from "@/game/constants";
 import { requireCharacterAuth } from "@/game/auth";
 
 /**
@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     let leveledUp = 0;
     xp = newXp;
-    while (xp >= xpToNext) {
+    while (level < MAX_LEVEL && xp >= xpToNext) {
       xp -= xpToNext;
       level += 1;
       leveledUp += 1;
