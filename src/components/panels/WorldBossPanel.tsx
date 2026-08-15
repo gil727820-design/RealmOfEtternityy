@@ -4,6 +4,7 @@ import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
 import { towerMonsterImage, type TowerBossKind } from "@/game/constants";
 import { fmtBig } from "@/game/worldBoss";
+import { computeClockSkew, fmtLocalDateTime, fmtServerTimeLocal } from "@/game/eventTime";
 
 function fmtCountdown(ms: number): string {
   const total = Math.max(0, Math.floor(ms / 1000));
@@ -56,6 +57,8 @@ interface WorldBossData {
   me: { characterId: string; name: string; damageDealt: number; hits: number; hp: number; maxHp: number } | null;
   mySquad: SquadInfo | null;
   myInvites: Array<{ squadId: string; leaderName: string; leaderLevel: number }>;
+  serverTime?: string | null;
+  serverOffsetMinutes?: number;
 }
 
 const POLL_MS = 3_000; // atualização ao vivo do boss/squad
@@ -64,6 +67,9 @@ export default function WorldBossPanel() {
   const { character, locale, notify, setCharacter } = useGameStore();
   const [data, setData] = useState<WorldBossData | null>(null);
   const [now, setNow] = useState(Date.now());
+  // Desvio (ms) entre o relógio do jogador e o do servidor: usado para a
+  // contagem regressiva não depender do relógio do aparelho.
+  const [skew, setSkew] = useState(0);
   const [inviteName, setInviteName] = useState("");
   const [cooldownMs, setCooldownMs] = useState(0);
   const [busy, setBusy] = useState(false);
@@ -74,7 +80,9 @@ export default function WorldBossPanel() {
     try {
       const res = await fetch(`/api/world-boss?characterId=${encodeURIComponent(String(character.id))}`);
       if (!res.ok) return;
-      setData(await res.json());
+      const d = await res.json();
+      setData(d);
+      setSkew(computeClockSkew(d.serverTime));
     } catch {
       /* mantém o estado anterior */
     }
@@ -114,15 +122,24 @@ export default function WorldBossPanel() {
   const event = data?.event ?? null;
   const bossAlive = event ? event.status === "open" && event.bossHp > 0 : true;
 
+  // "Agora" corrigido pelo desvio de relógio (não depende do aparelho do jogador).
+  const serverNow = now - skew;
+
   let countdown: number | null = null;
   let countdownLabel = "";
   if (open && data?.endsAt) {
-    countdown = new Date(data.endsAt).getTime() - now;
+    countdown = new Date(data.endsAt).getTime() - serverNow;
     countdownLabel = t("worldBoss.closesIn", locale);
   } else if (!open && data?.nextOpening) {
-    countdown = new Date(data.nextOpening).getTime() - now;
+    countdown = new Date(data.nextOpening).getTime() - serverNow;
     countdownLabel = t("worldBoss.opensIn", locale);
   }
+
+  // Data/hora LOCAL da próxima abertura (ou do fim do evento).
+  const nextAtLabel = open
+    ? { label: t("worldBoss.endsAt", locale), iso: data?.endsAt }
+    : { label: t("worldBoss.nextOpenAt", locale), iso: data?.nextOpening };
+  const scheduleOffset = data?.serverOffsetMinutes ?? 0;
 
   const doAction = async (path: string, body: Record<string, unknown>, successMsg?: string) => {
     if (busy) return;
@@ -220,13 +237,21 @@ export default function WorldBossPanel() {
                 {countdownLabel} {fmtCountdown(countdown)}
               </div>
             )}
+            {nextAtLabel.iso && (
+              <div className="text-sm text-red-300 font-bold">
+                📅 {nextAtLabel.label}: {fmtLocalDateTime(nextAtLabel.iso, locale)}
+              </div>
+            )}
             {Array.isArray(data?.schedule) && data.schedule.length > 0 && (
               <div className="mt-4">
-                <p className="text-xs text-gray-500 mb-2">{t("worldBoss.schedule", locale)}</p>
+                <p className="text-xs text-gray-500 mb-2">
+                  {t("worldBoss.schedule", locale)}{" "}
+                  <span className="text-gray-600">({t("worldBoss.localTime", locale)})</span>
+                </p>
                 <div className="flex flex-wrap justify-center gap-2">
                   {data.schedule.map((hhmm) => (
                     <span key={hhmm} className="px-3 py-1 rounded-full bg-red-500/10 border border-red-500/40 text-red-200 font-mono text-sm">
-                      🕐 {t("worldBoss.opensAt", locale)} {hhmm}
+                      🕐 {t("worldBoss.opensAt", locale)} {fmtServerTimeLocal(hhmm, scheduleOffset, locale)}
                     </span>
                   ))}
                 </div>

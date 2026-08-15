@@ -33,6 +33,10 @@ export async function GET() {
       closingInMs: status.closingInMs,
       schedule: status.schedule,
       durationMinutes: cfg.durationMinutes,
+      // Relógio do servidor: o cliente usa para corrigir a contagem regressiva
+      // e exibir os horários convertidos pro fuso local do jogador.
+      serverTime: new Date().toISOString(),
+      serverOffsetMinutes: -new Date().getTimezoneOffset(),
       items,
     });
   } catch (e) {

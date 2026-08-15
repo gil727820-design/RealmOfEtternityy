@@ -22,6 +22,7 @@ import AchievementsPanel from "./panels/AchievementsPanel";
 import AfkPanel from "./panels/AfkPanel";
 import DungeonPanel from "./panels/DungeonPanel";
 import SkillTreePanel from "./panels/SkillTreePanel";
+import MasteryPanel from "./panels/MasteryPanel";
 import MailboxPanel from "./panels/MailboxPanel";
 import CodePanel from "./panels/CodePanel";
 import DonatePanel from "./panels/DonatePanel";
@@ -187,6 +188,7 @@ export default function GameScreen() {
       case "afk": return <AfkPanel />;
       case "dungeon": return <DungeonPanel />;
       case "skills": return <SkillTreePanel />;
+      case "mastery": return <MasteryPanel />;
       case "mailbox": return <MailboxPanel />;
       case "code": return <CodePanel />;
       case "donate": return <DonatePanel />;

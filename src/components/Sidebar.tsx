@@ -29,10 +29,11 @@ const NAV_SECTIONS: NavSection[] = [
       { tab: "dungeon", icon: "🕳️", image: "/images/sidebar/menu_masmorras.png", labelKey: "nav.dungeon", color: "#8b5cf6" },
       { tab: "guild", icon: "🏰", image: "/images/sidebar/menu_guilda.png", labelKey: "nav.guild", color: "#3b82f6" },
       { tab: "rankings", icon: "🏆", image: "/images/sidebar/menu_rankings.png", labelKey: "nav.rankings", color: "#f59e0b" },
+      { tab: "mastery", icon: "👑", labelKey: "nav.mastery", color: "#ffd700", isNew: true },
     ],
   },
-{
-      titleKey: "nav.sec.economia",
+  {
+    titleKey: "nav.sec.economia",
       items: [
         { tab: "shop", icon: "🛒", image: "/images/sidebar/menu_loja.png", labelKey: "nav.shop", color: "#ec4899" },
         { tab: "ghostshop", icon: "👻", labelKey: "nav.ghostShop", color: "#a855f7", isNew: true },

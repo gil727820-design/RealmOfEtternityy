@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
 import { RARITY_COLORS } from "@/game/constants";
+import { computeClockSkew, fmtLocalDateTime, fmtServerTimeLocal } from "@/game/eventTime";
 
 /** Formata um intervalo em HH:MM:SS para contagens regressivas. */
 function fmtCountdown(ms: number): string {
@@ -23,6 +24,8 @@ interface GhostShopData {
   closingInMs: number | null;
   schedule: string[];
   durationMinutes: number;
+  serverTime?: string | null;
+  serverOffsetMinutes?: number;
   items: Array<{ template: Record<string, unknown> | null; price: number; quantity: number }>;
 }
 
@@ -33,6 +36,9 @@ export default function GhostShopPanel() {
   const { character, locale, notify, setCharacter, setTab } = useGameStore();
   const [shop, setShop] = useState<GhostShopData | null>(null);
   const [now, setNow] = useState(Date.now());
+  // Desvio (ms) entre o relógio do jogador e o do servidor: usado para a
+  // contagem regressiva não depender do relógio do aparelho.
+  const [skew, setSkew] = useState(0);
   const [buying, setBuying] = useState<string | null>(null);
   const transitionTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -42,13 +48,15 @@ export default function GhostShopPanel() {
       if (!res.ok) return;
       const d = await res.json();
       setShop(d);
+      setSkew(computeClockSkew(d.serverTime));
       // Refresh PONTUAL na transição (fecha/abre): a loja não fica mostrando
       // itens depois da hora nem atrasa a abertura — recarrega exatamente
       // quando a janela termina/começa (com 1s de folga).
       if (transitionTimeout.current) clearTimeout(transitionTimeout.current);
       const ts = d.open ? d.endsAt : d.nextOpening;
       if (ts) {
-        const t = new Date(ts).getTime() - Date.now();
+        const target = new Date(ts).getTime();
+        const t = target - (Date.now() - computeClockSkew(d.serverTime));
         if (t > 0) {
           transitionTimeout.current = setTimeout(() => load(), Math.min(t + 1000, 3600_000));
         }
@@ -74,16 +82,25 @@ export default function GhostShopPanel() {
   const towerCoins = Number(character.towerCoins) || 0;
   const open = !!shop?.open;
 
+  // "Agora" corrigido pelo desvio de relógio (não depende do aparelho do jogador).
+  const serverNow = now - skew;
+
   // Fecha em (se aberta) / abre em (se fechada)
   let countdown: number | null = null;
   let countdownLabel = "";
   if (open && shop?.endsAt) {
-    countdown = new Date(shop.endsAt).getTime() - now;
+    countdown = new Date(shop.endsAt).getTime() - serverNow;
     countdownLabel = t("ghostShop.closesIn", locale);
   } else if (!open && shop?.nextOpening) {
-    countdown = new Date(shop.nextOpening).getTime() - now;
+    countdown = new Date(shop.nextOpening).getTime() - serverNow;
     countdownLabel = t("ghostShop.opensIn", locale);
   }
+
+  // Data/hora LOCAL da próxima abertura (ou do fechamento) — legível no fuso do jogador.
+  const nextAtLabel = open
+    ? { label: t("ghostShop.closesAt", locale), iso: shop?.endsAt }
+    : { label: t("ghostShop.nextOpenAt", locale), iso: shop?.nextOpening };
+  const scheduleOffset = shop?.serverOffsetMinutes ?? 0;
 
   const buy = async (templateId: number, price: number, itemName: string) => {
     if (buying) return;
@@ -150,13 +167,16 @@ export default function GhostShopPanel() {
         </div>
       ) : open ? (
         <>
-          {/* Barra de status: aberta + contagem regressiva */}
+          {/* Barra de status: aberta + contagem regressiva + data/hora de fechamento */}
           <div className="flex flex-wrap items-center justify-between gap-3 game-card p-4 rounded-2xl border-purple-500/50">
             <span className="px-3 py-1.5 rounded-full bg-green-500/15 border border-green-500/50 text-green-300 font-bold text-sm animate-pulse-soft">
               🟢 {t("ghostShop.open", locale)}
             </span>
             <span className="text-sm text-purple-200 font-bold tabular-nums">
               {countdownLabel}: {countdown !== null ? fmtCountdown(countdown) : "—"}
+            </span>
+            <span className="text-xs text-purple-300/80">
+              {nextAtLabel.label}: {fmtLocalDateTime(nextAtLabel.iso, locale)}
             </span>
           </div>
 
@@ -226,13 +246,21 @@ export default function GhostShopPanel() {
                 {countdownLabel} {fmtCountdown(countdown)}
               </div>
             )}
+            {nextAtLabel.iso && (
+              <div className="text-sm text-purple-300 font-bold">
+                📅 {nextAtLabel.label}: {fmtLocalDateTime(nextAtLabel.iso, locale)}
+              </div>
+            )}
             {Array.isArray(shop.schedule) && shop.schedule.length > 0 && (
               <div className="mt-4">
-                <p className="text-xs text-gray-500 mb-2">{t("ghostShop.schedule", locale)}</p>
+                <p className="text-xs text-gray-500 mb-2">
+                  {t("ghostShop.schedule", locale)}{" "}
+                  <span className="text-gray-600">({t("ghostShop.localTime", locale)})</span>
+                </p>
                 <div className="flex flex-wrap justify-center gap-2">
                   {shop.schedule.map((hhmm) => (
                     <span key={hhmm} className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/40 text-purple-200 font-mono text-sm">
-                      🕐 {t("ghostShop.opensAt", locale)} {hhmm}
+                      🕐 {t("ghostShop.opensAt", locale)} {fmtServerTimeLocal(hhmm, scheduleOffset, locale)}
                     </span>
                   ))}
                 </div>

@@ -2,7 +2,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 
-export type GameTab = "dashboard" | "character" | "missions" | "inventory" | "map" | "tower" | "pvp" | "guild" | "shop" | "ghostshop" | "worldboss" | "market" | "rankings" | "forge" | "achievements" | "afk" | "dungeon" | "skills" | "mailbox" | "code" | "donate" | "settings" | "guide";
+export type GameTab = "dashboard" | "character" | "missions" | "inventory" | "map" | "tower" | "pvp" | "guild" | "shop" | "ghostshop" | "worldboss" | "market" | "rankings" | "forge" | "achievements" | "afk" | "dungeon" | "skills" | "mastery" | "mailbox" | "code" | "donate" | "settings" | "guide";
 
 interface GameState {
   userId: string | null;
