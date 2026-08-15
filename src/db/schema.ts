@@ -118,3 +118,11 @@ export const marketplace = pgTable("marketplace", {
   kind: text("kind"),
   data: jsonb("data").notNull(),
 });
+
+// Logs administrativos do servidor (ex.: avisos de hitkill na torre / boss
+// mundial). A coluna `kind` permite filtrar por tipo de evento.
+export const adminLogs = pgTable("admin_logs", {
+  id: uuid("id").primaryKey(),
+  kind: text("kind"),
+  data: jsonb("data").notNull(),
+});

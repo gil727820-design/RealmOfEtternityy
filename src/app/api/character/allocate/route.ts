@@ -78,27 +78,42 @@ export async function POST(req: NextRequest) {
     const cls = (char.classType ?? "warrior") as ClassName;
     const classCap = classStatCap(cls, stat as AllocStatKey);
     const baseInvested = Math.max(0, current - bonusVal);
-    if (classCap !== null && baseInvested + config.perPoint * qty > classCap) {
-      const maxPoints = Math.floor((classCap - baseInvested) / config.perPoint);
-      if (maxPoints <= 0) {
+
+    // Capacidade restante de cada limite (quanto ainda pode subir).
+    let classRemaining = Infinity;
+    let globalRemaining = Infinity;
+
+    // Limite POR CLASSE (cap sobre o valor investido, sem equipamento).
+    if (classCap !== null) {
+      classRemaining = classCap - baseInvested;
+      if (classRemaining <= 0) {
         return NextResponse.json(
           { error: `${stat} já está no limite da sua classe (${classCap})!` },
           { status: 400 }
         );
       }
-      appliedQty = Math.min(qty, maxPoints);
+      const maxPoints = Math.floor(classRemaining / config.perPoint);
+      // Se falta menos que 1 ponto inteiro (ex.: limite 35 e +2 por ponto),
+      // permite investir UM ponto parcial para completar o cap exato — em vez
+      // de travar em 34 e nunca chegar aos 35.
+      if (maxPoints <= 0) appliedQty = Math.min(appliedQty, 1);
+      else appliedQty = Math.min(appliedQty, maxPoints);
     }
 
     // Limite máximo global do status (ex.: critical até 90%, dodge até 50%)
-    if (config.cap !== undefined && current + config.perPoint * appliedQty > config.cap) {
-      const maxPoints = Math.floor((config.cap - current) / config.perPoint);
-      if (maxPoints <= 0) {
+    if (config.cap !== undefined) {
+      globalRemaining = config.cap - current;
+      if (globalRemaining <= 0) {
         return NextResponse.json({ error: `${stat} já está no limite (${config.cap})!` }, { status: 400 });
       }
-      appliedQty = Math.min(appliedQty, maxPoints);
+      const maxPoints = Math.floor(globalRemaining / config.perPoint);
+      if (maxPoints <= 0) appliedQty = Math.min(appliedQty, 1);
+      else appliedQty = Math.min(appliedQty, maxPoints);
     }
 
-    const delta = config.perPoint * appliedQty;
+    // Valor aplicado: nunca estoura os limites — o último ponto pode ser
+    // parcial (ex.: 34 → 35 com perPoint 2 gasta 1 ponto e soma só +1).
+    const delta = Math.min(config.perPoint * appliedQty, classRemaining, globalRemaining);
 
     // Aplica o incremento no status correspondente
     const patch: Record<string, unknown> = {

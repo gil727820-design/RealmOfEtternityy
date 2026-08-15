@@ -8,14 +8,28 @@ import {
   MAX_PRICE_GOLD,
   MAX_PRICE_DIAMONDS,
   listingFee,
+  sellUnlock,
 } from "@/game/market";
 import { requireCharacterAuth } from "@/game/auth";
 
-/** Lista os anúncios ativos do mercado (mais recentes primeiro). */
+/** Lista os anúncios ativos do mercado (mais recentes primeiro) + preços médios. */
 export async function GET() {
   try {
     const listings = await jsonDb.listActiveListings();
-    return NextResponse.json({ listings });
+    // Preço médio por item (ouro) para referência de mercado na UI.
+    const raw = await jsonDb.listActiveListings(1000);
+    const avg: Record<string, number> = {};
+    for (const e of raw) {
+      const l = e.listing;
+      const key = String(l.templateId);
+      if (!avg[key]) {
+        const prices = raw
+          .filter((x: any) => String(x.listing.templateId) === key && x.listing.currency === "gold")
+          .map((x: any) => Math.round(Number(x.listing.price) / Math.max(1, Number(x.listing.quantity) || 1)));
+        avg[key] = prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0;
+      }
+    }
+    return NextResponse.json({ listings, avgPrices: avg });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erro interno";
     return NextResponse.json({ error: msg }, { status: 500 });
@@ -55,8 +69,13 @@ export async function POST(req: NextRequest) {
     }
 
     const char = auth.char;
-    if ((Number(char.level) || 0) < MARKET_MIN_LEVEL) {
-      return NextResponse.json({ error: `Nível mínimo para usar o mercado: ${MARKET_MIN_LEVEL}` }, { status: 400 });
+    // Vender (anunciar) exige nível mínimo + andar da torre ("feito" para liberar).
+    const unlock = sellUnlock(char);
+    if (!unlock.unlocked) {
+      return NextResponse.json(
+        { error: unlock.missing || `Nível mínimo para usar o mercado: ${MARKET_MIN_LEVEL}` },
+        { status: 400 }
+      );
     }
 
     // Limites de anúncios
@@ -136,6 +155,19 @@ export async function POST(req: NextRequest) {
       "listing",
       characterId
     );
+
+    // Log de economia para o painel admin (detecção de duplicação/exploit).
+    jsonDb.addAdminLog("economy", {
+      source: "market",
+      event: "listing",
+      characterId,
+      charName: char.name || "Jogador",
+      templateId: entry.item.templateId,
+      quantity,
+      price,
+      currency,
+      fee,
+    });
 
     return NextResponse.json({
       success: true,

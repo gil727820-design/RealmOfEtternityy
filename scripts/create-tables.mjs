@@ -97,6 +97,11 @@ CREATE TABLE IF NOT EXISTS marketplace (
   kind text,
   data jsonb NOT NULL
 );
+CREATE TABLE IF NOT EXISTS admin_logs (
+  id uuid PRIMARY KEY,
+  kind text,
+  data jsonb NOT NULL
+);
 `;
 
 try {

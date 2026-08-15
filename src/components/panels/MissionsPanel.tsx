@@ -13,6 +13,10 @@ export default function MissionsPanel() {
   const [startingMission, setStartingMission] = useState<number | null>(null);
   const [claimingMission, setClaimingMission] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'available' | 'active'>('available');
+  // Missões Diárias + Semanais (reset automático)
+  const [daily, setDaily] = useState<Array<Record<string, unknown>>>([]);
+  const [weekly, setWeekly] = useState<Array<Record<string, unknown>>>([]);
+  const [claimingDaily, setClaimingDaily] = useState<string | null>(null);
   const [, setTick] = useState(0);
   const energyRegenMsRef = useRef(0);
   const energyAtRef = useRef(Date.now());
@@ -36,6 +40,88 @@ export default function MissionsPanel() {
   }, [characterId, setCharacter, notify]);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Carrega as missões diárias/semanais com progresso.
+  const loadDaily = useCallback(async () => {
+    if (!characterId) return;
+    try {
+      const res = await fetch(`/api/missions/daily?characterId=${encodeURIComponent(characterId)}`);
+      const d = await res.json();
+      setDaily(Array.isArray(d.daily) ? d.daily : []);
+      setWeekly(Array.isArray(d.weekly) ? d.weekly : []);
+    } catch { /* silencioso */ }
+  }, [characterId]);
+
+  useEffect(() => { loadDaily(); }, [loadDaily]);
+
+  const claimDailyMission = async (kind: string, list: "daily" | "weekly") => {
+    if (!characterId || claimingDaily) return;
+    setClaimingDaily(`${list}_${kind}`);
+    try {
+      const res = await fetch("/api/missions/daily", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characterId, kind, list }),
+      });
+      const d = await res.json();
+      if (!res.ok) { notify(d.error, "error"); setClaimingDaily(null); return; }
+      notify(d.message || "🎁 Recompensa coletada!", "success");
+      if (d.character) setCharacter(d.character);
+      await loadDaily();
+    } catch { notify(t("general.error", locale), "error"); }
+    setClaimingDaily(null);
+  };
+
+  /** Renderiza uma lista de missões (diárias ou semanais) com progresso + coletar. */
+  const renderMissionList = (list: Array<Record<string, unknown>>, listType: "daily" | "weekly") => {
+    if (list.length === 0) return null;
+    return (
+      <div className="grid md:grid-cols-2 gap-3">
+        {list.map((m) => {
+          const id = String(m.id);
+          const target = Number(m.target) || 1;
+          const progress = Number(m.progress) || 0;
+          const pct = Math.min(100, (progress / target) * 100);
+          const done = !!m.done;
+          const claimed = !!m.claimed;
+          const rw = (m.reward || {}) as Record<string, number>;
+          return (
+            <div key={id} className={`game-card p-3 flex flex-col gap-2 ${done && !claimed ? "border-[#ffd700]/50" : ""}`}>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{String(m.icon || "📋")}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-bold truncate">{t(String(m.nameKey), locale)}</div>
+                  <div className="text-[11px] text-gray-400">{t(String(m.descKey), locale).replace("{n}", String(target))}</div>
+                </div>
+                {claimed ? (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/40 text-green-300 font-bold">✓ {t("ach.claimed", locale)}</span>
+                ) : done ? (
+                  <button
+                    onClick={() => claimDailyMission(id, listType)}
+                    disabled={claimingDaily !== null}
+                    className="text-[10px] px-2.5 py-1 rounded-full bg-gradient-to-r from-[#ffd700] to-[#f59e0b] text-black font-black disabled:opacity-40"
+                  >
+                    {claimingDaily === `${listType}_${id}` ? "…" : "🎁 " + t("mission.claim", locale)}
+                  </button>
+                ) : null}
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1.5 rounded-full bg-gray-800 overflow-hidden">
+                  <div className={`h-full rounded-full ${done ? "bg-[#22c55e]" : "bg-[#ffd700]"}`} style={{ width: `${pct}%` }} />
+                </div>
+                <span className="text-[10px] text-gray-400 tabular-nums">{progress}/{target}</span>
+              </div>
+              <div className="flex gap-2 text-[10px] text-gray-500 flex-wrap">
+                {rw.gold ? <span>💰 {String(rw.gold)}</span> : null}
+                {rw.crystals ? <span>🔮 {String(rw.crystals)}</span> : null}
+                {rw.towerCoins ? <span>🗼 {String(rw.towerCoins)}</span> : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
 
   useEffect(() => {
     if (typeof (character as any)?.energyRegenMs === "number") energyRegenMsRef.current = (character as any).energyRegenMs;
@@ -147,6 +233,32 @@ export default function MissionsPanel() {
             </span>
           </span>
         </div>
+      </div>
+
+      {/* Missões Diárias + Semanais (reset automático) */}
+      <div className="space-y-4">
+        <section>
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="text-lg font-black flex items-center gap-2">
+              <span className="text-xl">🔁</span> {t("daily.title", locale)}
+            </h3>
+            <span className="text-[10px] text-gray-500">{t("daily.subtitle", locale)}</span>
+          </div>
+          {renderMissionList(daily, "daily") ?? (
+            <div className="game-card p-4 text-center text-xs text-gray-500">{t("general.loading", locale)}</div>
+          )}
+        </section>
+        <section>
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="text-lg font-black flex items-center gap-2">
+              <span className="text-xl">🗓️</span> {t("weekly.title", locale)}
+            </h3>
+            <span className="text-[10px] text-gray-500">{t("weekly.subtitle", locale)}</span>
+          </div>
+          {renderMissionList(weekly, "weekly") ?? (
+            <div className="game-card p-4 text-center text-xs text-gray-500">{t("general.loading", locale)}</div>
+          )}
+        </section>
       </div>
 
       {/* Tabs */}

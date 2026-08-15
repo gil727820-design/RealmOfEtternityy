@@ -9,6 +9,7 @@ import {
   MARKET_MIN_LEVEL,
   MAX_LISTINGS_PER_CHAR,
   listingFee,
+  sellUnlock,
 } from "@/game/market";
 import { MAX_TRADE_ADS_PER_CHAR } from "@/game/tradeAds";
 import { fmtNum } from "@/game/format";
@@ -51,6 +52,7 @@ function BrowseTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
   const [preview, setPreview] = useState<PreviewItem | null>(null);
   const [query, setQuery] = useState("");
   const [rarity, setRarity] = useState("");
+  const [avgPrices, setAvgPrices] = useState<Record<string, number>>({});
   const timers = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
@@ -59,6 +61,7 @@ function BrowseTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
       const res = await fetch("/api/market");
       const data = await res.json();
       if (Array.isArray(data.listings)) setListings(data.listings);
+      if (data.avgPrices) setAvgPrices(data.avgPrices as Record<string, number>);
     } catch {
       /* silencioso */
     } finally {
@@ -275,6 +278,11 @@ function BrowseTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
                     <p className={`text-base font-black ${l.currency === "diamonds" ? "text-cyan-300" : "text-yellow-300"}`}>
                       {fmt(l.price)} {l.currency === "diamonds" ? "💎" : "🪙"}
                     </p>
+                    {avgPrices[String(l.templateId)] > 0 && l.currency === "gold" && (
+                      <p className="text-[9px] text-gray-500">
+                        📈 Média: {fmt(avgPrices[String(l.templateId)])} 🪙
+                      </p>
+                    )}
                   </div>
                   {mine ? (
                     <button
@@ -439,8 +447,30 @@ function SellTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
 
   const fee = selected ? listingFee(Math.max(1, Math.floor(Number(price) || 0)), currency) : 0;
 
+  // Desbloqueio do leilão: nível mínimo + andar da torre (mostra o que falta).
+  const sellUnlockInfo = sellUnlock(character);
+
   return (
     <>
+      {/* Gate de desbloqueio do leilão */}
+      {!sellUnlockInfo.unlocked && (
+        <div className="game-card mb-4 flex flex-col gap-2 border-[#ffd700]/40 p-4">
+          <p className="text-sm font-black text-[#ffd700]">🔒 Leilão bloqueado</p>
+          <p className="text-xs text-gray-300">
+            Para <b>vender itens</b> no mercado você precisa provar seu valor:
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <span className={`rounded-full px-3 py-1 text-[11px] font-bold border ${Number(character?.level) >= MARKET_MIN_LEVEL ? "border-green-500/50 bg-green-500/10 text-green-300" : "border-white/10 bg-white/5 text-gray-400"}`}>
+              {Number(character?.level) >= MARKET_MIN_LEVEL ? "✅" : "⭕"} Nível {MARKET_MIN_LEVEL}+ ({Number(character?.level) || 0}/{MARKET_MIN_LEVEL})
+            </span>
+            <span className={`rounded-full px-3 py-1 text-[11px] font-bold border ${Number(character?.towerFloor) >= sellUnlockInfo.minTowerFloor ? "border-green-500/50 bg-green-500/10 text-green-300" : "border-white/10 bg-white/5 text-gray-400"}`}>
+              {Number(character?.towerFloor) >= sellUnlockInfo.minTowerFloor ? "✅" : "⭕"} Andar {sellUnlockInfo.minTowerFloor} da torre ({Number(character?.towerFloor) || 0}/{sellUnlockInfo.minTowerFloor})
+            </span>
+          </div>
+          <p className="text-[10px] text-gray-500">Comprar itens continua liberado para todos a partir do nível {MARKET_MIN_LEVEL}.</p>
+        </div>
+      )}
+
       {/* Meus anúncios ativos (com botão de remover) */}
       {myListings.length > 0 && (
         <div className="game-card mb-4 flex flex-col gap-2 p-3">

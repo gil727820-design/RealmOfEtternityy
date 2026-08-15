@@ -102,6 +102,21 @@ export async function POST(req: NextRequest) {
     });
 
     const fresh = await jsonDb.findCharacterById(characterId);
+
+    // Log de economia (compra realizada) para o painel admin.
+    jsonDb.addAdminLog("economy", {
+      source: "market",
+      event: "buy",
+      characterId,
+      charName: buyer.name || "Jogador",
+      sellerId: listing.sellerId,
+      sellerName: listing.sellerName || "Jogador",
+      templateId: listedItem.templateId,
+      quantity: qty,
+      price,
+      currency,
+    });
+
     return NextResponse.json({
       success: true,
       message: `✅ Comprado por ${price.toLocaleString("pt-BR")} ${currency === "diamonds" ? "💎" : "🪙"}`,

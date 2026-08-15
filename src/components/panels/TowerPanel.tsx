@@ -207,13 +207,24 @@ export default function TowerPanel() {
     setStage("arena");
   };
 
+  // Formata números grandes (XP/recompensas em níveis altos viram 1e+73):
+  // mostra "12,4M" / "850K" em vez de notação científica quebrada.
+  const fmtNum = (n: unknown): string => {
+    const v = Number(n) || 0;
+    if (!Number.isFinite(v)) return String(v);
+    if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(v >= 10_000_000_000 ? 0 : 1)}B`;
+    if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(v >= 10_000_000 ? 0 : 1)}M`;
+    if (v >= 1_000) return `${(v / 1_000).toFixed(v >= 100_000 ? 0 : 1)}K`;
+    return Math.floor(v).toString();
+  };
+
   const goNext = () => {
+    // Re-ataca SEMPRE (vitória após o cooldown automático ou derrota clicando
+    // em "Atacar novamente"). ANTES, após uma DERROTA o botão levava de volta
+    // pra arena em vez de iniciar outra batalha — parecia que a torre
+    // "parava de batalhar" depois da primeira luta.
     cancelAutoNext();
-    if (result?.rewards?.newFloor) {
-      startBattle();
-    } else {
-      stopFighting();
-    }
+    startBattle();
   };
 
   const monsterName = battle ? t(battle.monNameKey, locale) : "";
@@ -307,7 +318,6 @@ export default function TowerPanel() {
       {stage === "battle" && battle && (
         <div className="game-card relative overflow-hidden border-purple-800 bg-gradient-to-b from-gray-900/80 to-black/70 p-4 sm:p-6">
           {flash > 0 && <div key={flash} className="absolute inset-0 pointer-events-none z-20 battle-flash" />}
-
           <div className="flex justify-between items-center mb-4 gap-2 flex-wrap">
             <div>
               <div className="text-xl font-black flex items-center gap-2">
@@ -316,6 +326,11 @@ export default function TowerPanel() {
                 {battle.boss && (
                   <span className="text-[10px] bg-yellow-600/30 text-yellow-300 border border-yellow-500 rounded-full px-2 py-0.5 animate-pulse-soft">
                     {t("tower.bossFloor", locale)}
+                  </span>
+                )}
+                {!!battle.scaled && (
+                  <span className="text-[10px] bg-red-600/30 text-red-300 border border-red-500 rounded-full px-2 py-0.5 animate-pulse-soft">
+                    🔥 {t("tower.scaledBoss", locale)}
                   </span>
                 )}
               </div>
@@ -445,12 +460,17 @@ export default function TowerPanel() {
           </p>
           {result.won && result.rewards && (
             <div className="my-4 flex justify-center flex-wrap gap-3">
-              <span className="px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/40 text-yellow-300 font-bold">🪙 {result.rewards.gold}</span>
-              <span className="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/40 text-green-300 font-bold">⚡ {result.rewards.xp} XP</span>
-              <span className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/40 text-purple-300 font-bold">🪙 {result.rewards.coins} {t("tower.coins", locale)}</span>
+              <span className="px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/40 text-yellow-300 font-bold">🪙 {fmtNum(result.rewards.gold)}</span>
+              <span className="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/40 text-green-300 font-bold">⚡ {fmtNum(result.rewards.xp)} XP</span>
+              <span className="px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/40 text-purple-300 font-bold">🪙 {fmtNum(result.rewards.coins)} {t("tower.coins", locale)}</span>
               {result.rewards.levelUp && (
                 <span className="px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/40 text-blue-300 font-bold animate-glow-pulse">
                   ⬆️ Lv {result.rewards.newLevel}!
+                </span>
+              )}
+              {result.rewards.bossEnchant && (
+                <span className="px-3 py-1 rounded-full bg-red-600/20 border border-red-500/60 text-red-300 font-bold animate-glow-pulse">
+                  {result.rewards.bossEnchant.icon} Encanto de Chefe: {result.rewards.bossEnchant.stat === "attack" ? "⚔️ Ataque" : result.rewards.bossEnchant.stat === "defense" ? "🛡️ Defesa" : result.rewards.bossEnchant.stat === "maxHp" ? "❤️ Vida" : result.rewards.bossEnchant.stat === "speed" ? "👟 Velocidade" : "💥 Crítico"} +{result.rewards.bossEnchant.amount} na sua arma!
                 </span>
               )}
             </div>

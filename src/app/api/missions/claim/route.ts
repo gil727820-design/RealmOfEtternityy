@@ -4,6 +4,7 @@ import { xpForLevel, powerCalc, missionXpReward, resolveMaxLevel } from "@/game/
 import { computeEnergyRegen } from "@/game/energy";
 import { xpMultiplier, energyMultiplier, goldMultiplier } from "@/game/boosts";
 import { requireCharacterAuth } from "@/game/auth";
+import { trackProgress } from "@/game/dailyMissions";
 
 export async function POST(req: NextRequest) {
   try {
@@ -63,6 +64,8 @@ export async function POST(req: NextRequest) {
       missionBatch: [], // força o embaralhamento de um novo grupo de missões
       energy: regen.energy,
       lastEnergyAt: regen.lastEnergyAt,
+      // Missões diárias/semanais: progresso de missões concluídas.
+      ...trackProgress(char, "missions", 1, now),
       lastActivity: now.toISOString(),
     });
 

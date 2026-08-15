@@ -7,6 +7,7 @@ import { RARITY_COLORS, classImage, powerCalc, type ClassName } from "@/game/con
 import { skinById, SKIN_CATALOG, type SkinTemplate } from "@/game/skins";
 import { skinBuffDesc } from "@/game/skinBuffs";
 import { boostSummary, formatBoostMs } from "@/game/boosts";
+import { enchantById, enchantName, isBossEnchant } from "@/game/forge";
 import ItemIcon from "@/components/ui/ItemIcon";
 
 // ---------------------------------------------------------------- utilidades
@@ -640,6 +641,26 @@ const selected = items.find((it) => it.inv.id === selectedId) ?? null;
     }
   };
 
+  // Equipa AUTOMATICAMENTE o melhor item de cada slot (1 clique).
+  const handleAutoEquip = async () => {
+    if (busy) return;
+    setBusy("auto_equip");
+    try {
+      const res: any = await run("/api/inventory/auto-equip", {});
+      if (res.failed) {
+        notify(res.error ?? t("general.error", locale), "error");
+        return;
+      }
+      notify(res.message || "⚔️ Equipado!", "success");
+      triggerEquipFx(undefined);
+    } catch {
+      notify(t("general.error", locale), "error");
+    } finally {
+      await loadAll();
+      setBusy(null);
+    }
+  };
+
   const handleUse = async (it: any) => {
     const id = it.inv.id;
     setBusy(id);
@@ -771,6 +792,17 @@ const categories = [
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          {/* Equipar Melhor: equipa o melhor item de cada slot automaticamente */}
+          {category !== "skins" && category !== "visual" && (
+            <button
+              onClick={handleAutoEquip}
+              disabled={busy !== null}
+              className="rounded-xl border border-[#e94560]/50 bg-[#e94560]/10 px-3 py-2 text-xs font-black text-[#e94560] transition-all hover:bg-[#e94560]/20 disabled:opacity-40"
+              title={t("inv.autoEquip", locale)}
+            >
+              {busy === "auto_equip" ? "…" : "⚔️ " + t("inv.autoEquip", locale)}
+            </button>
+          )}
           <WalletPill img="/images/icons/icone_moeda.png" alt="Gold" value={fmt(char?.gold)} />
           <WalletPill img="/images/icons/icone_diamante.png" alt="Diamonds" value={fmt(char?.diamonds)} tint="text-cyan-300" />
         </div>
@@ -845,6 +877,13 @@ const categories = [
                       <ItemIcon template={entry.template} emojiClass="text-2xl" alt="" />
                     ) : (
                       <span className="text-xl opacity-40">{SLOT_ICON[slot]}</span>
+                    )}
+                    {/* ✦ item ENCANTADO — brilho roxo no slot equipado */}
+                    {entry?.inv?.enchant && (
+                      <span
+                        className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.95)]"
+                        title={`✦ ${t("inv.enchanted", locale)}`}
+                      />
                     )}
                     <span className="text-[8px] uppercase tracking-wider text-gray-500">{t(`slot.${slot}`, locale)}</span>
                   </button>
@@ -981,6 +1020,8 @@ const categories = [
                 const id = it.inv.id;
                 const active = selectedId === id;
                 const rarityHex = RARITY_COLORS[tpl.rarity];
+                const ench = it.inv?.enchant ? enchantById(String(it.inv.enchant)) : null;
+                const bossEnch = !!it.inv?.enchant && isBossEnchant(String(it.inv.enchant));
                 const sub =
                   tpl.type === "consumable" ? t("inv.consumable", locale) : t(`slot.${tpl.slot}`, locale);
                 return (
@@ -991,13 +1032,24 @@ const categories = [
                       active ? "border-[#e94560] ring-2 ring-[#e94560]/40" : ""
                     }`}
                     style={
-                      !active && rarityHex
-                        ? { borderColor: `${rarityHex}66`, boxShadow: `0 0 12px ${rarityHex}22 inset` }
-                        : undefined
+                      !active && ench
+                        ? { borderColor: "rgba(168,85,247,0.75)", boxShadow: "0 0 16px rgba(168,85,247,0.4), 0 0 12px rgba(168,85,247,0.22) inset" }
+                        : !active && rarityHex
+                          ? { borderColor: `${rarityHex}66`, boxShadow: `0 0 12px ${rarityHex}22 inset` }
+                          : undefined
                     }
                   >
                     <div className="relative grid w-full place-items-center">
                       <ItemIcon template={tpl} className="h-12 w-12 object-contain" emojiClass="text-3xl" alt="" />
+                      {/* ✦ item ENCANTADO — selo roxo com brilho (🔥 vermelho se for de CHEFE) */}
+                      {ench && (
+                        <span
+                          className={`absolute top-0 right-0 rounded-full px-1.5 text-[9px] font-black text-white shadow-[0_0_10px_${bossEnch ? "rgba(239,68,68,0.9)" : "rgba(168,85,247,0.9)"}] ${bossEnch ? "bg-red-600" : "bg-purple-600"}`}
+                          title={`${bossEnch ? "🔥" : "✦"} ${enchantName(ench, locale)}`}
+                        >
+                          {bossEnch ? "🔥" : "✦"}
+                        </span>
+                      )}
                       {it.inv?.equipped && (
                         <span className="absolute top-0 left-1/2 -translate-x-1/2 rounded-full bg-[#e94560] px-1.5 text-[9px] font-black text-white">
                           ✓
@@ -1054,6 +1106,16 @@ const categories = [
                         ? t("inv.consumable", locale)
                         : `${SLOT_ICON[selected.template.slot] ?? "❔"} ${t(`slot.${selected.template.slot}`, locale)}`}
                     </span>
+                    {/* ✦ item ENCANTADO — destaque no detalhe (🔥 se for de CHEFE) */}
+                    {selected.inv?.enchant && (() => {
+                      const enc = enchantById(String(selected.inv.enchant));
+                      const boss = isBossEnchant(String(selected.inv.enchant));
+                      return enc ? (
+                        <span className={`rounded-full border px-2 py-0.5 font-bold shadow-[0_0_10px_${boss ? "rgba(239,68,68,0.35)" : "rgba(168,85,247,0.35)"}] ${boss ? "border-red-500/50 bg-red-600/20 text-red-300" : "border-purple-500/50 bg-purple-600/20 text-purple-300"}`}>
+                          {boss ? "🔥" : "✦"} {t("inv.enchanted", locale)}: {enc.icon} {enchantName(enc, locale)}
+                        </span>
+                      ) : null;
+                    })()}
                     {selected.inv?.equipped && (
                       <span className="rounded-full bg-[#e94560]/20 px-2 py-0.5 font-bold text-[#e94560]">
                         {t("inv.equipped", locale)}

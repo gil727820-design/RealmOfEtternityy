@@ -16,7 +16,10 @@ import { xpMultiplier, goldMultiplier } from "@/game/boosts";
 import { classSkillEffect, type ClassName } from "@/game/constants";
 import { skillTreeDebuff, DEBUFF_LOG } from "@/game/skillTree";
 import { masteryBuff } from "@/game/mastery";
+import { rollBossEnchant, isBossEnchant, equipmentBonus } from "@/game/forge";
 import { requireCharacterAuth } from "@/game/auth";
+import { trackProgress } from "@/game/dailyMissions";
+import { checkRateLimit } from "@/game/rateLimit";
 
 const SKILL_COST = 15;
 const MAX_ROUNDS = 40;
@@ -77,6 +80,37 @@ function floorMonster(char: any, floor: number, kind: TowerMonsterKind | TowerBo
     coinsReward: boss ? 30 + Math.floor(f / 10) : 4 + Math.floor(f / 12),
     boss,
   };
+}
+
+/**
+ * Anti-one-shot de CHEFE da torre: se o dano máximo do jogador num único
+ * golpe já mataria o chefe (hitkill), o chefe é escalado na hora para virar
+ * uma batalha de verdade — HP alto o bastante pra sobreviver vários golpes e
+ * ataque forte o bastante pra derrubar o jogador (chance real dos dois lados).
+ * Também loga no console do servidor para o admin acompanhar quando isso rola.
+ */
+function antiOneShot(char: any, mon: any, ca: any, atkFactor: number, floor: number) {
+  if (!mon.boss) return mon;
+  const playerMaxHit = Math.round(ca.attack * Math.max(1, atkFactor) * 1.7);
+  if (playerMaxHit < mon.maxHp) return mon;
+  const hp = Math.max(mon.maxHp, Math.round(playerMaxHit * 8));
+  const atk = Math.max(mon.attack, Math.round(ca.maxHp * 0.22));
+  console.log(
+    `[hitkill] ${char.name || "?"} causaria ~${playerMaxHit} de dano e o chefe tem ${mon.maxHp} HP — chefe escalado para batalha justa.`
+  );
+  // Registra no painel admin (aba Logs) para o admin acompanhar os hitkills.
+  jsonDb.addAdminLog("hitkill", {
+    source: "tower",
+    characterId: char.id,
+    characterName: char.name || "?",
+    floor: Math.max(1, Number(floor) || 1),
+    playerMaxHit,
+    bossHp: mon.maxHp,
+    scaledHp: hp,
+    scaledAttack: atk,
+    message: `${char.name || "?"} causaria ~${playerMaxHit} de dano e o chefe tem ${mon.maxHp} HP — chefe escalado para batalha justa.`,
+  });
+  return { ...mon, maxHp: hp, attack: atk, scaled: true };
 }
 
 // Golpe: retorna dano, crítico ou esquiva
@@ -141,7 +175,7 @@ export async function POST(req: NextRequest) {
     if (action === "start") {
       const kind = towerMonsterForFloor(floor);
       const seed = Math.floor(Math.random() * 1e9);
-      const mon = floorMonster(char, floor, kind, seed);
+      const mon = antiOneShot(char, floorMonster(char, floor, kind, seed), ca, atkFactor, floor);
       return NextResponse.json({
         ok: true,
         action,
@@ -153,6 +187,7 @@ export async function POST(req: NextRequest) {
           monNameKey: mon.nameKey,
           monImage: mon.image,
           boss: mon.boss,
+          scaled: mon.scaled,
           monMaxHp: mon.maxHp,
           monHp: mon.maxHp,
           monAttack: mon.attack,
@@ -180,7 +215,7 @@ export async function POST(req: NextRequest) {
 
     const seed = Number(state.seed) || 1;
     const kind = isTowerMonsterKind(state.kind) ? (state.kind as TowerMonsterKind | TowerBossKind) : "slime";
-    const mon = floorMonster(char, state.floor || floor, kind, seed);
+    const mon = antiOneShot(char, floorMonster(char, state.floor || floor, kind, seed), ca, atkFactor, state.floor || floor);
 
     // Estado atual, garantindo limites (não confiamos cegamente no cliente)
     let charHp = Math.min(ca.maxHp, Math.max(1, Number(state.charHp) || ca.maxHp));
@@ -363,6 +398,24 @@ export async function POST(req: NextRequest) {
       lost = !won;
     }
 
+    // ---- Anti-cheat: limite de vitórias por janela (loga no painel admin) ----
+    if (won) {
+      const ok = checkRateLimit(`tower_${char.id}`, Date.now(), (msg) => {
+        jsonDb.addAdminLog("anticheat", {
+          source: "tower",
+          characterId: char.id,
+          characterName: char.name || "?",
+          message: msg,
+        });
+      });
+      if (!ok) {
+        return NextResponse.json(
+          { error: "Ação muito rápida — aguarde alguns segundos.", code: "rate_limited" },
+          { status: 429 }
+        );
+      }
+    }
+
     // ---- Persistir resultado (apenas no fim) ----
     let rewards: any;
     if (won || lost) {
@@ -392,6 +445,51 @@ export async function POST(req: NextRequest) {
           critical: ca.critical,
           level: newLevel,
         });
+        // ---- Encanto EXCLUSIVO DE CHEFE: vencer um chefe (andar múltiplo de
+        // 10) encanta GRATUITAMENTE a arma equipada com um encanto forte que
+        // só existe aqui (não sai na forja). Se a arma já tem encanto de chefe,
+        // não substitui (acumula apenas o primeiro). ----
+        let bossEnchant = null;
+        if (mon.boss && won) {
+          const inv = await jsonDb.getInventoryForCharacter(char.id);
+          const weapon = inv.find(
+            (e: any) => e.item?.equipped && e.template?.slot === "weapon" && e.template?.type !== "consumable"
+          );
+          if (weapon) {
+            const cur = String(weapon.item.enchant || "");
+            if (!isBossEnchant(cur)) {
+              const ench = rollBossEnchant();
+              await jsonDb.updateInventoryItem(String(weapon.item.id), { enchant: ench.id });
+              bossEnchant = ench;
+              // Se a arma está equipada, recalcula os atributos (bônus novo).
+              const freshInv = await jsonDb.getInventoryForCharacter(char.id);
+              let total = { attack: 0, defense: 0, maxHp: 0, speed: 0, critical: 0 };
+              for (const e of freshInv) {
+                if (!e.item?.equipped || e.template?.type === "consumable") continue;
+                const b = equipmentBonus(e.template, e.item);
+                total.attack += b.attack;
+                total.defense += b.defense;
+                total.maxHp += b.maxHp;
+                total.speed += b.speed;
+                total.critical += b.critical;
+              }
+              const base = (char.baseStats && typeof char.baseStats === "object" ? char.baseStats : {}) as Record<string, number>;
+              const patchStats = {
+                attack: Math.max(0, (Number(base.attack) || 0) + total.attack),
+                defense: Math.max(0, (Number(base.defense) || 0) + total.defense),
+                maxHp: Math.max(1, (Number(base.maxHp) || 0) + total.maxHp),
+                speed: Math.max(0, (Number(base.speed) || 0) + total.speed),
+                critical: Math.max(0, (Number(base.critical) || 0) + total.critical),
+              };
+              await jsonDb.updateCharacter(char.id, {
+                ...patchStats,
+                hp: Math.min(Number(char.hp) || patchStats.maxHp, patchStats.maxHp),
+                power: powerCalc({ ...patchStats, hp: patchStats.maxHp, level: newLevel }),
+              });
+            }
+          }
+        }
+
         await jsonDb.updateCharacter(char.id, {
           xp: newXp,
           level: newLevel,
@@ -402,6 +500,8 @@ export async function POST(req: NextRequest) {
           unspentStatPoints: newStatPoints,
           skillPoints: newSkillPoints,
           power,
+          // Missões diárias/semanais: progresso de torre.
+          ...trackProgress(char, "tower", 1),
           lastActivity: new Date().toISOString(),
         });
         rewards = {
@@ -411,6 +511,7 @@ export async function POST(req: NextRequest) {
           levelUp: newLevel > (char.level || 0),
           newLevel,
           newFloor: newTowerFloor,
+          bossEnchant: bossEnchant ? { id: bossEnchant.id, icon: bossEnchant.icon, stat: bossEnchant.stat, amount: bossEnchant.amount } : null,
         };
       } else {
         // Derrota → NÃO reseta: o jogador permanece no andar em que perdeu e
@@ -449,6 +550,7 @@ export async function POST(req: NextRequest) {
         monImage: mon.image,
         monNameKey: mon.nameKey,
         boss: mon.boss,
+        scaled: mon.scaled,
         round,
       },
     });

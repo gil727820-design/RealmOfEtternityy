@@ -5,6 +5,7 @@ import { computeEnergyRegen } from "@/game/energy";
 import { xpMultiplier, energyMultiplier, goldMultiplier } from "@/game/boosts";
 import { computeAfkRewards } from "@/game/afk";
 import { requireCharacterAuth } from "@/game/auth";
+import { trackProgress } from "@/game/dailyMissions";
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,6 +71,8 @@ export async function POST(req: NextRequest) {
       unspentStatPoints: newStatPoints,
       skillPoints: newSkillPoints,
       afkSince: null, // sessão encerrada — o jogador ativa de novo quando quiser
+      // Missões diárias/semanais: progresso de coleta AFK.
+      ...trackProgress(char, "afk", 1, now),
       lastActivity: now.toISOString(),
     });
 

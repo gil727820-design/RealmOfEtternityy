@@ -5,7 +5,7 @@ import {
   users, characters, itemTemplates, inventoryItems, missionTemplates,
   activeMissions, afkRewards, battles, guilds, guildInvites, guildChats,
   mailbox, excludedUsers, regionAudio, serverSettings, codes,
-  marketplace,
+  marketplace, adminLogs,
 } from "./schema";
 import { skinById } from "@/game/skins";
 
@@ -851,6 +851,50 @@ export async function isInfiniteEnergyEnabled(): Promise<boolean> {
   return !!settings.infiniteEnergy;
 }
 
+/* ─── Logs administrativos (hitkill, eventos do servidor...) ─── */
+
+/** Grava um log administrativo (ex.: aviso de hitkill) na tabela admin_logs. */
+export async function addAdminLog(kind: string, entry: Record<string, unknown>) {
+  const full = {
+    id: uuidv4(),
+    kind: String(kind || "log"),
+    createdAt: new Date().toISOString(),
+    ...entry,
+  };
+  try {
+    await insertRec(adminLogs, full, [["kind", "kind"]]);
+  } catch (e) {
+    // Log nunca deve derrubar a ação do jogador — se falhar, apenas avisa.
+    console.error("[adminLog] falha ao gravar log:", e);
+  }
+  return full;
+}
+
+/** Lista logs administrativos, do mais recente para o mais antigo. */
+export async function listAdminLogs(kind?: string, limit = 100) {
+  const all = await rowsOf(adminLogs);
+  const filtered = kind
+    ? all.filter((l: any) => String(l.kind) === String(kind))
+    : all;
+  return filtered
+    .sort((a: any, b: any) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
+    .slice(0, Math.max(1, Math.min(1000, Number(limit) || 100)));
+}
+
+/** Apaga logs administrativos (todos ou de um tipo específico). */
+export async function clearAdminLogs(kind?: string) {
+  const all = await rowsOf(adminLogs);
+  const target = kind
+    ? all.filter((l: any) => String(l.kind) === String(kind))
+    : all;
+  for (const rec of target) {
+    try {
+      await deleteRec(adminLogs, rec.id);
+    } catch { /* ignora */ }
+  }
+  return target.length;
+}
+
 /* ─── Códigos de resgate ─── */
 
 export async function listCodes() {
@@ -1224,6 +1268,10 @@ export default {
   // admin: anúncio global / manutenção
   getServerSettings,
   updateServerSettings,
+  // admin: logs do servidor (hitkill etc.)
+  addAdminLog,
+  listAdminLogs,
+  clearAdminLogs,
   // códigos de resgate
   listCodes,
   findCodeByCodeValue,

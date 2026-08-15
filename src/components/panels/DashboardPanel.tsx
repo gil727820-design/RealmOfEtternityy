@@ -59,6 +59,16 @@ export default function DashboardPanel() {
       return sid ? skinById(String(sid))?.image : null;
     })() || classImage(cls, c.sex as string);
   const num = (v: unknown, fallback = 0) => typeof v === "number" ? v : fallback;
+  // Formata números grandes (XP em níveis altos vira 4.58e+104 — mostra
+  // "45,8B" em vez de notação científica quebrada).
+  const fmtNum = (v: unknown): string => {
+    const n = Number(v) || 0;
+    if (!Number.isFinite(n)) return String(v);
+    if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(n >= 10_000_000_000 ? 0 : 1)}B`;
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n >= 10_000_000 ? 0 : 1)}M`;
+    if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 100_000 ? 0 : 1)}K`;
+    return Math.floor(n).toString();
+  };
   const energyFormat = () => {
     const ms = energyRegenMsRef.current;
     const remainingMs = Math.max(0, ms - (Date.now() - energyAtRef.current));
@@ -121,7 +131,10 @@ export default function DashboardPanel() {
         return;
       }
       if (data.character) setCharacter(data.character);
-      notify(`+${String(row.perPoint * amount)} ${t(row.key, locale)}!`, "success");
+      // O servidor pode aplicar um ponto parcial perto do limite (ex.: chegar
+      // exatamente no cap quando +2 por ponto deixaria em 34/35) — mostra o
+      // valor REAL aplicado em vez do valor cheio do clique.
+      notify(`+${String(data.added ?? row.perPoint * amount)} ${t(row.key, locale)}!`, "success");
     } catch {
       notify("Erro ao distribuir status", "error");
     } finally {
@@ -284,7 +297,7 @@ export default function DashboardPanel() {
             <div>
               <div className="flex justify-between text-xs mb-1.5">
                 <span className="flex items-center gap-1 text-gray-300">✨ XP</span>
-                <span className="text-gray-400">{String(c.xp)}/{String(c.xpToNext)}</span>
+                <span className="text-gray-400">{fmtNum(c.xp)}/{fmtNum(c.xpToNext)}</span>
               </div>
               <div className="bar-container h-2.5">
                 <div className="xp-bar h-2.5" style={{ width: `${xpPct}%` }} />
@@ -330,6 +343,31 @@ export default function DashboardPanel() {
               <span className="text-xl">🌟</span>
               <span className="text-[#ffd700] font-bold">{t("stat.prestige", locale)}: {String(c.prestige)}</span>
             </div>
+          )}
+
+          {/* Prestígio / Renascimento */}
+          {(c.level as number) >= 100 && (
+            <button
+              onClick={() => {
+                if (!window.confirm(t("prestige.confirm", locale).replace("{n}", String(c.prestige || 0)).replace("{n2}", String((Number(c.prestige) || 0) + 1)))) return;
+                fetch("/api/character/prestige", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ characterId: c.id }),
+                })
+                  .then((r) => r.json())
+                  .then((d) => {
+                    if (!d.success) { notify(d.error || t("general.error", locale), "error"); return; }
+                    notify(d.message || "🌟 Renasceu!", "success");
+                    if (d.character) setCharacter(d.character);
+                  })
+                  .catch(() => notify(t("general.error", locale), "error"));
+              }}
+              className="mb-4 w-full rounded-xl border border-[#ffd700]/50 bg-gradient-to-r from-[#ffd700]/15 to-[#f59e0b]/10 px-4 py-2.5 text-sm font-black text-[#ffd700] hover:bg-[#ffd700]/20 transition-all"
+              title={t("prestige.desc", locale)}
+            >
+              🌟 {t("prestige.btn", locale)}
+            </button>
           )}
           
           <div className="grid grid-cols-2 gap-2">
@@ -433,7 +471,12 @@ export default function DashboardPanel() {
                 const classCap = classStatCap(cls, row.stat as AllocStatKey);
                 const cap = classCap ?? (row as any).cap ?? undefined;
                 const invested = investedBase(row);
-                const atCap = cap !== undefined && invested + row.perPoint * allocQty > cap;
+                // No cap: desabilita. ANTES comparava "invested + clique > cap",
+                // o que travava em 34 quando o cap era 35 e +2 por ponto — o
+                // botão ficava desabilitado mesmo faltando 1 para o limite. Agora
+                // só desabilita quando já chegou (o servidor aplica o ponto
+                // parcial necessário para completar o cap exato).
+                const atCap = cap !== undefined && invested >= cap;
                 return (
                   <div
                     key={row.stat}

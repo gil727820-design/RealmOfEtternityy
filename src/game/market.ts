@@ -47,3 +47,44 @@ export function listingFee(price: number, currency: "gold" | "diamonds"): number
   if (currency === "diamonds") return LISTING_FEE_DIAMONDS;
   return Math.min(LISTING_FEE_GOLD_MAX, Math.max(LISTING_FEE_GOLD_MIN, Math.floor(price * LISTING_FEE_GOLD_PCT)));
 }
+
+/**
+ * Requisitos para VENDER no mercado (anunciar itens).
+ * Além do nível mínimo, exige um "feito" do jogador — subir na torre — para
+ * liberar o leilão. Comprar continua valendo apenas o nível mínimo.
+ */
+export function sellUnlock(char: any) {
+  const level = Number(char?.level) || 0;
+  const towerFloor = Number(char?.towerFloor) || 0;
+  const minTowerFloor = 10;
+  const unlocked = level >= MARKET_MIN_LEVEL && towerFloor >= minTowerFloor;
+  return {
+    unlocked,
+    minLevel: MARKET_MIN_LEVEL,
+    minTowerFloor,
+    level,
+    towerFloor,
+    missing:
+      level < MARKET_MIN_LEVEL
+        ? `Nível mínimo: ${MARKET_MIN_LEVEL}`
+        : towerFloor < minTowerFloor
+          ? `Suba até o andar ${minTowerFloor} da torre para liberar o leilão`
+          : null,
+  };
+}
+
+/** Preço médio por unidade de um template (usado pela UI para referência). */
+export function avgPrice(listings: any[], templateId: number, currency: "gold" | "diamonds") {
+  const matches = listings.filter(
+    (l: any) =>
+      Number(l.templateId) === Number(templateId) &&
+      l.currency === currency &&
+      l.status === "active" &&
+      Number(l.price) > 0
+  );
+  if (matches.length === 0) return null;
+  const perUnit = matches.map((l: any) =>
+    Math.round(Number(l.price) / Math.max(1, Number(l.quantity) || 1))
+  );
+  return Math.round(perUnit.reduce((a, b) => a + b, 0) / perUnit.length);
+}

@@ -48,6 +48,7 @@ const NAV_SECTIONS: NavSection[] = [
       { tab: "mailbox", icon: "📬", image: "/images/sidebar/menu_correio.png", labelKey: "nav.mailbox", color: "#facc15" },
       { tab: "code", icon: "🎟️", image: "/images/sidebar/menu_codigo.png", labelKey: "nav.code", color: "#a855f7" },
       { tab: "donate", icon: "💖", image: "/images/sidebar/menu_doar.png", labelKey: "nav.donate", color: "#ff4d6d" },
+      { tab: "guide", icon: "📖", labelKey: "nav.guide", color: "#4ecdc4" },
       { tab: "settings", icon: "⚙️", image: "/images/sidebar/menu_configuracoes.png", labelKey: "nav.settings", color: "#6b7280" },
     ],
   },

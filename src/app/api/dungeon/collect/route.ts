@@ -11,13 +11,16 @@ import {
   dungeonMaxRarityIdx,
 } from "@/game/dungeons";
 import { requireCharacterAuth } from "@/game/auth";
+import { trackProgress } from "@/game/dailyMissions";
 
-/** Rola `rolls` itens compatíveis com o nível e a profundidade da expedição. */
+/** Rola `rolls` itens compatíveis com o nível e a profundidade da expedição.
+ * Se o chefe foi derrotado (`boss`), garante +1 drop ÉPICO extra. */
 async function rollDungeonDrops(
   characterId: string,
   clears: number,
   rolls: number,
-  level: number
+  level: number,
+  boss: boolean = false
 ): Promise<any[]> {
   const allItems = await jsonDb.getAllItemTemplates();
   const maxIdx = dungeonMaxRarityIdx(clears);
@@ -46,6 +49,21 @@ async function rollDungeonDrops(
     if (!pick) continue;
     await jsonDb.grantItem(characterId, Number(pick.id), 1);
     rolled.push(pick);
+  }
+
+  // Chefe da masmorra: drop ÉPICO garantido (premia derrotar o chefe do piso).
+  // O pool normal para em raro, então o épico é sorteado direto dos templates.
+  if (boss) {
+    const epicPool = allItems.filter((it: any) => {
+      if (it.type === "consumable" || it.stackable === true) return false;
+      if (String(it.rarity) !== "epic") return false;
+      return (Number(it.minLevel) || 1) <= lvl + 5;
+    });
+    if (epicPool.length > 0) {
+      const pick = epicPool[Math.floor(Math.random() * epicPool.length)];
+      await jsonDb.grantItem(characterId, Number(pick.id), 1);
+      rolled.push(pick);
+    }
   }
   return rolled;
 }
@@ -102,7 +120,8 @@ export async function POST(req: NextRequest) {
     const newCrystals = (char.crystals || 0) + rw.crystals;
 
     // ---- Drops de items (peso de raridade sobe com a profundidade) ----
-    const rolled: any[] = rw.clears > 0 ? await rollDungeonDrops(characterId, rw.clears, rw.rolls, char.level) : [];
+    const rolled: any[] =
+      rw.clears > 0 ? await rollDungeonDrops(characterId, rw.clears, rw.rolls, char.level, rw.boss) : [];
 
     // ---- Recarga passiva de energia durante a expedição ----
     const regen = computeEnergyRegen(char, now, energyMultiplier(char));
@@ -138,6 +157,8 @@ export async function POST(req: NextRequest) {
       skillPoints: newSkillPoints,
       dungeonActive: null,
       dungeonStats: stats,
+      // Missões diárias/semanais: progresso de masmorra concluída.
+      ...trackProgress(char, "dungeon", 1, now),
       lastActivity: now.toISOString(),
     });
 

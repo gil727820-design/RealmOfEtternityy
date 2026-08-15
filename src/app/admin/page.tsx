@@ -31,7 +31,7 @@ function isoToLocalInput(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-type Tab = "dash" | "users" | "characters" | "guilds" | "send" | "excluded" | "music" | "server" | "codes" | "donate" | "pix" | "ghost" | "worldboss" | "test";
+type Tab = "dash" | "users" | "characters" | "guilds" | "send" | "excluded" | "music" | "server" | "codes" | "logs" | "donate" | "pix" | "ghost" | "worldboss" | "test";
 type SkinChar = { id: string; name: string; level: number; classType: string; skins: string[] };
 
 /** Recursos que o ADM pode presentear pelo correio. */
@@ -44,6 +44,28 @@ const RESOURCE_META: Record<string, { icon: string; label: string }> = {
   towerCoins: { icon: "🗼", label: "Moedas da Torre" },
   energy: { icon: "⚡", label: "Energia" },
 };
+
+/** Status que o ADM pode dar/tirar do personagem (ajuste rápido). */
+const STAT_ADJUST_OPTIONS = [
+  { id: "attack", label: "⚔️ Ataque" },
+  { id: "defense", label: "🛡️ Defesa" },
+  { id: "speed", label: "👟 Velocidade" },
+  { id: "critical", label: "💥 Crítico" },
+  { id: "maxHp", label: "❤️ Vida máx" },
+  { id: "mana", label: "🔮 Mana máx" },
+  { id: "precision", label: "🎯 Precisão" },
+  { id: "dodge", label: "💨 Esquiva" },
+  { id: "resistance", label: "🛡️ Resistência" },
+  { id: "energy", label: "⚡ Energia" },
+  { id: "gold", label: "💰 Ouro" },
+  { id: "diamonds", label: "💎 Diamantes" },
+  { id: "crystals", label: "🔮 Cristais" },
+  { id: "towerCoins", label: "🗼 Moedas da torre" },
+  { id: "pvpCoins", label: "⚔️ Moedas PvP" },
+  { id: "guildCoins", label: "🏰 Moedas de guilda" },
+  { id: "xp", label: "✨ XP" },
+  { id: "unspentStatPoints", label: "🎯 Pontos de status" },
+];
 
 export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
@@ -65,6 +87,9 @@ export default function AdminPage() {
   // Edit form state (personagens)
   const [editCharId, setEditCharId] = useState("");
   const [editFields, setEditFields] = useState<Record<string, string>>({});
+  // Ajuste de status por personagem (dar/tirar)
+  const [adjStat, setAdjStat] = useState<Record<string, string>>({});
+  const [adjAmount, setAdjAmount] = useState<Record<string, string>>({});
   // VIP por personagem (tier selecionado em cada linha)
   const [vipSelects, setVipSelects] = useState<Record<string, string>>({});
   // Loja Fantasma (moedas da torre)
@@ -141,6 +166,9 @@ export default function AdminPage() {
   const [codeMaxUses, setCodeMaxUses] = useState("0");
   const [codeExpiresDays, setCodeExpiresDays] = useState("0");
   const [codesList, setCodesList] = useState<Record<string, unknown>[]>([]);
+  // Logs administrativos (hitkill etc.)
+  const [logsList, setLogsList] = useState<Record<string, unknown>[]>([]);
+  const [logsFilter, setLogsFilter] = useState("all"); // "all" | "hitkill" | "economy"
 
   const headers = { "Content-Type": "application/json", "x-admin-key": adminKey };
   const audioHeaders = { "x-admin-key": adminKey };
@@ -274,6 +302,30 @@ export default function AdminPage() {
     setBusy(null);
   };
 
+  // ---- Logs administrativos (hitkill, economia etc.) ----
+  const logKindParam = () => (logsFilter === "hitkill" || logsFilter === "economy" ? logsFilter : "");
+
+  const loadLogs = async () => {
+    setLoading(true);
+    try {
+      const kind = logKindParam();
+      const res = await fetch(`/api/admin?action=logs&kind=${encodeURIComponent(kind)}&limit=200`, { headers });
+      const d = await res.json();
+      setLogsList(Array.isArray(d.logs) ? (d.logs as Record<string, unknown>[]) : []);
+    } catch { /* ignore */ }
+    setLoading(false);
+  };
+
+  const clearLogs = async (kind: string) => {
+    const label = kind === "hitkill" ? "os logs de hitkill" : kind === "economy" ? "os logs de economia" : "TODOS os logs";
+    if (!window.confirm(`Apagar ${label}? Essa ação não pode ser desfeita.`)) return;
+    setBusy("clear_logs");
+    const d = await callAdmin({ action: "clear_logs", kind: logKindParam() });
+    setMessage(d.success ? `✅ ${d.message}` : `❌ ${d.error || "Erro"}`);
+    await loadLogs();
+    setBusy(null);
+  };
+
   useEffect(() => {
     if (!authenticated) return;
     const run = ({
@@ -288,6 +340,7 @@ export default function AdminPage() {
       music: loadMusic,
       server: undefined,
       codes: loadCodes,
+      logs: loadLogs,
       donate: loadDonateSettings,
       pix: loadPurchases,
     } as Record<Tab, (() => Promise<void>) | undefined>)[tab];
@@ -296,7 +349,7 @@ export default function AdminPage() {
       return () => clearTimeout(id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab, authenticated]);
+  }, [tab, authenticated, logsFilter]);
   const editCharacter = async () => {
     const updates: Record<string, number> = {};
     for (const [k, v] of Object.entries(editFields)) {
@@ -359,6 +412,41 @@ export default function AdminPage() {
     setBusy(`stats_grant_${String(c.id)}`);
     const d = await callAdmin({ action: "grant_stat_points", characterId: c.id });
     setMessage(d.success ? `✅ ${pts} pontos de status concedidos a "${name}"!` : `❌ ${d.error || "Falha"}`);
+    await loadCharacters();
+    setBusy(null);
+  };
+
+  /** Dar ou TIRAR status do personagem (amount pode ser negativo). */
+  const adjustStats = async (c: Record<string, unknown>) => {
+    if (busy) return;
+    const stat = adjStat[String(c.id)];
+    const raw = adjAmount[String(c.id)];
+    const amount = Math.floor(Number(raw));
+    if (!stat || raw === "" || !Number.isFinite(amount) || amount === 0) {
+      setMessage("❌ Selecione o status e informe um valor diferente de 0 (negativo tira).");
+      return;
+    }
+    const name = String(c.name);
+    if (!window.confirm(`⚖️ ${amount > 0 ? "DAR" : "TIRAR"} ${Math.abs(amount)} em "${stat}" de "${name}"?`)) return;
+    setBusy(`adj_${String(c.id)}`);
+    const d = await callAdmin({ action: "adjust_stats", characterId: c.id, stat, amount });
+    setMessage(d.success ? `✅ ${d.message || "Ajustado!"}` : `❌ ${d.error || "Falha"}`);
+    await loadCharacters();
+    setBusy(null);
+  };
+
+  /** Recalcula os status a partir do que está equipado (raridade × runas × encanto). */
+  const recalcEquipment = async (c?: Record<string, unknown>) => {
+    if (busy) return;
+    const scope = c ? `do personagem "${String(c.name)}"` : "de TODOS os personagens";
+    if (!window.confirm(
+      `⚙️ Recalcular equipamentos ${scope}?\n\nReaplica nos status o multiplicador por raridade (comum ×1 → supremo ×8.8) + runas + encanto, conforme o que está equipado agora.`
+    )) return;
+    setBusy(c ? `recalc_${String(c.id)}` : "recalc_all");
+    const d = await callAdmin(c
+      ? { action: "recalc_equipment", characterId: c.id }
+      : { action: "recalc_equipment" });
+    setMessage(d.success ? `✅ ${d.message || "Recalculado!"}` : `❌ ${d.error || "Falha"}`);
     await loadCharacters();
     setBusy(null);
   };
@@ -1018,6 +1106,7 @@ export default function AdminPage() {
     { id: "music", label: "Músicas das Ilhas", icon: "🎵" },
     { id: "server", label: "Mensagem Global", icon: "📢" },
     { id: "codes", label: "Códigos", icon: "🎟️" },
+    { id: "logs", label: "Logs", icon: "📜" },
     { id: "donate", label: "Donate (PIX)", icon: "💖" },
     { id: "pix", label: "Compras PIX", icon: "💎" },
     { id: "ghost", label: "Loja Fantasma", icon: "👻" },
@@ -1241,6 +1330,13 @@ export default function AdminPage() {
                   >
                     {busy === "tower_reset_general" ? "Resetando..." : "🗼 Resetar Torre (Todos)"}
                   </button>
+                  <button
+                    onClick={() => recalcEquipment()}
+                    disabled={busy === "recalc_all"}
+                    className="bg-gradient-to-r from-[#a855f7] to-[#7c5cfc] text-white rounded-xl px-4 py-2 font-bold text-sm hover:opacity-90 disabled:opacity-40"
+                  >
+                    {busy === "recalc_all" ? "Recalculando..." : "⚙️ Recalcular Equipamentos (Todos)"}
+                  </button>
                 </div>
 
                 {/* Edit Form */}
@@ -1248,7 +1344,7 @@ export default function AdminPage() {
                   <h3 className="text-sm font-bold text-[#ffd700] mb-3">⚡ Editar Personagem (use o ID da lista abaixo)</h3>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
                     <input value={editCharId} onChange={(e) => setEditCharId(e.target.value)} placeholder="ID do personagem" className="bg-[#0a0a12] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#ff6b6b] focus:outline-none" />
-                    {["gold", "diamonds", "towerCoins", "energy", "maxEnergy", "level", "towerFloor", "attack", "defense", "power", "vipLevel"].map((f) => (
+                    {["gold", "diamonds", "towerCoins", "energy", "maxEnergy", "level", "xp", "towerFloor", "attack", "defense", "speed", "critical", "maxHp", "unspentStatPoints", "skillPoints", "power", "vipLevel"].map((f) => (
                       <input key={f} value={editFields[f] || ""} onChange={(e) => setEditFields({ ...editFields, [f]: e.target.value })} placeholder={f}
                         type="number" className="bg-[#0a0a12] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#ff6b6b] focus:outline-none" />
                     ))}
@@ -1269,6 +1365,18 @@ export default function AdminPage() {
                           </div>
                           <div className="text-xs text-[#ffd700] font-bold">Lv.{String(c.level)}</div>
                           <div className="text-xs text-gray-400">💰 {Number(c.gold || 0).toLocaleString()} • 💎 {Number(c.diamonds || 0)} • 🗼 {Number(c.towerCoins || 0).toLocaleString()} • 🏯 Andar {Number(c.towerFloor || 1)}</div>
+                        </div>
+                        {/* Chips de status */}
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          <span className="text-[10px] bg-[#ff6b6b]/10 border border-[#ff6b6b]/30 text-[#ff6b6b] rounded-full px-2 py-0.5 font-bold">⚔️ {Number(c.attack || 0).toLocaleString()}</span>
+                          <span className="text-[10px] bg-[#3b82f6]/10 border border-[#3b82f6]/30 text-blue-300 rounded-full px-2 py-0.5 font-bold">🛡️ {Number(c.defense || 0).toLocaleString()}</span>
+                          <span className="text-[10px] bg-[#22c55e]/10 border border-[#22c55e]/30 text-green-300 rounded-full px-2 py-0.5 font-bold">❤️ {Number(c.maxHp || 0).toLocaleString()}</span>
+                          <span className="text-[10px] bg-[#4ecdc4]/10 border border-[#4ecdc4]/30 text-teal-300 rounded-full px-2 py-0.5 font-bold">👟 {Number(c.speed || 0)}</span>
+                          <span className="text-[10px] bg-[#ffd700]/10 border border-[#ffd700]/30 text-yellow-300 rounded-full px-2 py-0.5 font-bold">💥 {Number(c.critical || 0)}%</span>
+                          <span className="text-[10px] bg-[#a855f7]/10 border border-[#a855f7]/30 text-purple-300 rounded-full px-2 py-0.5 font-bold">⭐ {Number(c.power || 0).toLocaleString()}</span>
+                          {Number(c.unspentStatPoints || 0) > 0 && (
+                            <span className="text-[10px] bg-[#00ff88]/10 border border-[#00ff88]/30 text-green-300 rounded-full px-2 py-0.5 font-bold">🎯 {Number(c.unspentStatPoints || 0)} pts</span>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <button
@@ -1292,6 +1400,12 @@ export default function AdminPage() {
                             }}
                             className="text-xs bg-[#ffd700] text-black rounded-lg px-3 py-1.5 font-bold hover:opacity-90">
                             ✏️ Editar
+                          </button>
+                          <button
+                            onClick={() => recalcEquipment(c)}
+                            disabled={busy === `recalc_${String(c.id)}`}
+                            className="text-xs bg-[#7c5cfc] text-white rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
+                            {busy === `recalc_${String(c.id)}` ? "..." : "⚙️ Recalc. Equip."}
                           </button>
                         </div>
                       </div>
@@ -1337,6 +1451,34 @@ export default function AdminPage() {
                           disabled={busy === `vip_rm_${String(c.id)}`}
                           className="text-xs bg-[#ff6b6b] text-white rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
                           {busy === `vip_rm_${String(c.id)}` ? "..." : "🗑️ Remover VIP"}
+                        </button>
+                      </div>
+
+                      {/* ⚖️ Dar / tirar status (amount negativo tira) */}
+                      <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-white/5 pt-2">
+                        <span className="text-[11px] text-gray-400 font-bold">⚖️ Ajustar status:</span>
+                        <select
+                          value={adjStat[String(c.id)] || ""}
+                          onChange={(e) => setAdjStat((s) => ({ ...s, [String(c.id)]: e.target.value }))}
+                          className="bg-[#0a0a12] border border-gray-700 rounded-lg px-2 py-1 text-xs text-white focus:border-[#7c5cfc] focus:outline-none"
+                        >
+                          <option value="">Status...</option>
+                          {STAT_ADJUST_OPTIONS.map((o) => (
+                            <option key={o.id} value={o.id}>{o.label}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="number"
+                          value={adjAmount[String(c.id)] || ""}
+                          onChange={(e) => setAdjAmount((s) => ({ ...s, [String(c.id)]: e.target.value }))}
+                          placeholder="+/- valor"
+                          className="w-24 bg-[#0a0a12] border border-gray-700 rounded-lg px-2 py-1 text-xs text-white focus:border-[#7c5cfc] focus:outline-none"
+                        />
+                        <button
+                          onClick={() => adjustStats(c)}
+                          disabled={busy === `adj_${String(c.id)}`}
+                          className="text-xs bg-[#4ecdc4] text-black rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
+                          {busy === `adj_${String(c.id)}` ? "..." : "✅ Aplicar"}
                         </button>
                       </div>
                     </div>
@@ -2264,6 +2406,106 @@ export default function AdminPage() {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+            {tab === "logs" && (
+              <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-white mb-1">📜 Logs do servidor</h3>
+                    <p className="text-xs text-gray-400">
+                      Avisos automáticos do jogo — <b className="text-red-400">hitkill</b> (anti-one-shot na torre/boss) e transações de <b className="text-yellow-300">economia</b> (anúncios e compras no mercado).
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex rounded-xl border border-white/10 overflow-hidden">
+                      {[
+                        { id: "all", label: "Todos" },
+                        { id: "hitkill", label: "💥 Hitkill" },
+                        { id: "economy", label: "💰 Economia" },
+                      ].map((f) => (
+                        <button
+                          key={f.id}
+                          onClick={() => setLogsFilter(f.id)}
+                          className={`px-3 py-1.5 text-xs font-bold transition ${logsFilter === f.id ? "bg-[#e94560] text-white" : "bg-[#0a0a12] text-gray-400 hover:text-white"}`}
+                        >
+                          {f.label}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => loadLogs()}
+                      disabled={loading}
+                      className="text-xs px-3 py-1.5 rounded-xl border border-white/10 text-gray-300 hover:text-white hover:bg-white/5 disabled:opacity-40"
+                    >
+                      🔄 Atualizar
+                    </button>
+                    <button
+                      onClick={() => clearLogs(logsFilter)}
+                      disabled={busy === "clear_logs"}
+                      className="text-xs px-3 py-1.5 rounded-xl border border-red-500/30 text-red-400 hover:text-red-300 hover:bg-red-500/10 disabled:opacity-40"
+                    >
+                      {busy === "clear_logs" ? "Limpando..." : "🗑️ Limpar"}
+                    </button>
+                  </div>
+                </div>
+
+                {loading && logsList.length === 0 ? (
+                  <div className="text-center text-gray-500 text-sm py-10">Carregando logs...</div>
+                ) : logsList.length === 0 ? (
+                  <div className="text-center text-gray-500 text-sm py-10">Nenhum log registrado ainda. Eles aparecem aqui quando o anti-one-shot entra em ação (hitkill na torre / boss mundial) ou quando houver transações de mercado.</div>
+                ) : (
+                  <div className="space-y-2.5 max-h-[560px] overflow-y-auto pr-1">
+                    {logsList.map((l) => {
+                      const kind = String(l.kind || "log");
+                      const source = String(l.source || "");
+                      const isHitkill = kind === "hitkill";
+                      const isEconomy = kind === "economy";
+                      const ts = l.createdAt ? new Date(String(l.createdAt)) : null;
+                      return (
+                        <div key={String(l.id)} className={`rounded-xl border p-3 ${isHitkill ? "border-red-500/30 bg-red-950/20" : isEconomy ? "border-yellow-500/30 bg-yellow-950/15" : "border-white/10 bg-[#0a0a12]"}`}>
+                          <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                            {isHitkill ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 font-bold">💥 HITKILL</span>
+                            ) : isEconomy ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 font-bold">💰 ECONOMIA</span>
+                            ) : (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-500/20 border border-gray-500/40 text-gray-300 font-bold">📋 LOG</span>
+                            )}
+                            {source === "tower" && <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/40 text-purple-300">🏯 Torre</span>}
+                            {source === "world-boss" && <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/40 text-yellow-300">🌍 Boss Mundial</span>}
+                            {source === "market" && <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-300">🏪 Mercado</span>}
+                            {l.charName ? (
+                              <span className="text-[11px] font-bold text-white">⚔️ {String(l.charName)}</span>
+                            ) : l.characterName ? (
+                              <span className="text-[11px] font-bold text-white">⚔️ {String(l.characterName)}</span>
+                            ) : null}
+                            {l.floor !== undefined && (
+                              <span className="text-[10px] text-gray-400">🏯 Andar {String(l.floor)}</span>
+                            )}
+                            {ts && !Number.isNaN(ts.getTime()) && (
+                              <span className="ml-auto text-[10px] text-gray-500">🕐 {ts.toLocaleString("pt-BR")}</span>
+                            )}
+                          </div>
+                          <p className="text-xs text-gray-300">{String(l.message || "")}</p>
+                          {(l.damage !== undefined || l.playerMaxHit !== undefined) && (
+                            <p className="text-[10px] text-gray-500 mt-1 font-mono">
+                              {l.playerMaxHit !== undefined && <>Dano máximo: <b className="text-red-400">{String(l.playerMaxHit)}</b> • HP do chefe: {String(l.bossHp)} • HP escalado: {String(l.scaledHp)} • Ataque escalado: {String(l.scaledAttack)}</>}
+                              {l.damage !== undefined && <>Dano: <b className="text-red-400">{String(l.damage)}</b> • Cap aplicado: {String(l.cappedDamage)} • HP do boss: {String(l.bossHp)}</>}
+                            </p>
+                          )}
+                          {isEconomy && (
+                            <p className="text-[10px] text-gray-500 mt-1 font-mono">
+                              {String(l.event === "buy" ? "🛒 Compra" : "📦 Anúncio")} • Item #{String(l.templateId)} • {String(l.quantity)}× • Preço: <b className="text-yellow-300">{Number(l.price).toLocaleString("pt-BR")}</b> {l.currency === "diamonds" ? "💎" : "🪙"}
+                              {l.event === "buy" && l.sellerName ? <> • Vendedor: {String(l.sellerName)}</> : null}
+                              {l.event === "listing" && l.fee !== undefined ? <> • Taxa: {String(l.fee)}</> : null}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
             {tab === "donate" && (

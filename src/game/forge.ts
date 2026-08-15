@@ -25,6 +25,28 @@ export interface EnchantDef {
 /** Limite de runas (aprimoramento) por item. */
 export const MAX_ENHANCE = 15;
 
+/**
+ * Multiplicador de atributos POR RARIDADE (aplicado sobre a base do template).
+ *
+ * O catálogo original deixava as raridades muito próximas (um épico quase
+ * igual a um lendário). Aqui cada raridade multiplica a base — o comum é a
+ * base pura (×1) e cada tier acima dá um salto claro:
+ *   comum ×1 · incomum ×1.3 · raro ×1.7 · épico ×2.2 · lendário ×3 · mítico ×4 ·
+ *   divino ×5.2 · ancestral ×6.8 · supremo ×8.8
+ * Ex. (espada): comum 6 atq → épico ~53 atq → lendário ~108 atq.
+ */
+export const RARITY_STAT_MULT: Record<string, number> = {
+  common: 1,
+  uncommon: 1.3,
+  rare: 1.7,
+  epic: 2.2,
+  legendary: 3,
+  mythic: 4,
+  divine: 5.2,
+  ancestral: 6.8,
+  supreme: 8.8,
+};
+
 /** Custo em ouro para encantar. */
 export const ENCHANT_COST = 5000;
 
@@ -274,6 +296,30 @@ export const ENCHANT_POOLS: Record<ClassName, EnchantDef[]> = {
   ]),
 };
 
+/**
+ * ENCANTOS EXCLUSIVOS DE CHEFES — só são obtidos vencendo chefes (torre a cada
+ * 10 andares / Boss Mundial). São mais fortes que os encantos normais da classe
+ * e têm id próprio (`boss_*`), então não saem na forja por ouro.
+ */
+export const BOSS_ENCHANTS: EnchantDef[] = [
+  { id: "boss_1", icon: "👹", name: { pt: "Essência do Caos", en: "Chaos Essence", es: "Esencia del Caos" }, stat: "attack", amount: 25 },
+  { id: "boss_2", icon: "🛡️", name: { pt: "Armadura Titânica", en: "Titanic Armor", es: "Armadura Titánica" }, stat: "defense", amount: 20 },
+  { id: "boss_3", icon: "❤️‍🔥", name: { pt: "Coração de Dragão", en: "Dragon Heart", es: "Corazón de Dragón" }, stat: "maxHp", amount: 400 },
+  { id: "boss_4", icon: "⚡", name: { pt: "Velocidade Abissal", en: "Abyssal Speed", es: "Velocidad Abisal" }, stat: "speed", amount: 8 },
+  { id: "boss_5", icon: "💥", name: { pt: "Olho do Devorador", en: "Devourer's Eye", es: "Ojo del Devorador" }, stat: "critical", amount: 8 },
+  { id: "boss_6", icon: "🌋", name: { pt: "Fúria do Primordial", en: "Primordial Wrath", es: "Furia del Primordial" }, stat: "attack", amount: 40 },
+];
+
+/** Retorna true se o id é um encanto exclusivo de chefe. */
+export function isBossEnchant(id: string | null | undefined): boolean {
+  return !!id && id.startsWith("boss_");
+}
+
+/** Sorteia um encanto de chefe aleatório (para drops de chefes). */
+export function rollBossEnchant(): EnchantDef {
+  return BOSS_ENCHANTS[Math.floor(Math.random() * BOSS_ENCHANTS.length)];
+}
+
 /** Pool de encantamentos disponíveis para a classe do personagem. */
 export function enchantPoolForClass(cls: ClassName | string): EnchantDef[] {
   return ENCHANT_POOLS[(cls as ClassName) ?? "warrior"] ?? ENCHANT_POOLS.warrior;
@@ -286,8 +332,10 @@ export function enchantName(en: EnchantDef, locale: string): string {
   return en.name.pt;
 }
 
-/** Busca um encantamento pelo id (em qualquer pool). */
+/** Busca um encantamento pelo id (pool das classes + pool de chefes). */
 export function enchantById(id: string): EnchantDef | undefined {
+  const boss = BOSS_ENCHANTS.find((e) => e.id === id);
+  if (boss) return boss;
   for (const p of Object.values(ENCHANT_POOLS)) {
     const found = p.find((e) => e.id === id);
     if (found) return found;
@@ -319,8 +367,10 @@ export function enhanceChance(level: number): number {
 /** Bônus de atributos de um item de equipamento considerando runas + encanto. */
 export function equipmentBonus(template: Record<string, unknown> | null, item: Record<string, unknown>) {
   const t = template || {};
+  // Multiplicador da raridade (comum = base pura; cada tier vale mais) ×
   // +5% por runa (aumento pequeno e controlado).
-  const scale = 1 + (Number(item.enhanceLevel) || 0) * 0.05;
+  const rmult = RARITY_STAT_MULT[String(t.rarity || "common")] ?? 1;
+  const scale = rmult * (1 + (Number(item.enhanceLevel) || 0) * 0.05);
   const ench = enchantById(String(item.enchant || ""));
   const bonus: Record<string, number> = { attack: 0, defense: 0, maxHp: 0, speed: 0, critical: 0 };
   bonus.attack = Math.floor(Number(t.attack || 0) * scale);

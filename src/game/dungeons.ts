@@ -8,9 +8,9 @@
  *    8h ≈ 5.5× a 2h — vale a pena deixar o herói rodando mais tempo.
  *  - O combate é simulado por poder: tentar muito além do seu poder gera
  *    derrota e perde o bônus → incentiva escolher a dificuldade certa.
- *  - Drops: só até RARO (comum/incomum/raro) — épico+ sai apenas de baús da
- *    loja. Andares profundos dão mais drops (e o chefe garante +1), mas nunca
- *    sobem além de raro.
+ *  - Drops: até RARO nos rolls normais — épico+ sai apenas de baús da loja ou
+ *    do CHEFE do piso (que garante 1 drop ÉPICO ao ser derrotado). Andares
+ *    profundos dão mais drops (e o chefe garante +1).
  */
 
 import { xpMultiplier } from "./boosts";
@@ -85,12 +85,12 @@ export const DUNGEON_RARITY_ORDER = [
 ] as const;
 
 /**
- * Raridade máxima dos drops de masmorra.
- * Regra de design: drops de masmorra/torre vão no máximo até RARO —
- * épico e acima só saem de BAÚS da loja (item premium/cultivado).
+ * Raridade máxima dos ROLLS NORMAIS de masmorra (o chefe garante épico à parte).
+ * Regra de design: drops de masmorra/torre vão no máximo até RARO — épico e
+ * acima só saem de BAÚS da loja ou do drop garantido do chefe.
  */
 export function dungeonMaxRarityIdx(_clears: number): number {
-  return 2; // rare — épico+ só em baús
+  return 2; // rare — épico+ só em baús ou chefe
 }
 
 /**

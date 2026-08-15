@@ -26,7 +26,9 @@ import MailboxPanel from "./panels/MailboxPanel";
 import CodePanel from "./panels/CodePanel";
 import DonatePanel from "./panels/DonatePanel";
 import SettingsPanel from "./panels/SettingsPanel";
+import GuidePanel from "./panels/GuidePanel";
 import MusicController from "./MusicController";
+import Notifications from "./Notifications";
 import PreloadImages from "./ui/PreloadImages";
 import { skinById } from "@/game/skins";
 
@@ -189,6 +191,7 @@ export default function GameScreen() {
       case "code": return <CodePanel />;
       case "donate": return <DonatePanel />;
       case "settings": return <SettingsPanel />;
+      case "guide": return <GuidePanel />;
       default: return <DashboardPanel />;
     }
   };
@@ -243,6 +246,8 @@ export default function GameScreen() {
 
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
       <MusicController />
+      {/* Notificações do navegador (energia cheia / loja fantasma / boss) */}
+      <Notifications />
 
       <div className={"relative z-10 transition-all duration-500 ease-in-out " + (collapsed ? "md:pl-0" : "md:pl-60")}>
         <header

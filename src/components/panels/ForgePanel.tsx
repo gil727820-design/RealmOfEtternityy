@@ -144,7 +144,7 @@ export default function ForgePanel() {
                     <button
                       key={String(item.id)}
                       onClick={() => setSelectedId(String(item.id))}
-                      className={`w-full text-left p-3 rounded-xl border transition ${isSelected ? "border-[#f97316] bg-[#f97316]/10" : "border-white/10 bg-[#0a0a12] hover:border-white/30"}`}
+                      className={`w-full text-left p-3 rounded-xl border transition ${isSelected ? "border-[#f97316] bg-[#f97316]/10" : enc ? "border-purple-500/50 bg-[#0a0a12] hover:border-purple-400 shadow-[0_0_10px_rgba(168,85,247,0.18)]" : "border-white/10 bg-[#0a0a12] hover:border-white/30"}`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 min-w-0">
@@ -159,7 +159,7 @@ export default function ForgePanel() {
                             <span className="text-[10px] font-black bg-[#f97316]/20 border border-[#f97316]/40 text-orange-300 rounded-full px-2 py-0.5">+{lvl}</span>
                           )}
                           {!!enc && (
-                            <span className="text-[10px] font-black bg-purple-500/20 border border-purple-500/40 text-purple-300 rounded-full px-2 py-0.5" title={enchantName(enc, locale)}>{enc.icon}</span>
+                            <span className="text-[10px] font-black bg-purple-500/20 border border-purple-500/40 text-purple-300 rounded-full px-2 py-0.5 shadow-[0_0_8px_rgba(168,85,247,0.5)]" title={`✦ ${enchantName(enc, locale)}`}>✦ {enc.icon}</span>
                           )}
                           {!!item.equipped && <span className="text-[10px] bg-green-500/20 text-green-300 rounded-full px-2 py-0.5">✓</span>}
                         </div>

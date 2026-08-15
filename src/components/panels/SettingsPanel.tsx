@@ -3,9 +3,24 @@ import { useEffect, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t, supportedLocales } from "@/i18n";
 
+const NOTIF_LS = "realm_notifications_enabled";
+
+/** Pede permissão de notificação do navegador e avisa se foi negada. */
+async function requestNotificationPermission(): Promise<boolean> {
+  if (!("Notification" in window)) return false;
+  const perm = await Notification.requestPermission();
+  return perm === "granted";
+}
+
 export default function SettingsPanel() {
-  const { locale, setLocale, soundOn, setSoundOn, volume, setVolume, characterId } = useGameStore();
+  const { locale, setLocale, soundOn, setSoundOn, volume, setVolume, characterId, notify } = useGameStore();
   const [onlineCount, setOnlineCount] = useState<number | null>(null);
+  const [notifEnabled, setNotifEnabled] = useState(false);
+  const [notifSupported] = useState(() => typeof window !== "undefined" && "Notification" in window);
+
+  useEffect(() => {
+    setNotifEnabled(typeof window !== "undefined" && localStorage.getItem(NOTIF_LS) === "1");
+  }, []);
 
   // Contador real de jogadores online (heartbeat de presença) + marca o próprio
   // jogador como online ao abrir as configurações. Atualiza a cada 30s.
@@ -38,6 +53,51 @@ export default function SettingsPanel() {
           {t("settings.title", locale)}
         </span>
       </h2>
+
+      {/* 🔔 Notificações do navegador */}
+      <div className="game-card p-5">
+        <div className="flex items-center justify-between gap-4 mb-3">
+          <h3 className="font-bold flex items-center gap-2">🔔 {t("settings.notifications", locale)}</h3>
+          {notifEnabled && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/40 text-green-300 font-bold">
+              ✓ {t("settings.on", locale)}
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-gray-400 mb-3">
+          {t("settings.notifications.desc", locale)}
+        </p>
+        {notifSupported ? (
+          <button
+            onClick={async () => {
+              const granted = notifEnabled || (await requestNotificationPermission());
+              if (!granted) {
+                setNotifEnabled(false);
+                try { localStorage.removeItem(NOTIF_LS); } catch { /* ignora */ }
+                notify("❌ Permissão de notificação negada pelo navegador.", "error");
+                return;
+              }
+              const next = !notifEnabled;
+              setNotifEnabled(next);
+              try {
+                if (next) localStorage.setItem(NOTIF_LS, "1");
+                else localStorage.removeItem(NOTIF_LS);
+                window.dispatchEvent(new Event("realm-notifications-change"));
+              } catch { /* ignora */ }
+              notify(next ? "🔔 Notificações ativadas!" : "🔕 Notificações desativadas.", "success");
+            }}
+            className={`relative w-14 h-8 rounded-full transition-colors shrink-0 cursor-pointer ${notifEnabled ? "bg-[#22c55e]" : "bg-gray-700"}`}
+            aria-pressed={notifEnabled}
+            title={t("settings.notifications", locale)}
+          >
+            <span
+              className={`absolute top-1 w-6 h-6 rounded-full bg-white shadow transition-all ${notifEnabled ? "left-7" : "left-1"}`}
+            />
+          </button>
+        ) : (
+          <p className="text-xs text-gray-600">{t("settings.notifications.unsupported", locale)}</p>
+        )}
+      </div>
 
       {/* 🔊 Som / Volume */}
       <div className="game-card p-5">

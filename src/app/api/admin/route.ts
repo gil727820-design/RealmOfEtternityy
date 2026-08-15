@@ -140,6 +140,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ codes });
     }
 
+    if (action === "logs") {
+      // Logs administrativos (ex.: avisos de hitkill da torre / boss mundial).
+      const kind = url.searchParams.get("kind") || "";
+      const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit")) || 100));
+      const logs = await jsonDb.listAdminLogs(kind || undefined, limit);
+      return NextResponse.json({ logs });
+    }
+
     if (action === "purchases") {
       const purchases = await jsonDb.listPurchases();
       return NextResponse.json({ purchases });
@@ -176,7 +184,8 @@ export async function POST(req: NextRequest) {
       if (!characterId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
 
       const allowed = ["gold","diamonds","crystals","energy","maxEnergy","pvpCoins","guildCoins",
-        "towerCoins","level","hp","maxHp","attack","defense","speed","critical","power","vipLevel",
+        "towerCoins","level","xp","hp","maxHp","mana","maxMana","attack","defense","speed","critical",
+        "precision","dodge","resistance","power","vipLevel","unspentStatPoints","skillPoints",
         "towerFloor","pvpRating","banned","currentRegion"];
 
       const clean: Record<string, unknown> = {};
@@ -288,6 +297,142 @@ export async function POST(req: NextRequest) {
       });
       if (!updated) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
       return NextResponse.json({ success: true, character: updated, granted: add, message: `${add} pontos de status concedidos (3 × Lv.${level})!` });
+    }
+
+    if (action === "adjust_stats") {
+      // Dar OU TIRAR status do personagem: `amount` pode ser negativo
+      // (ex.: attack -50, maxHp +2000, xp +500000).
+      const { characterId, stat, amount } = body;
+      if (!characterId || !stat) return NextResponse.json({ error: "Dados necessários" }, { status: 400 });
+
+      const fieldMap: Record<string, string> = {
+        attack: "attack", defense: "defense", speed: "speed", critical: "critical",
+        maxHp: "maxHp", mana: "maxMana", precision: "precision", dodge: "dodge",
+        resistance: "resistance", energy: "energy", gold: "gold", diamonds: "diamonds",
+        crystals: "crystals", towerCoins: "towerCoins", pvpCoins: "pvpCoins",
+        guildCoins: "guildCoins", xp: "xp", unspentStatPoints: "unspentStatPoints",
+      };
+      const field = fieldMap[String(stat)];
+      if (!field) return NextResponse.json({ error: "Status inválido" }, { status: 400 });
+
+      const delta = Math.floor(Number(amount) || 0);
+      if (delta === 0) return NextResponse.json({ error: "Informe um valor diferente de 0" }, { status: 400 });
+
+      const char = await jsonDb.findCharacterById(String(characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+
+      const current = Number(char[field]) || 0;
+      const next = Math.max(0, current + delta);
+      const patch: Record<string, unknown> = { [field]: next, lastActivity: new Date().toISOString() };
+      if (field === "maxHp") patch.hp = Math.min(Number(char.hp) || next, next);
+      if (field === "maxMana") patch.mana = Math.min(Number(char.mana) || next, next);
+      if (field === "energy") patch.energy = Math.min(next, Number(char.maxEnergy) || 100);
+
+      // Mantém a contabilidade "investido" (baseStats) em dia para os status
+      // que têm base — equipar/trocar item depois não sobrescreve o ajuste.
+      const baseMap: Record<string, string> = {
+        attack: "attack", defense: "defense", speed: "speed", critical: "critical", maxHp: "maxHp",
+      };
+      if (baseMap[String(stat)]) {
+        const baseStats =
+          char.baseStats && typeof char.baseStats === "object"
+            ? { ...(char.baseStats as Record<string, number>) }
+            : {};
+        baseStats[baseMap[String(stat)]] = Math.max(0, (Number(baseStats[baseMap[String(stat)]]) || 0) + delta);
+        patch.baseStats = baseStats;
+      }
+
+      // Recalcula o poder quando o status alterado faz parte dele.
+      if (["attack", "defense", "speed", "critical", "maxHp"].includes(String(stat))) {
+        const attack = String(stat) === "attack" ? next : Number(char.attack) || 0;
+        const defense = String(stat) === "defense" ? next : Number(char.defense) || 0;
+        const hp = String(stat) === "maxHp" ? next : Number(char.maxHp) || 0;
+        const speed = String(stat) === "speed" ? next : Number(char.speed) || 0;
+        const critical = String(stat) === "critical" ? next : Number(char.critical) || 0;
+        patch.power = powerCalc({ attack, defense, hp, speed, critical, level: Number(char.level) || 1 });
+      }
+
+      const updated = await jsonDb.updateCharacter(String(characterId), patch);
+      if (!updated) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+      return NextResponse.json({
+        success: true,
+        character: updated,
+        field,
+        delta,
+        value: next,
+        message: `✅ ${field} ${delta >= 0 ? "+" : ""}${delta} → ${next}`,
+      });
+    }
+
+    if (action === "recalc_equipment") {
+      // Recalcula os status de TODOS os personagens (ou um, se characterId)
+      // a partir dos itens EQUIPADOS atuais — aplica retroativamente mudanças
+      // de balanceamento (ex.: multiplicador por raridade da forja).
+      const { characterId } = body;
+      const all = characterId
+        ? [await jsonDb.findCharacterById(String(characterId))].filter(Boolean)
+        : await jsonDb.listCharacters("", 999999);
+      let processed = 0;
+      for (const c of all) {
+        if (!c) continue;
+        const inv = await jsonDb.getInventoryForCharacter(String(c.id));
+        const bonus = { attack: 0, defense: 0, maxHp: 0, speed: 0, critical: 0 };
+        for (const e of inv) {
+          if (!e.item?.equipped || e.template?.type === "consumable") continue;
+          const b = equipmentBonus(e.template, e.item);
+          bonus.attack += b.attack;
+          bonus.defense += b.defense;
+          bonus.maxHp += b.maxHp;
+          bonus.speed += b.speed;
+          bonus.critical += b.critical;
+        }
+        // Base investida = o que foi alocado/ganho (sem equipamento).
+        const baseStats =
+          c.baseStats && typeof c.baseStats === "object"
+            ? (c.baseStats as Record<string, number>)
+            : {
+                attack: Math.max(0, (Number(c.attack) || 0) - bonus.attack),
+                defense: Math.max(0, (Number(c.defense) || 0) - bonus.defense),
+                maxHp: Math.max(0, (Number(c.maxHp) || 0) - bonus.maxHp),
+                speed: Math.max(0, (Number(c.speed) || 0) - bonus.speed),
+                critical: Math.max(0, (Number(c.critical) || 0) - bonus.critical),
+              };
+        const attack = Math.max(0, (Number(baseStats.attack) || 0) + bonus.attack);
+        const defense = Math.max(0, (Number(baseStats.defense) || 0) + bonus.defense);
+        const maxHp = Math.max(1, (Number(baseStats.maxHp) || 0) + bonus.maxHp);
+        const speed = Math.max(0, (Number(baseStats.speed) || 0) + bonus.speed);
+        const critical = Math.max(0, (Number(baseStats.critical) || 0) + bonus.critical);
+        await jsonDb.updateCharacter(String(c.id), {
+          attack,
+          defense,
+          maxHp,
+          speed,
+          critical,
+          hp: Math.min(Number(c.hp) || maxHp, maxHp),
+          baseStats: {
+            attack: Math.max(0, Number(baseStats.attack) || 0),
+            defense: Math.max(0, Number(baseStats.defense) || 0),
+            maxHp: Math.max(0, Number(baseStats.maxHp) || 0),
+            speed: Math.max(0, Number(baseStats.speed) || 0),
+            critical: Math.max(0, Number(baseStats.critical) || 0),
+          },
+          power: powerCalc({
+            attack,
+            defense,
+            hp: maxHp,
+            speed,
+            critical,
+            level: Number(c.level) || 1,
+          }),
+          lastActivity: new Date().toISOString(),
+        });
+        processed++;
+      }
+      return NextResponse.json({
+        success: true,
+        processed,
+        message: `Equipamentos recalculados em ${processed} personagem(ns) — raridade × runas × encanto aplicados!`,
+      });
     }
 
     if (action === "reset_attributes_general") {
@@ -603,6 +748,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         success: true,
         message: "♻️ Jogo resetado! Todos os jogadores, personagens, guildas, inventário e correio foram apagados. O catálogo de itens/missões foi mantido.",
+      });
+    }
+
+    // ---- Logs administrativos: limpar (todos ou por tipo) ----
+    if (action === "clear_logs") {
+      const { kind } = body;
+      const removed = await jsonDb.clearAdminLogs(typeof kind === "string" && kind ? kind : undefined);
+      return NextResponse.json({
+        success: true,
+        removed,
+        message: `🗑️ ${removed} log(s) removido(s).`,
       });
     }
 

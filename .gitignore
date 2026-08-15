@@ -42,3 +42,6 @@ _typecheck.txt
 # ficam de fora desta regra.
 /public/uploads/proofs/
 /public/uploads/donate/
+
+# Backups automáticos do banco (scripts/backup-db.mjs)
+/backups/

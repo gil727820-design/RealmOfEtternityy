@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { leagueForRating, powerCalc, xpForLevel, classSkillEffect, type ClassName } from "@/game/constants";
+import { leagueForRating, powerCalc, xpForLevel, resolveMaxLevel, classSkillEffect, type ClassName } from "@/game/constants";
 import { getSkinClassBuff, skinRarityMult } from "@/game/skinBuffs";
 import { xpMultiplier, goldMultiplier } from "@/game/boosts";
 import { computePvpDaily, PVP_DAILY_MAX, pvpDateKey } from "@/game/pvp";
@@ -8,6 +8,8 @@ import { skillTreeDebuff, DEBUFF_LOG } from "@/game/skillTree";
 import { decideEnemyAction } from "@/game/battleAI";
 import { masteryBuff } from "@/game/mastery";
 import { requireCharacterAuth } from "@/game/auth";
+import { trackProgress } from "@/game/dailyMissions";
+import { pvpSeasonInfo, trackSeasonBest } from "@/game/pvpSeason";
 
 const SKILL_COST = 15;
 const MAX_ROUNDS = 40;
@@ -422,7 +424,11 @@ export async function POST(req: NextRequest) {
       let newXpToNext = char.xpToNext || xpForLevel(newLevel);
       let newStatPoints = char.unspentStatPoints || 0;
       let newSkillPoints = char.skillPoints || 0;
-      while (newXp >= newXpToNext) {
+      // Nível máximo configurado no painel admin (0 = padrão 999) — mesma
+      // regra das outras fontes de XP (missões, torre, masmorra, AFK...).
+      const settings = await jsonDb.getServerSettings();
+      const pvpMaxLevel = resolveMaxLevel(Number(settings?.maxLevel) || 0);
+      while (newLevel < pvpMaxLevel && newXp >= newXpToNext) {
         newXp -= newXpToNext;
         newLevel++;
         newXpToNext = xpForLevel(newLevel);
@@ -439,6 +445,10 @@ export async function POST(req: NextRequest) {
         level: newLevel,
       });
 
+      // Temporada da Arena: atualiza o melhor rating da temporada atual.
+      const seasonInfo = pvpSeasonInfo();
+      const seasonPatch = won ? trackSeasonBest({ ...char, pvpRating: newAtkRating }, seasonInfo.seasonId) : {};
+
       await jsonDb.updateCharacter(char.id, {
         pvpRating: newAtkRating,
         pvpLeague: leagueForRating(newAtkRating),
@@ -452,6 +462,9 @@ export async function POST(req: NextRequest) {
         unspentStatPoints: newStatPoints,
         skillPoints: newSkillPoints,
         power,
+        // Missões diárias/semanais: progresso de PvP (vitórias).
+        ...(won ? trackProgress(char, "pvp", 1) : {}),
+        ...seasonPatch,
       });
       // Oponente real (offline) usa a mesma lógica do agressor, invertida
       if (!isBot && defender.id) {

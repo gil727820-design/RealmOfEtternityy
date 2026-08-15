@@ -104,7 +104,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { damage, crit } = computePlayerDamage(auth.char, cfg);
+    let { damage, crit } = computePlayerDamage(auth.char, cfg);
+
+    // Anti-one-shot: um único golpe NUNCA derruba o boss de uma vez (máx ~12%
+    // do HP total por ataque). Assim um jogador muito forte não mata o evento
+    // sozinho num hitkill — a batalha fica normal e todos têm chance de
+    // contribuir/ganhar. Loga no console do servidor quando o cap é aplicado.
+    const maxPerHit = Math.max(1, Math.floor(cfg.boss.maxHp * 0.12));
+    if (damage > maxPerHit) {
+      console.log(
+        `[hitkill] ${auth.char.name || "?"} causaria ${damage} de dano (cap ${maxPerHit}) no Boss Mundial — dano limitado.`
+      );
+      // Registra no painel admin (aba Logs) para o admin acompanhar os hitkills.
+      jsonDb.addAdminLog("hitkill", {
+        source: "world-boss",
+        characterId: auth.char.id,
+        characterName: auth.char.name || "?",
+        damage,
+        cappedDamage: maxPerHit,
+        bossHp: cfg.boss.maxHp,
+        message: `${auth.char.name || "?"} causaria ${damage} de dano (cap ${maxPerHit}) no Boss Mundial — dano limitado.`,
+      });
+      damage = maxPerHit;
+    }
 
     // Aplica o dano ao boss de forma ATÔMICA e usa o estado mais recente como base.
     const after = await jsonDb.decrementWorldBossHp(damage);
