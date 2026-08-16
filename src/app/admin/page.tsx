@@ -4,6 +4,9 @@ import { RARITY_COLORS, CLASS_ICONS, REGIONS, TOWER_BOSS_KINDS, MAX_LEVEL, tower
 import type { ClassName } from "@/game/constants";
 import { SKIN_CATALOG } from "@/game/skins";
 import { VIP_TIERS, currentVipTier } from "@/game/vip";
+import { PET_DEFS } from "@/game/pets";
+import { ADVANCED_CLASSES } from "@/game/advancedClasses";
+import { ASCENSION_MAX } from "@/game/ascension";
 
 /** Nomes bonitos dos tiers VIP exibidos no painel. */
 const VIP_LABELS: Record<string, string> = {
@@ -49,7 +52,7 @@ function serverTimeToLocal(hhmm: string, serverOffsetMin: number): string {
   return `${pad(Math.floor(total / 60))}:${pad(total % 60)}`;
 }
 
-type Tab = "dash" | "users" | "characters" | "guilds" | "send" | "excluded" | "music" | "server" | "codes" | "logs" | "donate" | "pix" | "ghost" | "worldboss" | "test" | "inventory";
+type Tab = "dash" | "users" | "characters" | "guilds" | "send" | "excluded" | "music" | "server" | "codes" | "logs" | "donate" | "pix" | "ledger" | "ghost" | "worldboss" | "test" | "inventory";
 type SkinChar = { id: string; name: string; level: number; classType: string; skins: string[] };
 
 /** Recursos que o ADM pode presentear pelo correio. */
@@ -110,6 +113,25 @@ export default function AdminPage() {
   const [adjAmount, setAdjAmount] = useState<Record<string, string>>({});
   // VIP por personagem (tier selecionado em cada linha)
   const [vipSelects, setVipSelects] = useState<Record<string, string>>({});
+  // Pets / Classe Avançada / Ascensão / Temporada por personagem
+  const [petSelects, setPetSelects] = useState<Record<string, string>>({});
+  const [advSelects, setAdvSelects] = useState<Record<string, string>>({});
+  const [ascLevels, setAscLevels] = useState<Record<string, string>>({});
+  const [seasonPts, setSeasonPts] = useState<Record<string, string>>({});
+  // Ações em MASSA (selecionar vários personagens)
+  const [sel, setSel] = useState<Record<string, boolean>>({});
+  const [bulkPetId, setBulkPetId] = useState("");
+  const [bulkVipTier, setBulkVipTier] = useState("");
+  const [bulkSeasonPts, setBulkSeasonPts] = useState("100");
+  const [bulkResGold, setBulkResGold] = useState("0");
+  const [bulkResDiamonds, setBulkResDiamonds] = useState("0");
+  const [bulkResCrystals, setBulkResCrystals] = useState("0");
+  // Códigos de resgate: recompensas novas (VIP + recursos)
+  const [codeVipTier, setCodeVipTier] = useState("");
+  const [codeVipDays, setCodeVipDays] = useState("30");
+  const [codeGold, setCodeGold] = useState("0");
+  const [codeDiamonds, setCodeDiamonds] = useState("0");
+  const [codeCrystals, setCodeCrystals] = useState("0");
   // Loja Fantasma (moedas da torre)
   const [ghostEnabled, setGhostEnabled] = useState(false);
   const [ghostSchedule, setGhostSchedule] = useState<string[]>(["12:00", "18:00", "21:00"]);
@@ -206,6 +228,11 @@ export default function AdminPage() {
   const [diamondsPerReal, setDiamondsPerReal] = useState("1000");
   const [purchases, setPurchases] = useState<Record<string, unknown>[]>([]);
   const [pixLoaded, setPixLoaded] = useState(false);
+  // Livro-razão permanente (quem comprou → reenviar diamantes após reset)
+  const [ledgerList, setLedgerList] = useState<Record<string, unknown>[]>([]);
+  const [ledgerChars, setLedgerChars] = useState<Record<string, unknown>[]>([]);
+  const [ledgerLoaded, setLedgerLoaded] = useState(false);
+  const [ledgerRefundTo, setLedgerRefundTo] = useState<Record<string, string>>({});
   // Códigos de resgate
   const [codeValue, setCodeValue] = useState("");
   const [codeXpHours, setCodeXpHours] = useState("12");
@@ -329,6 +356,11 @@ export default function AdminPage() {
       code: codeValue,
       xpHours: codeXpHours,
       energyHours: codeEnergyHours,
+      vipTier: codeVipTier,
+      vipDays: codeVipDays,
+      gold: codeGold,
+      diamonds: codeDiamonds,
+      crystals: codeCrystals,
       label: codeLabel,
       maxUses: codeMaxUses,
       expiresDays: codeExpiresDays,
@@ -397,6 +429,7 @@ export default function AdminPage() {
       logs: loadLogs,
       donate: loadDonateSettings,
       pix: loadPurchases,
+      ledger: loadLedger,
     } as Record<Tab, (() => Promise<void>) | undefined>)[tab];
     if (run) {
       const id = setTimeout(() => { void run(); }, 0);
@@ -486,6 +519,118 @@ export default function AdminPage() {
     const d = await callAdmin({ action: "adjust_stats", characterId: c.id, stat, amount });
     setMessage(d.success ? `✅ ${d.message || "Ajustado!"}` : `❌ ${d.error || "Falha"}`);
     await loadCharacters();
+    setBusy(null);
+  };
+
+  /** 🐾 Dar um pet específico para o personagem. */
+  const grantPet = async (c: Record<string, unknown>) => {
+    if (busy) return;
+    const petId = petSelects[String(c.id)];
+    if (!petId) {
+      setMessage("❌ Selecione um pet no menu ao lado antes de dar.");
+      return;
+    }
+    const name = String(c.name);
+    if (!window.confirm(`🐾 Dar o pet "${petId}" para "${name}"?`)) return;
+    setBusy(`pet_${String(c.id)}`);
+    const d = await callAdmin({ action: "grant_pet", characterId: c.id, petId });
+    setMessage(d.success ? `✅ ${d.message || "Pet adicionado!"}` : `❌ ${d.error || "Falha"}`);
+    await loadCharacters();
+    setBusy(null);
+  };
+
+  const grantAllPets = async (c: Record<string, unknown>) => {
+    if (busy) return;
+    const name = String(c.name);
+    if (!window.confirm(`🐾 Dar TODOS os pets para "${name}"?`)) return;
+    setBusy(`pets_all_${String(c.id)}`);
+    const d = await callAdmin({ action: "grant_all_pets", characterId: c.id });
+    setMessage(d.success ? `✅ ${d.message || "Pets adicionados!"}` : `❌ ${d.error || "Falha"}`);
+    await loadCharacters();
+    setBusy(null);
+  };
+
+  /** 🌟 Setar a classe avançada do personagem (ou remover com vazio). */
+  const setAdvClass = async (c: Record<string, unknown>) => {
+    if (busy) return;
+    const advId = advSelects[String(c.id)] || "";
+    const name = String(c.name);
+    if (!advId) {
+      if (!window.confirm(`🌟 Remover a classe avançada de "${name}"?`)) return;
+    } else if (!window.confirm(`🌟 Evoluir "${name}" para "${advId}"?`)) return;
+    setBusy(`adv_${String(c.id)}`);
+    const d = await callAdmin({ action: "set_advanced_class", characterId: c.id, advancedClassId: advId });
+    setMessage(d.success ? `✅ ${d.message || "Classe avançada atualizada!"}` : `❌ ${d.error || "Falha"}`);
+    await loadCharacters();
+    setBusy(null);
+  };
+
+  /** 🌌 Setar o patamar de ascensão do personagem (0 = remover). */
+  const setAscension = async (c: Record<string, unknown>) => {
+    if (busy) return;
+    const raw = ascLevels[String(c.id)];
+    const lv = Math.max(0, Math.min(ASCENSION_MAX, Math.floor(Number(raw))));
+    if (raw === "" || !Number.isFinite(lv)) {
+      setMessage(`❌ Informe um patamar de 0 a ${ASCENSION_MAX}.`);
+      return;
+    }
+    const name = String(c.name);
+    if (!window.confirm(`🌌 ${lv > 0 ? `Definir Ascensão ${lv} para` : "Remover a Ascensão de"} "${name}"?`)) return;
+    setBusy(`asc_${String(c.id)}`);
+    const d = await callAdmin({ action: "set_ascension", characterId: c.id, level: lv });
+    setMessage(d.success ? `✅ ${d.message || "Ascensão definida!"}` : `❌ ${d.error || "Falha"}`);
+    await loadCharacters();
+    setBusy(null);
+  };
+
+  /** 🏆 Conceder pontos de temporada. */
+  const grantSeasonPoints = async (c: Record<string, unknown>) => {
+    if (busy) return;
+    const raw = seasonPts[String(c.id)];
+    const pts = Math.floor(Number(raw));
+    if (!raw || !Number.isFinite(pts) || pts <= 0) {
+      setMessage("❌ Informe uma quantidade de pontos maior que 0.");
+      return;
+    }
+    const name = String(c.name);
+    if (!window.confirm(`🏆 Dar ${pts} pontos de temporada para "${name}"?`)) return;
+    setBusy(`season_${String(c.id)}`);
+    const d = await callAdmin({ action: "grant_season_points", characterId: c.id, points: pts });
+    setMessage(d.success ? `✅ ${d.message || "Pontos concedidos!"}` : `❌ ${d.error || "Falha"}`);
+    await loadCharacters();
+    setBusy(null);
+  };
+
+  // ---- Ações em MASSA (selecionar vários personagens) ----
+
+  const selIds = Object.keys(sel).filter((k) => sel[k]);
+  const selCount = selIds.length;
+
+  const toggleSel = (id: string) => setSel((s) => ({ ...s, [id]: !s[id] }));
+
+  const selectAllShown = () => {
+    const chars = ((data as { characters?: unknown[] }).characters || []) as Record<string, unknown>[];
+    setSel(Object.fromEntries(chars.map((c) => [String(c.id), true])));
+  };
+
+  const clearSel = () => setSel({});
+
+  /** Roda uma ação em massa sobre os personagens marcados. */
+  const bulkRun = async (subAction: string, value?: unknown, confirmMsg?: string) => {
+    if (busy) return;
+    const ids = Object.keys(sel).filter((k) => sel[k]);
+    if (!ids.length) {
+      setMessage("❌ Marque os personagens na lista (checkbox) antes de usar uma ação em massa.");
+      return;
+    }
+    if (confirmMsg && !window.confirm(confirmMsg)) return;
+    setBusy(`bulk_${subAction}`);
+    const d = await callAdmin({ action: "bulk_action", characterIds: ids, subAction, value });
+    setMessage(d.success ? `✅ ${d.message}` : `❌ ${d.error || "Erro"}`);
+    if (d.success) {
+      clearSel();
+      await loadCharacters();
+    }
     setBusy(null);
   };
 
@@ -907,7 +1052,7 @@ export default function AdminPage() {
       body.skinId = sendSkinId;
     }
     const d = await callAdmin(body);
-    const targetName = ((data.characters as SkinChar[]) ?? []).find((c) => c.id === sendCharId)?.name || "";
+    const targetName = (Array.isArray(data.characters) ? (data.characters as SkinChar[]) : []).find((c) => c.id === sendCharId)?.name || "";
     setMessage(d.success ? `📨 Presente enviado para ${targetName} — aparece no CORREIO do jogador!` : `❌ ${d.error || "Erro"}`);
   };
 
@@ -1071,6 +1216,38 @@ export default function AdminPage() {
     setLoading(false);
   };
 
+  /** Carrega o livro-razão permanente (quem comprou — sobrevive ao reset). */
+  const loadLedger = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin?action=purchase_ledger`, { headers });
+      const d = await res.json();
+      setLedgerList(Array.isArray(d.ledger) ? (d.ledger as Record<string, unknown>[]) : []);
+      setLedgerChars(Array.isArray(d.characters) ? (d.characters as Record<string, unknown>[]) : []);
+      if (d.backfilled > 0) setMessage(`📒 ${d.backfilled} compra(s) antiga(s) migradas para o livro-razão permanente.`);
+    } catch { /* ignora */ }
+    setLedgerLoaded(true);
+    setLoading(false);
+  };
+
+  /** 💎 Reenvia os diamantes de uma compra registrada (após o reset do jogo). */
+  const refundLedger = async (entry: Record<string, unknown>) => {
+    if (busy) return;
+    const targetId = ledgerRefundTo[String(entry.id)] || String(entry.characterId || "");
+    const name = String(entry.characterName || "?");
+    const diamonds = Number(entry.diamonds || 0);
+    if (!targetId) {
+      setMessage("❌ Selecione o personagem que deve receber o reembolso.");
+      return;
+    }
+    if (!window.confirm(`💎 Reenviar ${diamonds.toLocaleString()} diamantes de "${name}" para o personagem selecionado? (fica marcado como enviado)`)) return;
+    setBusy(`refund_${String(entry.id)}`);
+    const d = await callAdmin({ action: "refund_purchase", ledgerId: entry.id, characterId: targetId });
+    setMessage(d.success ? `✅ ${d.message}` : `❌ ${d.error || "Falha"}`);
+    await loadLedger();
+    setBusy(null);
+  };
+
   /** Aprova (credita diamantes) ou rejeita um comprovante de compra PIX. */
   const decidePurchase = async (purchase: Record<string, unknown>, approve: boolean) => {
     const p = purchase as Record<string, unknown>;
@@ -1216,6 +1393,7 @@ export default function AdminPage() {
     if (tab === "server" && !serverLoaded) loadServerSettings();
     if (tab === "donate" && !donateLoaded) loadDonateSettings();
     if (tab === "pix" && !pixLoaded) loadPurchases();
+    if (tab === "ledger" && !ledgerLoaded) loadLedger();
     if (tab === "ghost" && !ghostLoaded) loadGhostShop();
     if (tab === "worldboss" && !wbLoaded) loadWorldBoss();
   }, [tab, serverLoaded, donateLoaded, pixLoaded, ghostLoaded, wbLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -1312,6 +1490,7 @@ export default function AdminPage() {
     { id: "logs", label: "Logs", icon: "📜" },
     { id: "donate", label: "Donate (PIX)", icon: "💖" },
     { id: "pix", label: "Compras PIX", icon: "💎" },
+    { id: "ledger", label: "Já Compraram", icon: "📒" },
     { id: "ghost", label: "Loja Fantasma", icon: "👻" },
     { id: "worldboss", label: "Evento Global", icon: "🌍" },
     { id: "inventory", label: "Inventário", icon: "🎒" },
@@ -1544,6 +1723,87 @@ export default function AdminPage() {
                   </button>
                 </div>
 
+                {/* ✅ Ações em MASSA — marque os personagens na lista e aplique em todos de uma vez */}
+                <div className="bg-[#1a1a2e] rounded-xl p-4 border border-[#4ecdc4]/40 mb-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <h3 className="text-sm font-bold text-[#4ecdc4]">✅ Ações em Massa</h3>
+                    <div className="flex items-center gap-2 flex-wrap text-xs">
+                      <span className="text-gray-300 font-bold">🎯 {selCount} selecionado(s)</span>
+                      <button onClick={selectAllShown} className="text-[#4ecdc4] border border-[#4ecdc4]/40 rounded-lg px-3 py-1.5 hover:bg-[#4ecdc4]/10">☑️ Selecionar visíveis</button>
+                      <button onClick={clearSel} className="text-gray-400 border border-white/15 rounded-lg px-3 py-1.5 hover:bg-white/10">🗑️ Limpar</button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Torre */}
+                    <button
+                      onClick={() => bulkRun("reset_tower", undefined, `🗼 Resetar a TORRE para o 1º andar de ${selCount} personagem(ns)?`)}
+                      disabled={busy?.startsWith("bulk_")}
+                      className="text-xs bg-[#7c5cfc] text-white rounded-lg px-3 py-2 font-bold hover:opacity-90 disabled:opacity-40">
+                      🗼 Resetar Torre (1º andar)
+                    </button>
+                    {/* Pets */}
+                    <select value={bulkPetId} onChange={(e) => setBulkPetId(e.target.value)}
+                      className="bg-[#0a0a12] border border-gray-700 rounded-lg px-2 py-2 text-xs text-white">
+                      <option value="">🐾 Pet...</option>
+                      {PET_DEFS.map((p) => (
+                        <option key={p.id} value={p.id}>{p.icon} {t(p.nameKey, "pt-BR")}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => bulkRun("grant_pet", bulkPetId, `🐾 Dar o pet selecionado para ${selCount} personagem(ns)?`)}
+                      disabled={busy?.startsWith("bulk_") || !bulkPetId}
+                      className="text-xs bg-[#4ecdc4] text-black rounded-lg px-3 py-2 font-bold hover:opacity-90 disabled:opacity-40">
+                      🐾 Dar Pet
+                    </button>
+                    <button
+                      onClick={() => bulkRun("grant_all_pets", undefined, `🎁 Dar TODOS os pets para ${selCount} personagem(ns)?`)}
+                      disabled={busy?.startsWith("bulk_")}
+                      className="text-xs bg-[#22c55e] text-black rounded-lg px-3 py-2 font-bold hover:opacity-90 disabled:opacity-40">
+                      🎁 Todos os Pets
+                    </button>
+                    {/* Pontos / Recursos / VIP / Temporada */}
+                    <button
+                      onClick={() => bulkRun("grant_stat_points", undefined, `➕ Dar 3×Lv pontos de status para ${selCount} personagem(ns)?`)}
+                      disabled={busy?.startsWith("bulk_")}
+                      className="text-xs bg-[#4ecdc4] text-black rounded-lg px-3 py-2 font-bold hover:opacity-90 disabled:opacity-40">
+                      ➕ Pontos (3×Lv)
+                    </button>
+                    <div className="flex items-center gap-1 bg-[#0a0a12] border border-gray-700 rounded-lg px-2 py-1.5">
+                      <input value={bulkResGold} onChange={(e) => setBulkResGold(e.target.value)} type="number" min="0" placeholder="💰" title="Ouro" className="w-20 bg-transparent text-xs text-white" />
+                      <input value={bulkResDiamonds} onChange={(e) => setBulkResDiamonds(e.target.value)} type="number" min="0" placeholder="💎" title="Diamantes" className="w-16 bg-transparent text-xs text-white" />
+                      <input value={bulkResCrystals} onChange={(e) => setBulkResCrystals(e.target.value)} type="number" min="0" placeholder="🔮" title="Cristais" className="w-16 bg-transparent text-xs text-white" />
+                      <button
+                        onClick={() => bulkRun("grant_resources", { gold: Number(bulkResGold) || 0, diamonds: Number(bulkResDiamonds) || 0, crystals: Number(bulkResCrystals) || 0 }, `🎁 Dar recursos para ${selCount} personagem(ns)?`)}
+                        disabled={busy?.startsWith("bulk_")}
+                        className="text-xs bg-[#ffd700] text-black rounded-lg px-2.5 py-1 font-bold hover:opacity-90 disabled:opacity-40">
+                        🎁 Recursos
+                      </button>
+                    </div>
+                    <select value={bulkVipTier} onChange={(e) => setBulkVipTier(e.target.value)}
+                      className="bg-[#0a0a12] border border-gray-700 rounded-lg px-2 py-2 text-xs text-white">
+                      <option value="">👑 VIP...</option>
+                      {VIP_TIERS.map((tier) => (
+                        <option key={tier.id} value={tier.id}>{VIP_LABELS[tier.id] || tier.id}</option>
+                      ))}
+                    </select>
+                    <button
+                      onClick={() => bulkRun("set_vip", bulkVipTier, `👑 Aplicar VIP em ${selCount} personagem(ns)? (30 dias)`)}
+                      disabled={busy?.startsWith("bulk_") || !bulkVipTier}
+                      className="text-xs bg-[#ffd700] text-black rounded-lg px-3 py-2 font-bold hover:opacity-90 disabled:opacity-40">
+                      👑 VIP
+                    </button>
+                    <div className="flex items-center gap-1">
+                      <input value={bulkSeasonPts} onChange={(e) => setBulkSeasonPts(e.target.value)} type="number" min="1" placeholder="🏆 pts" className="w-20 bg-[#0a0a12] border border-gray-700 rounded-lg px-2 py-2 text-xs text-white" />
+                      <button
+                        onClick={() => bulkRun("grant_season_points", Math.max(1, Math.floor(Number(bulkSeasonPts) || 0)), `🏆 Dar ${bulkSeasonPts} pontos de temporada para ${selCount} personagem(ns)?`)}
+                        disabled={busy?.startsWith("bulk_")}
+                        className="text-xs bg-[#ffd700] text-black rounded-lg px-3 py-2 font-bold hover:opacity-90 disabled:opacity-40">
+                        🏆 Temporada
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Edit Form */}
                 <div className="bg-[#1a1a2e] rounded-xl p-4 border border-[#ffd700]/30 mb-4">
                   <h3 className="text-sm font-bold text-[#ffd700] mb-3">⚡ Editar Personagem (use o ID da lista abaixo)</h3>
@@ -1560,9 +1820,16 @@ export default function AdminPage() {
                 {loading ? <div className="text-center py-10 text-gray-400">Carregando...</div> : (
                   <div className="space-y-2">
                     {Array.isArray((data as { characters?: unknown[] }).characters) && ((data as { characters: Record<string, unknown>[] }).characters).map((c) => (
-                      <div key={String(c.id)} className="bg-[#1a1a2e] rounded-xl p-3 border border-white/10">
+                      <div key={String(c.id)} className={`bg-[#1a1a2e] rounded-xl p-3 border ${sel[String(c.id)] ? "border-[#4ecdc4]/70 ring-1 ring-[#4ecdc4]/40" : "border-white/10"}`}>
                         <div className="flex flex-wrap items-center justify-between gap-3">
                           <div className="flex items-center gap-3 flex-wrap">
+                          <input
+                            type="checkbox"
+                            checked={!!sel[String(c.id)]}
+                            onChange={() => toggleSel(String(c.id))}
+                            title="Marcar para ações em massa"
+                            className="accent-[#4ecdc4] w-5 h-5 cursor-pointer shrink-0"
+                          />
                           <span className="text-xl">{CLASS_ICONS[(c.classType as ClassName) || "warrior"]}</span>
                           <div>
                             <div className="font-bold text-white">{String(c.name)}</div>
@@ -1686,6 +1953,107 @@ export default function AdminPage() {
                           {busy === `adj_${String(c.id)}` ? "..." : "✅ Aplicar"}
                         </button>
                       </div>
+
+                      {/* 🐾 Pets — dar pet específico ou a coleção inteira */}
+                      <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-white/5 pt-2">
+                        <span className="text-[11px] text-gray-400 font-bold">🐾 Pets:</span>
+                        <select
+                          value={petSelects[String(c.id)] || ""}
+                          onChange={(e) => setPetSelects((s) => ({ ...s, [String(c.id)]: e.target.value }))}
+                          className="bg-[#0a0a12] border border-gray-700 rounded-lg px-2 py-1 text-xs text-white focus:border-[#4ecdc4] focus:outline-none"
+                        >
+                          <option value="">Selecione o pet...</option>
+                          {PET_DEFS.map((p) => (
+                            <option key={p.id} value={p.id}>{p.icon} {t(p.nameKey, "pt-BR")} ({p.rarity})</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => grantPet(c)}
+                          disabled={busy === `pet_${String(c.id)}`}
+                          className="text-xs bg-[#4ecdc4] text-black rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
+                          {busy === `pet_${String(c.id)}` ? "..." : "🐾 Dar Pet"}
+                        </button>
+                        <button
+                          onClick={() => grantAllPets(c)}
+                          disabled={busy === `pets_all_${String(c.id)}`}
+                          className="text-xs bg-[#22c55e] text-black rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
+                          {busy === `pets_all_${String(c.id)}` ? "..." : "🎁 Todos os Pets"}
+                        </button>
+                        <span className="text-[11px] text-gray-500">
+                          {(() => {
+                            const pets = Array.isArray(c.pets) ? (c.pets as { id: string; level: number }[]) : [];
+                            if (pets.length === 0) return "sem pets";
+                            return `${pets.length} pet(s) • ativo: ${String(c.activePetId || "nenhum")}`;
+                          })()}
+                        </span>
+                      </div>
+
+                      {/* 🌟 Classe Avançada — setar/remover direto */}
+                      <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-white/5 pt-2">
+                        <span className="text-[11px] text-gray-400 font-bold">🌟 Classe Avançada:</span>
+                        <select
+                          value={advSelects[String(c.id)] || ""}
+                          onChange={(e) => setAdvSelects((s) => ({ ...s, [String(c.id)]: e.target.value }))}
+                          className="bg-[#0a0a12] border border-gray-700 rounded-lg px-2 py-1 text-xs text-white focus:border-[#a855f7] focus:outline-none"
+                        >
+                          <option value="">Remover...</option>
+                          {ADVANCED_CLASSES.map((a) => (
+                            <option key={a.id} value={a.id}>{a.icon} {t(a.nameKey, "pt-BR")} ({a.cls})</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={() => setAdvClass(c)}
+                          disabled={busy === `adv_${String(c.id)}`}
+                          className="text-xs bg-[#a855f7] text-white rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
+                          {busy === `adv_${String(c.id)}` ? "..." : "🌟 Setar"}
+                        </button>
+                        <span className="text-[11px] text-gray-500">
+                          atual: {String((c.advancedClass as any)?.id || "nenhuma")}
+                        </span>
+                      </div>
+
+                      {/* 🌌 Ascensão — setar patamar (0 = remover) */}
+                      <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-white/5 pt-2">
+                        <span className="text-[11px] text-gray-400 font-bold">🌌 Ascensão:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max={ASCENSION_MAX}
+                          value={ascLevels[String(c.id)] ?? String(Number(c.ascension) || 0)}
+                          onChange={(e) => setAscLevels((s) => ({ ...s, [String(c.id)]: e.target.value }))}
+                          placeholder={`0-${ASCENSION_MAX}`}
+                          className="w-16 bg-[#0a0a12] border border-gray-700 rounded-lg px-2 py-1 text-xs text-white focus:border-[#facc15] focus:outline-none"
+                        />
+                        <button
+                          onClick={() => setAscension(c)}
+                          disabled={busy === `asc_${String(c.id)}`}
+                          className="text-xs bg-[#facc15] text-black rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
+                          {busy === `asc_${String(c.id)}` ? "..." : "🌌 Setar"}
+                        </button>
+                        <span className="text-[11px] text-gray-500">atual: {Number(c.ascension) || 0}/{ASCENSION_MAX}</span>
+                      </div>
+
+                      {/* 🏆 Temporada — conceder pontos */}
+                      <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-white/5 pt-2">
+                        <span className="text-[11px] text-gray-400 font-bold">🏆 Temporada:</span>
+                        <input
+                          type="number"
+                          min="1"
+                          value={seasonPts[String(c.id)] || ""}
+                          onChange={(e) => setSeasonPts((s) => ({ ...s, [String(c.id)]: e.target.value }))}
+                          placeholder="pontos"
+                          className="w-20 bg-[#0a0a12] border border-gray-700 rounded-lg px-2 py-1 text-xs text-white focus:border-[#ffd700] focus:outline-none"
+                        />
+                        <button
+                          onClick={() => grantSeasonPoints(c)}
+                          disabled={busy === `season_${String(c.id)}`}
+                          className="text-xs bg-[#ffd700] text-black rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
+                          {busy === `season_${String(c.id)}` ? "..." : "🏆 Dar Pontos"}
+                        </button>
+                        <span className="text-[11px] text-gray-500">
+                          atual: {Number(c.seasonPoints || 0).toLocaleString()} pts (temp {String(c.seasonId || "-")})
+                        </span>
+                      </div>
                     </div>
                   ))}
                   </div>
@@ -1700,7 +2068,7 @@ export default function AdminPage() {
                   <select value={sendCharId} onChange={(e) => setSendCharId(e.target.value)}
                     className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#ff6b6b] focus:outline-none mb-3">
                     <option value="">— selecionar personagem —</option>
-                    {((data.characters as SkinChar[]) ?? []).map((c) => (
+                    {(Array.isArray(data.characters) ? (data.characters as SkinChar[]) : []).map((c) => (
                       <option key={c.id} value={c.id}>{c.name} (Lv.{c.level} · {CLASS_ICONS[(c.classType as ClassName) || "warrior"]})</option>
                     ))}
                   </select>
@@ -2837,7 +3205,7 @@ export default function AdminPage() {
                     }}
                       className="flex-1 min-w-[240px] bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#ffd700] focus:outline-none">
                       <option value="">— selecionar personagem —</option>
-                      {((data.characters as SkinChar[]) ?? []).map((c) => (
+                      {(Array.isArray(data.characters) ? (data.characters as SkinChar[]) : []).map((c) => (
                         <option key={c.id} value={c.id}>{c.name} (Lv.{c.level} · {CLASS_ICONS[(c.classType as ClassName) || "warrior"]})</option>
                       ))}
                     </select>
@@ -2961,6 +3329,40 @@ export default function AdminPage() {
                         className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white focus:border-[#a855f7] focus:outline-none" />
                     </div>
                   </div>
+                  <div className="grid grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">🎁 VIP (tier, opcional)</label>
+                      <select value={codeVipTier} onChange={(e) => setCodeVipTier(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white focus:border-[#ffd700] focus:outline-none">
+                        <option value="">Sem VIP</option>
+                        {VIP_TIERS.map((tier) => (
+                          <option key={tier.id} value={tier.id}>{VIP_LABELS[tier.id] || tier.id}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">VIP por (dias)</label>
+                      <input value={codeVipDays} onChange={(e) => setCodeVipDays(e.target.value)} type="number" min="1"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white focus:border-[#a855f7] focus:outline-none" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">💰 Ouro</label>
+                      <input value={codeGold} onChange={(e) => setCodeGold(e.target.value)} type="number" min="0"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white focus:border-[#a855f7] focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">💎 Diamantes</label>
+                      <input value={codeDiamonds} onChange={(e) => setCodeDiamonds(e.target.value)} type="number" min="0"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white focus:border-[#a855f7] focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">🔮 Cristais</label>
+                      <input value={codeCrystals} onChange={(e) => setCodeCrystals(e.target.value)} type="number" min="0"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white focus:border-[#a855f7] focus:outline-none" />
+                    </div>
+                  </div>
                   <div className="mb-4">
                     <label className="block text-xs text-gray-500 mb-1">Rótulo / mensagem</label>
                     <input value={codeLabel} onChange={(e) => setCodeLabel(e.target.value)}
@@ -2992,6 +3394,12 @@ export default function AdminPage() {
                             <div className="flex flex-wrap gap-2 mb-2">
                               {Number(c.xpHours) > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ffd700]/10 border border-[#ffd700]/40 text-[#ffd700]">2x XP • {String(c.xpHours)}h</span>}
                               {Number(c.energyHours) > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#4ecdc4]/10 border border-[#4ecdc4]/40 text-[#4ecdc4]">2x Energia • {String(c.energyHours)}h</span>}
+                              {!!c.vipTier && Number(c.vipDays) > 0 && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ffd700]/10 border border-[#ffd700]/40 text-[#ffd700]">👑 VIP {String(c.vipTier)} • {String(c.vipDays)}d</span>
+                              )}
+                              {Number(c.gold) > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ffd700]/10 border border-[#ffd700]/40 text-[#ffd700]">💰 {Number(c.gold).toLocaleString()}</span>}
+                              {Number(c.diamonds) > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#a855f7]/10 border border-[#a855f7]/40 text-purple-300">💎 {Number(c.diamonds)}</span>}
+                              {Number(c.crystals) > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#4ecdc4]/10 border border-[#4ecdc4]/40 text-[#4ecdc4]">🔮 {Number(c.crystals)}</span>}
                             </div>
                             <p className="text-[11px] text-gray-400 mb-1.5">💬 {String(c.label || "Boost 2x")}</p>
                             <p className="text-[11px] text-gray-500 mb-2">
@@ -3338,6 +3746,72 @@ export default function AdminPage() {
                                 </div>
                               )}
                             </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+            {tab === "ledger" && (
+              <div className="space-y-4">
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-[#ffd700]/30">
+                  <h3 className="text-sm font-bold text-[#ffd700] mb-1">📒 Jogadores que JÁ COMPRARAM (livro-razão permanente)</h3>
+                  <p className="text-xs text-gray-400 mb-4">
+                    Registro <b className="text-[#ffd700]">eterno</b> de todas as compras aprovadas — <b className="text-white">sobrevive ao reset do jogo</b>.
+                    Se o jogo for resetado, use <b className="text-[#4ecdc4]">💎 Reenviar</b> para devolver os diamantes ao jogador
+                    (escolha o personagem que deve receber). Cada reembolso só pode ser enviado <b className="text-white">1 vez</b>.
+                  </p>
+                  <div className="flex justify-between items-center flex-wrap gap-2 mb-3">
+                    <span className="text-xs text-gray-400">Total registrado: <b className="text-white">{ledgerList.length}</b> compra(s) · 💎 <b className="text-[#ffd700]">{ledgerList.reduce((s, e) => s + (Number(e.diamonds) || 0), 0).toLocaleString()}</b></span>
+                    <button onClick={loadLedger} className="text-xs text-[#ffd700] border border-[#ffd700]/40 rounded-lg px-3 py-1.5 hover:bg-[#ffd700]/10">🔄 Atualizar</button>
+                  </div>
+                  {loading && ledgerList.length === 0 ? (
+                    <div className="text-center text-gray-500 text-sm py-10">Carregando...</div>
+                  ) : ledgerList.length === 0 ? (
+                    <div className="text-center text-gray-500 text-sm py-10">Nenhuma compra aprovada ainda — as aprovações na aba Compras PIX entram aqui automaticamente.</div>
+                  ) : (
+                    <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
+                      {ledgerList.map((e) => {
+                        const refunded = !!e.refunded;
+                        const diamonds = Number(e.diamonds || 0);
+                        return (
+                          <div key={String(e.id)} className={`rounded-xl border p-3 ${refunded ? "border-green-500/40 bg-green-500/5" : "border-white/10 bg-[#0a0a12]"}`}>
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-lg">💎</span>
+                                <div>
+                                  <div className="font-bold text-white">{String(e.characterName || "?")}</div>
+                                  <div className="text-[10px] text-gray-500 font-mono">{String(e.characterId || "").slice(0, 13)}… · R$ {String(e.valueBRL || 0)} · {e.approvedAt ? new Date(String(e.approvedAt)).toLocaleDateString("pt-BR") : ""}</div>
+                                </div>
+                              </div>
+                              <span className="text-sm font-black text-[#ffd700]">💎 {diamonds.toLocaleString()}</span>
+                              {refunded && (
+                                <span className="text-[10px] bg-green-500/20 text-green-300 border border-green-500/40 rounded-full px-2 py-0.5 font-bold">
+                                  ✅ Enviado {e.refundedAt ? new Date(String(e.refundedAt)).toLocaleDateString("pt-BR") : ""} {e.refundedToName ? `para ${String(e.refundedToName)}` : ""}
+                                </span>
+                              )}
+                            </div>
+                            {!refunded && (
+                              <div className="mt-2 flex flex-wrap items-center gap-2">
+                                <select
+                                  value={ledgerRefundTo[String(e.id)] || String(e.characterId || "")}
+                                  onChange={(ev) => setLedgerRefundTo((s) => ({ ...s, [String(e.id)]: ev.target.value }))}
+                                  className="bg-[#0a0a12] border border-gray-700 rounded-lg px-2 py-1.5 text-xs text-white flex-1 min-w-[200px]">
+                                  <option value={String(e.characterId || "")}>Personagem original ({String(e.characterName || "?")})</option>
+                                  {ledgerChars.filter((c) => String(c.id) !== String(e.characterId)).map((c) => (
+                                    <option key={String(c.id)} value={String(c.id)}>Enviar para: {String(c.name)} (Lv.{String(c.level)})</option>
+                                  ))}
+                                </select>
+                                <button
+                                  onClick={() => refundLedger(e)}
+                                  disabled={busy === `refund_${String(e.id)}`}
+                                  className="text-xs bg-[#4ecdc4] text-black rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
+                                  {busy === `refund_${String(e.id)}` ? "..." : "💎 Reenviar"}
+                                </button>
+                              </div>
+                            )}
                           </div>
                         );
                       })}

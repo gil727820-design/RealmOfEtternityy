@@ -2,6 +2,52 @@ import { NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { missingRegionMissions } from "@/game/generatedMissions";
 import { RPG_ITEMS } from "@/game/rpgItems.gen";
+import { MATERIAL_TEMPLATES } from "@/game/materials";
+import { RELICS } from "@/game/relics";
+
+// ─── Materiais (crafting) ────────────────────────────────────────────────────
+// Templates empilháveis (type "material") com ids 5000+ — livres do catálogo
+// RPG (que vai até 1271). A definição real (pesos, níveis, receitas) está em
+// src/game/materials.ts; aqui só garantimos que existem como templates no banco
+// para o inventário/loja exibirem os cartões corretos.
+// ─── Relíquias ───────────────────────────────────────────────────────────────
+// Templates com slot "relic" (ids 6000+, livres). A definição real (buffs) está
+// em src/game/relics.ts; aqui só garantimos que existem como templates.
+const RELIC_TEMPLATES = RELICS.map((r, i) => ({
+  id: 6000 + i,
+  nameKey: r.nameKey,
+  type: "equipment",
+  stackable: false,
+  slot: "relic",
+  relicId: r.id,
+  rarity: r.rarity,
+  icon: r.icon,
+  image: r.image,
+  minLevel: 1,
+  attack: 0,
+  defense: 0,
+  hp: 0,
+  speed: 0,
+  critical: 0,
+  sellPrice: 200 + i * 100,
+}));
+
+const MATERIALS = MATERIAL_TEMPLATES.map((m) => ({
+  id: m.id,
+  nameKey: m.nameKey,
+  type: "material",
+  stackable: true,
+  rarity: m.rarity,
+  icon: m.icon,
+  slot: null,
+  minLevel: m.minLevel,
+  attack: 0,
+  defense: 0,
+  hp: 0,
+  speed: 0,
+  critical: 0,
+  sellPrice: Math.max(1, Math.round(m.minLevel * 2)),
+}));
 
 // ─── Catálogo de Espadas ────────────────────────────────────────────────────
 // Ícones de arma (32×32) copiados de "32 Free Weapon Icons" para
@@ -88,6 +134,20 @@ export async function POST() {
         await jsonDb.insertItemTemplates(missing);
         itemsInserted = missing.length;
       }
+    }
+
+    // Materiais de craft — sempre garante que existam (idempotente).
+    const knownMaterialIds = new Set((await jsonDb.getAllItemTemplates()).map((t: any) => t.id));
+    const missingMaterials = MATERIALS.filter((m) => !knownMaterialIds.has(m.id));
+    if (missingMaterials.length) {
+      await jsonDb.insertItemTemplates(missingMaterials);
+      itemsInserted += missingMaterials.length;
+    }
+    // Relíquias — sempre garante que existam (idempotente).
+    const missingRelics = RELIC_TEMPLATES.filter((r) => !knownMaterialIds.has(r.id));
+    if (missingRelics.length) {
+      await jsonDb.insertItemTemplates(missingRelics);
+      itemsInserted += missingRelics.length;
     }
 
     // Check if missions already seeded

@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { requireCharacterAuth } from "@/game/auth";
+import {
+  GUILD_UPGRADES,
+  getGuildUpgrades,
+  upgradeCost,
+  guildMaxMembers,
+  guildLevelStatus,
+  type GuildUpgrades,
+} from "@/game/guildLevels";
+import { syncGuildBuffsToCharacter, syncGuildBuffsToAllMembers } from "@/game/guildActivity";
 
 const MAX_MEMBERS = 10;
 
@@ -57,9 +66,13 @@ export async function GET(req: NextRequest) {
       membership: myGuild ? String(g.id) === String(myGuild.id) : false,
     }));
 
+    // Status da guilda evolutiva (nível, XP, melhorias e buffs) para a UI.
+    const guildStatus = myGuild ? guildLevelStatus(myGuild) : null;
+
     return NextResponse.json({
       guilds: publicGuilds,
       guild: myGuild,
+      guildStatus,
       myInvites,
       guildRequests,
     });
@@ -171,6 +184,90 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, guild });
     }
 
+    // ---------- DOAR ouro para o banco da guilda ----------
+    if (action === "donate") {
+      const { characterId, guildId, amount } = body;
+      const char = await jsonDb.findCharacterById(String(characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+      const guild = await jsonDb.findGuildById(String(guildId));
+      if (!guild) return NextResponse.json({ error: "Guilda não encontrada" }, { status: 404 });
+      const isMember = (Array.isArray(guild.members) ? guild.members : []).some((m: any) => m.id === String(characterId));
+      if (!isMember) return NextResponse.json({ error: "Você não é membro desta guilda" }, { status: 403 });
+
+      const qty = Math.floor(Number(amount));
+      if (!Number.isFinite(qty) || qty < 100) {
+        return NextResponse.json({ error: "Doe pelo menos 100 de ouro" }, { status: 400 });
+      }
+      if ((char.gold || 0) < qty) {
+        return NextResponse.json({ error: "Ouro insuficiente" }, { status: 400 });
+      }
+
+      await jsonDb.updateCharacter(char.id, { gold: (char.gold || 0) - qty });
+      const updatedGuild = await jsonDb.updateGuild(String(guildId), {
+        gold: (Number(guild.gold) || 0) + qty,
+      });
+      await jsonDb.insertGuildChatMessage({
+        guildId: String(guildId),
+        characterId: "system",
+        name: "Sistema",
+        text: `${char.name} doou ${qty} de ouro para o banco da guilda.`,
+      });
+      return NextResponse.json({ success: true, gold: (Number(guild.gold) || 0) + qty, guild: updatedGuild });
+    }
+
+    // ---------- MELHORAR guilda (gasta ouro do banco) ----------
+    if (action === "upgrade") {
+      const { characterId, guildId, upgradeId } = body;
+      const char = await jsonDb.findCharacterById(String(characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+      const guild = await jsonDb.findGuildById(String(guildId));
+      if (!guild) return NextResponse.json({ error: "Guilda não encontrada" }, { status: 404 });
+
+      // Só o líder (ou oficial) pode melhorar a guilda.
+      const isLeaderOrOfficer = (Array.isArray(guild.members) ? guild.members : []).some(
+        (m: any) => m.id === String(characterId) && (m.rank === "leader" || m.rank === "officer")
+      );
+      if (!isLeaderOrOfficer) {
+        return NextResponse.json({ error: "Apenas o líder ou oficiais podem melhorar a guilda" }, { status: 403 });
+      }
+
+      const def = GUILD_UPGRADES.find((u) => u.id === upgradeId);
+      if (!def) return NextResponse.json({ error: "Melhoria inválida" }, { status: 400 });
+
+      const upgrades = getGuildUpgrades(guild);
+      const currentLevel = upgrades[def.id as keyof GuildUpgrades];
+      if (currentLevel >= def.maxLevel) {
+        return NextResponse.json({ error: "Esta melhoria já está no nível máximo" }, { status: 400 });
+      }
+
+      const cost = upgradeCost(def, currentLevel);
+      if ((Number(guild.gold) || 0) < cost) {
+        return NextResponse.json(
+          { error: `O banco da guilda precisa de ${cost} de ouro (dê uma doação!)` },
+          { status: 400 }
+        );
+      }
+
+      const newUpgrades = { ...upgrades, [def.id]: currentLevel + 1 };
+      const updatedGuild = await jsonDb.updateGuild(String(guildId), {
+        upgrades: newUpgrades,
+        gold: (Number(guild.gold) || 0) - cost,
+      });
+      // Atualiza o snapshot de buffs de TODOS os membros (novo buff vale na hora).
+      await syncGuildBuffsToAllMembers(updatedGuild);
+      await jsonDb.insertGuildChatMessage({
+        guildId: String(guildId),
+        characterId: "system",
+        name: "Sistema",
+        text: `${char.name} melhorou ${def.nameKey} para nível ${currentLevel + 1}!`,
+      });
+      return NextResponse.json({
+        success: true,
+        guild: updatedGuild,
+        status: guildLevelStatus(updatedGuild),
+      });
+    }
+
     // ---------- SAIR / EXPULSAR ----------
     if (action === "leave" || action === "kick") {
       const { characterId, guildId, targetId } = body;
@@ -206,7 +303,7 @@ export async function POST(req: NextRequest) {
       }
 
       await jsonDb.updateGuild(String(guildId), { members: nextMembers });
-      await jsonDb.updateCharacter(leavingId, { guildId: null, guildRank: null });
+      await jsonDb.updateCharacter(leavingId, { guildId: null, guildRank: null, guildBuffs: null });
       return NextResponse.json({ success: true, guild: await jsonDb.findGuildById(String(guildId)) });
     }
 
@@ -244,7 +341,8 @@ export async function POST(req: NextRequest) {
       const guild = await jsonDb.findGuildById(String(guildId));
       if (!guild) return NextResponse.json({ error: "Guilda não encontrada" }, { status: 404 });
       const members = (Array.isArray(guild.members) ? guild.members : []) as any[];
-      if (members.length >= MAX_MEMBERS) return NextResponse.json({ error: "Guilda cheia" }, { status: 400 });
+      const memberLimit = guildMaxMembers(Number(guild.level) || 1);
+      if (members.length >= memberLimit) return NextResponse.json({ error: "Guilda cheia" }, { status: 400 });
       if (await jsonDb.hasPendingGuildInvite(char.id, String(guildId))) {
         return NextResponse.json({ error: "Você já solicitou entrada nesta guilda" }, { status: 400 });
       }
@@ -277,7 +375,7 @@ export async function POST(req: NextRequest) {
       if (!members.some((m: any) => m.id === String(characterId) && m.rank === "leader")) {
         return NextResponse.json({ error: "Apenas o líder pode aceitar pedidos" }, { status: 403 });
       }
-      if (members.length >= MAX_MEMBERS) {
+      if (members.length >= guildMaxMembers(Number(guild.level) || 1)) {
         await jsonDb.updateGuildInvite(invite.id, { status: "declined", resolvedAt: new Date().toISOString() });
         return NextResponse.json({ error: "Guilda cheia" }, { status: 400 });
       }
@@ -290,6 +388,9 @@ export async function POST(req: NextRequest) {
       await jsonDb.updateCharacter(targetChar.id, { guildId: guild.id, guildRank: "member" });
       await jsonDb.updateGuildInvite(invite.id, { status: "accepted", resolvedAt: new Date().toISOString() });
       await jsonDb.insertGuildChatMessage({ guildId: String(guild.id), characterId: "system", name: "Sistema", text: `${targetChar.name} entrou na guilda.` });
+      // Grava o snapshot dos buffs atuais da guilda no novo membro.
+      const acceptedGuild = await jsonDb.findGuildById(String(guild.id));
+      if (acceptedGuild) await syncGuildBuffsToCharacter(targetChar.id, acceptedGuild);
       return NextResponse.json({ success: true, guild: await jsonDb.findGuildById(guild.id) });
     }
 // ---------- JOGADOR aceita/recusa CONVITE recebido ----------
@@ -308,7 +409,7 @@ export async function POST(req: NextRequest) {
       const guild = await jsonDb.findGuildById(String(invite.guildId));
       if (!guild) return NextResponse.json({ error: "Guilda não existe mais" }, { status: 404 });
       const members = (Array.isArray(guild.members) ? guild.members : []) as any[];
-      if (members.length >= MAX_MEMBERS) return NextResponse.json({ error: "Guilda cheia" }, { status: 400 });
+      if (members.length >= guildMaxMembers(Number(guild.level) || 1)) return NextResponse.json({ error: "Guilda cheia" }, { status: 400 });
       const targetChar = await jsonDb.findCharacterById(String(characterId));
       if (!targetChar) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
       if (targetChar.guildId) return NextResponse.json({ error: "Você já está em uma guilda" }, { status: 400 });
@@ -318,6 +419,9 @@ export async function POST(req: NextRequest) {
       await jsonDb.updateCharacter(targetChar.id, { guildId: guild.id, guildRank: "member" });
       await jsonDb.updateGuildInvite(invite.id, { status: "accepted", resolvedAt: new Date().toISOString() });
       await jsonDb.insertGuildChatMessage({ guildId: String(guild.id), characterId: "system", name: "Sistema", text: `${targetChar.name} entrou na guilda.` });
+      // Grava o snapshot dos buffs atuais da guilda no novo membro.
+      const joinedGuild = await jsonDb.findGuildById(String(guild.id));
+      if (joinedGuild) await syncGuildBuffsToCharacter(targetChar.id, joinedGuild);
       return NextResponse.json({ success: true, guild: await jsonDb.findGuildById(guild.id) });
     }
 

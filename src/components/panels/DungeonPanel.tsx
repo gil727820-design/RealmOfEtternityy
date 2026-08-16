@@ -6,11 +6,14 @@ import { RARITY_COLORS } from "@/game/constants";
 import {
   DUNGEON_DAILY_CAP,
   DUNGEON_DURATIONS_SEC,
+  DUNGEON_DIFFICULTIES,
+  difficultyDef,
   computeDungeonRewards,
   computeDungeonStatus,
   dungeonCapFloor,
   dungeonDurationFactor,
-  dungeonEnergyCost,
+  dungeonEnergyCostWithDiff,
+  type DungeonDifficulty,
 } from "@/game/dungeons";
 
 export default function DungeonPanel() {
@@ -19,6 +22,7 @@ export default function DungeonPanel() {
   const [loading, setLoading] = useState(true);
   const [selectedSec, setSelectedSec] = useState<number>(7200);
   const [selectedFloor, setSelectedFloor] = useState<number>(1);
+  const [difficulty, setDifficulty] = useState<DungeonDifficulty>("normal");
   const [starting, setStarting] = useState(false);
   const [collecting, setCollecting] = useState(false);
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
@@ -44,9 +48,11 @@ export default function DungeonPanel() {
   const cap = dungeonCapFloor(Number((character as any)?.level) || 1);
   const attempt = Math.max(1, Math.min(cap, selectedFloor));
   const hours = DUNGEON_DURATIONS_SEC.find((d) => d.sec === selectedSec)?.hours ?? 2;
-  const cost = dungeonEnergyCost(hours);
-  const preview = character ? computeDungeonRewards(character as any, attempt, hours) : null;
+  const diff = difficultyDef(difficulty);
+  const cost = dungeonEnergyCostWithDiff(hours, diff);
+  const preview = character ? computeDungeonRewards(character as any, attempt, hours, diff) : null;
   const energy = Number((character as any)?.energy) || 0;
+  const level = Number((character as any)?.level) || 1;
 
   const activeRun = status?.active ?? null;
   const activeDone = activeRun ? activeRun.done : false;
@@ -72,7 +78,7 @@ export default function DungeonPanel() {
       const res = await fetch("/api/dungeon/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ characterId, durationSec: selectedSec, attemptFloor: attempt }),
+        body: JSON.stringify({ characterId, durationSec: selectedSec, attemptFloor: attempt, difficulty }),
       });
       const data = await res.json();
       if (data.success) {
@@ -198,6 +204,29 @@ export default function DungeonPanel() {
                   <div className="text-[11px] text-gray-400 mt-1">recompensa ×{dungeonDurationFactor(d.hours).toLocaleString("pt-BR")}</div>
                 </button>
               ))}
+            </div>
+
+            <div className="mt-6">
+              <h3 className="text-lg font-bold mb-2 flex items-center gap-2"><span>🎚️</span>{t("dungeon.difficulty", locale)}</h3>
+              <div className="grid grid-cols-4 gap-2">
+                {DUNGEON_DIFFICULTIES.map((d) => {
+                  const locked = level < d.minLevel;
+                  const active = difficulty === d.id;
+                  return (
+                    <button
+                      key={d.id}
+                      onClick={() => !locked && setDifficulty(d.id as DungeonDifficulty)}
+                      disabled={locked}
+                      className={`rounded-xl border p-2.5 text-center transition-all ${active && !locked ? "border-[#a855f7] bg-[#a855f7]/15 ring-2 ring-[#a855f7]/40" : locked ? "border-white/5 bg-white/5 opacity-40 cursor-not-allowed" : "border-white/10 bg-white/5 hover:border-white/20"}`}
+                    >
+                      <div className="text-xl">{d.icon}</div>
+                      <div className="text-[10px] font-black text-white">{t(d.nameKey, locale)}</div>
+                      <div className="text-[9px] text-gray-500">×{d.rewardMult}{locked ? ` · Lv.${d.minLevel}` : ""}</div>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-gray-500 mt-1">{t("dungeon.difficultyHint", locale)}</p>
             </div>
 
             <div className="mt-6">

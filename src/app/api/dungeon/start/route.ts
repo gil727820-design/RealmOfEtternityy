@@ -1,20 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { computeEnergyRegen } from "@/game/energy";
+import { computeEnergyRegen, effectiveMaxEnergy } from "@/game/energy";
 import { energyMultiplier } from "@/game/boosts";
 import {
   DUNGEON_DAILY_CAP,
   DUNGEON_DURATIONS_SEC,
+  DUNGEON_DIFFICULTIES,
+  difficultyDef,
   computeDungeonRewards,
   dungeonCapFloor,
   dungeonDateKey,
   dungeonEnergyCost,
+  dungeonEnergyCostWithDiff,
+  type DungeonDifficulty,
 } from "@/game/dungeons";
 import { requireCharacterAuth } from "@/game/auth";
 
 export async function POST(req: NextRequest) {
   try {
-    const { characterId, durationSec, attemptFloor } = await req.json();
+    const { characterId, durationSec, attemptFloor, difficulty } = await req.json();
 
     if (!characterId) {
       return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
@@ -40,8 +44,18 @@ export async function POST(req: NextRequest) {
     }
     const hours = duration.hours;
 
-    // Custo de energia escala com a duração escolhida (2h=10, 4h=20, 8h=40).
-    const cost = dungeonEnergyCost(hours);
+    // Dificuldade escolhida (normal por padrão). Valida nível mínimo.
+    const diff = difficultyDef(String(difficulty || "normal") as DungeonDifficulty);
+    if ((char.level || 1) < diff.minLevel) {
+      return NextResponse.json(
+        { error: `Esta dificuldade requer nível ${diff.minLevel}+` },
+        { status: 400 }
+      );
+    }
+
+    // Custo de energia escala com a duração escolhida (2h=10, 4h=20, 8h=40)
+    // e com a dificuldade (normal ×1 → lendário ×2.5).
+    const cost = dungeonEnergyCostWithDiff(hours, diff);
 
     // Andar tentado dentro do teto permitido pelo nível.
     const cap = dungeonCapFloor(char.level || 1);
@@ -82,7 +96,7 @@ export async function POST(req: NextRequest) {
     // Deduz energia (timer de recarga recomeça a partir deste momento).
     // Com energia infinita, a energia é mantida (nunca diminui).
     await jsonDb.updateCharacter(characterId, {
-      energy: infiniteEnergy ? Math.max(regen.energy, char.maxEnergy || 100) : regen.energy - cost,
+      energy: infiniteEnergy ? Math.max(regen.energy, effectiveMaxEnergy(char)) : regen.energy - cost,
       lastEnergyAt: now.toISOString(),
       lastActivity: now.toISOString(),
     });
@@ -94,11 +108,13 @@ export async function POST(req: NextRequest) {
         durationSec: duration.sec,
         hours,
         attemptFloor: Math.max(1, attempt),
+        difficulty: diff.id,
       },
+      dungeonDifficulty: diff.id,
     });
 
     // Prévia exibida ao usuário (poder é avaliado na coleta, mas mostra a esperada).
-    const preview = computeDungeonRewards(char, attempt, hours);
+    const preview = computeDungeonRewards(char, attempt, hours, diff);
 
     return NextResponse.json({
       success: true,
@@ -106,6 +122,7 @@ export async function POST(req: NextRequest) {
       endsAt: new Date(now.getTime() + duration.sec * 1000).toISOString(),
       durationSec: duration.sec,
       hours,
+      difficulty: diff.id,
       attemptFloor: Math.max(1, attempt),
       preview,
       message: "Expedição iniciada! Conclua em:",

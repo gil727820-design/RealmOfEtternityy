@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { getBoosts, boostSummary, type Boosts } from "@/game/boosts";
 import { requireCharacterAuth } from "@/game/auth";
+import { VIP_TIERS, vipTierById } from "@/game/vip";
 
 /**
  * POST /api/codes/redeem
@@ -49,7 +50,15 @@ export async function POST(req: NextRequest) {
 
     const xpHours = Number(data.xpHours) || 0;
     const energyHours = Number(data.energyHours) || 0;
-    if (xpHours <= 0 && energyHours <= 0) {
+    // Recompensas novas: VIP por dias + recursos diretos.
+    const vipTierId = String(data.vipTier || "").trim().toLowerCase();
+    const vipDays = Math.max(0, Math.floor(Number(data.vipDays) || 0));
+    const goldReward = Math.max(0, Math.floor(Number(data.gold) || 0));
+    const diamondsReward = Math.max(0, Math.floor(Number(data.diamonds) || 0));
+    const crystalsReward = Math.max(0, Math.floor(Number(data.crystals) || 0));
+    const tierDef = vipTierById(vipTierId);
+    const hasVip = !!tierDef && vipDays > 0;
+    if (xpHours <= 0 && energyHours <= 0 && !hasVip && goldReward <= 0 && diamondsReward <= 0 && crystalsReward <= 0) {
       return NextResponse.json({ error: "Este código não possui recompensas." }, { status: 400 });
     }
 
@@ -59,19 +68,49 @@ export async function POST(req: NextRequest) {
     if (xpHours > 0) boosts.xpUntil = new Date(now + xpHours * 3600 * 1000).toISOString();
     if (energyHours > 0) boosts.energyUntil = new Date(now + energyHours * 3600 * 1000).toISOString();
 
-    const updated = await jsonDb.updateCharacter(String(characterId), {
-      boosts,
+    // Recursos diretos (ouro / diamantes / cristais).
+    const patch: Record<string, unknown> = {
+      gold: (Number(char.gold) || 0) + goldReward,
+      diamonds: (Number(char.diamonds) || 0) + diamondsReward,
+      crystals: (Number(char.crystals) || 0) + crystalsReward,
       lastActivity: new Date().toISOString(),
-    });
+    };
+
+    // VIP: só aplica se o tier do código for MAIOR que o atual (nunca rebaixa).
+    if (hasVip && tierDef) {
+      const current = char.vipTier ? vipTierById(String(char.vipTier)) : null;
+      const currentIdx = current ? VIP_TIERS.indexOf(current) : -1;
+      const codeIdx = VIP_TIERS.indexOf(tierDef);
+      if (codeIdx > currentIdx) {
+        patch.vipTier = tierDef.id;
+        patch.vipLevel = codeIdx + 1;
+        patch.vipUntil = new Date(now + vipDays * 86400000).toISOString();
+      } else if (current && currentIdx >= 0 && new Date(String(char.vipUntil || 0)).getTime() > now) {
+        // Tier igual: estende a duração atual em vez de substituir.
+        const extra = Math.max(0, Number(char.vipUntil ? new Date(String(char.vipUntil)).getTime() : 0) - now);
+        patch.vipUntil = new Date(now + extra + vipDays * 86400000).toISOString();
+      }
+    }
+
+    const updated = await jsonDb.updateCharacter(String(characterId), { ...patch, boosts });
 
     // Marca como resgatado por este jogador.
     await jsonDb.updateCode(rec.id, { redeemedBy: [...redeemedBy, String(characterId)] });
+
+    const granted: string[] = [];
+    if (xpHours > 0) granted.push(`2x XP (${xpHours}h)`);
+    if (energyHours > 0) granted.push(`2x Energia (${energyHours}h)`);
+    if (hasVip && tierDef) granted.push(`VIP ${tierDef.id.charAt(0).toUpperCase() + tierDef.id.slice(1)} (${vipDays}d)`);
+    if (goldReward > 0) granted.push(`${goldReward.toLocaleString()} de ouro`);
+    if (diamondsReward > 0) granted.push(`${diamondsReward} diamantes`);
+    if (crystalsReward > 0) granted.push(`${crystalsReward} cristais`);
 
     return NextResponse.json({
       success: true,
       character: updated,
       boosts: boostSummary(updated),
-      message: "Código resgatado com sucesso!",
+      granted,
+      message: `Código resgatado! Você recebeu: ${granted.join(", ")}`,
     });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erro interno";

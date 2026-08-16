@@ -8,6 +8,7 @@ import { skinById, SKIN_CATALOG, type SkinTemplate } from "@/game/skins";
 import { skinBuffDesc } from "@/game/skinBuffs";
 import { boostSummary, formatBoostMs } from "@/game/boosts";
 import { enchantById, enchantName, isBossEnchant } from "@/game/forge";
+import { setStatuses } from "@/game/sets";
 import ItemIcon from "@/components/ui/ItemIcon";
 
 // ---------------------------------------------------------------- utilidades
@@ -915,6 +916,9 @@ const categories = [
               );
             })}
           </div>
+
+          {/* Sets de equipamento: bônus por peças da mesma raridade equipadas */}
+          <SetBonusSection equippedEntries={items.filter((it) => it.inv?.equipped)} level={Number(char?.level) || 1} />
         </section>
 {/* ---------- centro: filtros + grade ---------- */}
         <section className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-bg-surface p-3 sm:p-4">
@@ -1341,6 +1345,67 @@ const categories = [
         </section>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Bloco de SETS de equipamento: mostra o progresso de cada raridade
+ * (peças equipadas / 7) e o bônus ativo do tier atingido.
+ */
+function SetBonusSection({ equippedEntries, level }: { equippedEntries: any[]; level: number }) {
+  const { locale } = useGameStore();
+  const statuses = useMemo(() => setStatuses(equippedEntries, level), [equippedEntries, level]);
+  const active = statuses.filter((s) => s.pieces >= 3);
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-black/20 p-2.5">
+      <div className="flex items-center justify-between mb-2 px-1">
+        <span className="text-[10px] font-black uppercase tracking-widest text-[#f59e0b]">
+          🧩 {t("set.title", locale)}
+        </span>
+        <span className="text-[9px] text-gray-500">{t("set.subtitle", locale)}</span>
+      </div>
+      <div className="space-y-1.5">
+        {statuses.map((s) => {
+          const isActive = s.pieces >= 3;
+          return (
+            <div
+              key={s.rarity}
+              className={`rounded-lg border px-2 py-1.5 ${isActive ? "" : "border-white/5 bg-white/[0.03] opacity-60"}`}
+              style={isActive ? { borderColor: `${s.color}55`, background: `${s.color}0d` } : undefined}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-[10px] font-bold" style={{ color: s.color }}>
+                  {s.icon} {t(s.nameKey, locale)}
+                </span>
+                <span className="text-[9px] font-black text-gray-400">
+                  {s.pieces}/{s.maxPieces}
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-white/5 overflow-hidden mt-1">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, (s.pieces / s.maxPieces) * 100)}%`, background: s.color }}
+                />
+              </div>
+              {isActive && s.bonus && (
+                <div className="mt-1 flex flex-wrap gap-1 text-[9px] font-bold">
+                  {s.bonus.attack > 0 && <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-red-300">⚔️ +{s.bonus.attack}</span>}
+                  {s.bonus.defense > 0 && <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-blue-300">🛡️ +{s.bonus.defense}</span>}
+                  {s.bonus.maxHp > 0 && <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-green-300">❤️ +{s.bonus.maxHp}</span>}
+                  {s.bonus.critical > 0 && <span className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-yellow-300">💥 +{s.bonus.critical}%</span>}
+                </div>
+              )}
+              {!isActive && s.nextTier && (
+                <div className="mt-0.5 text-[8px] text-gray-600">
+                  {t("set.next", locale)} {s.nextTier.pieces} peças
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

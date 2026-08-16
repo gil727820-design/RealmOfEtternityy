@@ -6,10 +6,13 @@ import { classImage, type ClassName } from "@/game/constants";
 import { skinById } from "@/game/skins";
 import PreloadImages from "./ui/PreloadImages";
 
-type NavItem = { tab: GameTab; icon: string; image?: string; labelKey: string; color: string; isNew?: boolean };
+type NavItem = { tab: GameTab; icon: string; image?: string; labelKey: string; color: string };
 type NavSection = { titleKey?: string; items: NavItem[] };
 
-/** Navegação organizada em seções: Aventura / Combate / Economia / Conta. */
+/**
+ * Navegação organizada em seções temáticas — cada sistema na sua categoria:
+ * Aventura / Batalha / Guilda / Progressão / Economia / Eventos & Rankings / Conta.
+ */
 const NAV_SECTIONS: NavSection[] = [
   {
     titleKey: "nav.sec.aventura",
@@ -19,31 +22,55 @@ const NAV_SECTIONS: NavSection[] = [
       { tab: "inventory", icon: "🎒", image: "/images/sidebar/menu_inventario.png", labelKey: "nav.inventory", color: "#ffd700" },
       { tab: "map", icon: "🗺️", image: "/images/sidebar/menu_mapa.png", labelKey: "nav.map", color: "#22c55e" },
       { tab: "tower", icon: "🗼", image: "/images/sidebar/menu_torre.png", labelKey: "nav.tower", color: "#a855f7" },
+      { tab: "pets", icon: "🐾", labelKey: "nav.pets", color: "#22d3ee" },
+      { tab: "skills", icon: "🌳", image: "/images/sidebar/menu_habilidades.png", labelKey: "nav.skills", color: "#a855f7" },
     ],
   },
   {
-    titleKey: "nav.sec.combate",
+    titleKey: "nav.sec.batalha",
     items: [
       { tab: "pvp", icon: "⚔️", image: "/images/sidebar/menu_arena.png", labelKey: "nav.pvp", color: "#ef4444" },
-      { tab: "worldboss", icon: "🌍", labelKey: "nav.worldBoss", color: "#ef4444", isNew: true },
+      { tab: "worldboss", icon: "🌍", labelKey: "nav.worldBoss", color: "#ef4444" },
       { tab: "dungeon", icon: "🕳️", image: "/images/sidebar/menu_masmorras.png", labelKey: "nav.dungeon", color: "#8b5cf6" },
+      { tab: "mastery", icon: "👑", labelKey: "nav.mastery", color: "#ffd700" },
+    ],
+  },
+  {
+    titleKey: "nav.sec.guilda",
+    items: [
       { tab: "guild", icon: "🏰", image: "/images/sidebar/menu_guilda.png", labelKey: "nav.guild", color: "#3b82f6" },
-      { tab: "rankings", icon: "🏆", image: "/images/sidebar/menu_rankings.png", labelKey: "nav.rankings", color: "#f59e0b" },
-      { tab: "mastery", icon: "👑", labelKey: "nav.mastery", color: "#ffd700", isNew: true },
+    ],
+  },
+  {
+    titleKey: "nav.sec.progressao",
+    items: [
+      { tab: "bestiary", icon: "📖", labelKey: "nav.bestiary", color: "#22c55e" },
+      { tab: "relics", icon: "🗿", labelKey: "nav.relics", color: "#a855f7" },
+      { tab: "specialization", icon: "🎯", labelKey: "nav.specialization", color: "#ffd700" },
+      { tab: "collection", icon: "📚", labelKey: "nav.collection", color: "#f97316" },
+      { tab: "advancedclass", icon: "🌟", labelKey: "nav.advancedclass", color: "#06b6d4" },
+      { tab: "ascension", icon: "🌌", labelKey: "nav.ascension", color: "#c084fc" },
     ],
   },
   {
     titleKey: "nav.sec.economia",
-      items: [
-        { tab: "shop", icon: "🛒", image: "/images/sidebar/menu_loja.png", labelKey: "nav.shop", color: "#ec4899" },
-        { tab: "ghostshop", icon: "👻", labelKey: "nav.ghostShop", color: "#a855f7", isNew: true },
-        { tab: "market", icon: "🏪", image: "/images/marketplace/icone_marketplace.png", labelKey: "nav.market", color: "#f59e0b" },
-        { tab: "forge", icon: "🔨", image: "/images/sidebar/menu_forja.png", labelKey: "nav.forge", color: "#f97316" },
-        { tab: "afk", icon: "💤", image: "/images/sidebar/menu_afk.png", labelKey: "nav.afk", color: "#06b6d4" },
-        { tab: "skills", icon: "🌳", image: "/images/sidebar/menu_habilidades.png", labelKey: "nav.skills", color: "#a855f7" },
-        { tab: "achievements", icon: "🏅", image: "/images/sidebar/menu_conquistas.png", labelKey: "nav.achievements", color: "#8b5cf6" },
-      ],
-    },
+    items: [
+      { tab: "shop", icon: "🛒", image: "/images/sidebar/menu_loja.png", labelKey: "nav.shop", color: "#ec4899" },
+      { tab: "ghostshop", icon: "👻", labelKey: "nav.ghostShop", color: "#a855f7" },
+      { tab: "market", icon: "🏪", image: "/images/marketplace/icone_marketplace.png", labelKey: "nav.market", color: "#f59e0b" },
+      { tab: "forge", icon: "🔨", image: "/images/sidebar/menu_forja.png", labelKey: "nav.forge", color: "#f97316" },
+      { tab: "afk", icon: "💤", image: "/images/sidebar/menu_afk.png", labelKey: "nav.afk", color: "#06b6d4" },
+      { tab: "achievements", icon: "🏅", image: "/images/sidebar/menu_conquistas.png", labelKey: "nav.achievements", color: "#8b5cf6" },
+    ],
+  },
+  {
+    titleKey: "nav.sec.eventos",
+    items: [
+      { tab: "rankings", icon: "🏆", image: "/images/sidebar/menu_rankings.png", labelKey: "nav.rankings", color: "#f59e0b" },
+      { tab: "season", icon: "🏅", labelKey: "nav.season", color: "#f59e0b" },
+      { tab: "dailylogin", icon: "📅", labelKey: "nav.dailyLogin", color: "#22c55e" },
+    ],
+  },
   {
     titleKey: "nav.sec.conta",
     items: [
@@ -183,11 +210,6 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
                       ) : (
                         <span className="w-7 h-7 flex items-center justify-center text-xl transition-transform group-hover:scale-110">
                           {item.icon}
-                        </span>
-                      )}
-                      {!collapsed && item.isNew && (
-                        <span className="absolute -top-1 -right-2 px-1 py-px rounded-full text-[8px] font-black bg-[#f59e0b] text-black shadow-[0_0_8px_rgba(245,158,11,0.7)]">
-                          {t("nav.badge.new", locale)}
                         </span>
                       )}
                     </span>

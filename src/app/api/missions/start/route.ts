@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { computeEnergyRegen } from "@/game/energy";
+import { computeEnergyRegen, effectiveMaxEnergy } from "@/game/energy";
 import { energyMultiplier } from "@/game/boosts";
 import { requireCharacterAuth } from "@/game/auth";
 
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     // Deduzir energia (timer de recarga recomeça a partir deste momento).
     // Com energia infinita, a energia é mantida (nunca diminui).
     await jsonDb.updateCharacter(characterId, {
-      energy: infiniteEnergy ? Math.max(currentEnergy, char.maxEnergy || 100) : currentEnergy - mission.energyCost,
+      energy: infiniteEnergy ? Math.max(currentEnergy, effectiveMaxEnergy(char)) : currentEnergy - mission.energyCost,
       lastEnergyAt: now.toISOString(),
       lastActivity: now.toISOString(),
     });

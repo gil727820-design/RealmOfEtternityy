@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { participantFromChar, requireOpenEvent } from "../_state";
 import jsonDb from "@/db/repo";
 import { powerCalc, resolveMaxLevel } from "@/game/constants";
+import { seasonPatch } from "@/game/season";
 import {
   applyXp,
   computeBossHit,
   computePlayerDamage,
   fmtBig,
   randomUUID,
+  worldBossPhase,
   type WorldBossConfig,
   type WorldBossEventState,
   type WorldBossMob,
@@ -345,7 +347,12 @@ export async function POST(req: NextRequest) {
     me.lastAttackAt = now;
 
     // Revide do boss no jogador (somente se o boss está "atacável").
+    // FASE DE ENFURECIMENTO: o boss fica mais forte a cada 25% de HP perdido
+    // (+dano, +velocidade, +crítico) — a batalha esquenta no final.
+    const hpPct = cur.bossMaxHp > 0 ? cur.bossHp / cur.bossMaxHp : 0;
+    const phase = worldBossPhase(hpPct);
     const bossHit = computeBossHit(cfg, { defense: Number(auth.char.defense) || 0, maxHp: me.maxHp });
+    bossHit.damage = Math.max(1, Math.round(bossHit.damage * phase.attackMult));
     me.hp = Math.max(0, Math.round(me.hp - bossHit.damage));
     if (me.hp <= 0) me.deadAt = now;
     else me.deadAt = null;
@@ -355,11 +362,14 @@ export async function POST(req: NextRequest) {
 
     const bossAlive = cur.bossHp > 0;
     cur.log.push(`${crit ? "💥" : "⚔️"} ${me.name} causou ${fmtBig(damage)} de dano${crit ? " (CRÍTICO!)" : ""}!`);
-    cur.log.push(`👹 O boss revidou em ${me.name} por ${fmtBig(bossHit.damage)}${bossHit.crit ? " (crítico)" : ""}.`);
+    cur.log.push(`👹 O boss revidou em ${me.name} por ${fmtBig(bossHit.damage)}${bossHit.crit ? " (crítico)" : ""} (fase ${phase.phase}).`);
     if (cur.log.length > 40) cur.log = cur.log.slice(-40);
 
     // O dano pode ter levado o HP do boss até um threshold → ativa o escudo.
     const shieldActivated = maybeActivateShield(cur, cfg, now);
+
+    // Temporada global: cada ataque ao Boss Mundial dá pontos de temporada.
+    await jsonDb.updateCharacter(auth.char.id, seasonPatch(auth.char, "worldboss"));
 
     let rewards: unknown = null;
     if (!bossAlive && !cur.rewardsGiven) {
@@ -406,6 +416,7 @@ export async function POST(req: NextRequest) {
       shieldThreshold: cur.shieldThreshold,
       shieldExpiresInMs: cur.shieldActive ? (cur.shieldExpiresAt ?? now) - now : 0,
       breakShieldCost: cfg.shield.breakCost,
+      phase: { phase: phase.phase, nameKey: phase.nameKey, attackMult: phase.attackMult },
       mobs: (cur.mobs || []).map((m) => ({ id: m.id, kind: m.kind, hp: m.hp, maxHp: m.maxHp })),
       rewards,
     });

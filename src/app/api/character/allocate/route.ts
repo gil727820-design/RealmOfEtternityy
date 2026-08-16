@@ -3,6 +3,7 @@ import jsonDb from "@/db/repo";
 import { powerCalc, classStatCap, type ClassName, type AllocStatKey } from "@/game/constants";
 import { equipmentBonus } from "@/game/forge";
 import { requireCharacterAuth } from "@/game/auth";
+import { totalSetBonus } from "@/game/sets";
 
 // Configuração de cada status: quanto vale 1 ponto investido
 const STAT_CONFIG: Record<string, { field: string; perPoint: number; cap?: number; bonusKey?: "atk" | "def" | "hp" | "spd" | "crit" }> = {
@@ -17,8 +18,8 @@ const STAT_CONFIG: Record<string, { field: string; perPoint: number; cap?: numbe
   resistance: { field: "resistance", perPoint: 1 },
 };
 
-/** Soma os bônus de todos os itens equipados (forja + encanto) de um personagem. */
-async function equippedBonuses(characterId: string) {
+/** Soma os bônus de todos os itens equipados (forja + encanto + sets) de um personagem. */
+async function equippedBonuses(characterId: string, level: number) {
   let atk = 0, def = 0, hp = 0, spd = 0, crit = 0;
   const inv = await jsonDb.getInventoryForCharacter(characterId);
   for (const e of inv) {
@@ -30,6 +31,11 @@ async function equippedBonuses(characterId: string) {
     spd += b.speed;
     crit += b.critical;
   }
+  const setB = totalSetBonus(inv.filter((e: any) => e.item?.equipped), level);
+  atk += setB.attack;
+  def += setB.defense;
+  hp += setB.maxHp;
+  crit += setB.critical;
   return { atk, def, hp, spd, crit };
 }
 
@@ -69,7 +75,7 @@ export async function POST(req: NextRequest) {
     const current = Number(char[config.field]) || 0;
 
     // Bônus de itens equipados para esse status (base investida exclui isso)
-    const equip = await equippedBonuses(String(characterId));
+    const equip = await equippedBonuses(String(characterId), char.level || 1);
     const bonusVal = config.bonusKey ? equip[config.bonusKey] : 0;
 
     // Limite POR CLASSE: cada classe tem papel definido (DPS/tank/caster) e não

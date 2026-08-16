@@ -314,6 +314,36 @@ export function computePlayerDamage(
   return { damage: dmg, crit };
 }
 
+/* ─── Fases de enfurecimento (evolução do boss) ─── */
+
+/**
+ * Fase de enfurecimento do boss com base no HP restante (0–1):
+ *  - Fase 1: 76%–100% — normal
+ *  - Fase 2: 51%–75%  — +15% dano, +10% velocidade
+ *  - Fase 3: 26%–50%  — +35% dano, +15% velocidade, +5% crítico
+ *  - Fase 4: 0%–25%   — ENFURECIDO: +60% dano, +20% velocidade, +10% crítico
+ */
+export function worldBossPhase(hpPct: number): {
+  phase: number;
+  nameKey: string;
+  attackMult: number;
+  speedBonus: number;
+  critBonus: number;
+} {
+  const n = Number(hpPct);
+  const pct = Math.max(0, Math.min(1, Number.isFinite(n) ? n : 1));
+  if (pct <= 0.25) {
+    return { phase: 4, nameKey: "worldBoss.phase4", attackMult: 1.6, speedBonus: 20, critBonus: 10 };
+  }
+  if (pct <= 0.5) {
+    return { phase: 3, nameKey: "worldBoss.phase3", attackMult: 1.35, speedBonus: 15, critBonus: 5 };
+  }
+  if (pct <= 0.75) {
+    return { phase: 2, nameKey: "worldBoss.phase2", attackMult: 1.15, speedBonus: 10, critBonus: 0 };
+  }
+  return { phase: 1, nameKey: "worldBoss.phase1", attackMult: 1, speedBonus: 0, critBonus: 0 };
+}
+
 /** Dano que o boss causa no jogador (revide) — PROPORCIONAL ao HP do jogador:
  * sem defesa ~12% do HP máximo por golpe; defesa alta reduz até ~2-4%.
  * Assim o boss é ameaçador em qualquer nível (não fica em "1" com defesa alta). */

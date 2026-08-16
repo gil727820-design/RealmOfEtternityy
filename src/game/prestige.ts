@@ -78,6 +78,11 @@ export function prestigePatch(char: any, equippedBonus: {
     xpToNext: xpForLevel(1),
     unspentStatPoints: 0,
     skillPoints: 0,
+    // Ao renascer, a torre volta ao 1º andar e o personagem volta ao mapa
+    // inicial (nível 1 só pode ficar na Vila Inicial — as regiões altas
+    // voltam a exigir nível para viajar).
+    towerFloor: 1,
+    currentRegion: "starter_village",
     // Atributos base escalados pelo prestígio (sem equipamento).
     baseStats: {
       attack: base.attack,

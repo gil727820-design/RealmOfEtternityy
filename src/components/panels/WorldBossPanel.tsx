@@ -54,6 +54,7 @@ interface WorldBossData {
     bossHp: number;
     bossMaxHp: number;
     bossHpPct: number;
+    phase?: { phase: number; nameKey: string; attackMult: number };
     totalDamage: number;
     participantsCount: number;
     squads: SquadInfo[];
@@ -414,6 +415,19 @@ export default function WorldBossPanel() {
                       style={{ width: `${event?.bossHpPct ?? 100}%` }}
                     />
                   </div>
+                  {/* Fase de enfurecimento do boss */}
+                  {event?.phase && event.phase.phase > 1 && (
+                    <div className={`mt-2 flex items-center justify-between text-xs font-bold px-3 py-1.5 rounded-lg border ${
+                      event.phase.phase >= 4
+                        ? "bg-red-950/60 border-red-500/50 text-red-300 animate-pulse-soft"
+                        : event.phase.phase === 3
+                        ? "bg-orange-950/50 border-orange-500/40 text-orange-300"
+                        : "bg-yellow-950/40 border-yellow-500/30 text-yellow-300"
+                    }`}>
+                      <span>🔥 {t(event.phase.nameKey, locale)}</span>
+                      <span className="text-[10px] opacity-80">+{Math.round((event.phase.attackMult - 1) * 100)}% {t("worldBoss.phaseAtk", locale)}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2 text-xs text-gray-300">
                   <span className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">⚔️ {fmtBig(data.boss.attack)}</span>

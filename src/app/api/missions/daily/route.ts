@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { dailyList, weeklyList, claimMission, type MissionKind } from "@/game/dailyMissions";
+import { dailyList, weeklyList, claimMission, weeklyAllDone, claimWeeklyBonus, weeklyBonusReward, type MissionKind } from "@/game/dailyMissions";
 import { requireCharacterAuth } from "@/game/auth";
 
 /** Lista as missões diárias + semanais com progresso. */
@@ -14,9 +14,15 @@ export async function GET(req: NextRequest) {
     if (!auth.ok) return auth.response;
     const char = auth.char;
 
+    const weeklyBonus = {
+      done: weeklyAllDone(char),
+      claimed: !!char.weeklyMissions?.bonusClaimed,
+      reward: weeklyBonusReward(Number(char.level) || 1),
+    };
     return NextResponse.json({
       daily: dailyList(char),
       weekly: weeklyList(char),
+      weeklyBonus,
     });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erro interno";
@@ -32,6 +38,30 @@ export async function POST(req: NextRequest) {
     if (!characterId || !kind) {
       return NextResponse.json({ error: "Dados necessários" }, { status: 400 });
     }
+    // Bônus semanal (completou todas as semanais da semana).
+    if (kind === "weekly_bonus") {
+      const authB = await requireCharacterAuth(req, String(characterId));
+      if (!authB.ok) return authB.response;
+      const charB = authB.char;
+      const resB = claimWeeklyBonus(charB);
+      if (resB.error) return NextResponse.json({ error: resB.error }, { status: 400 });
+      const rwB = resB.reward!;
+      const patchB: Record<string, unknown> = {
+        gold: (Number(charB.gold) || 0) + rwB.gold,
+        diamonds: (Number(charB.diamonds) || 0) + rwB.diamonds,
+        towerCoins: (Number(charB.towerCoins) || 0) + rwB.towerCoins,
+        ...resB.patch,
+        lastActivity: new Date().toISOString(),
+      };
+      const updatedB = await jsonDb.updateCharacter(String(characterId), patchB);
+      return NextResponse.json({
+        success: true,
+        reward: rwB,
+        character: updatedB,
+        message: `🏆 Bônus semanal coletado: ${rwB.gold} 🪙, ${rwB.diamonds} 💎, ${rwB.towerCoins} 🗼`,
+      });
+    }
+
     if (list !== "daily" && list !== "weekly") {
       return NextResponse.json({ error: "Lista inválida" }, { status: 400 });
     }

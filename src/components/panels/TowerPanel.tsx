@@ -15,7 +15,7 @@ import Confetti from "@/components/ui/Confetti";
 const AUTO_NEXT_COOLDOWN_MS = 4000;
 
 export default function TowerPanel() {
-  const { characterId, character, locale, notify, setCharacter, setTab } = useGameStore();
+  const { characterId, character, locale, notify, setCharacter, setTab, autoBattle, setAutoBattle } = useGameStore();
   const [stage, setStage] = useState<"arena" | "battle" | "result">("arena");
   const [battle, setBattle] = useState<any>(null);
   const [result, setResult] = useState<any>(null);
@@ -70,14 +70,17 @@ export default function TowerPanel() {
     { key: "stat.dodge", icon: fIcons.dodge, p: `${fStats.dodge}%`, m: `${Math.round(b.monDodge)}%` },
   ];
 
-  const sendAction = async (action: string, state: any) => {
+  const sendAction = async (action: string, state: any, auto?: any) => {
     const res = await fetch("/api/tower/fight", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ characterId, action, state }),
+      body: JSON.stringify({ characterId, action, state, auto }),
     });
     return res.json();
   };
+
+  // Envia uma rodada do AUTO BATTLE: o servidor decide a ação pelo modo.
+  const sendAuto = (state: any) => sendAction("auto", state, autoBattle);
 
   const refreshChar = async () => {
     try {
@@ -153,15 +156,21 @@ export default function TowerPanel() {
     }
   };
 
-  // Luta automática: dispara ações sozinho até o fim
+  // Luta automática: o servidor decide a ação pelo modo escolhido
   const autoLoop = async (state: any) => {
     if (autoStop.current || !state) return;
-    // eslint-disable-next-line react-hooks/purity -- sorteio de ação na lógica de jogo (evento assíncrono)
-    const useSkill = state.charMp >= 15 && Math.random() < 0.45;
-    const act = useSkill ? "skill" : "attack";
-    const data = await sendAction(act, state);
+    const data = await sendAuto(state);
     if (!data || data.error) {
+      // Batalha expirada (ficou fora da página / parado demais): recomeça do
+      // zero no andar atual — não dá mais pra "abandonar e continuar no auto".
+      if (data && data.code === "battle_expired") {
+        autoStop.current = false;
+        startBattle();
+        return;
+      }
       if (data && data.code === "no_mana") {
+        // Modo manual sem mana não acontece no auto (servidor decide), mas
+        // mantém o fallback por segurança.
         const d2 = await sendAction("attack", state);
         const ended = applyRound(d2);
         if (!ended && d2.battle) setTimeout(() => autoLoop(d2.battle), 1200);
@@ -289,7 +298,65 @@ export default function TowerPanel() {
                 </div>
               </div>
             )}
-            <div className="flex justify-center gap-3 flex-wrap">
+            {/* Configurações do Auto Battle: modo, auto-skill e auto-poção */}
+            <div className="mt-5 mx-auto max-w-md rounded-2xl border border-purple-700/40 bg-black/40 p-4 text-left">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs font-black uppercase tracking-widest text-purple-300">⚙️ {t("tower.autoSettings", locale)}</div>
+                <div className="text-[10px] text-gray-500">{t("tower.autoSettingsHint", locale)}</div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {(["aggressive", "balanced", "defensive"] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={() => setAutoBattle({ mode: m })}
+                    className={`rounded-xl px-2 py-2 text-xs font-bold border transition-all cursor-pointer ${
+                      autoBattle.mode === m
+                        ? "border-purple-400 bg-purple-500/30 text-white shadow-[0_0_12px_rgba(168,85,247,0.4)]"
+                        : "border-white/15 bg-white/5 text-gray-300 hover:bg-white/10"
+                    }`}
+                  >
+                    {m === "aggressive" ? "🗡️" : m === "balanced" ? "⚖️" : "🛡️"}{" "}
+                    {t(`tower.mode.${m}`, locale)}
+                  </button>
+                ))}
+              </div>
+              <div className="space-y-2">
+                <label className="flex items-center justify-between gap-3 text-xs text-gray-300 cursor-pointer">
+                  <span>💥 {t("tower.autoSkill", locale)}</span>
+                  <input
+                    type="checkbox"
+                    checked={autoBattle.useSkill}
+                    onChange={(e) => setAutoBattle({ useSkill: e.target.checked })}
+                    className="accent-purple-500 w-4 h-4 cursor-pointer"
+                  />
+                </label>
+                <label className="flex items-center justify-between gap-3 text-xs text-gray-300 cursor-pointer">
+                  <span>🧪 {t("tower.autoPotion", locale)}</span>
+                  <input
+                    type="checkbox"
+                    checked={autoBattle.potionEnabled}
+                    onChange={(e) => setAutoBattle({ potionEnabled: e.target.checked })}
+                    className="accent-purple-500 w-4 h-4 cursor-pointer"
+                  />
+                </label>
+                {autoBattle.potionEnabled && (
+                  <div className="flex items-center gap-2 text-xs text-gray-400 pl-1">
+                    <span>{t("tower.potionBelow", locale)}:</span>
+                    <input
+                      type="range"
+                      min={10}
+                      max={90}
+                      step={10}
+                      value={autoBattle.potionPct}
+                      onChange={(e) => setAutoBattle({ potionPct: Number(e.target.value) })}
+                      className="flex-1 accent-purple-500"
+                    />
+                    <span className="font-bold text-purple-300 w-10 text-right">{autoBattle.potionPct}%</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-center gap-3 flex-wrap mt-4">
               <button
                 onClick={startBattle}
                 disabled={busy}

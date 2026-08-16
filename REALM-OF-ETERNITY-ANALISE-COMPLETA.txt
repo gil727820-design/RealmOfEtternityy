@@ -1,0 +1,1480 @@
+================================================================================
+  REALM OF ETERNITY — ANÁLISE MEGA COMPLETA DO JOGO (TODAS AS FUNCIONALIDADES)
+  MMORPG Idle Online · Next.js 16 · React 19 · TypeScript · Postgres (Supabase)
+================================================================================
+
+Este documento descreve TODAS as funcionalidades do jogo, do início ao fim:
+o que cada sistema faz, como o jogador interage, o que o servidor valida,
+quais recompensas são dadas e o que acontece DEPOIS (o fluxo completo).
+
+--------------------------------------------------------------------------------
+SUMÁRIO
+--------------------------------------------------------------------------------
+ 1. Visão geral do projeto e arquitetura
+ 2. Fluxo de entrada: Registro → Login → Sessão → Criação de Personagem
+ 3. O Personagem: classes, atributos, níveis, XP, Poder, moedas
+ 4. Energia (recarga passiva) e Boosts (2x XP / 2x Energia)
+ 5. Sistema VIP (8 tiers)
+ 6. Missões de Região (o fluxo completo: ver → iniciar → esperar → coletar → up)
+ 7. Missões Diárias e Semanais (reset automático por data)
+ 8. Modo AFK (descanso offline)
+ 9. Torre Infinita (batalha por rodadas, chefes, hitkill)
+10. Arena PvP (matchmaking, batalha, rating, ligas, temporadas)
+11. Masmorras (expedições offline 2h/4h/8h)
+12. Evento Global — Boss Mundial (squads, escudo, mobs, recompensas)
+13. Guildas (criar, membros, convites, chat, expulsar, transferir)
+14. Mercado entre jogadores (anúncios de venda por ouro/diamantes)
+15. Anúncios de Troca + Salas de Troca 1x1 (dupla confirmação atômica)
+16. Loja (baús, poções, VIP)
+17. Loja Fantasma (loja agendada com moedas da torre)
+18. Forja (runas + encantamentos + encantos de chefe)
+19. Inventário (equipar, usar, vender, remover, auto-equipar, skins)
+20. Sistema de Skins (SKIN FULL + buffs de combate)
+21. Árvore de Habilidades (10 por classe, 9 passivas + 1 debuff)
+22. Maestria da Classe (capstone)
+23. Prestígio (renascimento no nível 999)
+24. Conquistas e Títulos
+25. Caixa de Correio (itens, skins, recursos do admin)
+26. Códigos de Resgate (boost 2x)
+27. Doação PIX (compra de diamantes com aprovação manual)
+28. Rankings (power, nível, PvP, torre, riqueza, prestígio)
+29. Sistema de Presença (jogadores online) e Notificações do navegador
+30. Mapa / Regiões / Música por ilha
+31. Painel Admin (todas as abas e ~55 ações)
+32. Configurações globais do servidor (anúncio, manutenção, energia infinita)
+33. Segurança, Anti-cheat e Logs administrativos
+34. Banco de dados, scripts e infraestrutura
+35. Internacionalização (pt-BR, en, es)
+36. Observações finais, pontos de atenção e números-chave
+
+
+================================================================================
+ 1. VISÃO GERAL DO PROJETO E ARQUITETURA
+================================================================================
+
+Realm of Eternity é um MMORPG idle online, mobile-first, jogável no navegador
+(inclusive como PWA instalável). O jogador cria um personagem entre 13 classes,
+faz missões, sobe na torre, luta na arena, junta-se a guildas, troca itens com
+outros jogadores, participa de eventos agendados (Loja Fantasma e Boss Mundial)
+e progride até o nível 999 com prestígio infinito.
+
+CAMADAS DO CÓDIGO:
+
+- src/db/schema.ts ......... 18 tabelas Postgres. Padrão: colunas de identidade
+                             (id, user_id, name, character_id, guild_id, kind)
+                             + uma coluna data jsonb com o documento completo.
+- src/db/repo.ts ............ Repositório (1.319 linhas). Substituiu o antigo
+                             jsonDb (arquivos JSON). Todas as operações CRUD:
+                             usuários, personagens, itens, missões, guildas,
+                             correio, mercado, códigos, logs, compras PIX.
+- src/db/index.ts ............ Conexão com Postgres (pool de até 5 clientes,
+                             ssl, falha rápida se faltar DATABASE_URL).
+- src/game/* ................. 30 arquivos de REGRAS PURAS do jogo (fórmulas,
+                             constantes, balanceamento) compartilhadas entre
+                             API e UI — o preview que o jogador vê é o mesmo
+                             número que o servidor concede (nunca divergem).
+- src/app/api/** ............. 68 rotas de API (Next.js route handlers).
+                             TODA ação do jogo passa pelo servidor.
+- src/components/ ............ Interface: AuthScreen, CharacterCreation,
+                             CharacterSelect, GameScreen, Sidebar, TopBar +
+                             23 painéis (uma aba por funcionalidade).
+- src/store/gameStore.ts ..... Estado do cliente com Zustand. NÃO guarda dados
+                             de jogo no localStorage — só preferências
+                             (idioma, som, volume). Dados sempre do servidor.
+- src/i18n/ .................. Traduções pt-BR / en / es (interface + itens).
+
+FLUXO GERAL DE UMA AÇÃO (ex.: iniciar missão):
+  1. O jogador clica no painel → o cliente chama POST /api/missions/start.
+  2. A rota valida a SESSÃO (cookie httpOnly roe_session → JWT) e a
+     PROPRIEDADE do personagem (requireCharacterAuth: o characterId do corpo
+     precisa pertencer ao usuário autenticado).
+  3. A rota aplica as regras (energia, nível, missão ativa...).
+  4. Persiste no banco via repo.ts e devolve o resultado.
+  5. O cliente atualiza o estado e a interface.
+
+
+================================================================================
+ 2. FLUXO DE ENTRADA: REGISTRO → LOGIN → SESSÃO → CRIAÇÃO DE PERSONAGEM
+================================================================================
+
+TELA DE LOGIN (AuthScreen):
+- Alterna entre "Entrar" (login) e "Criar conta" (registro).
+- Seletor de idioma no topo (PT-BR / EN) — muda na hora toda a interface.
+- Ao abrir o jogo, o cliente chama GET /api/auth/me:
+    * Se existe cookie de sessão válido → restaura a sessão direto
+      (sem pedir login de novo) e mostra a seleção de personagens.
+    * Se não → mostra o formulário.
+- Remove o cache antigo do jogo (localStorage "realm-of-eternity-storage" v1)
+  para não exibir dados velhos.
+
+REGISTRO (POST /api/auth/register):
+- Validações:
+    * Username: 3 a 20 caracteres, apenas letras/números/underscore, deve
+      começar com letra, e NÃO pode conter termos proibidos (filtro de
+      profanidade com detecção de leetspeak, acentos e caracteres repetidos).
+    * Senha: mínimo 4, máximo 50 caracteres.
+    * Username em uso → erro 409.
+- A senha é guardada SOMENTE como hash bcrypt (10 rounds). Nunca em texto puro.
+- Já autentica o registro: grava o cookie de sessão e devolve userId/username.
+
+LOGIN (POST /api/auth/login):
+- Busca o usuário pelo username (normalizado: minúsculas).
+- Conta banida → 403 com motivo. Conta excluída → 403.
+- bcrypt.compare da senha → senha incorreta = 401.
+- Atualiza lastLogin e devolve: userId, username, role, locale, hasCharacter,
+  character (principal), characters (lista), mailboxCount (correio pendente).
+- Grava o cookie httpOnly de sessão (30 dias).
+
+SESSÃO (src/game/auth.ts):
+- Cookie roe_session: JWT assinado com SESSION_SECRET (fallback ADMIN_KEY,
+  fallback aleatório de dev com aviso). httpOnly (imune a XSS), sameSite=lax
+  (anti-CSRF), secure em produção, 30 dias de validade.
+- requireCharacterAuth(): valida sessão + carrega o personagem + confere que
+  char.userId === session.sub. Negado = 401/403/404 conforme o caso.
+- Cookie separado roe_admin para o painel admin (função exclusiva "admin").
+
+CRIAÇÃO DE PERSONAGEM (CharacterCreation → POST /api/character/create):
+- O jogador digita o NOME, escolhe SEXO (masculino/feminino) e CLASSE entre 13.
+- Validações: nome (mesmas regras do username) + nome único + limite de
+  MÁX. 3 PERSONAGENS POR CONTA.
+- O personagem nasce com:
+    * Atributos base da classe (hp/attack/defense/speed/critical/mana),
+    * precision/dodge/resistance = 5, energia 100/100,
+    * 500 de ouro, 0 das demais moedas,
+    * level 1, xp 0, xpToNext = xpForLevel(1) = 165,
+    * região inicial starter_village, liga PvP bronze, andar da torre 1,
+    * prestige 0, sem itens, sem skins.
+- O primeiro personagem criado é o "principal"; o jogador pode criar até 3
+  e alternar entre eles na tela de seleção.
+
+SELEÇÃO DE PERSONAGEM (CharacterSelect):
+- Mostra os personagens da conta (nome, nível, classe, poder, região).
+- Clicar em um → carrega o jogo com ele (GET /api/character/[id]).
+- Botão de criar outro personagem (se tiver menos de 3).
+
+
+================================================================================
+ 3. O PERSONAGEM: CLASSES, ATRIBUTOS, NÍVEIS, XP, PODER, MOEDAS
+================================================================================
+
+13 CLASSES (CLASS_LIST em src/game/constants.ts):
+  warrior (Guerreiro), paladin (Paladino), berserker (Berserker),
+  mage (Mago), necromancer (Necromante), assassin (Assassino),
+  hunter (Caçador), monk (Monge), samurai (Samurai), knight (Cavaleiro),
+  summoner (Invocador), templar (Templário), archer (Arqueiro).
+
+Cada classe tem:
+- Ícone emoji e imagem de personagem (masculino/feminino em pixel art).
+- GOLPE ESPECIAL próprio (Fúria do Guerreiro, Lâmina Sagrada, Explosão
+  Arcana, Toque da Morte, Lâmina Sombria, Disparo Certeiro, Punho Supremo,
+  Corte da Lâmina, Investida Nobre, Legião Invocada, Punição Divina,
+  Chuva de Flechas...).
+- EFEITO MECÂNICO exclusivo do golpe (não é só multiplicador):
+    * warrior:     dano 1.7x, +5% crítico
+    * paladin:     dano 1.5x, recebe -20% dano após golpe, cura 6% ao usar
+    * berserker:   dano 2.1x, +8% crítico, RECEBE +25% dano (trade-off)
+    * mage:        dano 1.6x, +10% crítico, ignora 30% da defesa inimiga
+    * necromancer: dano 1.5x, 55% de chance de sangrar o inimigo
+    * assassin:    dano 1.45x, +18% crítico, 40% de chance de golpe duplo
+    * hunter:      dano 1.5x, +15% crítico, ignora 30% de defesa
+    * monk:        dano 1.75x, recebe -15% dano
+    * samurai:     dano 1.9x, +12% crítico
+    * knight:      dano 1.55x, recebe -25% dano (tanque)
+    * summoner:    dano 1.55x, 45% sangramento
+    * templar:     dano 1.5x, recebe -18%, cura 5% ao usar
+    * archer:      dano 1.4x, +15% crítico, ignora 40% de defesa
+  Custo de mana do golpe: 15 (padrão).
+
+ATRIBUTOS:
+- Ataque, Defesa, HP, Velocidade, Crítico, Mana, Precisão, Esquiva,
+  Resistência.
+- Ao SUBIR DE NÍVEL: +3 pontos de status livres; +1 ponto de habilidade a
+  cada 3 níveis (níveis múltiplos de 3).
+- O jogador distribui pontos na aba Personagem (POST /api/character/allocate).
+  Valor por ponto: ataque +2, defesa +2, velocidade +2, HP +10, mana +5,
+  crítico +1, precisão +1, esquiva +1, resistência +1.
+- LIMITES POR CLASSE (classStatCap): cada classe tem papel definido (DPS,
+  tank, caster) e NÃO pode virar outra. Ataque, HP e Defesa são ILIMITADOS
+  para todas (Infinity). Os demais têm teto por classe, ex.:
+    * berserker: speed 85, mana 160, critical 65...
+    * mage:      mana 520, speed 65...
+    * knight:    resistance 90, speed 35...
+  O cap é sobre o valor INVESTIDO (base + pontos, SEM itens); equipamentos
+  somam por cima. O último ponto pode ser "parcial" para completar o cap
+  exato (ex.: 34 → 35 com +2 por ponto gasta 1 ponto e soma +1).
+- Limites globais: crítico máx 90%, esquiva máx 50%.
+- baseStats é mantido sincronizado (base da classe + pontos investidos, sem
+  equipamento) para a UI saber o que foi investido.
+
+RESET DE ATRIBUTOS (POST /api/character/reset-stats):
+- Custa 25.000 de ouro.
+- Calcula quantos pontos foram investidos em cada status (atual − base da
+  classe − bônus de itens equipados) e DEVOLVE todos os pontos livres.
+- Os status voltam ao padrão da classe + bônus dos itens equipados (mantidos).
+- Só funciona se houver pontos investidos.
+
+NÍVEL E XP:
+- Nível máximo padrão: 999 (o admin pode configurar um teto menor).
+- Curva de XP: xpForLevel(n) = 165 × 1.18^(n−1). Fica mais caro a cada nível.
+- XP de missões escala com a curva (missionXpReward ≈ 26% do XP necessário
+  no nível da missão) — ~3-4 missões do seu tier ≈ 1 nível.
+
+PODER (powerCalc):
+- power = atk×2 + def×1.5 + hp×0.5 + speed×1.2 + critical×1.8 + level×5.
+- Recalculado após qualquer mudança de atributos/equipamento/nível.
+
+MOEDAS (economia):
+- Ouro 🪙 ......... moeda comum (missões, AFK, torre, vender itens, loja).
+- Diamantes 💎 ..... moeda premium (compra por PIX, loja, mercado).
+- Cristais 🔮 ...... recompensa de conquistas/masmorras/missões diárias.
+- Moedas PvP ⚔️ .... arena.
+- Moedas de Guilda 🏰.
+- Moedas da Torre 🗼 (towerCoins) .... torre, Loja Fantasma, missões diárias.
+
+
+================================================================================
+ 4. ENERGIA (RECARGA PASSIVA) E BOOSTS (2x XP / 2x ENERGIA)
+================================================================================
+
+ENERGIA:
+- O personagem tem energia (máx 100 no início; pode crescer).
+- Regenera 1 ponto a cada 3 minutos (ENERGY_REGEN_MINUTES = 3).
+- A recarga é calculada pelo TEMPO REAL decorrido desde lastEnergyAt — funciona
+  mesmo com o jogador desconectado. Qualquer chamada que leia/atualize o
+  personagem "carimba" a nova energia.
+- A rota /api/character/[id] aplica a recarga e devolve energyRegenMs (ms até
+  a próxima) e energyFull (se está cheia) para o contador da interface.
+- Consumo: missões (custo por missão), masmorras (2h=10, 4h=20, 8h=40).
+- Se o ADMIN ligar "energia infinita" (server_settings.infiniteEnergy), as
+  ações não gastam energia (ela é mantida no máximo).
+
+BOOSTS (src/game/boosts.ts):
+- Ativados por CÓDIGOS de resgate ou POÇÕES de boost do inventário.
+- Guardados em character.boosts = { xpUntil?: ISO, energyUntil?: ISO }.
+- Enquanto ativos:
+    * XP: recompensas de XP (missões/AFK/torre/masmorras) ×2 (XP_MULT).
+    * Energia: recarga ×2 (ENERGY_MULT).
+- Os multiplicadores do VIP são aplicados JUNTO (multiplicam):
+    * xpMultiplier = (boost 2x?) × (VIP xpMult)
+    * energyMultiplier = (boost 2x?) × (VIP energyRate)
+    * goldMultiplier = (VIP goldMult)
+- UI mostra tempo restante formatado (ex.: "2h 30m").
+
+
+================================================================================
+ 5. SISTEMA VIP (8 TIERS)
+================================================================================
+
+(src/game/vip.ts) — comprado na Loja com DIAMANTES, dura 30 dias:
+
+  Tier       Preço 💎   XP      Ouro    Energia
+  Bronze     100        1.15x   1.10x   1.05x
+  Prata      250        1.30x   1.20x   1.10x
+  Ouro       500        1.50x   1.35x   1.15x
+  Platina    900        1.70x   1.50x   1.20x
+  Diamante   1.500      2.00x   1.75x   1.25x
+  Mestre     2.500      2.30x   2.00x   1.30x
+  Lenda      4.000      2.60x   2.25x   1.35x
+  Imperador  7.000      3.00x   2.50x   1.40x
+
+- O personagem guarda vipTier (id) e vipUntil (ISO). Se expirou → sem VIP.
+- Só é possível comprar VIP ACIMA do atual (não dá para comprar o mesmo ou
+  inferior — mensagem de erro clara).
+- O bônus do VIP se aplica em TODO o jogo (missões, AFK, torre, PvP,
+  masmorras, energia) via boosts.ts.
+- A Loja tem os 8 tiers com preço em diamantes.
+- Título "Nobre" e conquista "vip_first" dependem de VIP ativo.
+
+
+================================================================================
+ 6. MISSÕES DE REGIÃO (FLUXO COMPLETO)
+================================================================================
+
+O QUE SÃO: missões por ilha/região. O jogador só pode jogar missões da
+REGIÃO ATUAL em que o personagem está (currentRegion).
+
+ONDE FICAM AS MISSÕES:
+- 27 missões manuais (seed) nas ilhas iniciais (ex.: missao_patrulhar_vila,
+  missao_kill_slimes, missao_entregar_carta, missao_cacar_lobos...).
+- Missões GERADAS automaticamente para as ilhas sem missão manual (Ruínas
+  Antigas, Minas Profundas, Pântano Sombrio, Montanhas Geladas, Deserto
+  Escaldante, Castelo Imperial, Ilhas Perdidas, Mundo dos Dragões, Reino
+  Demoníaco, Templo Celestial) — 5 por ilha, com temas próprios (ex.: no
+  Reino Demoníaco: "Quebrar as Maldições", "Selar os Portais"...).
+- As geradas têm IDs NEGATIVOS estáveis (hash FNV-1a da ilha+índice) para
+  nunca colidir com as manuais (positivas) e são idempotentes (ON CONFLICT).
+- Geração automática acontece ao carregar o personagem (character/[id]) e no
+  seed — só para ilhas que ainda não têm NENHUMA missão (não suja ilhas prontas).
+
+COMO O JOGADOR VÊ (batelada de 3 + 1 desafio):
+- /api/character/[id] monta o "missionBatch":
+    * 3 missões embaralhadas da região atual com nível ≤ o do jogador,
+    * +1 missão "desafio" de nível (level+1) quando existir.
+- O grupo SÓ é embaralhado quando uma missão é CONCLUÍDA (missionBatch é
+  zerado no claim para forçar um novo grupo).
+
+INICIAR UMA MISSÃO (POST /api/missions/start):
+1. Valida sessão + dono do personagem.
+2. Só UMA missão ativa por vez: se já houver missão em andamento → erro
+   "Você já tem uma missão em andamento! Complete-a primeiro."
+3. Busca o template (id da missão).
+4. Aplica a recarga passiva de energia ANTES de gastar.
+5. Valida: energia suficiente (custo da missão) e nível ≥ minLevel da missão.
+6. Deduz a energia, carimba lastEnergyAt (o timer de recarga recomeça).
+7. Cria a MISSÃO ATIVA (active_missions): { characterId, missionId,
+   startedAt, endsAt = agora + duração, claimed: false }.
+8. Resposta: sucesso + endsAt. A interface mostra o cronômetro.
+
+DURANTE: o jogador espera a duração da missão (30s a 240s nas manuais;
+as geradas escalam com o nível da ilha: 30 + minLevel×4...). Pode fechar o
+jogo — o tempo é real e continua contando.
+
+COLETAR (POST /api/missions/claim):
+1. Busca a missão ativa pelo id; não existe → 404; já coletada → 400.
+2. Ainda em andamento (now < endsAt) → "Missão ainda em andamento".
+3. Valida sessão + dono (via characterId da missão ativa).
+4. Lê o teto de nível configurado pelo admin (maxLevel).
+5. Recompensas:
+    * XP = missionXpReward(mission) × xpMultiplier(char) — escala com a
+      curva de nível (nem fácil demais no fim, nem impossível no começo).
+    * Ouro = goldReward × goldMultiplier(char) (VIP).
+    * Faz os level-ups pendentes: cada nível +3 pontos de status, e +1
+      ponto de habilidade a cada 3 níveis.
+    * Recalcula o Poder.
+    * Itens NÃO dropam em missões (só o admin concede itens).
+6. Energia: aplica a recarga passiva do tempo decorrido durante a missão
+   (ganha energia enquanto esperou!).
+7. Missões diárias/semanais: trackProgress(char, "missions", 1) — conta
+   como 1 missão concluída no objetivo diário/semanal.
+8. Marca a missão ativa como claimed=true, completed=true.
+9. Resposta: { xp ganho, ouro, levelUp?, newLevel, droppedItem: null }.
+
+DEPOIS (fim do fluxo):
+- O jogador recebe XP/ouro e talvez suba de nível (ganha pontos).
+- missionBatch é zerado → a UI mostra um NOVO grupo de missões (embaralhado).
+- A energia recarregou um pouco durante a espera.
+- O progresso diário "missões" avançou.
+- O jogador pode iniciar outra missão (novamente uma por vez).
+
+
+================================================================================
+ 7. MISSÕES DIÁRIAS E SEMANAIS (RESET AUTOMÁTICO)
+================================================================================
+
+(src/game/dailyMissions.ts) — diferentes das de região: objetivos FIXOS do
+dia/semana que resetam sozinhos pela DATA.
+
+DIÁRIAS (resetam à meia-noite local — dateKey YYYY-MM-DD):
+  - Concluir 2 missões          (📜)
+  - Vencer 5 batalhas na Torre  (🗼)
+  - Vencer 3 batalhas na Arena  (⚔️)
+  - Concluir 1 masmorra         (🕳️)
+  - Coletar 1 AFK               (💤)
+  Recompensa base: 250 + nível×15 de ouro, 3 + nível/10 cristais,
+  20 + nível×2 moedas da torre.
+
+SEMANAIS (resetam na segunda-feira — weekKey):
+  - 25 batalhas na Torre · 10 na Arena · 8 missões · 3 masmorras
+  Recompensa base: 1.500 + nível×80 de ouro, 15 + nível/8 cristais,
+  100 + nível×10 moedas da torre.
+
+COMO FUNCIONA:
+- O progresso fica em character.dailyMissions / weeklyMissions:
+  { date, progress: {tipo: n}, claimed: [ids] }.
+- readProgress detecta que a data mudou e reseta sozinho.
+- Rastreamento (trackProgress): as rotas que realizam a ação chamam
+  jsonDb.updateCharacter(charId, trackProgress(char, "tipo")) — um único
+  patch atualiza diária E semanal ao mesmo tempo (mesmos ids).
+  * missão concluída → "missions" (na rota de claim de missão)
+  * vitória na torre → "tower" (na rota de batalha)
+  * batalha PvP vencida → "pvp"
+  * masmorra coletada → "dungeon"
+  * AFK coletado → "afk"
+- COLETAR (POST /api/missions/daily): valida que a missão está completa e
+  não foi coletada, aplica a recompensa (ouro + cristais + moedas da torre)
+  e marca como coletada.
+
+FLUXO: jogador abre o painel → vê a lista com progresso/target e recompensa
+→ joga (as ações contam sozinhas) → clica em coletar quando completa →
+recebe a recompensa → no dia seguinte/semana seguinte, tudo reseta e
+começa de novo.
+
+
+================================================================================
+ 8. MODO AFK (DESCANSO OFFLINE)
+================================================================================
+
+O QUE É: sistema de ganho passivo por tempo. O jogador ativa o "modo
+descanso" e as recompensas acumulam enquanto ele está offline (ou online
+em qualquer tela).
+
+TAXAS (afkRatesPerMinute — REBALANCEADAS para não quebrar a economia):
+  ouro/min = nível × 0.25 + poder × 0.008
+  xp/min   = nível × 0.55 + poder × 0.015
+- Máximo acumulado: 12 HORAS (AFK_MAX_DURATION_SEC = 43200). Deixar 1
+  semana rende no máximo 12h.
+- Antes de 60 segundos não rende nada.
+
+INICIAR (POST /api/afk/start):
+- Valida sessão + dono.
+- Se já há recompensas acumuladas (afkSince com +60s), BLOQUEIA: "Você já
+  tem recompensas acumuladas. Colete antes de descansar novamente." (evita
+  perder tempo acumulado ao reiniciar).
+- Grava afkSince = agora.
+
+COLETAR (POST /api/afk/claim):
+- Valida sessão + dono. Sem sessão ativa (afkSince null) → erro.
+- Calcula as recompensas (computeAfkRewards — mesma fórmula do preview).
+- Ouro = bruto × goldMultiplier (VIP); XP = bruto × xpMultiplier (boost+VIP).
+- Aplica level-ups (+3 pontos por nível, +1 habilidade a cada 3 níveis),
+  recalcula poder, aplica recarga de energia do tempo decorrido.
+- ZERA afkSince (sessão encerrada — o jogador escolhe quando descansar de
+  novo; não reinicia sozinho).
+- trackProgress(char, "afk", 1) para a missão diária.
+- Registra o resgate em afk_rewards (histórico) e devolve { gold, xp,
+  duration, levelUp?, newLevel, droppedItem: null }.
+
+FLUXO: o jogador clica em "Descansar" → o painel mostra o preview ao vivo
+(gold/min e xp/min, atualizados pelo /api/character/[id]) → espera o tempo
+que quiser (máx 12h) → coleta → as recompensas caem e a sessão fecha.
+
+
+================================================================================
+ 9. TORRE INFINITA (BATALHA POR RODADAS)
+================================================================================
+
+O QUE É: dungeon vertical de 1 andar em diante (sem teto, ou com teto
+configurado pelo admin). A cada andar o jogador enfrenta um monstro em
+batalha por rodadas (máx 40 rodadas). A cada 10 andares: CHEFE.
+
+MONSTROS:
+- 18 mobs comuns (slime, lobo, aranha, esqueleto, golem, minotauro,
+  espectro, dragão + 10 novos: sentinela_de_pedra, assassino_das_sombras,
+  mago_do_caos, gárgula_de_ferro, cavaleiro_corrompido, invocador_de_almas,
+  behold_vigilância, lich_do_trono, avatar_da_eternidade, quimera_da_torre).
+- 11 chefes (coral_kraken, crystal_basilisk, eclipse_lich, ember_phoenix,
+  glacier_troll, mushroom_brute, root_guardian, sand_scorpion,
+  steam_automaton, thunder_roc, void_wyrm) — um diferente a cada 10 andares,
+  ciclando.
+- Tier de monstro sobe conforme o andar; mix base + bônus para variedade.
+- Dificuldade FIXA por andar (não espelha o jogador): mobs ficam mais
+  fortes gradualmente — quem sobe é quem é realmente forte.
+
+BATALHA (POST /api/tower/fight):
+- Ações: start (spawna o NPC), attack, skill (golpe especial, 15 de mana),
+  defend (metade do dano recebido + recupera até 8 de mana).
+- PRNG determinístico por semente: o mesmo monstro mantém os stats entre
+  rodadas (o estado da batalha vai e volta entre cliente e servidor, que
+  VALIDA os limites — não confia cegamente no cliente).
+- Mecânicas de combate:
+    * Precisão anula esquiva 1:1.
+    * Velocidade: chance de ATAQUE EXTRA por rodada (até 50% conforme a
+      diferença de velocidade).
+    * Resistência reduz o dano recebido (até ~30%).
+    * Skins equipadas: multiplicador de dano/tank/crítico/sangramento/cura.
+    * Maestria: multiplicadores extras (podem somar com a skin).
+    * Árvore de habilidades: debuffs aplicados no golpe especial
+      (sunder/curse aumentam dano; bleed/burn/poison dão dano extra;
+      weaken/slow reduzem o contra-ataque; blind reduz o crítico inimigo).
+    * Efeito mecânico do golpe da classe (ver seção 3).
+- ANTI-HITKILL DE CHEFE: se o dano máximo do jogador num único golpe já
+  mataria o chefe, o chefe é escalado NA HORA para virar batalha de verdade
+  (HP ≈ 8× o dano máximo, ataque forte). LOGADO no painel admin (kind
+  "hitkill", source "tower").
+
+VITÓRIA:
+- XP = mon.xpReward × xpMultiplier × towerXpMult (admin pode reduzir a XP da
+  torre, ex.: 0.3 = só 30%); escala com a curva de nível.
+- Ouro = mon.goldReward × goldMultiplier; moedas da torre = coinsReward.
+- AVANÇA 1 andar por vitória (respeitando maxTowerFloor do admin). O andar
+  usado é o da BATALHA (state.floor), evitando pular de 2 em 2 em corridas.
+- Level-ups (+3 pontos, +1 habilidade a cada 3 níveis).
+- CHEFE VENCIDO: a ARMA EQUIPADA ganha GRATUITAMENTE um ENCANTO EXCLUSIVO
+  DE CHEFE (boss_* — Essência do Caos +25 atq, Armadura Titânica +20 def,
+  Coração de Dragão +400 HP, Velocidade Abissal +8 spd, Olho do Devorador
+  +8 crit, Fúria do Primordial +40 atq). Não substitui um encanto de chefe
+  já existente. Recalcula os atributos na hora.
+- trackProgress(char, "tower", 1) para missões diárias/semanais.
+- ANTI-CHEAT: vitórias rápidas demais (mais de 12 em 30s) → 429 + log.
+
+DERROTA:
+- NÃO reseta: o jogador permanece no andar atual e pode tentar de novo.
+
+FLUXO: o jogador abre a Torre → vê o andar atual e o monstro → "Lutar" →
+batalha por rodadas com botões Ataque/Golpe/Defender → vence: sobe o andar,
+ganha XP/ouro/moedas → perde: tenta de novo no mesmo andar → a cada 10
+andares enfrenta um chefe (com recompensa de encanto exclusivo).
+
+
+================================================================================
+ 10. ARENA PvP (MATCHMAKING, RATING, LIGAS, TEMPORADAS)
+================================================================================
+
+MATCHMAKING (GET /api/pvp/fight):
+- Oponentes REAIS: personagens com diferença de nível ≤ 3 e diferença de
+  poder ≤ max(150, meu poder × 0.35), ordenados por proximidade (máx 5).
+- BOTS gerados na mesma faixa (16 nomes, ex.: Zerath o Imortal, Morgana
+  Sombria, Thorgrim Martelo...) para completar até 8 oponentes.
+- Aba "Jogadores": todos os personagens reais ordenados por rating/poder.
+
+BATALHA (POST /api/pvp/battle) — sistema de rodadas igual à torre, mas:
+- O oponente usa a IA decideEnemyAction (src/game/battleAI.ts):
+    * REMATE: jogador com vida baixa → golpe especial (não deixa escapar).
+    * DEFESA: oponente com vida baixa → defende e regenera mana.
+    * GOLPE CEDO: mana cheia → golpe no início.
+    * FIM DE BATALHA: rodadas altas → aposta tudo no golpe.
+    * "Savvy" (esperteza) cresce com o rating da liga — oponentes de liga
+      alta jogam melhor.
+  A defesa do oponente reduz o próximo golpe do jogador pela metade.
+- Validação diária: PVP_DAILY_MAX = 10 batalhas/dia (pvpDailyDate +
+  pvpDailyCount no personagem; reseta sozinho pela data).
+- Buffs de skin e maestria valem para os DOIS lados (oponente real com
+  skin/árvore também usa os dele).
+- A IA do oponente usa o skill da classe dele (dano 1.6x no golpe).
+
+RATING E RECOMPENSAS:
+- Vitória: +5 rating, +10 moedas PvP. Derrota: −3 rating, +2 moedas PvP.
+- A liga é recalculada pelo rating (leagueForRating).
+- No fim da batalha, o rating do DEFENSOR real também muda (vice-versa).
+- Vitórias contam para a missão diária/semanal "pvp".
+- Insere o registro em battles (histórico).
+
+LIGAS (8):
+  Bronze 0 · Prata 300 · Ouro 600 · Platina 1000 · Diamante 1400 ·
+  Mestre 1800 · Lenda 2300 · Imperador 2800.
+  Cada liga tem ícone/emoji e imagem.
+
+TEMPORADA (src/game/pvpSeason.ts):
+- Ciclo de 14 dias (época de referência: 2026-01-05).
+- O personagem guarda pvpSeasonBest = { seasonId, rating } (melhor rating
+  da temporada atual, atualizado a cada luta via trackSeasonBest).
+- FIM DE TEMPORADA: recompensas pela liga MÁXIMA alcançada
+  (coleção claim via /api/pvp/season):
+    Bronze 1.500 🪙/100 ⚔️/10 🔮 · Prata 3.000/250/25 ·
+    Ouro 6.000/500/50 · Platina 12.000/900/90 · Diamante 20.000/1.500/140 ·
+    Mestre 35.000/2.400/220 · Lenda 55.000/3.600/320 · Imperador 90.000/5.000/450.
+- O rating reseta no INÍCIO da nova temporada (ao lutar), mantendo o
+  histórico (pvpSeasonClaimed evita coletar 2x).
+
+HISTÓRICO (GET /api/pvp/history): últimas 50 (máx 100) batalhas do
+personagem com data/hora.
+
+FLUXO: o jogador abre a Arena → escolhe entre oponentes reais/bots ou na
+lista de jogadores → batalha por rodadas contra a IA → vence/perde → ganha
+rating, moedas e liga sobem/descem → o melhor rating da temporada é
+guardado → ao fim da temporada, coleta a recompensa da liga máxima.
+
+
+================================================================================
+ 11. MASMORRAS (EXPEDIÇÕES OFFLINE 2h / 4h / 8h)
+================================================================================
+
+O QUE É: expedição offline. O jogador escolhe duração e andar-alvo; o
+combate é SIMULADO por poder; ao terminar, coleta recompensas (mesmo
+fechado o jogo).
+
+REGRAS (src/game/dungeons.ts):
+- Limite: 3 masmorras/dia (DUNGEON_DAILY_CAP) — recurso escasso.
+- Custo de energia: 2h = 10, 4h = 20, 8h = 40 (escala com a duração).
+- Andar máximo tentável: 3 + nível/2 (máx 60).
+- A simulação: o personagem limpa andares enquanto poder ≥ poder do andar
+  (andar 1 = 15 + 22×andar; chefe a cada 10 = ×1.35). Atinge o teto onde
+  o poder não passa e para. Derrota = 0 andares limpos (perde o bônus).
+- Duração maior paga MUITO mais (fator: 2h=0.5, 4h=0.8, 8h=1.0) — vale a
+  pena deixar rodando mais tempo.
+- Drops: até RARO nos rolls normais (épico+ SÓ de baús da loja ou do
+  CHEFE do piso). Andares profundos dão mais rolls (1 por ~12 andares
+  × fator de duração, +1 se venceu o chefe).
+- Recompensas: ouro (22 + andar×13 por andar), XP (15 + andar×13 por
+  andar, ×fator), cristais (andar/14 × fator), bônus do chefe (+120
+  ouro/XP).
+- A UI mostra PREVIEW idêntico ao que será concedido (computeDungeonRewards
+  é usado nas duas pontas).
+
+INICIAR (POST /api/dungeon/start):
+1. Valida sessão + dono. Não pode ter outra expedição ativa.
+2. Valida duração (2h/4h/8h), andar ≤ teto do nível, energia suficiente,
+   limite diário.
+3. Deduz energia e grava dungeonActive = { startedAt, durationSec, hours,
+   attemptFloor }.
+
+COLETAR (POST /api/dungeon/collect):
+1. Valida sessão + dono. Exige expedição ativa e CONCLUÍDA (tempo real
+   decorrido ≥ duração).
+2. Recalcula as recompensas com o poder ATUAL (idêntico ao preview).
+3. Aplica XP (com boosts/VIP), ouro (× goldMultiplier), cristais.
+4. Rola os drops de itens (raridade ponderada, máx raro; chefe garante +1
+   drop ÉPICO garantido).
+5. Aplica recarga de energia do tempo decorrido.
+6. Atualiza dungeonStats { runsToday, totalRuns, totalClears, bestFloor,
+   itemsFound } e o limite diário.
+7. trackProgress(char, "dungeon", 1) para diárias/semanais.
+8. Limpa dungeonActive (pode iniciar outra, se não bateu o limite do dia).
+
+FLUXO: o jogador abre Masmorras → vê o preview (andares que vai limpar,
+ouro/XP/cristais/drops esperados, limite diário) → escolhe duração e
+andar → paga energia → a expedição roda em tempo real (pode fechar o jogo)
+→ volta, coleta → recebe XP/ouro/cristais/itens → repete até 3x por dia.
+
+
+================================================================================
+ 12. EVENTO GLOBAL — BOSS MUNDIAL
+================================================================================
+
+O QUE É: batalha CONJUNTA em janelas agendadas (admin configura horários
+"HH:MM" e duração). Todos os participantes atacam o MESMO boss (HP
+compartilhado, ex.: 10 milhões), podem formar SQUADS, e quando o boss morre
+todos recebem recompensas proporcionais ao dano.
+
+AGENDAMENTO (src/game/schedule.ts):
+- Horários diários (hora do SERVIDOR) + duração (ex.: 12:00, 18:00, 21:00
+  por 60 min). Janelas que atravessam a meia-noite funcionam.
+- O estado do evento (HP, participantes, squads, convites, log) fica em
+  server_settings.worldBossEvent e RESETA automaticamente a cada nova
+  janela (novo occurrenceId = timestamp da janela).
+
+CONFIGURAÇÃO (admin):
+- enabled, schedule, durationMinutes, boss (kind/imagem, maxHp ~10M,
+  attack 260, defense 120, speed 8, crit 12), rewards (ouro/XP/moedas da
+  torre), maxSquadSize (4), attackCooldownSec (5), regenSec (60),
+  respawnSec (10), shield (ativa em 75/50/25% do HP restante, dura 180s,
+  quebra por 50 💎 ou ouro), spawnMobs (2 dragões com 4M de HP, recompensa
+  a quem matar).
+
+PARTICIPAR:
+- ENTRAR (POST /api/world-boss/enter): cria o participante (HP cheio).
+- ATACAR (POST /api/world-boss/attack):
+    * Valida janela aberta + sessão + dono.
+    * Cooldown de 5s entre ataques do mesmo jogador (429).
+    * Dano do jogador = ataque×60 + nível×150 (±15%, crítico ×2.2).
+    * ANTI-HITKILL: 1 golpe nunca derruba o boss (máx 12% do HP por ataque)
+      — logado no admin (kind "hitkill", source "world-boss").
+    * O BOSS REVIDA: dano PROPORCIONAL ao HP do jogador (~12% do HP máximo
+      sem defesa; defesa alta reduz até ~2-4%) — ameaçador em qualquer nível.
+    * Regeneração passiva de HP na batalha (100% a cada regenSec).
+    * Morreu? Respaw em respawnSec com HP cheio.
+    * O dano é aplicado de forma ATÔMICA (SQL jsonb_set — sem corrida).
+- ESCUDO: ao cruzar 75/50/25% do HP restante, o boss fica imune até alguém
+  comprar um QUEBRA-ESCUDO (custo configurado) ou o escudo expirar (180s).
+  Quando cai (comprado ou expirado), o boss SPAWNA mobs (ex.: 2 dragões).
+- MOBS: têm HP próprio; quem causa dano recebe recompensa proporcional ao
+  matar (ouro/XP). Cap de 50% do HP do mob por golpe.
+- SQUADS (máx 4): o líder convida por nome (POST invite) → o convidado
+  aceita/recusa (POST respond) → sair promove o próximo membro a líder
+  (POST leave). Convites expiram com a janela.
+- LOG: os últimos ~30 eventos do evento ficam visíveis.
+
+VITÓRIA (boss derrotado):
+- status → "won", rewardsGiven = true.
+- distributeRewards: para CADA participante, share = dano dele / dano
+  total → gold = pool.gold × share, xp = pool.xp × share (com level-ups),
+  coins = pool.towerCoins (fixo p/ todos).
+- Log no admin (kind "worldboss_result") com o TOP 3 de dano.
+- O evento fecha (não respawna na mesma janela); nextOpening mostra a
+  próxima abertura.
+
+FLUXO: abre o painel (sempre visível) → vê o status (aberto/fechado com
+contagem regressiva da próxima abertura) → entra → ataca a cada 5s →
+forma squad com amigos → quebra escudos ou mata mobs → o boss morre →
+todos recebem recompensas proporcionais ao dano → evento fecha até a
+próxima janela agendada.
+
+
+================================================================================
+ 13. GUILDAS (CRIAR, MEMBROS, CONVITES, CHAT)
+================================================================================
+
+(src/app/api/guild/route.ts + repo) — guilda com até 10 membros.
+
+CRIAR (action=create):
+- Requisitos: sem guilda, nível ≥ 5, 1.000 de ouro (custa ao criar).
+- Nome (mín 3, máx 20), descrição (máx 120), ícone (emoji), logo (opcional).
+- A LOGO é salva como Data URL base64 no banco (máx 4MB) — funciona em
+  hospedagem serverless (sem arquivos em disco).
+- O criador vira LÍDER (guildRank "leader"), a guilda nasce nível 1.
+
+ENTRAR:
+- O jogador SOLICITA entrada (action=invite) → vira convite pendente.
+- O LÍDER aceita (action=accept) ou recusa (action=decline).
+- Alternativa: convite direto do líder para um jogador, que aceita
+  (action=my_accept) ou recusa (action=my_decline) pelo próprio painel.
+- Ao entrar: membro é adicionado, guildId/guildRank no personagem, e
+  mensagem de sistema no chat ("X entrou na guilda").
+
+SAIR / EXPULSAR / TRANSFERIR:
+- leave: o líder NÃO pode sair com outros membros (deve transferir antes).
+- kick: só o líder; expulso perde guildId/guildRank.
+- transfer: o líder passa a liderança para outro membro.
+- Último membro saindo → a guilda é DISSOLVIDA (registro apagado).
+
+CHAT DA GUILDA (GET/POST /api/guild/chat):
+- Só membros podem falar (valida guildId do personagem). Texto máx 300.
+- Polling (~4s): retorna as últimas 60 mensagens; suporta ?after=id para
+  incremento.
+- Mensagens de sistema (entrou/saiu/expulso) aparecem automaticamente.
+
+PERSPECTIVA (GET /api/guild):
+- Lista de guildas públicas (com memberCount e pendingRequest),
+- minha guilda (detalhe), meus convites recebidos, e — se líder — os
+  pedidos aguardando aprovação na minha guilda.
+
+FLUXO: jogador sem guilda vê a lista → cria (paga 1.000 🪙 e vira líder)
+ou pede entrada → líder aprova → o jogador vê o painel da guilda (membros,
+chat, foto) → pode conversar, e o líder pode expulsar/transferir/aceitar
+pedidos. Moedas de guilda existem como moeda (guildCoins) mas a economia
+interna da guilda não tem mais ações além do chat/gestão.
+
+
+================================================================================
+ 14. MERCADO ENTRE JOGADORES (ANÚNCIOS DE VENDA)
+================================================================================
+
+(src/game/market.ts + /api/market/*) — vender/comprar itens e skins por
+ouro ou diamantes.
+
+REGRAS:
+- Nível mínimo para usar o mercado: 5.
+- Para VENDER (anunciar): nível 5 + ter chegado ao andar 10 da TORRE
+  (sellUnlock — "feito" para liberar o leilão; comprar só exige nível 5).
+- Máx. 8 anúncios ativos por personagem; 300 no servidor inteiro.
+- Taxa de anúncio: 5% do preço em ouro (mín 10, máx 1.000) OU 2 diamantes.
+  Não é reembolsada no cancelamento.
+- Preço máximo: 500.000 de ouro ou 5.000 diamantes por item.
+- Itens equipados / já listados não podem ser anunciados.
+- Consumíveis: pode anunciar PARTE do stack (quantity).
+- SKINS: podem ser anunciadas (listingType "skin") — a skin é REMOVIDA do
+  vendedor enquanto listada e devolvida se cancelar.
+
+ANUNCIAR (POST /api/market):
+- Valida sessão, dono, desbloqueio, limites, preço, taxa (cobra na hora).
+- O item é guardado num UUID "fantasma" (MARKET_SYSTEM_ID =
+  00000000-0000-0000-0000-00000000dead): consumível vira linha separada no
+  sistema com a quantidade; equipamento muda o characterId para o sistema
+  e marca listed: true. (Ninguém pode usar o item enquanto listado.)
+- Log de economia no admin (kind "economy", source "market", event
+  "listing") para detectar duplicação/exploit.
+
+COMPRAR (POST /api/market/buy):
+- Valida nível 5, anúncio ativo, não pode comprar o próprio anúncio.
+- Cobra o comprador e paga o vendedor (ouro ou diamantes).
+- Move o item: consumível → nova linha no inventário do comprador (e apaga
+  a do sistema); equipamento → muda dono e listed: false. Skin → adiciona
+  ao comprador.
+- Anúncio → status "sold" com buyerId/buyerName/soldAt.
+- Log de economia (event "buy").
+
+CANCELAR (POST /api/market/cancel):
+- Só o dono. Devolve o item/skin ao vendedor. Taxa não reembolsada.
+- Anúncio → status "cancelled".
+
+LISTAGEM (GET /api/market):
+- Anúncios ativos (mais recentes primeiro) com template do item, dados do
+  vendedor e PREÇO MÉDIO por template (referência de mercado na UI).
+
+FLUXO: jogador com nível 5 + torre 10 abre o Mercado → anuncia um item
+(paga taxa) → outros veem na lista com preço médio → alguém compra (paga;
+vendedor recebe; item muda de dono) → ou o vendedor cancela (item volta).
+
+
+================================================================================
+ 15. ANÚNCIOS DE TROCA + SALAS DE TROCA 1x1 (DUPLA CONFIRMAÇÃO ATÔMICA)
+================================================================================
+
+(src/game/tradeAds.ts + /api/trade-ads/* + /api/trade-session/*)
+
+ANÚNCIO DE TROCA (POST /api/trade-ads):
+- Nível mínimo 5. Máx. 5 anúncios ativos por personagem; 100 no servidor.
+- Título (mín 3 letras, máx 60), "quero" (máx 120), até 8 itens oferecidos
+  (NÃO reservados — só mostrados), preço opcional em ouro/diamantes.
+- Valida que os itens são do jogador, não equipados, não listados/reservados.
+- Duração: expira em 72h (TRADE_AD_TTL_HOURS).
+
+CHAT PRIVADO DO ANÚNCIO (GET/POST /api/trade-ads/chat):
+- Cada PAR tem a própria conversa (o jogador A não vê as mensagens do B).
+- Mensagens ficam em ad.chatByPlayer = { idDoOutro: [mensagens] }.
+- Máx 100 mensagens por conversa. Texto máx 200.
+- Para ABRIR uma sala de troca é preciso ter conversado no chat.
+
+SALA DE TROCA 1x1 (POST /api/trade-session/open):
+- O dono abre com um interessado que conversou; o interessado abre com o
+  dono. playerA = dono, playerB = interessado.
+- Impede sala duplicada para o mesmo par no mesmo anúncio.
+
+SELECIONAR ITENS (POST /api/trade-session/select):
+- Cada lado escolhe até 8 itens + ouro/diamantes (não pode oferecer mais
+  do que tem). Alterar a seleção RESETA a própria confirmação.
+
+CONFIRMAR (POST /api/trade-session/confirm):
+- Cada lado confirma o próprio lado. Quando AMBOS confirmaram → TROCA
+  ATÔMICA:
+    * Revalida TUDO de novo (itens ainda existem, não equipados, não em
+      uso, saldo de moedas suficiente) — se mudou, desfaz as confirmações
+      e pede revisão.
+    * Troca unilateral (presente) é permitida — basta UM lado oferecer.
+    * Move itens dos dois lados e transfere ouro/diamantes.
+    * Sala → status "completed". Mensagem de sucesso.
+- CANCELAR (POST /api/trade-session/cancel): qualquer participante encerra
+  a sala (status "cancelled"). Nada é movido.
+- CHAT DA SALA (POST/GET /api/trade-session/chat): mensagens entre os dois
+  durante a negociação (máx 100).
+- MINHAS SALAS (GET /api/trade-session/sessions): salas ativas envolvendo
+  o personagem, com confirmações dos dois lados, ofertas (com templates) e
+  moedas oferecidas. Polling para a UI.
+
+FLUXO COMPLETO: jogador cria anúncio com o que oferece e o que quer →
+interessados conversam no chat privado → um dos dois abre a sala 1x1 →
+cada lado seleciona itens/moedas → ambos confirmam → o servidor valida e
+EXECUTA a troca atômica (ninguém fica com item a mais ou a menos) →
+sala concluída. Qualquer um pode cancelar a qualquer momento antes da
+execução.
+
+
+================================================================================
+ 16. LOJA (BAÚS, POÇÕES, VIP)
+================================================================================
+
+(POST /api/shop/buy) — catálogo fixo no código (SHOP_ITEMS):
+
+BAÚS (itens de equipamento, ponderados por raridade — o topo do baú tem o
+maior peso, cada nível abaixo corta o peso pela metade):
+  - Comum ..... 1.500 🪙 (2 itens, até incomum)
+  - Incomum ... 3.500 🪙 (3 itens, até raro)
+  - Raro ...... 7.000 🪙 (3 itens, até épico)
+  - Épico ..... 150 💎 (3 itens, até épico)
+  - Lendário .. 450 💎 (4 itens, até lendário)
+  - Mítico .... 900 💎 (4 itens, até mítico)
+  - Divino .... 1.800 💎 (5 itens, até divino)
+  - Secreto ... 4.000 💎 (5 itens, até supremo)
+  Baús NUNCA entregam poções/consumíveis; só equipamentos de nível
+  ≤ nível do jogador + 10 (pequena folga).
+
+POÇÕES:
+  - Poção de Vida 250 🪙 (+100 HP) · Mana 250 🪙 (+100 mana) ·
+    Energia 300 🪙 (+50) · Força 350 🪙 · Velocidade 350 🪙 ·
+    Vigor 400 🪙 · Elixir de XP 400 💎 (+50 XP) · Antídoto 300 🪙.
+  - As principais (vida/mana/energia/XP) viram ITENS DE INVENTÁRIO
+    (consumíveis empilháveis) se o seed tiver rodado; senão aplicam o
+    efeito instantâneo antigo.
+  - Poções de boost (2x XP / 2x Energia por N horas) também podem existir
+    como consumíveis com effect.boostXpHours/boostEnergyHours.
+
+VIP: os 8 tiers (ver seção 5) — só compra acima do atual.
+
+FLUXO: jogador abre a Loja → escolhe baú/poção/VIP → o servidor valida o
+saldo (ouro ou diamantes) → cobra → concede (baú rola itens ponderados;
+poção entra no inventário ou aplica efeito; VIP ativa 30 dias).
+
+
+================================================================================
+ 17. LOJA FANTASHA (LOJA AGENDADA COM MOEDAS DA TORRE)
+================================================================================
+
+(src/game/ghostShop.ts + /api/ghost-shop/*)
+
+O QUE É: loja temporária que abre em horários configurados pelo admin
+(schedule "HH:MM" + durationMinutes, ex.: 12:00/18:00/21:00 por 60 min).
+Paga com MOEDAS DA TORRE (towerCoins).
+
+- GET /api/ghost-shop: estado público (aberta? horários, contagem
+  regressiva, itens com template). Devolve serverTime + serverOffsetMinutes
+  para o cliente corrigir o relógio (o jogador não depende do relógio dele).
+- Se desativada → "ainda não está aberta". Se sem itens configurados →
+  fecha mas mantém a contagem da próxima abertura.
+- COMPRAR (POST /api/ghost-shop/buy):
+    * Valida sessão + dono + loja ATIVADA E ABERTA (hora do servidor).
+    * Valida que o templateId está na lista atual e o saldo de towerCoins.
+    * Cobra as moedas e concede o item (quantidade configurada).
+- A configuração (itens com templateId/preço/quantidade) é editada no
+  painel admin.
+
+FLUXO: o jogador vê o painel sempre na navegação → quando aberta, compra
+itens raros com moedas da torre → quando fechada, vê a contagem regressiva
+da próxima abertura (convertida para o fuso local dele).
+
+
+================================================================================
+ 18. FORJA (RUNAS + ENCANTAMENTOS + ENCANTOS DE CHEFE)
+================================================================================
+
+(src/game/forge.ts + /api/forge)
+
+RUNA (APRIMORAR, action=enhance):
+- +1 nível de runa por tentativa (1 → 15 máximo).
+- +5% de atributos por nível de runa sobre o multiplicador da raridade.
+- Custo: 1.000 × 1.6^nível (ex.: +0 → 1.000; +5 → ~10.500; +10 → ~110.000;
+  +14 → ~720.000). Consome ouro SEMPRE (mesmo falhando).
+- Chance: 100% no +0, cai ~6,5 pontos por nível até o piso de 10%
+  (+5 → ~68%; +10 → ~35%; +14 → 10%).
+- Runa e encanto funcionam JUNTOS (encantar não bloqueia aprimorar).
+
+ENCANTAR (action=enchant):
+- Custa 5.000 de ouro. Aplica um encantamento ALEATÓRIO do POOL DA CLASSE
+  (15 por classe, 13 classes = 195 encantamentos únicos com tema da classe:
+  3 de ataque, 3 de defesa, 3 de vida, 3 de velocidade, 3 de crítico).
+- Ex.: Guerreiro: Chama de Guerra (+5 atq) → Lâmina Mortal (+6 crit).
+- Um item só pode ter UM encantamento (não re-encanta item encantado).
+
+ENCANTOS DE CHEFE (boss_*):
+- Só saem vencendo CHEFES (torre a cada 10 andares / boss mundial).
+- Mais fortes que os normais: Essência do Caos +25 atq, Armadura Titânica
+  +20 def, Coração de Dragão +400 HP, Velocidade Abissal +8 spd, Olho do
+  Devorador +8 crit, Fúria do Primordial +40 atq.
+- A arma equipada ganha de graça ao vencer chefe da torre (se ainda não
+  tem um encanto de chefe).
+
+MULTIPLICADOR DE RARIDADE (RARITY_STAT_MULT):
+  comum ×1 · incomum ×1.3 · raro ×1.7 · épico ×2.2 · lendário ×3 ·
+  mítico ×4 · divino ×5.2 · ancestral ×6.8 · supremo ×8.8.
+  Bônus do item = base do template × raridade × (1 + runa×0.05) + encanto.
+
+EQUIPAMENTO → STATUS:
+- Ao aprimorar/encantar um item EQUIPADO, o servidor recalcula os
+  atributos do personagem preservando os pontos investidos (baseStats =
+  total atual − bônus antigo; novo total = base + bônus novo).
+
+FLUXO: jogador abre a Forja → escolhe um item de equipamento → "Gravar
+Runa" (paga ouro, tenta a sorte) ou "Encantar" (paga 5.000, ganha um
+encanto aleatório da classe) → se equipado, os status sobem na hora →
+para encantos de chefe, basta vencer chefes.
+
+
+================================================================================
+ 19. INVENTÁRIO (EQUIPAR, USAR, VENDER, REMOVER, AUTO-EQUIPAR, SKINS)
+================================================================================
+
+- GET /api/character/[id] devolve o inventário com templates, quantidade,
+  valor total de venda e se é empilhável (consumíveis empilham; equipamento
+  é instância única).
+
+EQUIPAR / DESEQUIPAR (POST /api/inventory/equip):
+- Valida dono; item não pode estar listado no mercado nem reservado em troca.
+- Valida requisitos do template: nível mínimo e restrição de classe.
+- Equipar um item desequipa automaticamente outro do MESMO SLOT.
+- Recalcula os atributos: base (status atuais − bônus antigos equipados) +
+  novos bônus — os pontos investidos NUNCA são perdidos.
+
+USAR (POST /api/inventory/use):
+- Só consumíveis (template.type === "consumable").
+- Efeitos do template.effect: hp, mana, energy, xp, boostXpHours,
+  boostEnergyHours (poções de boost 2x).
+- Boosts/VIP ampliam XP e energia. Consome 1 unidade do stack.
+- Pode subir de nível (level-ups com pontos).
+
+VENDER (POST /api/inventory/sell):
+- Só itens não equipados/não listados/não reservados.
+- Preço = sellPrice × quantidade (quantidade 1 ou "all" para o stack).
+- Recebe o ouro na hora.
+
+REMOVER (POST /api/inventory/remove):
+- Exclui 1 unidade (ou o stack com "all"). Só itens não equipados.
+
+AUTO-EQUIPAR (POST /api/inventory/auto-equip):
+- Equipa o MELHOR item de cada slot (maior bônus de forja, mesma fórmula
+  do poder), respeitando nível/classe, pulando itens listados/reservados.
+- Recálculo único no final.
+
+SKIN (POST /api/inventory/skin):
+- Equipa/desequipa a skin ativa (activeSkinId) — ver seção 20.
+
+FLUXO: jogador abre o Inventário → vê os itens com stats → equipa (status
+sobem na hora), usa poções (consome e aplica efeito), vende (recebe ouro),
+remove (descarta), ou usa auto-equipar para otimizar tudo de uma vez.
+
+
+================================================================================
+ 20. SISTEMA DE SKINS (SKIN FULL + BUFFS DE COMBATE)
+================================================================================
+
+(src/game/skins.ts + src/game/skinBuffs.ts)
+
+CATÁLOGO: 26 skins (2 por classe na maioria), com raridade épica/lendária/
+mítica e imagem própria (/skins/<classe>/...). Ex.: assassino_corte
+(lendária), warrior_real_02 (mítica), necromancer_sangue (mítica)...
+
+COMO ADQUIRIR:
+- O ADMIN concede via painel (dar skin / dar todas / enviar por correio).
+- No MERCADO: jogadores podem anunciar/Comprar skins.
+- Baús NÃO dão skins.
+
+EQUIPAR:
+- Só skin da PRÓPRIA classe do personagem.
+- Fica em character.activeSkinId; a imagem da skin vira o avatar do
+  personagem (sidebar, painel, batalha).
+
+BUFFS DE COMBATE (skinBuffs.ts):
+- A skin equipada dá um buff de combate TEMÁTICO por classe:
+    * Assassino: sangra o inimigo (13% do ataque por rodada) +6 crit.
+    * Berserker: +24% dano, recebe +8%, +7 crit.
+    * Guerreiro: +10% dano, recebe −10%.
+    * Paladino: recebe −18%, cura 3,5% do HP por rodada.
+    * Cavaleiro: recebe −22%, cura 2%.
+    * Templário: +5% dano, recebe −17%, cura 2%.
+    * Monge: +5% dano, recebe −12%, cura 2%, +6 crit.
+    * Mago: +20% dano, recebe +5%, +4 crit.
+    * Necromante: +12% dano, sangra 7%, +4 crit.
+    * Caçador: +8% dano, +12 crit.
+    * Samurai: +14% dano, recebe −5%, +7 crit.
+    * Invocador: +10% dano, recebe −5%, +5 crit.
+    * Arqueiro: +8% dano, +13 crit.
+- Cada SKIN ainda tem buff INDIVIDUAL (ex.: warrior_real_02 dá +30% dano,
+  recebe −20%, cura 2%, +8 crit — mais forte que a média da classe).
+- Raridade multiplica a força: épica ×1 · lendária ×1.3 · mítica ×1.6.
+- O buff vale na TORRE e no PvP automaticamente (o servidor aplica).
+- effectiveStats() mostra os status efetivos (crítico = base + bônus da
+  skin) para o painel exibir o número real.
+
+FLUXO: o jogador recebe skins (admin/mercado) → abre Inventário → aba de
+skins → equipa a da própria classe → o avatar muda e a batalha fica mais
+forte (buffs somam com maestria e árvore).
+
+
+================================================================================
+ 21. ÁRVORE DE HABILIDADES (10 POR CLASSE)
+================================================================================
+
+(src/game/skillTree.ts + POST /api/character/skill)
+
+- O personagem ganha 1 PONTO DE HABILIDADE a cada 3 níveis.
+- Cada classe tem 10 habilidades: 9 PASSIVAS (bônus pequeno permanente) +
+  1 DEBUFF exclusivo (aplicado quando você usa o GOLPE ESPECIAL).
+- Cada habilidade tem 3 ranks (1 ponto por rank). Desbloqueio progressivo:
+  a habilidade N exige N pontos totais na árvore (0, 1, 2... 8; o debuff
+  exige 9 pontos).
+- Valores por rank: atk +1, def +1, speed +1, maxHp +5, crit +0.5%,
+  precisão +1, esquiva +1.
+- DEBUFFS (8 tipos):
+    * bleed/sangramento, burn/queimadura, poison/veneno: dano extra
+      imediato (% do ataque).
+    * weaken/enfraquecer, slow/lentidão: inimigo causa −% de dano no
+      contra-ataque.
+    * sunder/quebrar armadura: golpe ignora % da defesa.
+    * curse/maldição: golpe causa +% de dano.
+    * blind/cegueira: inimigo com −% de crítico no contra-ataque.
+  Ex. por classe: Guerreiro = Golpe Derrubador (sunder); Mago = Combustão
+  (burn); Assassino = Lâmina Envenenada (poison); Monge = Toque Cego
+  (blind); Cavaleiro = Quebra-escudo (sunder); Arqueiro = Flecha da
+  Cegueira (blind)...
+
+APRENDER (POST /api/character/skill { characterId, skillId }):
+- Valida dono, habilidade da classe, rank < máx, pontos suficientes,
+  requisito de desbloqueio (total de ranks investidos).
+- Aplica o bônus passivo NA HORA nos atributos (atk/def/hp/crit/precisão/
+  esquiva/vel) e recalcula o Poder.
+- Ao completar a árvore inteira: resposta com MAESTRIA DESPERTADA (ver 22).
+
+RESET (POST { characterId, reset: true }):
+- Custa 25.000 de ouro. Devolve TODOS os pontos investidos, limpa skills e
+  REMOVE os bônus passivos dos atributos (e recalcula poder).
+- Desativa a maestria automaticamente (buff é calculado ao vivo).
+
+FLUXO: o jogador ganha pontos a cada 3 níveis → abre a Árvore → investe em
+passivas (status sobem na hora) e no debuff do golpe especial → ao maxar
+os 30 ranks, desperta a MAESTRIA da classe → pode resetar por 25k se
+quiser mudar a build.
+
+
+================================================================================
+ 22. MAESTRIA DA CLASSE (CAPSTONE)
+================================================================================
+
+(src/game/mastery.ts)
+
+- Quando TODAS as 10 habilidades da classe estão no rank máximo (30 pontos),
+  o personagem ganha um buff temático PERMANENTE de combate:
+    * Guerreiro: +12% dano, recebe −5%
+    * Paladino: +8% dano, recebe −10%
+    * Berserker: +18% dano, recebe +5%, +8 crit
+    * Mago: +16% dano
+    * Necromante: +14% dano, +6 crit
+    * Assassino: +12% dano, +10 crit
+    * Caçador: +14% dano, +6 crit
+    * Monge: +8% dano, recebe −8%, +5 crit
+    * Samurai: +16% dano, +5 crit
+    * Cavaleiro: recebe −14%
+    * Invocador: +12% dano, +6 crit
+    * Templário: +10% dano, recebe −10%
+    * Arqueiro: +14% dano, +8 crit
+- Título temático: Mestre de Guerra, Arquimago, Sombra Lendária,
+  Espadachim Lendário, Guardião Imortal, Senhor das Invocações,
+  Atirador de Elite...
+- Implementado como MULTIPLICADOR de combate (não mexe em atributos salvos
+  nem no poder) — vale na Torre e no PvP automaticamente e some sozinho
+  se o jogador RESETAR a árvore.
+- A UI toca uma animação especial ao despertar ("👑 MAESTRIA DESPERTADA!").
+
+
+================================================================================
+ 23. PRESTÍGIO (RENASCIMENTO NO NÍVEL 999)
+================================================================================
+
+(src/game/prestige.ts + POST /api/character/prestige)
+
+- Requisito: nível 999 (PRESTIGE_MIN_LEVEL).
+- Ao prestigiar:
+    * Reseta nível → 1, XP → 0, pontos → 0.
+    * prestige +1.
+    * Os atributos BASE da classe crescem +1% por prestígio:
+      base_final = base_classe × (1 + 0.01 × prestígio).
+    * Mantém itens equipados (o bônus de equipamento é somado depois),
+      moedas, skins, torre, PvP, guilda, conquistas — só o nível/XP/pontos
+      são resetados.
+- O patch é calculado com os bônus ATUAIS dos itens equipados (forja +
+  encanto) para preservar os status efetivos.
+- GET /api/character/prestige devolve se pode prestigiar e o motivo.
+- Conquista "prestige_1" e ranking de prestígio existem.
+
+FLUXO: jogador chega ao nível 999 → "Prestigiar" → renasce no nível 1 com
++1% de atributos base permanentes → sobe de novo, cada vez mais forte →
+prestígio infinito (sem limite).
+
+
+================================================================================
+ 24. CONQUISTAS E TÍTULOS
+================================================================================
+
+(src/game/achievements.ts + src/game/titles.ts + /api/achievements)
+
+CONQUISTAS (27): condições verificadas contra o personagem em tempo real.
+Ex.: first_steps (Lv1), level_10/25/50/100, rich (50k ouro), millionaire
+(1M ouro), pvp_300/1000/1800, tower_10/25/50, prestige_1, guild_join,
+guild_leader, skin_3/skin_10, power_500/1500, skill_first/skill_10,
+vip_first, diamond_1000, dungeon_10/dungeon_50, crystals_500.
+- Cada uma tem raridade (comum/rara/épica/lendária) e recompensa
+  (ouro/cristais).
+- COLETAR (POST /api/achievements { action: "claim" }): valida que a
+  condição está satisfeita e não foi coletada → aplica a recompensa e
+  marca como coletada (achievements[]).
+
+TÍTULOS (30): condições dinâmicas — nível (Novice, Aventureiro, Veterano,
+Campeão, Lenda), PvP (Brigão, Gladiador, Senhor da Guerra, Imperador PvP),
+torre (Escalador, Monstro, Titã), por classe (Guerreiro de Elite, Arquimago,
+Sombra, Paladino Sagrado, Águia), riqueza (Rico, Milionário), masmorras
+(Mergulhador, Lorde das Masmorras), árvore (Sábio das Habilidades), guilda
+(Líder de Guilda), VIP (Nobre), diamantes (Acumulador), cristais (Colecionador).
+- EQUIPAR (POST /api/achievements { action: "equip_title" }): valida o
+  desbloqueio, salva no histórico e alterna activeTitle (mostrado na UI).
+
+FLUXO: o jogador joga normalmente → o painel de Conquistas mostra as que
+desbloqueou (em tempo real) → clica em coletar para ganhar ouro/cristais →
+equipa títulos desbloqueados para exibir.
+
+
+================================================================================
+ 25. CAIXA DE CORREIO (ITENS, SKINS, RECURSOS DO ADMIN)
+================================================================================
+
+(src/db/repo.ts — seção mailbox + /api/mailbox)
+
+- O ADMIN envia correio: itens (sendMail), skins (sendSkinMail) ou
+  recursos (sendResourceMail: gold, diamonds, crystals, pvpCoins,
+  guildCoins, towerCoins, energy).
+- Registro: { kind: item|skin|resource, templateId?, quantity?, skinId?,
+  resource?, amount?, from, note, createdAt, claimedAt, claimed }.
+- GET /api/mailbox: lista o correio com template do item / skin, + pending.
+- CLAIM individual (POST { action: "claim", id }):
+    * Item → grantItem no inventário (empilha consumíveis).
+    * Skin → adiciona à coleção do personagem.
+    * Recurso → soma no personagem (energia respeita o máximo).
+    * Marca claimed/claimedAt.
+- CLAIM ALL (POST { action: "claim_all" }): resgata tudo de uma vez.
+- O badge no TopBar mostra a quantidade pendente (mailboxCount, também
+  vindo do /api/auth/me e /api/character/[id]).
+
+FLUXO: o admin envia um presente → o jogador vê o badge no topo → abre o
+Correio → vê as mensagens (com item/skin e nota) → "Coletar tudo" →
+os itens caem no inventário / a skin entra na coleção / as moedas somam.
+
+
+================================================================================
+ 26. CÓDIGOS DE RESGATE (BOOST 2x XP / 2x ENERGIA)
+================================================================================
+
+(POST /api/codes/redeem)
+
+- O ADMIN cria códigos no painel: { code, xpHours, energyHours, maxUses,
+  expiresAt }.
+- REDEEM: valida sessão + dono + código existe.
+- Validações:
+    * Já resgatado por este personagem → 409.
+    * maxUses atingido → 410.
+    * Expirou → 410.
+    * Sem recompensas → 400.
+- Aplica o boost: xpUntil/energyUntil = agora + N horas (soma ao que já
+  estiver ativo).
+- Marca o código como resgatado por este jogador (redeemedBy[]).
+- Devolve o resumo dos boosts (ativa? tempo restante).
+
+FLUXO: o admin divulga um código (ex.: "BEMVINDO") → o jogador digita no
+painel Códigos → valida e ativa 2x XP/Energia por N horas → a UI mostra o
+tempo restante → o multiplicador vale em todo o jogo.
+
+
+================================================================================
+ 27. DOAÇÃO PIX (COMPRA DE DIAMANTES COM APROVAÇÃO MANUAL)
+================================================================================
+
+(POST /api/pix/purchase + admin "Compras")
+
+- O ADMIN configura: chave PIX, QR code (upload) e quantos diamantes valem
+  R$ 1 (diamondsPerReal, padrão 1.000).
+- O JOGADOR: escolhe o valor em R$ → vê o QR/chave → paga no app do banco →
+  envia o COMPROVANTE (imagem, redimensionada no navegador para base64).
+- O servidor VALIDA que o comprovante é uma imagem de verdade (magic
+  numbers PNG/JPEG/GIF/WebP) e o guarda DENTRO do registro (nunca em
+  arquivo público — evita vazar dados bancários por URL adivinhável).
+- A compra fica status "pending" → o ADMIN vê no painel (aba Compras) →
+  APROVA → os diamantes são creditados no personagem (valor × diamondsPerReal)
+  → ou REJEITA.
+- Log e histórico: listPurchases ordenado por data.
+
+FLUXO: jogador clica em Doar → vê QR/chave → paga → envia o comprovante →
+compra fica pendente → admin aprova → diamantes caem na conta → jogador
+compra VIP/baús no mercado/loja.
+
+
+================================================================================
+ 28. RANKINGS
+================================================================================
+
+(GET /api/rankings) — top 50 por:
+  - Poder (padrão) · Nível · PvP (rating) · Torre (andar) · Riqueza (ouro) ·
+    Prestígio.
+- Também serve de BUSCA por nome (para convidar na troca entre jogadores):
+  normaliza acentos, devolve até 10 personagens.
+
+FLUXO: o jogador abre Rankings → escolhe a categoria → vê a tabela com
+nome/classe/nível/poder → atualiza quando quiser.
+
+
+================================================================================
+ 29. SISTEMA DE PRESENÇA E NOTIFICAÇÕES DO NAVEGADOR
+================================================================================
+
+PRESENÇA (POST/GET /api/presence):
+- O cliente envia um HEARTBEAT a cada 45s enquanto o jogo está aberto
+  (atualiza lastActivity; pausa quando a aba está oculta).
+- GET devolve quantos jogadores estão ONLINE (lastActivity ≤ 3 min,
+  agrupado por usuário — alts não contam 2x).
+- Exibido no painel de Configurações.
+
+NOTIFICAÇÕES (GET /api/notifications/check):
+- Polling a cada ~30s; o cliente dispara notificações do navegador nas
+  TRANSIÇÕES:
+    * Energia cheia (voltou do estado recarregando).
+    * Loja Fantasma aberta.
+    * Evento Global (Boss Mundial) aberto.
+    * (mailboxCount também é devolvido).
+
+FLUXO: o jogador deixa o jogo aberto (ou a aba em segundo plano) → quando
+a energia enche ou um evento abre, o navegador notifica → ele volta e joga.
+
+
+================================================================================
+ 30. MAPA / REGIÕES / MÚSICA POR ILHA
+================================================================================
+
+12 ILHAS (REGIONS) com nível mínimo, ícone, imagem e fundo próprio:
+  1. Vila Inicial (Lv1) · 2. Floresta Esquecida (Lv5) ·
+  3. Ruínas Antigas (Lv10) · 4. Minas Profundas (Lv15) ·
+  5. Pântano Sombrio (Lv20) · 6. Montanhas Geladas (Lv30) ·
+  7. Deserto Escaldante (Lv40) · 8. Castelo Imperial (Lv50) ·
+  9. Ilhas Perdidas (Lv60) · 10. Mundo dos Dragões (Lv75) ·
+  11. Reino Demoníaco (Lv90) · 12. Templo Celestial (Lv100).
+
+TROCAR DE REGIÃO (POST /api/region/change):
+- Valida sessão + dono + nível ≥ minLevel da ilha → atualiza
+  currentRegion.
+- O fundo da tela muda (bg da ilha), o tema de cor (accent) muda e as
+  missões disponíveis são da nova região.
+
+MÚSICA POR ILHA (GET /api/region/audio + admin):
+- O admin faz UPLOAD de um arquivo de áudio por região (region_audio).
+- O MusicController toca a música da região atual (com controle de
+  som/volume nas configurações).
+
+FLUXO: o jogador abre o Mapa → vê as ilhas com nível mínimo → troca para
+uma que pode → o cenário/música/missões mudam → quanto maior o nível,
+mais longe ele chega.
+
+
+================================================================================
+ 31. PAINEL ADMIN (TODAS AS ABAS E AÇÕES)
+================================================================================
+
+( /admin — página única de 3.433 linhas + POST /api/admin )
+
+LOGIN ADMIN: /api/admin/login valida ADMIN_KEY (cookie separado roe_admin
+com função "admin"). Logout /api/admin/logout.
+
+ABAS:
+- Dashboard: métricas (contas, personagens, jogadores online, resumo).
+- Usuários: busca, editar (edit_user), banir/desbanir, excluir
+  (delete_user → soft), restaurar (restore_user), EXCLUSÃO PERMANENTE
+  (delete_user_hard), resetar senha (reset_password — grava só hash bcrypt).
+- Personagens: lista com busca; editar personagem (edit_character),
+  setar VIP (set_vip/remove_vip), resetar atributos (reset_attributes /
+  reset_attributes_general), dar pontos de status (grant_stat_points),
+  ajustar stats (adjust_stats), recalcular equipamento (recalc_equipment),
+  resetar torre (reset_tower).
+- Guildas: lista e gestão.
+- Itens: catálogo (seed / add / edit / delete).
+- Inventário: inspecionar por personagem, definir quantidade
+  (set_inventory_quantity), limpar inventário (clear_inventory).
+- Excluídos: lista de contas excluídas (com motivo/data) + restaurar.
+- Mensagem Global (server): anúncio (banner/popup) + manutenção
+  (ativa? mensagem? até quando?) + update_server_settings.
+- Códigos: criar (create_code: código, horas de boost XP/energia, usos,
+  expiração), deletar, ver usos.
+- Logs: ver logs (hitkill, anticheat, economia, worldboss_result...),
+  filtrar por tipo/origem, limpar (clear_logs / clear_admin_logs_by_source).
+- Áudio: upload de música por ilha (upload_region_music), remover
+  (remove_region_music).
+- Evento Global (Boss Mundial): configurar tudo (toggle_world_boss,
+  horários, duração, stats do boss, recompensas, escudo, mobs, imagem),
+  reset_world_boss, ver relatório.
+- Loja Fantasma: toggle_ghost_shop, horários, duração, itens (templateId/
+  preço/quantidade).
+- Compras PIX: aprovar (approve_purchase → credita diamantes) / rejeitar
+  (reject_purchase).
+- Energia infinita: toggle_infinite_energy.
+- Skins: dar (give_skin), remover (remove_skin), dar todas (give_all_skins),
+  enviar por correio (send_skin_mail / send_all_skins_mail).
+- Pacotes: send_package (itens/recursos por correio).
+- Reset do jogo: reset_game (apaga TODOS os dados de jogadores — contas,
+  personagens, inventário, guildas, correio, códigos usados, mercado —
+  mantendo templates, músicas e configurações).
+- Doação: upload_donate_qr.
+
+TODAS as ações de admin validadas pelo cookie roe_admin (role "admin").
+
+
+================================================================================
+ 32. CONFIGURAÇÕES GLOBAIS DO SERVIDOR
+================================================================================
+
+(server_settings — 1 linha chaveada por "core"; GET /api/server/settings é
+PÚBLICO para o cliente)
+
+Campos usados:
+- announcement + announcementStyle (banner|popup) + announcementId —
+  mensagem global exibida ANTES de qualquer tela (ServerNotice).
+- maintenance + maintenanceMessage + maintenanceUntil — bloqueia o jogo
+  durante manutenção.
+- infiniteEnergy — energia infinita global (ações não gastam energia).
+- maxLevel — teto de nível (0 = padrão 999).
+- towerXpMult — multiplicador de XP da torre (0.3 = só 30%).
+- maxTowerFloor — andar máximo da torre (0 = sem limite).
+- ghostShop { enabled, schedule, durationMinutes, items[] }.
+- worldBoss { enabled, schedule, durationMinutes, boss, rewards, squads,
+  cooldowns, shield, spawnMobs } + worldBossEvent (estado do evento) +
+  worldBossImage.
+- donatePixKey, donateQrCode, diamondsPerReal.
+- purchases[] — compras PIX pendentes/aprovadas.
+
+FLUXO: o admin muda no painel → o servidor lê na próxima requisição → o
+cliente vê o anúncio/manutenção na tela de login, e os limites/eventos
+passam a valer no jogo todo.
+
+
+================================================================================
+ 33. SEGURANÇA, ANTI-CHEAT E LOGS ADMINISTRATIVOS
+================================================================================
+
+SEGURANÇA:
+- JWT em cookie httpOnly (30 dias) — imune a XSS; sameSite=lax (CSRF);
+  secure em produção.
+- requireCharacterAuth valida PROPRIEDADE do personagem em TODA ação
+  (403 se não for dono) — ninguém age sobre personagem alheio.
+- Senhas só como hash bcrypt; script remove-plaintext-passwords.mjs limpa
+  senhas em texto puro que sobraram de versões antigas.
+- Comprovante PIX validado por magic numbers (imagem de verdade) e NUNCA
+  salvo em pasta pública.
+- Logo de guilda validada (data:image/ + teto de tamanho).
+- Filtro de profanidade no registro de usuário/personagem (com leetspeak,
+  acentos, caracteres repetidos).
+
+ANTI-CHEAT (src/game/rateLimit.ts):
+- Máx 12 ações importantes por personagem em 30s (ex.: vitórias na torre).
+- 3 bloqueios seguidos → cooldown de 5 minutos.
+- Bloqueios LOGADOS no painel admin (kind "anticheat").
+
+ANTI-HITKILL:
+- Chefe da torre escalado se o jogador mataria com 1 golpe (log "hitkill").
+- Boss mundial: dano máx 12% do HP por ataque (log "hitkill").
+
+LOGS ADMIN (admin_logs): kind = hitkill | anticheat | economy |
+worldboss_result | log; source = tower | world-boss | market | admin...
+- Adicionar/ler/limpar via repo (addAdminLog nunca derruba a ação).
+
+
+================================================================================
+ 34. BANCO DE DADOS, SCRIPTS E INFRAESTRUTURA
+================================================================================
+
+TABELAS (18):
+  users, characters, item_templates, inventory_items, mission_templates,
+  active_missions, afk_rewards, battles, guilds, guild_invites,
+  guild_chats, mailbox, excluded_users, region_audio, server_settings,
+  codes, marketplace, admin_logs.
+  Padrão: colunas de identidade/consulta + data jsonb (documento completo).
+
+SCRIPTS (scripts/):
+- migrate.mjs ..... cria as 18 tabelas + migra templates de data/*.json
+  (itemTemplates, missionTemplates, regionAudio) e APAGA os JSONs antigos.
+- create-tables.mjs, seed-swords.mjs, seed-rpg-items.mjs (272 itens RPG +
+  20 espadas), clear-items.mjs, backup-db.mjs (mantém 14 backups), test-db.mjs,
+  remove-plaintext-passwords.mjs.
+
+SEED (POST /api/seed — chamado automaticamente no login):
+- Se o banco está vazio: insere 20 espadas + 272 itens RPG + 27 missões.
+- Complementa itens/missões que faltem (idempotente).
+- Gera missões das ilhas sem missões manuais (IDs negativos estáveis).
+
+next.config.ts: cache imutável para /images, /sprites e /classes.
+PWA: manifest.webmanifest + sw.js + PwaRegister (instalável).
+
+
+================================================================================
+ 35. INTERNACIONALIZAÇÃO (pt-BR, en, es)
+================================================================================
+
+- src/i18n/{pt-BR,en,es}.ts (interface ~1.100 linhas cada) +
+  src/i18n/items/{pt,en,es}.ts (nomes de itens RPG, 274 linhas cada).
+- t(key, locale) resolve com fallback para pt-BR.
+- Seletor de idioma na tela de login (PT-BR / EN) e Configurações.
+- Nomes de missões geradas, encantamentos, títulos de maestria, golpes de
+  classe, debuffs — tudo localizado.
+- Formato de datas/horários adaptado (dd/mm para pt/es, mm/dd para en).
+
+
+================================================================================
+ 36. OBSERVAÇÕES FINAIS, PONTOS DE ATENÇÃO E NÚMEROS-CHAVE
+================================================================================
+
+NÚMEROS-CHAVE:
+- 13 classes · 3 personagens/conta · nível máx 999 · prestígio infinito.
+- Curva de XP: 165 × 1.18^(n−1) · +3 pontos de status/nível · +1 habilidade
+  a cada 3 níveis.
+- Energia: 1/3min · 10 batalhas PvP/dia · 3 masmorras/dia · AFK máx 12h.
+- Mercado: nível 5 + torre 10 p/ vender · taxa 5% (10–1.000) ou 2💎.
+- Forja: runas até +15 (custo ×1.6, chance −6,5/nível, piso 10%) ·
+  encantos 5.000 🪙 · encantos de chefe exclusivos.
+- Boss Mundial: janelas agendadas · HP ~10M · squads 4 · escudo 75/50/25% ·
+  dano máx 12%/golpe · cooldown 5s.
+- Torneira: 8 ligas PvP · temporada 14 dias · 30 títulos · 27 conquistas.
+
+PONTOS DE ATENÇÃO (observações de arquitetura):
+- O repositório (repo.ts) carrega tabelas INTEIRAS em memória (rowsOf) na
+  maioria das operações — ok para servidor de comunidade, não escala com
+  milhares de jogadores simultâneos.
+- O pool Postgres é limitado a 5 clientes por causa do polling intenso
+  (boss, presença, mercado, chat); o comentário no código recomenda o
+  pooler TRANSACTION (porta 6543) do Supabase para produção.
+- Eventos agendados (Loja Fantasma/Boss Mundial) dependem de requisições
+  para "acordar" o estado (sem cron); o estado é resetado automaticamente
+  quando a janela muda.
+- Anti-cheat é por contagem de ações em janela (em memória) — suficiente
+  para servidor single-instance; o log persistido permite revisão manual.
+
+FIM DO DOCUMENTO
+================================================================================

@@ -23,11 +23,21 @@ import AfkPanel from "./panels/AfkPanel";
 import DungeonPanel from "./panels/DungeonPanel";
 import SkillTreePanel from "./panels/SkillTreePanel";
 import MasteryPanel from "./panels/MasteryPanel";
+import PetsPanel from "./panels/PetsPanel";
 import MailboxPanel from "./panels/MailboxPanel";
 import CodePanel from "./panels/CodePanel";
 import DonatePanel from "./panels/DonatePanel";
 import SettingsPanel from "./panels/SettingsPanel";
 import GuidePanel from "./panels/GuidePanel";
+import DailyLoginPanel from "./panels/DailyLoginPanel";
+import RandomEventModal from "./RandomEventModal";
+import BestiaryPanel from "./panels/BestiaryPanel";
+import RelicsPanel from "./panels/RelicsPanel";
+import SpecializationPanel from "./panels/SpecializationPanel";
+import CollectionPanel from "./panels/CollectionPanel";
+import AdvancedClassPanel from "./panels/AdvancedClassPanel";
+import AscensionPanel from "./panels/AscensionPanel";
+import SeasonPanel from "./panels/SeasonPanel";
 import MusicController from "./MusicController";
 import Notifications from "./Notifications";
 import PreloadImages from "./ui/PreloadImages";
@@ -189,11 +199,20 @@ export default function GameScreen() {
       case "dungeon": return <DungeonPanel />;
       case "skills": return <SkillTreePanel />;
       case "mastery": return <MasteryPanel />;
+      case "pets": return <PetsPanel />;
       case "mailbox": return <MailboxPanel />;
       case "code": return <CodePanel />;
       case "donate": return <DonatePanel />;
       case "settings": return <SettingsPanel />;
       case "guide": return <GuidePanel />;
+      case "dailylogin": return <DailyLoginPanel />;
+      case "bestiary": return <BestiaryPanel />;
+      case "relics": return <RelicsPanel />;
+      case "specialization": return <SpecializationPanel />;
+      case "collection": return <CollectionPanel />;
+      case "advancedclass": return <AdvancedClassPanel />;
+      case "ascension": return <AscensionPanel />;
+      case "season": return <SeasonPanel />;
       default: return <DashboardPanel />;
     }
   };
@@ -248,6 +267,8 @@ export default function GameScreen() {
 
       <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
       <MusicController />
+      {/* Eventos aleatórios (modal de aceitar/ignorar) */}
+      <RandomEventModal />
       {/* Notificações do navegador (energia cheia / loja fantasma / boss) */}
       <Notifications />
 

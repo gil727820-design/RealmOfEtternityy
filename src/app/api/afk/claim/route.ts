@@ -6,6 +6,7 @@ import { xpMultiplier, energyMultiplier, goldMultiplier } from "@/game/boosts";
 import { computeAfkRewards } from "@/game/afk";
 import { requireCharacterAuth } from "@/game/auth";
 import { trackProgress } from "@/game/dailyMissions";
+import { grantGuildActivityXp } from "@/game/guildActivity";
 
 export async function POST(req: NextRequest) {
   try {
@@ -78,7 +79,10 @@ export async function POST(req: NextRequest) {
 
     await jsonDb.insertAfkReward({ characterId, goldEarned, xpEarned, duration: afk.diffSec, claimedAt: new Date().toISOString() });
 
-    return NextResponse.json({ gold: goldEarned, xp: xpEarned, duration: afk.diffSec, levelUp: newLevel > (char.level || 0), newLevel, droppedItem });
+    // Guilda evolutiva: coleta AFK dá um pouco de XP para a guilda.
+    const guildXp = await grantGuildActivityXp(characterId, "afk");
+
+    return NextResponse.json({ gold: goldEarned, xp: xpEarned, duration: afk.diffSec, levelUp: newLevel > (char.level || 0), newLevel, droppedItem, guildXp });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erro interno";
     return NextResponse.json({ error: msg }, { status: 500 });

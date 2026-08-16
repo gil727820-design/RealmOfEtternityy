@@ -14,6 +14,23 @@
  */
 
 import { vipXpMult, vipEnergyRate, vipGoldMult } from "./vip";
+import { petXpMult, petGoldMult } from "./pets";
+import { relicXpMult, relicGoldMult } from "./relics";
+import { specXpMult, specGoldMult } from "./specializations";
+import { advXpMult, advGoldMult } from "./advancedClasses";
+import { ascensionBuffs } from "./ascension";
+
+/** Snapshot do bônus da coleção gravado no personagem (ver /api/collection). */
+function collectionBonusOf(char: Record<string, unknown> | null | undefined) {
+  const b = char?.collectionBonus;
+  return b && typeof b === "object" ? (b as Record<string, number>) : {};
+}
+
+/** Snapshot de buffs da guilda gravado no personagem (syncGuildBuffsToCharacter). */
+function guildBuffsOf(char: Record<string, unknown> | null | undefined) {
+  const g = char?.guildBuffs;
+  return g && typeof g === "object" ? (g as Record<string, number>) : {};
+}
 
 export interface Boosts {
   xpUntil?: string;
@@ -42,9 +59,12 @@ export function energyActive(char: Record<string, unknown> | null | undefined): 
   return isActive(getBoosts(char).energyUntil);
 }
 
-/** Multiplicador de XP (boost 2x combinado com o bônus do VIP). */
+/** Multiplicador de XP (boost 2x + VIP + pet + relíquia + especialização + classe avançada + ascensão + coleção + guilda). */
 export function xpMultiplier(char: Record<string, unknown> | null | undefined): number {
-  return (xpActive(char) ? XP_MULT : 1) * vipXpMult(char);
+  const guildXp = Number(guildBuffsOf(char).xpPct) || 0;
+  const collXp = Number(collectionBonusOf(char).xpPct) || 0;
+  const ascXp = Number(ascensionBuffs(char).xpPct) || 0;
+  return (xpActive(char) ? XP_MULT : 1) * vipXpMult(char) * petXpMult(char) * relicXpMult(char) * specXpMult(char) * advXpMult(char) * (1 + (guildXp + collXp + ascXp) / 100);
 }
 
 /** Multiplicador de recarga de energia (boost 2x combinado com o bônus do VIP). */
@@ -52,9 +72,12 @@ export function energyMultiplier(char: Record<string, unknown> | null | undefine
   return (energyActive(char) ? ENERGY_MULT : 1) * vipEnergyRate(char);
 }
 
-/** Multiplicador de ouro (bônus do VIP). Usado nas recompensas em ouro. */
+/** Multiplicador de ouro (VIP + pet + relíquia + especialização + classe avançada + ascensão + coleção + guilda). */
 export function goldMultiplier(char: Record<string, unknown> | null | undefined): number {
-  return vipGoldMult(char);
+  const guildGold = Number(guildBuffsOf(char).goldPct) || 0;
+  const collGold = Number(collectionBonusOf(char).goldPct) || 0;
+  const ascGold = Number(ascensionBuffs(char).goldPct) || 0;
+  return vipGoldMult(char) * petGoldMult(char) * relicGoldMult(char) * specGoldMult(char) * advGoldMult(char) * (1 + (guildGold + collGold + ascGold) / 100);
 }
 
 /** Gera a lista de boosts atualizada ao aplicar um boost de N horas. */

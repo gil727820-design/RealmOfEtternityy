@@ -3,6 +3,7 @@ import jsonDb from "@/db/repo";
 import { canPrestige, prestigePatch, PRESTIGE_MIN_LEVEL } from "@/game/prestige";
 import { equipmentBonus } from "@/game/forge";
 import { requireCharacterAuth } from "@/game/auth";
+import { totalSetBonus } from "@/game/sets";
 
 export async function GET(req: NextRequest) {
   try {
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: check.reason }, { status: 400 });
     }
 
-    // Soma os bônus atuais dos itens equipados (forja + encanto).
+    // Soma os bônus atuais dos itens equipados (forja + encanto + sets).
     const inv = await jsonDb.getInventoryForCharacter(String(characterId));
     const bonus = { attack: 0, defense: 0, maxHp: 0, speed: 0, critical: 0 };
     for (const e of inv) {
@@ -54,6 +55,11 @@ export async function POST(req: NextRequest) {
       bonus.speed += b.speed;
       bonus.critical += b.critical;
     }
+    const setBonus = totalSetBonus(inv.filter((e: any) => e.item?.equipped), char.level || 1);
+    bonus.attack += setBonus.attack;
+    bonus.defense += setBonus.defense;
+    bonus.maxHp += setBonus.maxHp;
+    bonus.critical += setBonus.critical;
 
     const patch = prestigePatch(char, bonus);
     const updated = await jsonDb.updateCharacter(String(characterId), patch);

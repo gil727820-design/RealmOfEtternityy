@@ -151,6 +151,31 @@ export default function SettingsPanel() {
         </div>
       </div>
 
+      {/* 🧹 Cache do Jogo — limpa dados locais e recarrega com tudo atualizado */}
+      <div className="game-card p-5 border-red-500/20">
+        <h3 className="font-bold mb-2">🧹 {t("settings.cache", locale)}</h3>
+        <p className="text-xs text-gray-400 mb-4">{t("settings.cache.desc", locale)}</p>
+        <button
+          onClick={() => {
+            // Limpa as preferências/cache local do app. A sessão fica no cookie
+            // httpOnly — limpar o localStorage NÃO desloga o jogador.
+            const keys = ["realm-of-eternity-storage-v2", "realm-of-eternity-storage", NOTIF_LS];
+            keys.forEach((k) => { try { localStorage.removeItem(k); } catch { /* ignora */ } });
+            // Limpa caches de Service Worker (se o navegador tiver).
+            try {
+              if (typeof caches !== "undefined" && typeof caches.keys === "function") {
+                caches.keys().then((names) => names.forEach((n) => caches.delete(n))).catch(() => {});
+              }
+            } catch { /* ignora */ }
+            notify(t("settings.cache.confirm", locale), "success");
+            setTimeout(() => window.location.reload(), 800);
+          }}
+          className="px-5 py-2.5 rounded-xl text-sm font-black border border-red-500/50 bg-red-500/15 text-red-200 hover:bg-red-500/25 cursor-pointer transition-all"
+        >
+          {t("settings.cache.btn", locale)}
+        </button>
+      </div>
+
       {/* 📊 Informações do Jogo */}
       <div className="game-card p-5">
         <h3 className="font-bold mb-3">📊 {t("settings.info", locale)}</h3>

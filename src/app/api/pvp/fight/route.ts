@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { leagueForRating, CLASS_LIST } from "@/game/constants";
 import { requireCharacterAuth } from "@/game/auth";
+import { grantGuildActivityXp } from "@/game/guildActivity";
 
 function simulateBattle(attacker: any, defender: { hp: number; attack: number; defense: number; speed: number; critical: number; dodge: number; name: string }) {
   let aHp = attacker.maxHp;
@@ -136,6 +137,8 @@ export async function POST(req: NextRequest) {
     const { attackerWon, log } = simulateBattle(attacker, defenderStats);
     const ratingChange = attackerWon ? 5 : -3;
     const newAtkRating = Math.max(0, attacker.pvpRating + ratingChange);
+    // Guilda evolutiva: vitória no PvP dá XP para a guilda.
+    const guildXp = attackerWon ? await grantGuildActivityXp(attackerId, "pvp") : null;
 
     await jsonDb.updateCharacter(attackerId, {
       pvpRating: newAtkRating,
@@ -151,7 +154,7 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ won: attackerWon, ratingChange, log });
+    return NextResponse.json({ won: attackerWon, ratingChange, log, guildXp });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erro interno";
     return NextResponse.json({ error: msg }, { status: 500 });

@@ -3,6 +3,7 @@ import jsonDb from "@/db/repo";
 import { CLASS_BASE_STATS, powerCalc, STAT_RESET_COST, type ClassName } from "@/game/constants";
 import { equipmentBonus } from "@/game/forge";
 import { requireCharacterAuth } from "@/game/auth";
+import { totalSetBonus } from "@/game/sets";
 
 // Config de cada status: como descobrir quantos pontos foram investidos.
 // perPoint precisa ser idêntico ao do /api/character/allocate.
@@ -27,8 +28,8 @@ const STAT_ROWS: StatRow[] = [
   { stat: "resistance", field: "resistance", fixedBase: 5, perPoint: 1 },
 ];
 
-/** Soma os bônus de todos os itens equipados (forja + encanto) de um personagem. */
-async function equippedBonuses(characterId: string) {
+/** Soma os bônus de todos os itens equipados (forja + encanto + sets) de um personagem. */
+async function equippedBonuses(characterId: string, level: number) {
   let atk = 0, def = 0, hp = 0, spd = 0, crit = 0;
   const inv = await jsonDb.getInventoryForCharacter(characterId);
   for (const e of inv) {
@@ -40,6 +41,11 @@ async function equippedBonuses(characterId: string) {
     spd += b.speed;
     crit += b.critical;
   }
+  const setB = totalSetBonus(inv.filter((e: any) => e.item?.equipped), level);
+  atk += setB.attack;
+  def += setB.defense;
+  hp += setB.maxHp;
+  crit += setB.critical;
   return { atk, def, hp, spd, crit };
 }
 
@@ -65,7 +71,7 @@ export async function POST(req: NextRequest) {
 
     const cls = (char.classType as ClassName) ?? "warrior";
     const base = CLASS_BASE_STATS[cls] ?? CLASS_BASE_STATS.warrior;
-    const equip = await equippedBonuses(String(characterId));
+    const equip = await equippedBonuses(String(characterId), char.level || 1);
     const level = Math.max(1, Number(char.level) || 1);
 
     // Total de pontos investidos em todos os status (nunca negativo).

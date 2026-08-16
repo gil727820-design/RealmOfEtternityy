@@ -259,6 +259,19 @@ export async function grantItem(
     obtainedAt: new Date().toISOString(),
   };
   await insertRec(inventoryItems, rec, [["characterId", "characterId"]]);
+  // COLEÇÃO/CODEX: registra itens de equipamento obtidos (idempotente, barato).
+  if (template?.slot && template?.type !== "consumable" && template?.stackable !== true) {
+    try {
+      const char = await getRec(characters, characterId);
+      const coll = char?.collection;
+      const unlocked = Array.isArray(coll?.unlocked) ? coll.unlocked : [];
+      const tid = Math.floor(Number(template.id));
+      if (Number.isFinite(tid) && !unlocked.includes(tid)) {
+        unlocked.push(tid);
+        await updateCharacter(characterId, { collection: { unlocked, claimed: Array.isArray(coll?.claimed) ? coll.claimed : [] } });
+      }
+    } catch { /* nunca quebra a concessão */ }
+  }
   return { item: rec, template, merged: false };
 }
 
@@ -966,6 +979,36 @@ export async function updatePurchase(id: string, patch: any) {
   return next.find((p: any) => p.id === id) ?? null;
 }
 
+/* ─── Livro-razão de compras PERMANENTE (sobrevive ao reset do jogo) ─── */
+/* Cada compra APROVADA vira um registro eterno aqui: se o jogo for
+ * resetado, o ADM reenvia os diamantes pelo painel (aba 💎 Já Compraram).
+ * Guardado em serverSettings.purchaseLedger — o reset não apaga serverSettings. */
+
+async function getPurchaseLedgerData(): Promise<any[]> {
+  const settings = await getServerSettings();
+  return Array.isArray(settings?.purchaseLedger) ? settings.purchaseLedger : [];
+}
+
+export async function listPurchaseLedger() {
+  const all = await getPurchaseLedgerData();
+  return all.sort((a: any, b: any) => (b.approvedAt || "").localeCompare(a.approvedAt || ""));
+}
+
+export async function appendPurchaseLedger(entry: any) {
+  const full = { id: uuidv4(), createdAt: new Date().toISOString(), ...entry };
+  const next = [...(await getPurchaseLedgerData()), full];
+  await updateServerSettings({ purchaseLedger: next });
+  return full;
+}
+
+export async function updatePurchaseLedgerEntry(id: string, patch: any) {
+  const next = (await getPurchaseLedgerData()).map((e: any) =>
+    e.id === id ? { ...e, ...patch } : e
+  );
+  await updateServerSettings({ purchaseLedger: next });
+  return next.find((e: any) => e.id === id) ?? null;
+}
+
 /* ─── Evento Global — Boss Mundial ─── */
 
 /** Lê o estado atual do evento (ou null se ainda não começou). */
@@ -1312,6 +1355,10 @@ export default {
   listPurchases,
   createPurchase,
   updatePurchase,
+  // Livro-razão permanente (reenvio de diamantes após reset)
+  listPurchaseLedger,
+  appendPurchaseLedger,
+  updatePurchaseLedgerEntry,
   // evento global — Boss Mundial
   getWorldBossEvent,
   saveWorldBossEvent,

@@ -10,6 +10,9 @@ import { masteryBuff } from "@/game/mastery";
 import { requireCharacterAuth } from "@/game/auth";
 import { trackProgress } from "@/game/dailyMissions";
 import { pvpSeasonInfo, trackSeasonBest } from "@/game/pvpSeason";
+import { applyAdvancedClassCombat, advSkillDmgMult } from "@/game/advancedClasses";
+import { applyAscensionCombat } from "@/game/ascension";
+import { seasonPatch as globalSeasonPatch } from "@/game/season";
 
 const SKILL_COST = 15;
 const MAX_ROUNDS = 40;
@@ -62,6 +65,10 @@ export async function POST(req: NextRequest) {
     const char = auth.char;
 
     const ca = getCharCombat(char);
+    // Buffs da CLASSE AVANÇADA (evolução nível 50+, passivos permanentes).
+    applyAdvancedClassCombat(char, ca);
+    // Buffs da ASCENSÃO (patamares divinos a cada 100 níveis: dano/HP/velocidade).
+    applyAscensionCombat(char, ca);
 
     // Buffs ativados pelas Skins equipadas (só os da própria classe)
     const myBuff = getSkinClassBuff(char.classType, char.activeSkinId);
@@ -202,8 +209,10 @@ export async function POST(req: NextRequest) {
       charMp -= cost;
       skillUsed = true;
       const pierceDef = oppDefense * (1 - (skillFx.pierce || 0));
+      // Classe avançada: turbina o golpe poderoso (multiplica o dmgMult da classe).
+      const advSkillMult = advSkillDmgMult(char);
       const r = strike(
-        { attack: Math.round(ca.attack * (skillFx.dmgMult || 1.8) * pm), critical: ca.critical + (skillFx.critBonus ?? 15) + myCritAdd, precision: ca.precision },
+        { attack: Math.round(ca.attack * (skillFx.dmgMult || 1.8) * pm * advSkillMult), critical: ca.critical + (skillFx.critBonus ?? 15) + myCritAdd, precision: ca.precision },
         { defense: pierceDef, dodge: oppDodge }
       );
       if (r.dodged) {
@@ -448,6 +457,8 @@ export async function POST(req: NextRequest) {
       // Temporada da Arena: atualiza o melhor rating da temporada atual.
       const seasonInfo = pvpSeasonInfo();
       const seasonPatch = won ? trackSeasonBest({ ...char, pvpRating: newAtkRating }, seasonInfo.seasonId) : {};
+      // Temporada GLOBAL: vitória no PvP dá pontos de temporada.
+      const gSeasonPatch = won ? globalSeasonPatch(char, "pvp") : {};
 
       await jsonDb.updateCharacter(char.id, {
         pvpRating: newAtkRating,
@@ -465,6 +476,7 @@ export async function POST(req: NextRequest) {
         // Missões diárias/semanais: progresso de PvP (vitórias).
         ...(won ? trackProgress(char, "pvp", 1) : {}),
         ...seasonPatch,
+        ...gSeasonPatch,
       });
       // Oponente real (offline) usa a mesma lógica do agressor, invertida
       if (!isBot && defender.id) {

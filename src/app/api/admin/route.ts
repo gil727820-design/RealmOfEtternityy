@@ -6,8 +6,13 @@ import jsonDb from "@/db/repo";
 import { getAdminSession } from "@/game/auth";
 import { SKIN_CATALOG, skinById } from "@/game/skins";
 import { VIP_TIERS, vipTierById } from "@/game/vip";
+import { PET_DEFS, petById, grantPetPatch } from "@/game/pets";
+import { ADVANCED_CLASSES, advancedClassForClass } from "@/game/advancedClasses";
+import { ASCENSION_MAX } from "@/game/ascension";
+import { seasonInfo } from "@/game/season";
 import { CLASS_BASE_STATS, powerCalc, REGIONS } from "@/game/constants";
 import { equipmentBonus } from "@/game/forge";
+import { totalSetBonus } from "@/game/sets";
 import type { ClassName } from "@/game/constants";
 
 // Admin auth middleware
@@ -29,8 +34,8 @@ async function checkAdmin(req: NextRequest) {
 
 const MUSIC_EXT = [".mp3", ".ogg", ".wav", ".m4a", ".webm"];
 
-/** Soma os bônus de todos os itens equipados (forja + encanto) de um personagem. */
-async function equippedBonuses(characterId: string) {
+/** Soma os bônus de todos os itens equipados (forja + encanto + sets) de um personagem. */
+async function equippedBonuses(characterId: string, level: number) {
   let atk = 0, def = 0, hp = 0, spd = 0, crit = 0;
   const inv = await jsonDb.getInventoryForCharacter(characterId);
   for (const e of inv) {
@@ -42,6 +47,11 @@ async function equippedBonuses(characterId: string) {
     spd += b.speed;
     crit += b.critical;
   }
+  const setB = totalSetBonus(inv.filter((e: any) => e.item?.equipped), level);
+  atk += setB.attack;
+  def += setB.defense;
+  hp += setB.maxHp;
+  crit += setB.critical;
   return { atk, def, hp, spd, crit };
 }
 
@@ -226,6 +236,40 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ purchases });
     }
 
+    if (action === "purchase_ledger") {
+      // Livro-razão PERMANENTE de quem comprou e foi aprovado. Backfill: compras
+      // já aprovadas que ainda não estão no livro são migradas automaticamente.
+      const ledger = await jsonDb.listPurchaseLedger();
+      const purchases = await jsonDb.listPurchases();
+      const existingPurchaseIds = new Set(ledger.map((e: any) => e.purchaseId));
+      let backfilled = 0;
+      for (const p of purchases) {
+        if (String(p.status) !== "approved") continue;
+        if (existingPurchaseIds.has(String(p.id))) continue;
+        const char = await jsonDb.findCharacterById(String(p.characterId));
+        await jsonDb.appendPurchaseLedger({
+          purchaseId: String(p.id),
+          characterId: String(p.characterId || ""),
+          characterName: String(char?.name || p.characterName || "?"),
+          userId: String(p.userId || char?.userId || ""),
+          diamonds: Number(p.diamonds) || 0,
+          valueBRL: Number(p.valueBRL) || 0,
+          approvedAt: String(p.decidedAt || p.createdAt || new Date().toISOString()),
+          refunded: false,
+          refundedAt: null,
+        });
+        backfilled++;
+      }
+      const fresh = backfilled > 0 ? await jsonDb.listPurchaseLedger() : ledger;
+      // Lista de personagens atuais para escolher o destino do reembolso.
+      const chars = await jsonDb.listCharacters("", 999999);
+      return NextResponse.json({
+        ledger: fresh,
+        backfilled,
+        characters: chars.map((c: any) => ({ id: c.id, name: c.name, level: c.level, classType: c.classType })),
+      });
+    }
+
     return NextResponse.json({ error: "Ação inválida" }, { status: 400 });
   } catch (e: unknown) {
     console.error("Admin error:", e);
@@ -325,7 +369,7 @@ export async function POST(req: NextRequest) {
       const base = CLASS_BASE_STATS[(char.classType as ClassName) ?? "warrior"] ?? CLASS_BASE_STATS.warrior;
       const level = Math.max(1, Number(char.level) || 1);
       // Bônus dos itens equipados continuam valendo após o reset.
-      const equip = await equippedBonuses(String(characterId));
+      const equip = await equippedBonuses(String(characterId), 1);
       const patch: Record<string, unknown> = {
         hp: Math.min(Number(char.hp) || base.hp, base.hp + equip.hp),
         maxHp: base.hp + equip.hp,
@@ -459,6 +503,11 @@ export async function POST(req: NextRequest) {
           bonus.speed += b.speed;
           bonus.critical += b.critical;
         }
+        const setBonus = totalSetBonus(inv.filter((e: any) => e.item?.equipped), c.level || 1);
+        bonus.attack += setBonus.attack;
+        bonus.defense += setBonus.defense;
+        bonus.maxHp += setBonus.maxHp;
+        bonus.critical += setBonus.critical;
         // Base investida = o que foi alocado/ganho (sem equipamento).
         const baseStats =
           c.baseStats && typeof c.baseStats === "object"
@@ -517,7 +566,7 @@ export async function POST(req: NextRequest) {
       for (const c of all) {
         const base = CLASS_BASE_STATS[(c.classType as ClassName) ?? "warrior"] ?? CLASS_BASE_STATS.warrior;
         const level = Math.max(1, Number(c.level) || 1);
-        const equip = await equippedBonuses(String(c.id));
+        const equip = await equippedBonuses(String(c.id), c.level || 1);
         await jsonDb.updateCharacter(String(c.id), {
           hp: Math.min(Number(c.hp) || base.hp, base.hp + equip.hp),
           maxHp: base.hp + equip.hp,
@@ -865,7 +914,49 @@ export async function POST(req: NextRequest) {
       if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
       const diamonds = Number(purchase.diamonds) || 0;
       await jsonDb.updateCharacter(char.id, { diamonds: (char.diamonds || 0) + diamonds });
-      return NextResponse.json({ success: true, purchase, granted: diamonds, message: `💎 ${diamonds} diamantes creditados para ${char.name}!` });
+      // Registro PERMANENTE no livro-razão: se o jogo for resetado, o ADM
+      // reenvia esses diamantes pelo painel (aba 💎 Já Compraram).
+      await jsonDb.appendPurchaseLedger({
+        purchaseId: String(purchase.id),
+        characterId: String(char.id),
+        characterName: String(char.name || "?"),
+        userId: String(purchase.userId || char.userId || ""),
+        diamonds,
+        valueBRL: Number(purchase.valueBRL) || 0,
+        approvedAt: new Date().toISOString(),
+        refunded: false,
+        refundedAt: null,
+      });
+      return NextResponse.json({ success: true, purchase, granted: diamonds, message: `💎 ${diamonds} diamantes creditados para ${char.name} e registrados no livro-razão (reenvio após reset)!` });
+    }
+
+    // ---- Livro-razão permanente: listar + reenviar diamantes após reset ----
+
+    if (action === "refund_purchase") {
+      const { ledgerId, characterId } = body;
+      if (!ledgerId) return NextResponse.json({ error: "ID do registro necessário" }, { status: 400 });
+      const ledger = await jsonDb.listPurchaseLedger();
+      const entry = ledger.find((e: any) => e.id === String(ledgerId));
+      if (!entry) return NextResponse.json({ error: "Registro não encontrado" }, { status: 404 });
+      if (entry.refunded) return NextResponse.json({ error: "Este reembolso já foi enviado antes!" }, { status: 400 });
+      const diamonds = Math.max(0, Math.floor(Number(entry.diamonds) || 0));
+      if (diamonds <= 0) return NextResponse.json({ error: "Registro sem diamantes" }, { status: 400 });
+      const targetId = String(characterId || entry.characterId || "");
+      const char = await jsonDb.findCharacterById(targetId);
+      if (!char) {
+        return NextResponse.json({ error: "Personagem não encontrado — selecione o personagem que deve receber o reembolso." }, { status: 404 });
+      }
+      await jsonDb.updateCharacter(char.id, {
+        diamonds: (Number(char.diamonds) || 0) + diamonds,
+        lastActivity: new Date().toISOString(),
+      });
+      await jsonDb.updatePurchaseLedgerEntry(String(entry.id), {
+        refunded: true,
+        refundedAt: new Date().toISOString(),
+        refundedToCharacterId: char.id,
+        refundedToName: String(char.name || "?"),
+      });
+      return NextResponse.json({ success: true, granted: diamonds, character: char, message: `💎 ${diamonds} diamantes reenviados para ${char.name} (compra original de ${entry.characterName})!` });
     }
 
     if (action === "reject_purchase") {
@@ -1018,8 +1109,15 @@ export async function POST(req: NextRequest) {
       const { code, xpHours, energyHours, label, maxUses, expiresDays } = body;
       const xpH = Math.max(0, Math.floor(Number(xpHours) || 0));
       const energyH = Math.max(0, Math.floor(Number(energyHours) || 0));
-      if (xpH <= 0 && energyH <= 0) {
-        return NextResponse.json({ error: "Informe horas de boost XP e/ou Energia (maior que 0)." }, { status: 400 });
+      // Recompensas novas: VIP por dias + recursos diretos (presente do ADM).
+      const vipTierId = String(body.vipTier || "").trim().toLowerCase();
+      const vipDays = Math.max(0, Math.floor(Number(body.vipDays) || 0));
+      const goldReward = Math.max(0, Math.floor(Number(body.gold) || 0));
+      const diamondsReward = Math.max(0, Math.floor(Number(body.diamonds) || 0));
+      const crystalsReward = Math.max(0, Math.floor(Number(body.crystals) || 0));
+      const hasVip = vipTierId !== "" && vipDays > 0 && !!vipTierById(vipTierId);
+      if (xpH <= 0 && energyH <= 0 && !hasVip && goldReward <= 0 && diamondsReward <= 0 && crystalsReward <= 0) {
+        return NextResponse.json({ error: "Informe ao menos uma recompensa: boost XP, boost Energia, VIP, ouro, diamantes ou cristais." }, { status: 400 });
       }
       const codeValue = String(code || "").trim().toUpperCase() || genCode();
       if (String(codeValue).length < 4) {
@@ -1034,7 +1132,12 @@ export async function POST(req: NextRequest) {
         code: codeValue,
         xpHours: xpH,
         energyHours: energyH,
-        label: String(label || "").trim() || "Boost 2x",
+        vipTier: hasVip ? vipTierId : null,
+        vipDays: hasVip ? vipDays : 0,
+        gold: goldReward,
+        diamonds: diamondsReward,
+        crystals: crystalsReward,
+        label: String(label || "").trim() || "Presente do ADM",
         maxUses: Math.max(0, Math.floor(Number(maxUses) || 0)),
         expiresAt: expiresDaysNum > 0
           ? new Date(Date.now() + expiresDaysNum * 24 * 3600 * 1000).toISOString()
@@ -1042,7 +1145,14 @@ export async function POST(req: NextRequest) {
         redeemedBy: [],
         createdAt: new Date().toISOString(),
       });
-      return NextResponse.json({ success: true, code: rec, message: `Código gerado: ${codeValue}` });
+      const parts: string[] = [];
+      if (xpH > 0) parts.push(`${xpH}h de XP`);
+      if (energyH > 0) parts.push(`${energyH}h de Energia`);
+      if (hasVip) parts.push(`VIP ${vipTierId} por ${vipDays}d`);
+      if (goldReward > 0) parts.push(`${goldReward.toLocaleString()} de ouro`);
+      if (diamondsReward > 0) parts.push(`${diamondsReward} diamantes`);
+      if (crystalsReward > 0) parts.push(`${crystalsReward} cristais`);
+      return NextResponse.json({ success: true, code: rec, message: `Código gerado: ${codeValue} (${parts.join(" + ")})` });
     }
 
     // ---- Evento Global (Boss Mundial): resetar o evento em andamento ----
@@ -1057,6 +1167,186 @@ export async function POST(req: NextRequest) {
       const done = await jsonDb.deleteCode(String(id));
       if (!done) return NextResponse.json({ error: "Código não encontrado" }, { status: 404 });
       return NextResponse.json({ success: true, message: "Código excluído." });
+    }
+
+    // ---- Pets: dar pet específico ou a coleção inteira ----
+
+    if (action === "grant_pet") {
+      const { characterId, petId } = body;
+      if (!characterId || !petId) return NextResponse.json({ error: "Personagem e pet são obrigatórios" }, { status: 400 });
+      const def = petById(String(petId));
+      if (!def) return NextResponse.json({ error: "Pet não encontrado" }, { status: 404 });
+      const char = await jsonDb.findCharacterById(String(characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+      const res = grantPetPatch(char, def.id);
+      const patch: Record<string, unknown> = { ...res.patch, lastActivity: new Date().toISOString() };
+      if (res.added && !char.activePetId) patch.activePetId = def.id;
+      const updated = await jsonDb.updateCharacter(String(characterId), patch);
+      return NextResponse.json({
+        success: true,
+        character: updated,
+        added: res.added,
+        message: res.added
+          ? `${def.icon} Pet ${def.nameKey} adicionado a ${char.name}!`
+          : `${def.icon} ${char.name} já tinha esse pet — convertido em XP para o pet ativo.`,
+      });
+    }
+
+    if (action === "grant_all_pets") {
+      const { characterId } = body;
+      if (!characterId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
+      const char = await jsonDb.findCharacterById(String(characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+      let patch: Record<string, unknown> = { lastActivity: new Date().toISOString() };
+      let added = 0;
+      for (const def of PET_DEFS) {
+        const res = grantPetPatch(char, def.id);
+        if (res.added) added++;
+        patch = { ...patch, ...res.patch };
+      }
+      const updated = await jsonDb.updateCharacter(String(characterId), patch);
+      return NextResponse.json({
+        success: true,
+        character: updated,
+        added,
+        message: `🐾 ${added} pet(s) novos adicionados (duplicatas viraram XP)!`,
+      });
+    }
+
+    // ---- Classe Avançada: setar/remover direto (sem custo) ----
+
+    if (action === "set_advanced_class") {
+      const { characterId, advancedClassId } = body;
+      if (!characterId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
+      const char = await jsonDb.findCharacterById(String(characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+      const id = String(advancedClassId || "").trim();
+      if (!id) {
+        const updated = await jsonDb.updateCharacter(String(characterId), {
+          advancedClass: null,
+          lastActivity: new Date().toISOString(),
+        });
+        return NextResponse.json({ success: true, character: updated, message: `🌟 Classe avançada removida de ${char.name}.` });
+      }
+      const def = ADVANCED_CLASSES.find((a) => a.id === id);
+      if (!def) return NextResponse.json({ error: "Classe avançada não encontrada" }, { status: 404 });
+      if (def.cls !== char.classType) {
+        return NextResponse.json({ error: `Essa evolução é de ${def.cls} — o personagem é ${char.classType}.` }, { status: 400 });
+      }
+      const updated = await jsonDb.updateCharacter(String(characterId), {
+        advancedClass: { id: def.id, evolvedAt: new Date().toISOString() },
+        lastActivity: new Date().toISOString(),
+      });
+      return NextResponse.json({ success: true, character: updated, message: `🌟 ${char.name} evoluiu para ${def.nameKey}!` });
+    }
+
+    // ---- Ascensão: setar patamar direto ----
+
+    if (action === "set_ascension") {
+      const { characterId, level } = body;
+      if (!characterId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
+      const char = await jsonDb.findCharacterById(String(characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+      const lv = Math.max(0, Math.min(ASCENSION_MAX, Math.floor(Number(level) || 0)));
+      const updated = await jsonDb.updateCharacter(String(characterId), {
+        ascension: lv,
+        lastActivity: new Date().toISOString(),
+      });
+      return NextResponse.json({
+        success: true,
+        character: updated,
+        message: lv > 0
+          ? `🌌 Ascensão ${lv} definida para ${char.name} (buffs permanentes aplicados)!`
+          : `🌌 Ascensão removida de ${char.name}.`,
+      });
+    }
+
+    // ---- Temporada: conceder pontos da temporada atual ----
+
+    if (action === "grant_season_points") {
+      const { characterId, points } = body;
+      if (!characterId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
+      const char = await jsonDb.findCharacterById(String(characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+      const pts = Math.max(1, Math.floor(Number(points) || 0));
+      const sid = seasonInfo().seasonId;
+      const cur = Number(char?.seasonId) === sid ? Math.max(0, Math.floor(Number(char?.seasonPoints) || 0)) : 0;
+      const updated = await jsonDb.updateCharacter(String(characterId), {
+        seasonId: sid,
+        seasonPoints: cur + pts,
+        lastActivity: new Date().toISOString(),
+      });
+      return NextResponse.json({
+        success: true,
+        character: updated,
+        seasonPoints: cur + pts,
+        message: `🏆 +${pts} pontos de temporada para ${char.name} (total: ${(cur + pts).toLocaleString()})!`,
+      });
+    }
+
+    // ---- AÇÕES EM MASSA (selecionar vários personagens no painel) ----
+    // body: { characterIds: string[], subAction, value }
+    // subAction: reset_tower | grant_all_pets | grant_pet | grant_stat_points
+    //            | grant_resources | grant_season_points | set_vip
+    if (action === "bulk_action") {
+      const ids: string[] = Array.isArray(body.characterIds) ? body.characterIds.map(String) : [];
+      if (!ids.length) return NextResponse.json({ error: "Selecione ao menos um personagem" }, { status: 400 });
+      const subAction = String(body.subAction || "");
+      let processed = 0;
+      for (const id of ids) {
+        const char = await jsonDb.findCharacterById(id);
+        if (!char) continue;
+        const stamp = new Date().toISOString();
+        if (subAction === "reset_tower") {
+          await jsonDb.updateCharacter(id, { towerFloor: 1, lastActivity: stamp });
+        } else if (subAction === "grant_all_pets") {
+          let patch: Record<string, unknown> = { lastActivity: stamp };
+          for (const def of PET_DEFS) {
+            const res = grantPetPatch(char, def.id);
+            patch = { ...patch, ...res.patch };
+          }
+          const pets = Array.isArray(patch.pets) ? (patch.pets as Array<{ id: string }>) : [];
+          await jsonDb.updateCharacter(id, patch);
+          if (pets.length > 0 && !char.activePetId) {
+            await jsonDb.updateCharacter(id, { activePetId: pets[0].id, lastActivity: stamp });
+          }
+        } else if (subAction === "grant_pet") {
+          const def = petById(String(body.value || ""));
+          if (!def) continue;
+          const res = grantPetPatch(char, def.id);
+          const patch: Record<string, unknown> = { ...res.patch, lastActivity: stamp };
+          if (res.added && !char.activePetId) patch.activePetId = def.id;
+          await jsonDb.updateCharacter(id, patch);
+        } else if (subAction === "grant_stat_points") {
+          const add = Math.max(1, Number(char.level) || 1) * 3;
+          await jsonDb.updateCharacter(id, { unspentStatPoints: (Number(char.unspentStatPoints) || 0) + add, lastActivity: stamp });
+        } else if (subAction === "grant_resources") {
+          const v = body.value as Record<string, number> | undefined;
+          const patch: Record<string, unknown> = { lastActivity: stamp };
+          if (v && typeof v === "object") {
+            if (Number(v.gold)) patch.gold = (Number(char.gold) || 0) + Math.max(0, Math.floor(Number(v.gold)));
+            if (Number(v.diamonds)) patch.diamonds = (Number(char.diamonds) || 0) + Math.max(0, Math.floor(Number(v.diamonds)));
+            if (Number(v.crystals)) patch.crystals = (Number(char.crystals) || 0) + Math.max(0, Math.floor(Number(v.crystals)));
+            if (Number(v.towerCoins)) patch.towerCoins = (Number(char.towerCoins) || 0) + Math.max(0, Math.floor(Number(v.towerCoins)));
+            if (Number(v.energy)) patch.energy = Math.min(Number(char.maxEnergy) || 100, (Number(char.energy) || 0) + Math.max(0, Math.floor(Number(v.energy))));
+          }
+          if (Object.keys(patch).length === 1) continue;
+          await jsonDb.updateCharacter(id, patch);
+        } else if (subAction === "grant_season_points") {
+          const pts = Math.max(1, Math.floor(Number(body.value) || 0));
+          const sid = seasonInfo().seasonId;
+          const cur = Number(char?.seasonId) === sid ? Math.max(0, Math.floor(Number(char?.seasonPoints) || 0)) : 0;
+          await jsonDb.updateCharacter(id, { seasonId: sid, seasonPoints: cur + pts, lastActivity: stamp });
+        } else if (subAction === "set_vip") {
+          const tierDef = vipTierById(String(body.value || ""));
+          if (!tierDef) continue;
+          const until = new Date(Date.now() + tierDef.days * 86400000).toISOString();
+          await jsonDb.updateCharacter(id, { vipTier: tierDef.id, vipUntil: until, vipLevel: VIP_TIERS.indexOf(tierDef) + 1, lastActivity: stamp });
+        }
+        processed++;
+      }
+      if (!processed) return NextResponse.json({ error: "Nenhum personagem válido encontrado" }, { status: 404 });
+      return NextResponse.json({ success: true, processed, message: `⚡ Ação aplicada em ${processed} personagem(ns)!` });
     }
 
     return NextResponse.json({ error: "Ação inválida" }, { status: 400 });

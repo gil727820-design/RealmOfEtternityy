@@ -1,8 +1,9 @@
 "use client";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { DEFAULT_AUTO_BATTLE, type AutoBattleSettings } from "@/game/autoBattle";
 
-export type GameTab = "dashboard" | "character" | "missions" | "inventory" | "map" | "tower" | "pvp" | "guild" | "shop" | "ghostshop" | "worldboss" | "market" | "rankings" | "forge" | "achievements" | "afk" | "dungeon" | "skills" | "mastery" | "mailbox" | "code" | "donate" | "settings" | "guide";
+export type GameTab = "dashboard" | "character" | "missions" | "inventory" | "map" | "tower" | "pets" | "pvp" | "guild" | "shop" | "ghostshop" | "worldboss" | "market" | "rankings" | "forge" | "achievements" | "afk" | "dungeon" | "skills" | "mastery" | "mailbox" | "code" | "donate" | "settings" | "guide" | "dailylogin" | "bestiary" | "relics" | "specialization" | "collection" | "advancedclass" | "ascension" | "season";
 
 interface GameState {
   userId: string | null;
@@ -29,6 +30,8 @@ interface GameState {
   mailboxCount: number;
   soundOn: boolean;
   volume: number;
+  /** Preferências do Auto Battle (modo, auto-skill, auto-poção). */
+  autoBattle: AutoBattleSettings;
 
   setUser: (userId: string, locale?: string) => void;
   setCharacter: (char: Record<string, unknown>) => void;
@@ -47,6 +50,7 @@ interface GameState {
   setMailboxCount: (n: number) => void;
   setSoundOn: (on: boolean) => void;
   setVolume: (v: number) => void;
+  setAutoBattle: (s: Partial<AutoBattleSettings>) => void;
   notify: (message: string, type: "success" | "error" | "info") => void;
   clearNotification: () => void;
   /** Mantém a sessão logada mas zera o personagem (usado ao trocar de conta). */
@@ -76,6 +80,7 @@ const initialState = {
   mailboxCount: 0,
   soundOn: true,
   volume: 0.08,
+  autoBattle: { ...DEFAULT_AUTO_BATTLE },
 };
 
 export const useGameStore = create<GameState>()(
@@ -102,6 +107,7 @@ export const useGameStore = create<GameState>()(
       setMailboxCount: (mailboxCount) => set({ mailboxCount }),
       setSoundOn: (soundOn) => set({ soundOn }),
       setVolume: (volume) => set({ volume: Math.min(1, Math.max(0, volume)) }),
+      setAutoBattle: (patch) => set((s) => ({ autoBattle: { ...s.autoBattle, ...patch } })),
       notify: (message, type) => set({ notification: { message, type } }),
       clearNotification: () => set({ notification: null }),
       resetSession: () => set({
@@ -139,6 +145,7 @@ export const useGameStore = create<GameState>()(
         locale: state.locale,
         soundOn: state.soundOn,
         volume: state.volume,
+        autoBattle: state.autoBattle,
       }),
     }
   )

@@ -16,6 +16,7 @@ export default function MissionsPanel() {
   // Missões Diárias + Semanais (reset automático)
   const [daily, setDaily] = useState<Array<Record<string, unknown>>>([]);
   const [weekly, setWeekly] = useState<Array<Record<string, unknown>>>([]);
+  const [weeklyBonus, setWeeklyBonus] = useState<Record<string, unknown> | null>(null);
   const [claimingDaily, setClaimingDaily] = useState<string | null>(null);
   const [, setTick] = useState(0);
   const energyRegenMsRef = useRef(0);
@@ -49,6 +50,7 @@ export default function MissionsPanel() {
       const d = await res.json();
       setDaily(Array.isArray(d.daily) ? d.daily : []);
       setWeekly(Array.isArray(d.weekly) ? d.weekly : []);
+      setWeeklyBonus(d.weeklyBonus ?? null);
     } catch { /* silencioso */ }
   }, [characterId]);
 
@@ -182,7 +184,13 @@ export default function MissionsPanel() {
         return; 
       }
       const r = data.rewards;
-      notify("🎉 +" + r.xp + " XP, +" + r.gold + " " + t("currency.gold", locale) + (r.levelUp ? " 🆙 " + t("stat.level", locale) + " " + r.newLevel + "!" : ""), "success");
+      let msg = "🎉 +" + r.xp + " XP, +" + r.gold + " " + t("currency.gold", locale) + (r.levelUp ? " 🆙 " + t("stat.level", locale) + " " + r.newLevel + "!" : "");
+      // Drops de missão (equipamento/poção) aparecem na notificação.
+      if (r.drops && r.drops.length > 0) {
+        const names = r.drops.map((d: any) => (d.icon || "📦") + " " + t(d.nameKey, locale)).join(", ");
+        msg += " 🎁 Drop: " + names + "!";
+      }
+      notify(msg, "success");
       loadData();
     } catch { 
       notify(t("general.error", locale), "error"); 
@@ -257,6 +265,33 @@ export default function MissionsPanel() {
           </div>
           {renderMissionList(weekly, "weekly") ?? (
             <div className="game-card p-4 text-center text-xs text-gray-500">{t("general.loading", locale)}</div>
+          )}
+          {/* Bônus por completar TODAS as semanais */}
+          {weeklyBonus && (
+            <div className={`mt-3 rounded-xl border p-4 ${(weeklyBonus as any).done && !(weeklyBonus as any).claimed ? "border-[#ffd700]/60 bg-[#ffd700]/10" : "border-white/10 bg-[#0a0a12]"}`}>
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="min-w-0">
+                  <div className="text-sm font-black text-[#ffd700]">🏆 {t("weekly.bonus", locale)}</div>
+                  <div className="text-[11px] text-gray-400">{t("weekly.bonus.desc", locale)}</div>
+                  <div className="text-[10px] text-gray-500 mt-0.5">
+                    💰 {String((weeklyBonus as any).reward?.gold || 0)} · 💎 {String((weeklyBonus as any).reward?.diamonds || 0)} · 🗼 {String((weeklyBonus as any).reward?.towerCoins || 0)}
+                  </div>
+                </div>
+                {(weeklyBonus as any).claimed ? (
+                  <span className="text-[10px] px-2.5 py-1 rounded-full bg-green-500/20 border border-green-500/40 text-green-300 font-bold">✓ {t("ach.claimed", locale)}</span>
+                ) : (weeklyBonus as any).done ? (
+                  <button
+                    onClick={() => claimDailyMission("weekly_bonus", "weekly")}
+                    disabled={claimingDaily !== null}
+                    className="text-[10px] px-3 py-1.5 rounded-full bg-gradient-to-r from-[#ffd700] to-[#f59e0b] text-black font-black disabled:opacity-40"
+                  >
+                    {claimingDaily === "weekly_weekly_bonus" ? "…" : "🎁 " + t("mission.claim", locale)}
+                  </button>
+                ) : (
+                  <span className="text-[10px] text-gray-500 font-bold">🔒 {t("weekly.bonus.locked", locale)}</span>
+                )}
+              </div>
+            </div>
           )}
         </section>
       </div>

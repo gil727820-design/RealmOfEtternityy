@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loadCtx } from "./_state";
-import { fmtBig, nextWorldBossOpening, type WorldBossMob } from "@/game/worldBoss";
+import { fmtBig, nextWorldBossOpening, worldBossPhase, type WorldBossMob } from "@/game/worldBoss";
 import { randomUUID } from "@/game/worldBoss";
 import jsonDb from "@/db/repo";
 
@@ -81,6 +81,7 @@ export async function GET(req: NextRequest) {
           bossHp: event.bossHp,
           bossMaxHp: event.bossMaxHp,
           bossHpPct: event.bossMaxHp > 0 ? Math.max(0, Math.min(100, (event.bossHp / event.bossMaxHp) * 100)) : 0,
+          phase: worldBossPhase(event.bossMaxHp > 0 ? event.bossHp / event.bossMaxHp : 1),
           totalDamage: event.totalDamage,
           participantsCount: Object.keys(event.participants).length,
           squads: squadsPublic,

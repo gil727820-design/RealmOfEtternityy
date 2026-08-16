@@ -4,6 +4,7 @@ import { CLASS_BASE_STATS, powerCalc, xpForLevel, MAX_CHARACTERS_PER_ACCOUNT } f
 import type { ClassName } from "@/game/constants";
 import { isValidUsername } from "@/game/profanityFilter";
 import { requireSession } from "@/game/auth";
+import { addPetToCharacter } from "@/game/pets";
 
 export async function POST(req: NextRequest) {
   try {
@@ -87,6 +88,9 @@ export async function POST(req: NextRequest) {
       afkSince: new Date().toISOString(),
       lastActivity: new Date().toISOString(),
       createdAt: new Date().toISOString(),
+      // Pet inicial (Lobo Sombrio) — todo herói nasce com um companheiro.
+      pets: addPetToCharacter({}, "lobo_sombrio"),
+      activePetId: "lobo_sombrio",
     });
 
     // O personagem nasce sem itens iniciais: o kit de equipamento foi removido

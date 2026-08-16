@@ -3,21 +3,7 @@ import jsonDb from "@/db/repo";
 import { powerCalc } from "@/game/constants";
 import { equipmentBonus } from "@/game/forge";
 import { requireCharacterAuth } from "@/game/auth";
-
-/** Soma os bônus de todos os itens equipados em uma lista do inventário. */
-function sumEquippedBonuses(entries: any[]) {
-  const total = { attack: 0, defense: 0, maxHp: 0, speed: 0, critical: 0 };
-  for (const e of entries) {
-    if (e.template?.type === "consumable") continue;
-    const b = equipmentBonus(e.template, e.item);
-    total.attack += b.attack;
-    total.defense += b.defense;
-    total.maxHp += b.maxHp;
-    total.speed += b.speed;
-    total.critical += b.critical;
-  }
-  return total;
-}
+import { sumEquippedBonusesWithSets } from "@/game/sets";
 
 /** Peso de um bônus para comparar itens (mesma fórmula do poder). */
 function bonusPower(b: Record<string, number>) {
@@ -47,7 +33,7 @@ export async function POST(req: NextRequest) {
     const char = auth.char;
 
     const inv = await jsonDb.getInventoryForCharacter(String(characterId));
-    const oldBonus = sumEquippedBonuses(inv.filter((e: any) => e.item?.equipped));
+    const oldBonus = sumEquippedBonusesWithSets(inv.filter((e: any) => e.item?.equipped), char.level || 1);
 
     // Agrupa por slot os itens disponíveis (não equipados, não listados/reservados).
     const bySlot = new Map<string, any[]>();
@@ -104,7 +90,7 @@ export async function POST(req: NextRequest) {
 
     // Recalcula os atributos uma única vez (base = atual - bônus antigo).
     const freshInv = await jsonDb.getInventoryForCharacter(String(characterId));
-    const newBonus = sumEquippedBonuses(freshInv.filter((e: any) => e.item?.equipped));
+    const newBonus = sumEquippedBonusesWithSets(freshInv.filter((e: any) => e.item?.equipped), char.level || 1);
     const base = {
       attack: Math.max(0, (Number(char.attack) || 0) - oldBonus.attack),
       defense: Math.max(0, (Number(char.defense) || 0) - oldBonus.defense),

@@ -47,6 +47,7 @@ export const DAILY_MISSION_DEFS: DailyMissionDef[] = [
   { id: "pvp", target: 3, nameKey: "daily.pvp", descKey: "daily.pvp.desc", icon: "⚔️" },
   { id: "dungeon", target: 1, nameKey: "daily.dungeon", descKey: "daily.dungeon.desc", icon: "🕳️" },
   { id: "afk", target: 1, nameKey: "daily.afk", descKey: "daily.afk.desc", icon: "💤" },
+  { id: "boss", target: 1, nameKey: "daily.boss", descKey: "daily.boss.desc", icon: "👹" },
 ];
 
 /** Objetivos SEMANAIS (resetam na segunda-feira). */
@@ -55,6 +56,7 @@ export const WEEKLY_MISSION_DEFS: DailyMissionDef[] = [
   { id: "pvp", target: 10, nameKey: "weekly.pvp", descKey: "weekly.pvp.desc", icon: "⚔️" },
   { id: "missions", target: 8, nameKey: "weekly.missions", descKey: "weekly.missions.desc", icon: "📜" },
   { id: "dungeon", target: 3, nameKey: "weekly.dungeon", descKey: "weekly.dungeon.desc", icon: "🕳️" },
+  { id: "boss", target: 3, nameKey: "weekly.boss", descKey: "weekly.boss.desc", icon: "👹" },
 ];
 
 /** Chave de data local YYYY-MM-DD. */
@@ -74,13 +76,15 @@ export function weekKey(date: Date = new Date()): string {
 }
 
 /** Tipo de missão usada no progresso (same ids nas duas listas). */
-export type MissionKind = "missions" | "tower" | "pvp" | "dungeon" | "afk";
+export type MissionKind = "missions" | "tower" | "pvp" | "dungeon" | "afk" | "boss";
 
 /** Estrutura de progresso persistida no personagem. */
 interface ProgressState {
   date: string;
   progress: Record<string, number>;
   claimed: string[];
+  /** Bônus semanal já coletado nesta semana. */
+  bonusClaimed?: boolean;
 }
 
 /** Gera o estado inicial vazio com a data de hoje. */
@@ -146,6 +150,39 @@ export function weeklyList(char: any, now: Date = new Date()) {
   return WEEKLY_MISSION_DEFS.map((d) =>
     missionStatus(d, st.progress[d.id] || 0, st.claimed.includes(d.id), weeklyReward(lv))
   );
+}
+
+/**
+ * BÔNUS SEMANAL 🏆 — completa as 5 semanais da semana para liberar.
+ * Recompensa especial (diamantes + moedas da torre) + marca `weeklyBonusClaimed`
+ * no estado da semana (para não coletar 2x).
+ */
+export function weeklyBonusReward(level: number) {
+  const lv = Math.max(1, Number(level) || 1);
+  return {
+    diamonds: 20 + Math.floor(lv / 5),
+    towerCoins: 200 + lv * 20,
+    gold: 3000 + lv * 150,
+  };
+}
+
+/** True se todas as missões semanais da semana foram concluídas E coletadas. */
+export function weeklyAllDone(char: any, now: Date = new Date()) {
+  const st = readProgress(char, "weeklyMissions", weekKey(now), now);
+  return WEEKLY_MISSION_DEFS.every((d) => (st.progress[d.id] || 0) >= d.target && st.claimed.includes(d.id));
+}
+
+/** Coleta o bônus semanal (1x por semana). Devolve patch + recompensa ou erro. */
+export function claimWeeklyBonus(char: any, now: Date = new Date()) {
+  const wk = weekKey(now);
+  const st = readProgress(char, "weeklyMissions", wk, now);
+  if (!weeklyAllDone(char, now)) {
+    return { error: "Conclua e colete todas as missões semanais primeiro" };
+  }
+  if (st.bonusClaimed) return { error: "Bônus da semana já coletado" };
+  st.bonusClaimed = true;
+  const reward = weeklyBonusReward(Number(char?.level) || 1);
+  return { patch: { weeklyMissions: st }, reward };
 }
 
 /** Coleta a recompensa de uma missão: marca como coletada e devolve o patch + valor. */

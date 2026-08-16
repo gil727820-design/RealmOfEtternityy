@@ -15,6 +15,9 @@ export default function ForgePanel() {
   const [tab, setTab] = useState<ForgeTab>("enhance");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // Craft: receitas + materiais do personagem.
+  const [recipes, setRecipes] = useState<Array<Record<string, unknown>>>([]);
+  const [materials, setMaterials] = useState<Array<Record<string, unknown>>>([]);
 
   const equipItems = inventory.filter(
     (e) => {
@@ -37,6 +40,19 @@ export default function ForgePanel() {
   }, [characterId, setCharacter, setInventory]);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  // Carrega receitas e materiais quando abre a aba de craft.
+  useEffect(() => {
+    if (tab !== "craft" || !characterId) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/craft?characterId=${encodeURIComponent(characterId)}`);
+        const d = await res.json();
+        if (d.recipes) setRecipes(d.recipes);
+        if (d.materials) setMaterials(d.materials);
+      } catch { /* ignore */ }
+    })();
+  }, [tab, characterId]);
 
   const doForge = async (action: "enhance" | "enchant") => {
     if (!characterId || !selectedId) return;
@@ -67,10 +83,39 @@ export default function ForgePanel() {
     setBusy(false);
   };
 
+  const doCraft = async (recipeId: string) => {
+    if (!characterId) return;
+    if (FORGE_MAINTENANCE) { notify("⚠️ A forja está em manutenção!", "error"); return; }
+    setBusy(true);
+    try {
+      const res = await fetch("/api/craft", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characterId, recipeId }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        notify(`❌ ${d.error}`, "error");
+      } else {
+        const crafted = d.crafted?.template;
+        notify(`🛠️ ${t("forge.craft.success", locale)} ${crafted?.icon || "⚔️"} ${crafted?.nameKey ? t(String(crafted.nameKey), locale) : ""}!`, "success");
+        await refresh();
+        // Recarrega materiais/receitas (quantidades mudaram).
+        const r = await fetch(`/api/craft?characterId=${encodeURIComponent(characterId)}`);
+        const dr = await r.json();
+        if (dr.recipes) setRecipes(dr.recipes);
+        if (dr.materials) setMaterials(dr.materials);
+      }
+    } catch {
+      notify(t("general.error", locale), "error");
+    }
+    setBusy(false);
+  };
+
   const tabs: { id: ForgeTab; label: string; icon: string; soon?: boolean }[] = [
     { id: "enhance", label: t("forge.enhance", locale), icon: "⬆️" },
     { id: "enchant", label: t("forge.enchant", locale), icon: "✨" },
-    { id: "craft", label: t("forge.craft", locale), icon: "🛠️", soon: true },
+    { id: "craft", label: t("forge.craft", locale), icon: "🛠️" },
     { id: "refine", label: t("forge.refine", locale), icon: "🔄", soon: true },
   ];
 
@@ -117,9 +162,82 @@ export default function ForgePanel() {
         ))}
       </div>
 
-      {(tab === "craft" || tab === "refine") && (
+      {tab === "craft" && (
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Materiais do personagem */}
+          <div className="game-card p-4">
+            <h3 className="font-bold text-sm text-gray-300 mb-3">🧪 {t("forge.craft.materials", locale)}</h3>
+            {materials.length === 0 ? (
+              <div className="text-center text-gray-500 text-sm py-8">{t("forge.craft.noMaterials", locale)}</div>
+            ) : (
+              <div className="space-y-2 max-h-[440px] overflow-y-auto pr-1">
+                {materials.map((m) => (
+                  <div key={String(m.templateId)} className="flex items-center justify-between bg-[#0a0a12] rounded-xl px-3 py-2 border border-white/10">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-xl">{String(m.icon || "🪨")}</span>
+                      <div className="min-w-0">
+                        <div className="font-semibold text-white text-sm truncate">{m.nameKey ? t(String(m.nameKey), locale) : "?"}</div>
+                        <div className="text-[10px] text-gray-500">{t(`rarity.${String(m.rarity || "common")}`, locale)}</div>
+                      </div>
+                    </div>
+                    <span className="font-black text-[#ffd700]">x{String(m.quantity || 0)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Receitas */}
+          <div className="game-card p-4">
+            <h3 className="font-bold text-sm text-gray-300 mb-3">🛠️ {t("forge.craft.recipes", locale)}</h3>
+            {recipes.length === 0 ? (
+              <div className="text-center text-gray-500 text-sm py-8">{t("forge.soon", locale)}…</div>
+            ) : (
+              <div className="space-y-3 max-h-[440px] overflow-y-auto pr-1">
+                {recipes.map((r) => {
+                  const affordable = !!r.affordable;
+                  const costs = (r.costs as Record<string, number>) || {};
+                  return (
+                    <div key={String(r.id)} className={`rounded-xl p-3 border ${affordable ? "border-[#00ff88]/30 bg-[#0a0a12]" : "border-white/10 bg-[#0a0a12] opacity-70"}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-bold text-white text-sm">{String(r.icon || "🛠️")} {t(String(r.nameKey), locale)}</div>
+                        <span className={`text-[10px] font-bold rounded-full px-2 py-0.5 ${affordable ? "bg-[#00ff88]/20 text-[#00ff88]" : "bg-red-500/20 text-red-300"}`}>
+                          {t(`rarity.${String(r.resultRarity || "rare")}`, locale)}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-gray-500 mb-2">{t(String(r.descKey), locale)}</div>
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        {Object.entries(costs).map(([tid, qty]) => {
+                          const mat = materials.find((m) => String(m.templateId) === String(tid));
+                          const have = Number(mat?.quantity) || 0;
+                          const enough = have >= Number(qty);
+                          return (
+                            <span key={tid} className={`text-[10px] font-bold rounded-full px-2 py-1 ${enough ? "bg-white/10 text-white" : "bg-red-500/20 text-red-300"}`}>
+                              {String(mat?.icon || "🪨")} {mat?.nameKey ? t(String(mat.nameKey), locale) : "?"} {have}/{String(qty)}
+                            </span>
+                          );
+                        })}
+                        <span className="text-[10px] font-bold rounded-full px-2 py-1 bg-[#ffd700]/15 text-[#ffd700]">💰 {Number(r.goldCost || 0).toLocaleString()}</span>
+                      </div>
+                      <button
+                        onClick={() => doCraft(String(r.id))}
+                        disabled={busy || !affordable}
+                        className="w-full py-2.5 text-sm font-black rounded-xl bg-gradient-to-r from-[#f97316] to-[#ffd700] text-black disabled:opacity-40"
+                      >
+                        {busy ? t("forge.busy", locale) : t("forge.craft.btn", locale)}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === "refine" && (
         <div className="game-card p-10 text-center border-2 border-dashed border-gray-700">
-          <div className="text-6xl mb-4 animate-pulse">🛠️</div>
+          <div className="text-6xl mb-4 animate-pulse">🔄</div>
           <div className="text-lg font-bold text-gray-300">{t("forge.select", locale)}</div>
           <div className="text-sm text-gray-500">{t("forge.soon", locale)}…</div>
         </div>

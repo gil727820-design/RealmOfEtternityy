@@ -9,9 +9,12 @@ import {
   dungeonDateKey,
   dungeonRollRarity,
   dungeonMaxRarityIdx,
+  difficultyDef,
 } from "@/game/dungeons";
 import { requireCharacterAuth } from "@/game/auth";
 import { trackProgress } from "@/game/dailyMissions";
+import { seasonPatch } from "@/game/season";
+import { grantGuildActivityXp } from "@/game/guildActivity";
 
 /** Rola `rolls` itens compatíveis com o nível e a profundidade da expedição.
  * Se o chefe foi derrotado (`boss`), garante +1 drop ÉPICO extra. */
@@ -20,10 +23,12 @@ async function rollDungeonDrops(
   clears: number,
   rolls: number,
   level: number,
-  boss: boolean = false
+  boss: boolean = false,
+  diffId: string = "normal"
 ): Promise<any[]> {
   const allItems = await jsonDb.getAllItemTemplates();
-  const maxIdx = dungeonMaxRarityIdx(clears);
+  const diff = difficultyDef(diffId);
+  const maxIdx = dungeonMaxRarityIdx(clears, diff);
   const lvl = Math.max(1, Number(level) || 1);
   // Só EQUIPAMENTOS de raridade até o teto do andar (máx. raro) e de nível
   // acessível. Poções/consumíveis nunca dropam de masmorra — só na loja.
@@ -39,7 +44,7 @@ async function rollDungeonDrops(
   for (let i = 0; i < rolls; i++) {
     if (usable.length === 0) break;
     // Roll ponderado: itens de raridade mais próxima do teto têm mais peso.
-    let rarity = dungeonRollRarity(clears);
+    let rarity = dungeonRollRarity(clears, diff);
     let pool = usable.filter((it: any) => String(it.rarity) === rarity);
     if (pool.length === 0) {
       // Fallback: sorteia entre todos os usáveis.
@@ -96,9 +101,10 @@ export async function POST(req: NextRequest) {
 
     const hours = status.active.hours;
     const attemptFloor = status.active.attemptFloor;
+    const diff = difficultyDef(status.active.difficulty);
 
     // Recompensas são recalculadas aqui (idênticas ao preview) com o poder atual.
-    const rw = computeDungeonRewards(char, attemptFloor, hours);
+    const rw = computeDungeonRewards(char, attemptFloor, hours, diff);
     const defeat = rw.clears <= 0;
 
     // ---- Nível / XP (mesma curva das missões) ----
@@ -121,7 +127,7 @@ export async function POST(req: NextRequest) {
 
     // ---- Drops de items (peso de raridade sobe com a profundidade) ----
     const rolled: any[] =
-      rw.clears > 0 ? await rollDungeonDrops(characterId, rw.clears, rw.rolls, char.level, rw.boss) : [];
+      rw.clears > 0 ? await rollDungeonDrops(characterId, rw.clears, rw.rolls, char.level, rw.boss, diff.id) : [];
 
     // ---- Recarga passiva de energia durante a expedição ----
     const regen = computeEnergyRegen(char, now, energyMultiplier(char));
@@ -159,8 +165,13 @@ export async function POST(req: NextRequest) {
       dungeonStats: stats,
       // Missões diárias/semanais: progresso de masmorra concluída.
       ...trackProgress(char, "dungeon", 1, now),
+      // Temporada global: masmorra concluída dá pontos de temporada.
+      ...seasonPatch(char, "dungeon", now),
       lastActivity: now.toISOString(),
     });
+
+    // Guilda evolutiva: expedição concluída dá XP para a guilda.
+    const guildXp = await grantGuildActivityXp(characterId, "dungeon");
 
     return NextResponse.json({
       success: true,
@@ -173,6 +184,7 @@ export async function POST(req: NextRequest) {
       boss: rw.boss,
       rolls: rw.rolls,
       bestRarity: rw.bestRarity,
+      difficulty: diff.id,
       levelUp: newLevel > (char.level || 0),
       newLevel,
       stats,

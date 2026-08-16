@@ -1,23 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { powerCalc } from "@/game/constants";
-import { equipmentBonus } from "@/game/forge";
 import { requireCharacterAuth } from "@/game/auth";
-
-// Soma os bônus de todos os itens equipados em uma lista do inventário (forja + encanto).
-function sumEquippedBonuses(entries: any[]) {
-  const total = { attack: 0, defense: 0, maxHp: 0, speed: 0, critical: 0 };
-  for (const e of entries) {
-    if (e.template?.type === "consumable") continue; // consumíveis nunca dão bônus passivos
-    const b = equipmentBonus(e.template, e.item);
-    total.attack += b.attack;
-    total.defense += b.defense;
-    total.maxHp += b.maxHp;
-    total.speed += b.speed;
-    total.critical += b.critical;
-  }
-  return total;
-}
+import { sumEquippedBonusesWithSets } from "@/game/sets";
 
 /** Valida requisitos do template contra o personagem (nível e classe). */
 function requirementsOk(char: any, template: any): { ok: boolean; reason?: string } {
@@ -68,7 +53,7 @@ export async function POST(req: NextRequest) {
     // Bônus dos itens equipados ANTES desta mudança (para preservar os status investidos).
     const oldInv = await jsonDb.getInventoryForCharacter(characterId);
     const oldEquipped = oldInv.filter((e: any) => e.item.equipped);
-    const oldBonus = sumEquippedBonuses(oldEquipped);
+    const oldBonus = sumEquippedBonusesWithSets(oldEquipped, char.level || 1);
 
     if (unequip) {
       await jsonDb.updateInventoryItem(itemId, { equipped: false });
@@ -94,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     // Bônus dos itens equipados DEPOIS da mudança.
     const freshInv = await jsonDb.getInventoryForCharacter(characterId);
-    const newBonus = sumEquippedBonuses(freshInv.filter((e: any) => e.item.equipped));
+    const newBonus = sumEquippedBonusesWithSets(freshInv.filter((e: any) => e.item.equipped), char.level || 1);
 
     // Base real = status atuais MENOS os bônus que estavam equipados antes da mudança.
     // Assim os pontos investidos (alocação de status, reset de atributos, level up,

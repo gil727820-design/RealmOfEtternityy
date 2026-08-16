@@ -15,6 +15,43 @@
 
 import { xpMultiplier } from "./boosts";
 
+/**
+ * DIFICULDADES avançadas: Normal → Lendário.
+ * Cada dificuldade multiplica recompensas/drops e exige nível mínimo.
+ * A dificuldade também aumenta o poder exigido dos andares (+% por tier)
+ * e o custo de energia — risco vs. recompensa.
+ */
+export type DungeonDifficulty = "normal" | "hard" | "epic" | "legendary";
+
+export interface DungeonDifficultyDef {
+  id: DungeonDifficulty;
+  nameKey: string;
+  icon: string;
+  /** Nível mínimo para escolher. */
+  minLevel: number;
+  /** Multiplicador de recompensas (ouro/XP/cristais). */
+  rewardMult: number;
+  /** Multiplicador do poder exigido por andar (mais difícil de limpar). */
+  powerMult: number;
+  /** Multiplicador do custo de energia. */
+  energyMult: number;
+  /** Raridade máxima permitida nos rolls (índice em DUNGEON_RARITY_ORDER). */
+  maxRarityIdx: number;
+  /** Rolls extras de item por expedição. */
+  bonusRolls: number;
+}
+
+export const DUNGEON_DIFFICULTIES: DungeonDifficultyDef[] = [
+  { id: "normal", nameKey: "dungeon.diff.normal", icon: "🟢", minLevel: 1, rewardMult: 1, powerMult: 1, energyMult: 1, maxRarityIdx: 2, bonusRolls: 0 },
+  { id: "hard", nameKey: "dungeon.diff.hard", icon: "🟠", minLevel: 20, rewardMult: 1.5, powerMult: 1.15, energyMult: 1.5, maxRarityIdx: 3, bonusRolls: 1 },
+  { id: "epic", nameKey: "dungeon.diff.epic", icon: "🟣", minLevel: 40, rewardMult: 2.2, powerMult: 1.3, energyMult: 2, maxRarityIdx: 5, bonusRolls: 2 },
+  { id: "legendary", nameKey: "dungeon.diff.legendary", icon: "🔴", minLevel: 60, rewardMult: 3.2, powerMult: 1.5, energyMult: 2.5, maxRarityIdx: 6, bonusRolls: 3 },
+];
+
+export function difficultyDef(id: string | null | undefined): DungeonDifficultyDef {
+  return DUNGEON_DIFFICULTIES.find((d) => d.id === id) ?? DUNGEON_DIFFICULTIES[0];
+}
+
 /** Limite de masmorras por dia (recurso escasso → drops competitivos). */
 export const DUNGEON_DAILY_CAP = 3;
 /** Energia gasta para iniciar uma expedição (custo base da duração de 2h). */
@@ -25,6 +62,11 @@ export const DUNGEON_ENERGY_PER_HOUR = DUNGEON_ENERGY_COST / 2;
 export function dungeonEnergyCost(hours: number): number {
   return Math.round((Number(hours) || 0) * DUNGEON_ENERGY_PER_HOUR);
 }
+
+/** Custo de energia com a dificuldade (normal ×1, lendário ×2.5). */
+export function dungeonEnergyCostWithDiff(hours: number, diff: DungeonDifficultyDef): number {
+  return Math.round(dungeonEnergyCost(hours) * diff.energyMult);
+}
 /** Durações permitidas (segundos). */
 export const DUNGEON_DURATIONS_SEC = [
   { hours: 2, sec: 7200 },
@@ -33,8 +75,8 @@ export const DUNGEON_DURATIONS_SEC = [
 ] as const;
 
 /** Poder (bruto) de cada andar de masmorra. */
-export function dungeonFloorPower(floor: number): number {
-  return Math.round(15 + floor * 22);
+export function dungeonFloorPower(floor: number, diff: DungeonDifficultyDef = DUNGEON_DIFFICULTIES[0]): number {
+  return Math.round((15 + floor * 22) * diff.powerMult);
 }
 
 /** Máximo de andares que o personagem consegue tentar (baseado no nível). */
@@ -45,7 +87,8 @@ export function dungeonCapFloor(level: number): number {
 /** Quantos andares o personagem limpa atendado a `attemptFloor`. */
 export function dungeonClears(
   power: number,
-  attemptFloor: number
+  attemptFloor: number,
+  diff: DungeonDifficultyDef = DUNGEON_DIFFICULTIES[0]
 ): { clears: number; boss: boolean } {
   const attempt = Math.max(1, Math.floor(attemptFloor));
   if (power <= 0) return { clears: 0, boss: false };
@@ -53,7 +96,7 @@ export function dungeonClears(
   let clears = 0;
   for (let f = 1; f <= attempt; f++) {
     const boss = f % 10 === 0;
-    const need = dungeonFloorPower(f) * (boss ? 1.35 : 1);
+    const need = dungeonFloorPower(f, diff) * (boss ? 1.35 : 1);
     if (power < need) break; // não passa deste andar
     clears = f;
   }
@@ -71,11 +114,12 @@ export function dungeonDurationFactor(hours: number): number {
 }
 
 /** Quantos rolls de item a expedição concede (sobe com duração e profundidade).
- * Vencer um chefe (andar múltiplo de 10) garante +1 drop. */
-export function dungeonItemRolls(clears: number, hours: number, boss: boolean = false): number {
+ * Vencer um chefe (andar múltiplo de 10) garante +1 drop. Dificuldades altas
+ * dão rolls extras. */
+export function dungeonItemRolls(clears: number, hours: number, boss: boolean = false, diff: DungeonDifficultyDef = DUNGEON_DIFFICULTIES[0]): number {
   const factor = dungeonDurationFactor(hours);
   if (clears <= 0) return 0;
-  return Math.max(1, Math.floor((clears / 12) * factor) + (boss ? 1 : 0));
+  return Math.max(1, Math.floor((clears / 12) * factor) + (boss ? 1 : 0) + diff.bonusRolls);
 }
 
 /** Ordem de raridade (baixa → alta). */
@@ -85,20 +129,22 @@ export const DUNGEON_RARITY_ORDER = [
 ] as const;
 
 /**
- * Raridade máxima dos ROLLS NORMAIS de masmorra (o chefe garante épico à parte).
- * Regra de design: drops de masmorra/torre vão no máximo até RARO — épico e
- * acima só saem de BAÚS da loja ou do drop garantido do chefe.
+ * Raridade máxima dos rolls conforme a DIFICULDADE:
+ *  - normal: até raro (épico+ só de chefe/baús)
+ *  - hard: até épico
+ *  - epic: até mítico
+ *  - legendary: até divino
  */
-export function dungeonMaxRarityIdx(_clears: number): number {
-  return 2; // rare — épico+ só em baús ou chefe
+export function dungeonMaxRarityIdx(_clears: number, diff: DungeonDifficultyDef = DUNGEON_DIFFICULTIES[0]): number {
+  return diff.maxRarityIdx;
 }
 
 /**
  * Pool ponderado de raridade para os drops. Andares profundos sobem o peso de
  * raridades altas. Retorna um array onde a probabilidade ≈ (ocorrências/total).
  */
-export function dungeonRarityPool(clears: number): string[] {
-  const maxIdx = dungeonMaxRarityIdx(clears);
+export function dungeonRarityPool(clears: number, diff: DungeonDifficultyDef = DUNGEON_DIFFICULTIES[0]): string[] {
+  const maxIdx = dungeonMaxRarityIdx(clears, diff);
   const counts = [6, 4, 3, 3]; // common, uncommon, rare, epic
   for (let i = 4; i <= Math.max(4, Math.min(6, maxIdx)); i++) {
     counts[i] = Math.max(2, 10 - Math.floor(i) * 2); // legendary=2, mythic=2, divine=2
@@ -111,15 +157,15 @@ export function dungeonRarityPool(clears: number): string[] {
 }
 
 /** Faz um roll ponderado dentro do pool de raridade. */
-export function dungeonRollRarity(clears: number): string {
-  const pool = dungeonRarityPool(clears);
+export function dungeonRollRarity(clears: number, diff: DungeonDifficultyDef = DUNGEON_DIFFICULTIES[0]): string {
+  const pool = dungeonRarityPool(clears, diff);
   if (pool.length === 0) return "common";
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
 /** Rótulo da melhor raridade alcançável (para exibir a estimativa na UI). */
-export function dungeonBestRarity(clears: number): string {
-  return DUNGEON_RARITY_ORDER[dungeonMaxRarityIdx(clears)];
+export function dungeonBestRarity(clears: number, diff: DungeonDifficultyDef = DUNGEON_DIFFICULTIES[0]): string {
+  return DUNGEON_RARITY_ORDER[dungeonMaxRarityIdx(clears, diff)];
 }
 
 /** Chave de data local (YYYY-MM-DD) usada para o limite diário. */
@@ -149,9 +195,9 @@ export function dungeonXpByClears(clears: number, hours: number): number {
 }
 
 /** Cristais extras pelo avanço (escala com a duração da expedição). */
-export function dungeonCrystalsByClears(clears: number, hours: number): number {
+export function dungeonCrystalsByClears(clears: number, hours: number, diff: DungeonDifficultyDef = DUNGEON_DIFFICULTIES[0]): number {
   if (clears <= 0) return 0;
-  return Math.floor((clears / 14) * dungeonDurationFactor(hours));
+  return Math.floor((clears / 14) * dungeonDurationFactor(hours) * diff.rewardMult);
 }
 
 /** Prêmio extra por vencer o chefe do piso atual. */
@@ -163,11 +209,12 @@ export function dungeonBossBonus(): { gold: number; xp: number } {
  * Total de ouro/XP bruto de uma expedição (sem aplicar boost de XP). Usado
  * tanto na estimativa (preview) quanto na coleta (claim) — nunca divergem.
  */
-export function dungeonBaseRewards(clears: number, boss: boolean, hours: number) {
+export function dungeonBaseRewards(clears: number, boss: boolean, hours: number, diff: DungeonDifficultyDef = DUNGEON_DIFFICULTIES[0]) {
   const b = dungeonBossBonus();
+  const mult = diff.rewardMult;
   return {
-    gold: dungeonGoldByClears(clears, hours) + (boss ? b.gold : 0),
-    xp: dungeonXpByClears(clears, hours) + (boss ? b.xp : 0),
+    gold: Math.floor((dungeonGoldByClears(clears, hours) + (boss ? b.gold : 0)) * mult),
+    xp: Math.floor((dungeonXpByClears(clears, hours) + (boss ? b.xp : 0)) * mult),
   };
 }
 
@@ -177,22 +224,23 @@ export function dungeonXpEarned(char: any, rawXp: number): number {
 }
 
 /** Recompensas de uma expedição concluída (idênticas ao preview). */
-export function computeDungeonRewards(char: any, attemptFloor: number, hours: number) {
+export function computeDungeonRewards(char: any, attemptFloor: number, hours: number, diff: DungeonDifficultyDef = DUNGEON_DIFFICULTIES[0]) {
   const power = Number(char.power) || 0;
-  const { clears, boss } = dungeonClears(power, attemptFloor);
-  const base = dungeonBaseRewards(clears, boss, hours);
+  const { clears, boss } = dungeonClears(power, attemptFloor, diff);
+  const base = dungeonBaseRewards(clears, boss, hours, diff);
   return {
     power,
     attemptFloor,
     hours,
+    difficulty: diff.id,
     clears,
     boss,
     gold: base.gold,
     xpRaw: base.xp,
     xp: dungeonXpEarned(char, base.xp),
-    crystals: dungeonCrystalsByClears(clears, hours),
-    rolls: dungeonItemRolls(clears, hours, boss),
-    bestRarity: clears > 0 ? dungeonBestRarity(clears) : "none",
+    crystals: dungeonCrystalsByClears(clears, hours, diff),
+    rolls: dungeonItemRolls(clears, hours, boss, diff),
+    bestRarity: clears > 0 ? dungeonBestRarity(clears, diff) : "none",
     factor: dungeonDurationFactor(hours),
   };
 }
@@ -202,6 +250,8 @@ export function computeDungeonStatus(char: any, now: Date = new Date()) {
   const stats = char.dungeonStats || {};
   const todayKey = dungeonDateKey(now);
   const used = stats.lastDate === todayKey ? Number(stats.runsToday) || 0 : 0;
+
+  const diff = difficultyDef(char.dungeonDifficulty);
 
   const daily = {
     cap: DUNGEON_DAILY_CAP,
@@ -224,13 +274,14 @@ export function computeDungeonStatus(char: any, now: Date = new Date()) {
       durationSec,
       hours: Number(run.hours) || (durationSec / 3600),
       attemptFloor: Number(run.attemptFloor) || 1,
+      difficulty: run.difficulty || diff.id,
       elapsedSec,
       remainingSec,
       done,
     };
   }
 
-  const preview = computeDungeonRewards(char, Number(run?.attemptFloor) || 1, Number(run?.hours) || 2);
+  const preview = computeDungeonRewards(char, Number(run?.attemptFloor) || 1, Number(run?.hours) || 2, diff);
 
-  return { active, daily, preview, cost: DUNGEON_ENERGY_COST };
+  return { active, daily, preview, cost: DUNGEON_ENERGY_COST, difficulty: diff };
 }

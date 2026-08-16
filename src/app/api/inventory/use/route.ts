@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { applyBoostPatch, xpMultiplier, energyMultiplier, type Boosts } from "@/game/boosts";
 import { xpForLevel, resolveMaxLevel } from "@/game/constants";
+import { effectiveMaxEnergy } from "@/game/energy";
 import { requireCharacterAuth } from "@/game/auth";
 
 /**
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
     // Bloqueia o uso se a manutenção/evento etc. — mantido simples: segue normal.
     const maxHp = char.maxHp || char.hp || 1;
     const maxMana = char.maxMana || char.mana || 1;
-    const maxEnergy = char.maxEnergy || char.energy || 1;
+    const maxEnergy = effectiveMaxEnergy(char);
 
     const hp = char.hp ?? 0;
     const mana = char.mana ?? 0;

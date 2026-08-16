@@ -3,21 +3,7 @@ import jsonDb from "@/db/repo";
 import { MAX_ENHANCE, ENCHANT_COST, enchantPoolForClass, enhanceCost, enhanceChance, equipmentBonus } from "@/game/forge";
 import { powerCalc } from "@/game/constants";
 import { requireCharacterAuth } from "@/game/auth";
-
-/** Soma os bônus de todos os itens equipados (forja + encanto). */
-function sumEquippedBonuses(entries: any[]) {
-  const total = { attack: 0, defense: 0, maxHp: 0, speed: 0, critical: 0 };
-  for (const e of entries) {
-    if (e.template?.type === "consumable") continue;
-    const b = equipmentBonus(e.template, e.item);
-    total.attack += b.attack;
-    total.defense += b.defense;
-    total.maxHp += b.maxHp;
-    total.speed += b.speed;
-    total.critical += b.critical;
-  }
-  return total;
-}
+import { sumEquippedBonusesWithSets } from "@/game/sets";
 
 /**
  * Recalcula os atributos do personagem a partir dos itens equipados.
@@ -35,7 +21,7 @@ async function recalcFromEquipped(
   if (!char) return null;
 
   const inv = await jsonDb.getInventoryForCharacter(characterId);
-  const bonus = sumEquippedBonuses(inv.filter((e: any) => e.item?.equipped));
+  const bonus = sumEquippedBonusesWithSets(inv.filter((e: any) => e.item?.equipped), char.level || 1);
 
   // Bônus que o personagem reflete hoje = total novo - (novo item) + (item antigo).
   const currentBonus = {

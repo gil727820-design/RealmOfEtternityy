@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
 import { classImage, CLASS_ICONS, type ClassName } from "@/game/constants";
+import BossBattle from "@/components/ui/BossBattle";
 
 type Member = { id: string; name: string; classType: string; sex: string; level: number; power?: number; rank: string; joinedAt?: string };
 type Invite = { id: string; guildId: string; guildName?: string; targetCharacterId?: string; targetName?: string; createdAt?: string };
@@ -50,6 +51,7 @@ export default function GuildPanel() {
   const { characterId, character, locale, notify, setCharacter } = useGameStore();
   const [guildsList, setGuildsList] = useState<Array<Record<string, unknown>>>([]);
   const [myGuild, setMyGuild] = useState<Record<string, unknown> | null>(null);
+  const [guildStatus, setGuildStatus] = useState<Record<string, unknown> | null>(null);
   const [myInvites, setMyInvites] = useState<Invite[]>([]);
   const [guildRequests, setGuildRequests] = useState<Invite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,6 +68,16 @@ export default function GuildPanel() {
   const [chatText, setChatText] = useState("");
   const chatRef = useRef<HTMLDivElement>(null);
 
+  // Guerra de guildas
+  const [warData, setWarData] = useState<Record<string, unknown> | null>(null);
+  const [warTarget, setWarTarget] = useState("");
+
+  // Boss de Guilda
+  const [guildBoss, setGuildBoss] = useState<Record<string, unknown> | null>(null);
+  // Batalha igual à torre (imagem do boss + barras de HP)
+  const [guildBossBattle, setGuildBossBattle] = useState(false);
+  const [guildBossExtra, setGuildBossExtra] = useState(false);
+
   const load = useCallback(async () => {
     if (!characterId) return;
     setLoading(true);
@@ -74,6 +86,7 @@ export default function GuildPanel() {
       const d = await res.json();
       setGuildsList(d.guilds ?? []);
       setMyGuild(d.guild ?? null);
+      setGuildStatus(d.guildStatus ?? null);
       setMyInvites(d.myInvites ?? []);
       setGuildRequests(d.guildRequests ?? []);
     } catch { /* ignore */ }
@@ -93,7 +106,34 @@ export default function GuildPanel() {
     } catch { /* ignore */ }
   }, [myGuild?.id]);
 
+  const loadWar = useCallback(async () => {
+    if (!characterId) return;
+    try {
+      const res = await fetch(`/api/guild-war?characterId=${encodeURIComponent(characterId)}`);
+      const d = await res.json();
+      if (!d.error) setWarData(d);
+    } catch { /* ignore */ }
+  }, [characterId]);
+
+  const loadGuildBoss = useCallback(async () => {
+    if (!characterId) return;
+    try {
+      const res = await fetch(`/api/guild-boss?characterId=${encodeURIComponent(characterId)}`);
+      const d = await res.json();
+      if (!d.error) setGuildBoss(d);
+    } catch { /* ignore */ }
+  }, [characterId]);
+
   useEffect(() => { load(); }, [load]);
+
+  // Carrega a guerra junto com a guilda e a cada 15s enquanto houver guerra ativa
+  useEffect(() => {
+    if (!myGuild?.id) return;
+    loadWar();
+    loadGuildBoss();
+    const id = setInterval(loadWar, 15000);
+    return () => clearInterval(id);
+  }, [myGuild?.id, loadWar, loadGuildBoss]);
 
   // Polling do chat a cada 4 segundos enquanto estiver na guilda
   useEffect(() => {
@@ -216,6 +256,32 @@ export default function GuildPanel() {
     await load();
   };
 
+  const donate = async (amount: number) => {
+    if (!characterId || !myGuild) return;
+    if (!amount || amount < 100) { notify(t("guild.donateMin", locale), "error"); return; }
+    if (!window.confirm(`${t("guild.donate", locale)} ${amount.toLocaleString()} 🪙?`)) return;
+    setBusy("donate");
+    const d = await call({ action: "donate", characterId, guildId: String(myGuild.id), amount });
+    setBusy(null);
+    if (!d.success) { notify(d.error, "error"); return; }
+    notify(`✅ ${amount.toLocaleString()} 🪙 ${t("guild.donateOk", locale)}`, "success");
+    await load();
+    await refreshChar();
+  };
+
+  const upgradeGuild = async (upgradeId: string, nameKey: string) => {
+    if (!characterId || !myGuild) return;
+    setBusy(`up_${upgradeId}`);
+    const d = await call({ action: "upgrade", characterId, guildId: String(myGuild.id), upgradeId });
+    setBusy(null);
+    if (!d.success) { notify(d.error, "error"); return; }
+    const status = d.status as Record<string, unknown> | undefined;
+    const upgrades = (status?.upgrades ?? {}) as Record<string, unknown>;
+    notify(`⬆️ ${t(nameKey, locale)} → ${t("guild.up.level", locale)} ${String(upgrades[upgradeId] ?? 0)}`, "success");
+    await load();
+    await refreshChar();
+  };
+
   const leaveGuild = async () => {
     if (!characterId || !myGuild) return;
     if (!window.confirm("Sair da guilda?")) return;
@@ -226,6 +292,59 @@ export default function GuildPanel() {
     notify(t("guild.leave", locale), "info");
     await load();
     await refreshChar();
+  };
+
+  const warCall = async (body: Record<string, unknown>) => {
+    try {
+      const res = await fetch("/api/guild-war", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      return await res.json();
+    } catch {
+      return { error: t("general.error", locale) };
+    }
+  };
+
+  const declareWar = async () => {
+    if (!characterId || !warTarget) return;
+    setBusy("declare");
+    const d = await warCall({ action: "declare", characterId, enemyId: warTarget });
+    setBusy(null);
+    if (!d.success) { notify(d.error, "error"); return; }
+    notify("⚔️ Guerra declarada!", "success");
+    await loadWar();
+  };
+
+  const guildBossAttack = async (extra = false) => {
+    if (!characterId) return;
+    setBusy(extra ? "gb_extra" : "gb_free");
+    try {
+      const res = await fetch("/api/guild-boss", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characterId, extra }),
+      });
+      const d = await res.json();
+      if (!d.success) { notify(d.error, "error"); return; }
+      notify(`🐲 ${t("gb.hit", locale)} +${d.dmg}!`, "success");
+      if (d.defeatedRewards) notify(`🏆 ${t("gb.defeated", locale)}`, "success");
+      await loadGuildBoss();
+      await refreshChar();
+    } catch {
+      notify(t("general.error", locale), "error");
+    }
+  };
+
+  const warAction = async (kind: "attack" | "defend") => {
+    if (!characterId) return;
+    setBusy(kind);
+    const d = await warCall({ action: kind, characterId });
+    setBusy(null);
+    if (!d.success) { notify(d.error, "error"); return; }
+    notify(kind === "attack" ? `💥 +${d.dmg} de dano!` : `🛡️ Fortaleza reparada (+${d.heal})`, "success");
+    await loadWar();
   };
 
   const sendChat = async () => {
@@ -265,6 +384,7 @@ export default function GuildPanel() {
 
   const members = (Array.isArray(myGuild?.members) ? (myGuild?.members as Member[]) : []) as Member[];
   const isLeader = members.some((m) => m.id === characterId && m.rank === "leader");
+  const isLeaderOrOfficer = members.some((m) => m.id === characterId && (m.rank === "leader" || m.rank === "officer"));
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="animate-fadeInDown">
@@ -316,6 +436,274 @@ export default function GuildPanel() {
                 <div className="text-2xl font-black text-[#ffd700]">💰 {Number(myGuild.gold || 0).toLocaleString()}</div>
               </div>
             </div>
+
+            {/* Nível da guilda + XP */}
+            {guildStatus && (
+              <div className="bg-[#0a0a12] rounded-xl p-4 border border-white/10 mb-4">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-bold text-white">🏰 {t("guild.level", locale)} {String(guildStatus.level)} <span className="text-gray-500 font-normal text-xs">/ {String(guildStatus.maxLevel)}</span></span>
+                  <span className="text-[10px] text-gray-400">{String(guildStatus.xp)}/{String(guildStatus.xpToNext)} XP</span>
+                </div>
+                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#ffd700] to-orange-500 transition-all"
+                    style={{ width: `${Number(guildStatus.xpToNext) > 0 ? Math.min(100, (Number(guildStatus.xp) / Number(guildStatus.xpToNext)) * 100) : 100}%` }} />
+                </div>
+                <div className="text-[10px] text-gray-500 mt-1">{t("guild.xpHint", locale)}</div>
+              </div>
+            )}
+
+            {/* Doação */}
+            <div className="bg-[#0a0a12] rounded-xl p-4 border border-white/10 mb-4">
+              <h4 className="text-sm font-bold text-gray-300 mb-2">💛 {t("guild.donate", locale)}</h4>
+              <div className="flex gap-2 flex-wrap">
+                {[500, 2000, 5000, 10000].map((amt) => (
+                  <button key={amt} onClick={() => donate(amt)} disabled={busy === "donate"}
+                    className="text-xs bg-[#ffd700]/10 border border-[#ffd700]/30 text-[#ffd700] rounded-lg px-3 py-1.5 font-bold hover:bg-[#ffd700]/20 disabled:opacity-40">
+                    🪙 {amt.toLocaleString()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Melhorias da guilda */}
+            {guildStatus && Array.isArray(guildStatus.upgradeDefs) && guildStatus.upgradeDefs.length > 0 && (
+              <div className="bg-[#0a0a12] rounded-xl p-4 border border-white/10 mb-4">
+                <h4 className="text-sm font-bold text-gray-300 mb-2">⬆️ {t("guild.up.title", locale)}</h4>
+                <div className="space-y-2">
+                  {(guildStatus.upgradeDefs as Array<Record<string, unknown>>).map((def) => {
+                    const lv = Number(def.level) || 0;
+                    const maxLv = Number(def.maxLevel) || 0;
+                    const atMax = lv >= maxLv;
+                    return (
+                      <div key={String(def.id)} className="flex items-center justify-between bg-white/5 rounded-lg px-3 py-2">
+                        <div className="min-w-0">
+                          <div className="text-sm text-white font-semibold">{String(def.icon)} {t(String(def.nameKey), locale)} <span className="text-[10px] text-gray-400">Lv.{lv}/{maxLv}</span></div>
+                          <div className="text-[10px] text-gray-500 truncate">{t(String(def.descKey), locale)}</div>
+                        </div>
+                        {isLeaderOrOfficer && !atMax && (
+                          <button onClick={() => upgradeGuild(String(def.id), String(def.nameKey))} disabled={busy === `up_${String(def.id)}`}
+                            className="text-[10px] bg-[#00ff88]/10 border border-[#00ff88]/40 text-[#00ff88] rounded-lg px-2.5 py-1.5 font-bold hover:bg-[#00ff88]/20 disabled:opacity-40 whitespace-nowrap ml-2">
+                            {busy === `up_${String(def.id)}` ? "..." : `⬆️ ${Number(def.cost).toLocaleString()} 🪙`}
+                          </button>
+                        )}
+                        {atMax && <span className="text-[10px] text-[#ffd700] font-bold ml-2 whitespace-nowrap">MAX</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Guerra de guildas */}
+            <div className="bg-[#0a0a12] rounded-xl p-4 border border-red-500/20 mb-4">
+              <h4 className="text-sm font-bold text-gray-300 mb-1">⚔️ {t("war.title", locale)}</h4>
+              {(() => {
+                const war = (warData?.war as Record<string, unknown>) || null;
+                const active = !!war?.active && !!war?.war;
+                const warObj = active ? (war?.war as Record<string, unknown>) : null;
+                const enemy = (warData?.enemy as Record<string, unknown>) || null;
+                const myRank = String(warData?.myRank || "member");
+                const canDeclare = !!warData?.canDeclare;
+                const declareCost = Number(warData?.declareCost || 0);
+                const minLevel = Number(warData?.minLevel || 3);
+                const guildLevel = Number(warData?.guildLevel || 1);
+                const candidates = Array.isArray(warData?.candidates) ? (warData.candidates as Array<Record<string, unknown>>) : [];
+                const lastResult = (warData?.lastWarResult as Record<string, unknown>) || null;
+                const cooldownUntil = warData?.cooldownUntil ? String(warData.cooldownUntil) : null;
+
+                if (active && warObj) {
+                  const hp = Number(warObj.fortressHp || 0);
+                  const maxHp = Number(warObj.fortressMaxHp || 1);
+                  const pct = maxHp > 0 ? Math.min(100, Math.max(0, (hp / maxHp) * 100)) : 0;
+                  const timeLeft = Number(warObj.timeLeftMs || 0);
+                  const hh = Math.floor(timeLeft / 3600000);
+                  const mm = Math.floor((timeLeft % 3600000) / 60000);
+                  const participants = Array.isArray(warObj.participants) ? (warObj.participants as Array<Record<string, unknown>>) : [];
+                  return (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-bold text-red-400">💥 {String(warObj.enemyName || "?")}</div>
+                        <div className="text-[10px] text-gray-400">⏳ {hh}h {mm}m</div>
+                      </div>
+                      <div>
+                        <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                          <span>🛡️ {t("war.fortress", locale)}</span>
+                          <span>{hp.toLocaleString()} / {maxHp.toLocaleString()}</span>
+                        </div>
+                        <div className="h-2.5 bg-white/5 rounded-full overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-red-500 to-orange-500 transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-center">
+                        <div className="bg-white/5 rounded-lg p-2">
+                          <div className="text-[10px] text-gray-500">{t("war.dealt", locale)}</div>
+                          <div className="text-sm font-black text-red-400">💥 {Number(warObj.dmgDealt || 0).toLocaleString()}</div>
+                        </div>
+                        <div className="bg-white/5 rounded-lg p-2">
+                          <div className="text-[10px] text-gray-500">{t("war.taken", locale)}</div>
+                          <div className="text-sm font-black text-orange-400">💢 {Number(warObj.dmgTaken || 0).toLocaleString()}</div>
+                        </div>
+                      </div>
+                      {participants.length > 0 && (
+                        <div>
+                          <div className="text-[10px] text-gray-500 mb-1">🏆 {t("war.participants", locale)}</div>
+                          <div className="space-y-0.5 max-h-24 overflow-y-auto">
+                            {participants.slice(0, 6).map((p) => (
+                              <div key={String(p.characterId)} className="flex justify-between text-[11px] text-gray-300">
+                                <span>{String(p.name)}</span>
+                                <span className="text-red-400">+{Number(p.dmg).toLocaleString()}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      <div className="flex gap-2">
+                        <button onClick={() => warAction("attack")} disabled={busy === "attack" || !warObj.canAct}
+                          className="flex-1 text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg px-3 py-2 font-bold disabled:opacity-40">
+                          {busy === "attack" ? "..." : `⚔️ ${t("war.attack", locale)}`}
+                        </button>
+                        <button onClick={() => warAction("defend")} disabled={busy === "defend" || !warObj.canAct}
+                          className="flex-1 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg px-3 py-2 font-bold disabled:opacity-40">
+                          {busy === "defend" ? "..." : `🛡️ ${t("war.defend", locale)}`}
+                        </button>
+                      </div>
+                      {!warObj.canAct && <div className="text-[10px] text-gray-500 text-center">⏳ {t("war.cooldown", locale)}</div>}
+                    </div>
+                  );
+                }
+
+                // Sem guerra ativa
+                return (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-gray-400">🏆 {t("war.points", locale)}: <b className="text-[#ffd700]">{Number(warData?.warPoints || 0)}</b></span>
+                      {lastResult && (
+                        <span className={`text-[10px] font-bold ${lastResult.draw ? "text-gray-400" : "text-[#00ff88]"}`}>
+                          {lastResult.draw ? t("war.draw", locale) : `🏆 ${t("war.victory", locale)} vs ${String(lastResult.winnerName || "")}`}
+                        </span>
+                      )}
+                    </div>
+                    {canDeclare && guildLevel >= minLevel ? (
+                      <>
+                        {cooldownUntil && new Date(cooldownUntil).getTime() > Date.now() ? (
+                          <div className="text-[10px] text-gray-500">⏳ {t("war.cooldownGuild", locale)}</div>
+                        ) : (
+                          <>
+                            <div className="flex gap-2">
+                              <select value={warTarget} onChange={(e) => setWarTarget(e.target.value)}
+                                className="game-input flex-1 text-sm">
+                                <option value="">{t("war.selectTarget", locale)}</option>
+                                {candidates.map((c) => (
+                                  <option key={String(c.id)} value={String(c.id)}>
+                                    {String(c.icon || "🏰")} {String(c.name)} (Lv.{String(c.level)} • {String(c.memberCount)} membros)
+                                  </option>
+                                ))}
+                              </select>
+                              <button onClick={declareWar} disabled={busy === "declare" || !warTarget}
+                                className="text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg px-3 py-2 font-bold disabled:opacity-40 whitespace-nowrap">
+                                {busy === "declare" ? "..." : `⚔️ ${t("war.declare", locale)}`}
+                              </button>
+                            </div>
+                            <div className="text-[10px] text-gray-500">💰 {t("war.cost", locale)}: <b className="text-[#ffd700]">{declareCost.toLocaleString()} 🪙</b> • {t("war.duration", locale)}: 24h</div>
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-[10px] text-gray-500">
+                        {guildLevel < minLevel
+                          ? `🔒 ${t("war.levelReq", locale)} ${minLevel}+`
+                          : `🔒 ${t("war.leaderOnly", locale)}`}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Boss de Guilda (raid semanal) */}
+            {(() => {
+              const b = (guildBoss?.boss as Record<string, unknown>) || null;
+              if (!b) return null;
+              const hp = Number(b.bossHp || 0);
+              const maxHp = Number(b.bossMaxHp || 1);
+              const pct = maxHp > 0 ? Math.min(100, Math.max(0, (hp / maxHp) * 100)) : 0;
+              const defeated = !!b.defeated;
+              const freeLeft = Number(b.freeAttacksLeft || 0);
+              const extraCost = Number(b.extraCost || 25000);
+              const ranking = Array.isArray(b.ranking) ? (b.ranking as Array<Record<string, unknown>>) : [];
+              // Monstro da batalha pessoal (imagem da TORRE, stats do raid escalados p/ exibição).
+              const gbMonster = {
+                nameKey: "gb.title",
+                image: "/images/tower/monsters/realm_of_eternity_void_wyrm_clean.png",
+                icon: "🐲",
+                stats: {
+                  maxHp: maxHp,
+                  attack: Math.max(10, Math.round(maxHp / 4000)),
+                  defense: Math.max(5, Math.round(maxHp / 20000)),
+                  speed: 5,
+                  critical: 10,
+                  dodge: 5,
+                },
+              };
+              return (
+                <div className="bg-[#0a0a12] rounded-xl p-4 border border-purple-500/20 mb-4">
+                  <h4 className="text-sm font-bold text-gray-300 mb-1">🐲 {t("gb.title", locale)}</h4>
+                  <div className="text-[10px] text-gray-500 mb-2">🔄 {t("gb.weekly", locale)}</div>
+                  <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                    <span>❤️ {t("worldBoss.hp", locale)}</span>
+                    <span>{hp.toLocaleString()} / {maxHp.toLocaleString()}</span>
+                  </div>
+                  <div className="h-3 bg-white/5 rounded-full overflow-hidden mb-2">
+                    <div className={`h-full transition-all ${defeated ? "bg-gradient-to-r from-green-600 to-green-400" : "bg-gradient-to-r from-purple-600 to-fuchsia-500"}`} style={{ width: `${pct}%` }} />
+                  </div>
+                  {defeated ? (
+                    <div className="text-center text-[#00ff88] font-bold text-sm py-2">🏆 {t("gb.defeated", locale)}!</div>
+                  ) : guildBossBattle ? (
+                    <BossBattle
+                      apiUrl="/api/guild-boss"
+                      monster={gbMonster}
+                      title={`🐲 ${t("gb.title", locale)}`}
+                      fightLabel={`⚔️ ${t("gb.attack", locale)}`}
+                      accent="#a855f7"
+                      extraBody={guildBossExtra ? { extra: true } : undefined}
+                      onFinished={async (r) => {
+                        await loadGuildBoss();
+                        await refreshChar();
+                        if (r.defeatedRewards) notify(`🏆 ${t("gb.defeated", locale)}`, "success");
+                      }}
+                      onExit={() => setGuildBossBattle(false)}
+                    />
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <button onClick={() => { setGuildBossExtra(false); setGuildBossBattle(true); }} disabled={freeLeft <= 0}
+                          className="flex-1 text-sm bg-purple-600 hover:bg-purple-500 text-white rounded-lg px-3 py-2 font-bold disabled:opacity-40">
+                          ⚔️ {t("gb.attack", locale)} ({freeLeft > 0 ? "1x grátis" : "sem grátis"})
+                        </button>
+                        <button onClick={() => { setGuildBossExtra(true); setGuildBossBattle(true); }}
+                          className="text-sm bg-[#ffd700]/15 border border-[#ffd700]/40 text-[#ffd700] rounded-lg px-3 py-2 font-bold hover:bg-[#ffd700]/25 disabled:opacity-40 whitespace-nowrap">
+                          💰 {t("gb.extra", locale)} ({extraCost.toLocaleString()})
+                        </button>
+                      </div>
+                      {freeLeft <= 0 && <div className="text-[10px] text-gray-500 text-center">⏳ {t("gb.freeUsed", locale)}</div>}
+                    </div>
+                  )}
+                  {ranking.length > 0 && (
+                    <div className="mt-2">
+                      <div className="text-[10px] text-gray-500 mb-1">🏆 {t("gb.ranking", locale)}</div>
+                      <div className="space-y-0.5 max-h-24 overflow-y-auto">
+                        {ranking.slice(0, 8).map((r, i) => (
+                          <div key={String(r.characterId)} className={`flex justify-between text-[11px] ${r.me ? "text-[#ffd700] font-bold" : "text-gray-300"}`}>
+                            <span>{i + 1}º {String(r.me ? t("gb.you", locale) : `#${String(r.characterId).slice(0, 4)}`)}</span>
+                            <span>💥 {Number(r.dmg).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Membros */}
             <div>

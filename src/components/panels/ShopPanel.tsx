@@ -2,22 +2,62 @@
 import { useEffect, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { RARITY_COLORS } from "@/game/constants";
+import { RARITY_ORDER } from "@/game/drops";
+import { EGG_RARITY_WEIGHTS } from "@/game/pets";
 import { VIP_TIERS, currentVipTier, vipRemainingMs } from "@/game/vip";
 import { t } from "@/i18n";
+import { pityStatus } from "@/game/pity";
 
 const CHESTS = [
-  { id: "common", name: "shop.chestBasic", cost: 1500, type: "gold", image: "/images/chests/bau_comum_transparente.png", desc: "shop.chestBasic.desc" },
-  { id: "uncommon", name: "shop.chestUncommon", cost: 3500, type: "gold", image: "/images/chests/bau_incomum_transparente.png", desc: "shop.chestUncommon.desc" },
-  { id: "rare", name: "shop.chestRare", cost: 7000, type: "gold", image: "/images/chests/bau_raro_transparente.png", desc: "shop.chestRare.desc" },
-  { id: "epic", name: "shop.chestEpic", cost: 150, type: "diamond", image: "/images/chests/bau_epico_transparente.png", desc: "shop.chestEpic.desc" },
-  { id: "legendary", name: "shop.chestLegendary", cost: 450, type: "diamond", image: "/images/chests/bau_lendario_transparente.png", desc: "shop.chestLegendary.desc" },
-  { id: "mythic", name: "shop.chestMythic", cost: 900, type: "diamond", image: "/images/chests/bau_mitico_transparente.png", desc: "shop.chestMythic.desc" },
-  { id: "divine", name: "shop.chestDivine", cost: 1800, type: "diamond", image: "/images/chests/bau_divino_transparente.png", desc: "shop.chestDivine.desc" },
-  { id: "secret", name: "shop.chestSecret", cost: 4000, type: "diamond", image: "/images/chests/bau_secreto_transparente.png", desc: "shop.chestSecret.desc" },
+  { id: "common", name: "shop.chestBasic", cost: 1500, type: "gold", image: "/images/chests/bau_comum_transparente.png", desc: "shop.chestBasic.desc", topRarity: "uncommon" },
+  { id: "uncommon", name: "shop.chestUncommon", cost: 3500, type: "gold", image: "/images/chests/bau_incomum_transparente.png", desc: "shop.chestUncommon.desc", topRarity: "rare" },
+  { id: "rare", name: "shop.chestRare", cost: 7000, type: "gold", image: "/images/chests/bau_raro_transparente.png", desc: "shop.chestRare.desc", topRarity: "epic" },
+  { id: "epic", name: "shop.chestEpic", cost: 150, type: "diamond", image: "/images/chests/bau_epico_transparente.png", desc: "shop.chestEpic.desc", topRarity: "epic" },
+  { id: "legendary", name: "shop.chestLegendary", cost: 450, type: "diamond", image: "/images/chests/bau_lendario_transparente.png", desc: "shop.chestLegendary.desc", topRarity: "legendary" },
+  { id: "mythic", name: "shop.chestMythic", cost: 900, type: "diamond", image: "/images/chests/bau_mitico_transparente.png", desc: "shop.chestMythic.desc", topRarity: "mythic" },
+  { id: "divine", name: "shop.chestDivine", cost: 1800, type: "diamond", image: "/images/chests/bau_divino_transparente.png", desc: "shop.chestDivine.desc", topRarity: "divine" },
+  { id: "secret", name: "shop.chestSecret", cost: 4000, type: "diamond", image: "/images/chests/bau_secreto_transparente.png", desc: "shop.chestSecret.desc", topRarity: "supreme" },
 ];
+
+/** Chance de cada raridade em um baú (mesma conta do servidor: peso 0.5^(distância do topo)). */
+function chestOdds(chest: { topRarity: string }) {
+  const topIdx = RARITY_ORDER.indexOf(chest.topRarity);
+  const rows: Array<{ rarity: string; weight: number; chance: number }> = [];
+  let total = 0;
+  for (let idx = 0; idx <= Math.max(0, topIdx); idx++) {
+    const w = Math.pow(0.5, Math.max(0, topIdx) - idx);
+    rows.push({ rarity: RARITY_ORDER[idx], weight: w, chance: 0 });
+    total += w;
+  }
+  return rows.map((r) => ({ ...r, chance: Math.round((r.weight / total) * 1000) / 10 }));
+}
+
+/** Chance de cada raridade em um ovo (mesma conta do servidor: EGG_RARITY_WEIGHTS). */
+function eggOdds(quality: "basic" | "rare" | "epic") {
+  const top: Record<string, string> = { basic: "rare", rare: "legendary", epic: "divine" };
+  const topRarity = top[quality] ?? "rare";
+  const maxIdx = RARITY_ORDER.indexOf(topRarity);
+  const rows: Array<{ rarity: string; weight: number; chance: number }> = [];
+  let total = 0;
+  for (let idx = 0; idx <= maxIdx; idx++) {
+    const rar = RARITY_ORDER[idx];
+    const w = EGG_RARITY_WEIGHTS[rar as keyof typeof EGG_RARITY_WEIGHTS] ?? 0;
+    if (w <= 0) continue;
+    rows.push({ rarity: rar, weight: w, chance: 0 });
+    total += w;
+  }
+  return rows.map((r) => ({ ...r, chance: Math.round((r.weight / total) * 1000) / 10 }));
+}
 
 /** Pacotes de diamantes vendidos por PIX (valores em reais). */
 const PIX_PACKS = [5, 10, 20, 50, 100];
+
+/** Ovos de pet vendidos na loja (id bate com o /api/shop/buy). */
+const PET_EGGS = [
+  { id: "pet_egg", name: "shop.petEggBasic", cost: 25000, type: "gold", icon: "🥚", desc: "shop.petEggBasic.desc", eggKey: "egg_basic" },
+  { id: "pet_egg_rare", name: "shop.petEggRare", cost: 200, type: "diamond", icon: "🔮", desc: "shop.petEggRare.desc", eggKey: "egg_rare" },
+  { id: "pet_egg_epic", name: "shop.petEggEpic", cost: 600, type: "diamond", icon: "✨", desc: "shop.petEggEpic.desc", eggKey: "egg_epic" },
+];
 
 const MAX_PROOF_BASE64 = 6 * 1024 * 1024; // 6MB de base64 (~4.5MB de imagem) — limite do servidor
 
@@ -77,6 +117,11 @@ export default function ShopPanel() {
   const [buying, setBuying] = useState<string | null>(null);
   const [chestReveal, setChestReveal] = useState<{ name: string; image: string; items: any[] } | null>(null);
   const [phase, setPhase] = useState<"opening" | "reveal">("opening");
+  // Informações do baú (conteúdo + chances + pity)
+  const [infoChestId, setInfoChestId] = useState<string | null>(null);
+  // Revelação do ovo de pet (animação) + informações do ovo
+  const [eggReveal, setEggReveal] = useState<{ egg: (typeof PET_EGGS)[number]; pet: any } | null>(null);
+  const [infoEggId, setInfoEggId] = useState<string | null>(null);
 
   // Config PIX (diamantes): chave, QR e conversão por real vindos do admin.
   const [pixSettings, setPixSettings] = useState<{ pixKey: string; qr: string; diamondsPerReal: number }>({ pixKey: "", qr: "", diamondsPerReal: 1000 });
@@ -103,6 +148,14 @@ export default function ShopPanel() {
     const timer = setTimeout(() => setPhase("reveal"), 1400);
     return () => clearTimeout(timer);
   }, [chestReveal]);
+
+  // Mesma lógica para o ovo: animação de choque e depois revela o pet.
+  useEffect(() => {
+    if (!eggReveal) return;
+    setPhase("opening");
+    const timer = setTimeout(() => setPhase("reveal"), 1500);
+    return () => clearTimeout(timer);
+  }, [eggReveal]);
 
   if (!character) return null;
 
@@ -140,6 +193,22 @@ export default function ShopPanel() {
       }
       if (data.type === "vip") {
         notify(`👑 ${t(itemName, locale)} ${t("pix.activated", locale)}! (30 ${t("general.days", locale)})`, "success");
+        return;
+      }
+      // Ovo de pet: abre a animação de choque e revela o pet (ou duplicata → XP).
+      if (data.type === "pet_egg" && data.pet) {
+        const egg = PET_EGGS.find((e) => e.id === itemId);
+        if (egg) {
+          setEggReveal({ egg, pet: data.pet });
+        } else {
+          const pet = data.pet as { icon: string; nameKey: string; rarity: string; added: boolean };
+          notify(
+            pet.added
+              ? `${pet.icon} ${t("pet.hatched", locale)}: ${t(pet.nameKey, locale)}!`
+              : `${pet.icon} ${t(pet.nameKey, locale)} ${t("pet.duplicate", locale)} (+${250} ${t("pet.xp", locale)})`,
+            pet.added ? "success" : "info"
+          );
+        }
         return;
       }
       notify(`${t("general.success", locale)} - ${t(itemName, locale)} ${t("shop.bought", locale)}!`, "success");
@@ -187,6 +256,7 @@ export default function ShopPanel() {
 
   const tabs = [
     { id: "chests", label: `📦 ${t("shop.chests", locale)}`, icon: "📦" },
+    { id: "pets", label: `🐾 ${t("shop.pets", locale)}`, icon: "🐾" },
     { id: "diamonds", label: `💎 ${t("pix.title", locale)}`, icon: "💎" },
     { id: "vip", label: "👑 VIP", icon: "👑" },
   ];
@@ -232,7 +302,36 @@ export default function ShopPanel() {
                 desc={t(chest.desc, locale)}
                 type={chest.type}
                 disabled={buying === chest.id}
+                pity={pityStatus(character as any, chest.id)}
                 onClick={() => buyItem(chest.id, chest.name, chest.type, chest.cost)}
+                onInfo={() => setInfoChestId(chest.id)}
+              />
+            ))}
+          </>
+        )}
+        {tab === "pets" && (
+          <>
+            <div className="game-card p-5 rounded-2xl border-white/10 col-span-full">
+              <p className="text-sm text-gray-300">
+                🐾 {t("shop.petsHint", locale)}
+              </p>
+              <p className="text-xs text-[#ffd700] mt-2">
+                🎁 {t("shop.petsPityHint", locale)}
+              </p>
+            </div>
+            {PET_EGGS.map((egg) => (
+              <ShopItem
+                key={egg.id}
+                name={t(egg.name, locale)}
+                cost={egg.cost}
+                image=""
+                icon={egg.icon}
+                desc={t(egg.desc, locale)}
+                type={egg.type}
+                disabled={buying === egg.id}
+                pity={pityStatus(character as any, egg.eggKey)}
+                onClick={() => buyItem(egg.id, egg.name, egg.type, egg.cost)}
+                onInfo={() => setInfoEggId(egg.id)}
               />
             ))}
           </>
@@ -309,6 +408,194 @@ export default function ShopPanel() {
         )}
       </div>
       )}
+
+      {/* Modal de INFORMAÇÕES do baú: conteúdo, chances e pity */}
+      {infoChestId && (() => {
+        const chest = CHESTS.find((c) => c.id === infoChestId);
+        if (!chest) return null;
+        const odds = chestOdds(chest);
+        const pity = pityStatus(character as any, chest.id);
+        return (
+          <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" onClick={() => setInfoChestId(null)}>
+            <div className="game-card relative w-full max-w-lg p-7 text-center overflow-hidden animate-scaleIn border-amber-400/40" onClick={(e) => e.stopPropagation()}>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.12),transparent_70%)]" />
+              <div className="relative">
+                <img src={chest.image} alt={t(chest.name, locale)} className="w-24 h-24 mx-auto object-contain drop-shadow-[0_0_25px_rgba(255,215,0,0.4)]" />
+                <h3 className="text-2xl font-black mt-2">{t(chest.name, locale)}</h3>
+                <p className="text-sm text-gray-400 mt-1">{t(chest.desc, locale)}</p>
+
+                {/* Pity */}
+                <div className="mt-5 bg-black/40 rounded-xl border border-white/10 p-4 text-left">
+                  <div className="text-xs font-black uppercase tracking-widest text-[#ffd700] mb-2">🎁 Pity — Garantia</div>
+                  {pity.limit > 0 ? (
+                    <>
+                      <p className="text-xs text-gray-300">
+                        A cada <b className="text-white">{pity.limit} aberturas</b> sem sair a raridade top
+                        (<b style={{ color: (RARITY_COLORS as Record<string, string>)[chest.topRarity] || "#ffd700" }}>{t(`rarity.${chest.topRarity}`, locale)}</b>),
+                        o próximo item é <b className="text-[#ff6b35]">GARANTIDO</b> como topo. Saíndo o topo antes, o contador zera.
+                      </p>
+                      <div className="mt-3">
+                        <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                          <span>Seu progresso</span>
+                          <span className={pity.guaranteed ? "text-[#ff6b35] font-black" : ""}>{pity.guaranteed ? "⭐ GARANTIDO AGORA!" : `${pity.current}/${pity.limit}`}</span>
+                        </div>
+                        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                          <div className={`h-full transition-all ${pity.guaranteed ? "bg-[#ff6b35] animate-pulse-soft" : "bg-[#ffd700]"}`} style={{ width: `${pity.pct}%` }} />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-xs text-gray-400">Sem garantia neste baú.</p>
+                  )}
+                </div>
+
+                {/* Chances por raridade */}
+                <div className="mt-4 bg-black/40 rounded-xl border border-white/10 p-4 text-left">
+                  <div className="text-xs font-black uppercase tracking-widest text-amber-300 mb-2">📊 Chance de cada raridade</div>
+                  <div className="space-y-1.5">
+                    {odds.map((o) => {
+                      const color = (RARITY_COLORS as Record<string, string>)[o.rarity] || "#9ca3af";
+                      const isTop = o.rarity === chest.topRarity;
+                      return (
+                        <div key={o.rarity} className="flex items-center gap-2">
+                          <span className="text-[11px] font-bold w-24 shrink-0" style={{ color }}>
+                            {t(`rarity.${o.rarity}`, locale)}{isTop ? " 👑" : ""}
+                          </span>
+                          <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${o.chance}%`, background: color }} />
+                          </div>
+                          <span className="text-[11px] font-black w-14 text-right text-white">{o.chance}%</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] text-gray-500 mt-3">
+                    Os itens sorteados são equipamentos <b className="text-gray-300">do seu nível</b> (até +10 acima) — nunca poções.
+                    A chance é ponderada: quanto mais perto do topo, mais raro.
+                  </p>
+                </div>
+
+                <button onClick={() => setInfoChestId(null)} className="game-btn-gold game-btn w-full mt-5 py-3">
+                  {t("general.close", locale)}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Modal de INFORMAÇÕES do ovo: chances + pity */}
+      {infoEggId && (() => {
+        const egg = PET_EGGS.find((e) => e.id === infoEggId);
+        if (!egg) return null;
+        const odds = eggOdds(egg.eggKey.replace("egg_", "") as "basic" | "rare" | "epic");
+        const pity = pityStatus(character as any, egg.eggKey);
+        const topRarity = odds[odds.length - 1]?.rarity ?? "rare";
+        return (
+          <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" onClick={() => setInfoEggId(null)}>
+            <div className="game-card relative w-full max-w-lg p-7 text-center overflow-hidden animate-scaleIn border-amber-400/40" onClick={(e) => e.stopPropagation()}>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.12),transparent_70%)]" />
+              <div className="relative">
+                <div className="text-7xl">{egg.icon}</div>
+                <h3 className="text-2xl font-black mt-2">{t(egg.name, locale)}</h3>
+                <p className="text-sm text-gray-400 mt-1">{t(egg.desc, locale)}</p>
+
+                {/* Pity */}
+                <div className="mt-5 bg-black/40 rounded-xl border border-white/10 p-4 text-left">
+                  <div className="text-xs font-black uppercase tracking-widest text-[#ffd700] mb-2">🎁 Pity — Garantia</div>
+                  <p className="text-xs text-gray-300">
+                    A cada <b className="text-white">{pity.limit} aberturas</b> sem sair o pet topo
+                    (<b style={{ color: (RARITY_COLORS as Record<string, string>)[topRarity] || "#ffd700" }}>{t(`rarity.${topRarity}`, locale)}</b>),
+                    o próximo ovo é <b className="text-[#ff6b35]">GARANTIDO</b> como o melhor dele. Saindo o topo antes, o contador zera.
+                  </p>
+                  <div className="mt-3">
+                    <div className="flex justify-between text-[10px] text-gray-500 mb-1">
+                      <span>Seu progresso</span>
+                      <span className={pity.guaranteed ? "text-[#ff6b35] font-black" : ""}>{pity.guaranteed ? "⭐ GARANTIDO AGORA!" : `${pity.current}/${pity.limit}`}</span>
+                    </div>
+                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                      <div className={`h-full transition-all ${pity.guaranteed ? "bg-[#ff6b35] animate-pulse-soft" : "bg-[#ffd700]"}`} style={{ width: `${pity.pct}%` }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Chances por raridade */}
+                <div className="mt-4 bg-black/40 rounded-xl border border-white/10 p-4 text-left">
+                  <div className="text-xs font-black uppercase tracking-widest text-amber-300 mb-2">📊 Chance de cada raridade</div>
+                  <div className="space-y-1.5">
+                    {odds.map((o) => {
+                      const color = (RARITY_COLORS as Record<string, string>)[o.rarity] || "#9ca3af";
+                      const isTop = o.rarity === topRarity;
+                      return (
+                        <div key={o.rarity} className="flex items-center gap-2">
+                          <span className="text-[11px] font-bold w-24 shrink-0" style={{ color }}>
+                            {t(`rarity.${o.rarity}`, locale)}{isTop ? " 👑" : ""}
+                          </span>
+                          <div className="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                            <div className="h-full rounded-full" style={{ width: `${o.chance}%`, background: color }} />
+                          </div>
+                          <span className="text-[11px] font-black w-14 text-right text-white">{o.chance}%</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-[10px] text-gray-500 mt-3">
+                    O pet sorteado vai direto para sua coleção — repetido vira <b className="text-gray-300">+250 XP</b> para o pet ativo.
+                  </p>
+                </div>
+
+                <button onClick={() => setInfoEggId(null)} className="game-btn-gold game-btn w-full mt-5 py-3">
+                  {t("general.close", locale)}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Modal de abertura do OVO: ovo tremendo + brilho → pet revelado */}
+      {eggReveal && (() => {
+        const pet = eggReveal.pet as { icon: string; nameKey: string; rarity: string; added: boolean };
+        const rarColor = (RARITY_COLORS as Record<string, string>)[pet.rarity] || "#9ca3af";
+        const rarLabel = t(`rarity.${pet.rarity}`, locale);
+        const pityTriggered = !!eggReveal.pet?.pityTriggered;
+        return (
+          <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" onClick={() => setEggReveal(null)}>
+            <div className="game-card relative w-full max-w-md p-8 text-center overflow-hidden animate-scaleIn border-amber-400/40" onClick={(e) => e.stopPropagation()}>
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,215,0,0.12),transparent_70%)]" />
+
+              {phase === "opening" ? (
+                <div className="relative flex flex-col items-center gap-7 py-8">
+                  <div className="animate-heartbeat text-8xl">{eggReveal.egg.icon}</div>
+                  <p className="text-amber-300 font-black text-lg animate-pulse-soft">🥚 {t("shop.opening", locale)}... chocando...</p>
+                  <p className="text-gray-400 text-sm -mt-4">{t(eggReveal.egg.name, locale)}</p>
+                </div>
+              ) : (
+                <div className="relative">
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    {["✨", "⭐", "✨"].map((s, i) => (
+                      <span key={i} className="text-3xl animate-bounceIn" style={{ animationDelay: `${i * 150}ms` }}>{s}</span>
+                    ))}
+                  </div>
+                  <div className="text-8xl animate-bounceIn" style={{ filter: `drop-shadow(0 0 25px ${rarColor}88)` }}>{pet.icon}</div>
+                  <h3 className="text-2xl font-black mt-3 animate-fadeInDown">{t(pet.nameKey, locale)}</h3>
+                  <p className="text-xs font-black uppercase tracking-widest mt-1" style={{ color: rarColor }}>
+                    {rarLabel}{pityTriggered ? " · ⭐ PITY GARANTIDO!" : ""}
+                  </p>
+                  <p className="text-sm text-gray-400 mt-2">
+                    {pet.added
+                      ? `🎉 ${t("pet.hatched", locale)}! ${t("shop.eggAdded", locale)}`
+                      : `🔄 ${t("pet.duplicate", locale)} (+250 ${t("pet.xp", locale)})`}
+                  </p>
+                  <button onClick={() => setEggReveal(null)} className="game-btn-gold game-btn w-full mt-6 py-3">
+                    {t("general.close", locale)}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Modal de abertura de baú: baú fechado → tremida + brilho → itens revelados */}
       {chestReveal && (
@@ -417,8 +704,17 @@ export default function ShopPanel() {
   );
 }
 
-const ShopItem = ({ name, cost, icon, image, desc, type, onClick, disabled }: any) => (
+const ShopItem = ({ name, cost, icon, image, desc, type, onClick, disabled, pity, onInfo }: any) => (
   <div className="game-card p-6 flex flex-col items-center text-center gap-4 hover-lift">
+    {onInfo && (
+      <button
+        onClick={(e) => { e.stopPropagation(); onInfo(); }}
+        title="Ver conteúdo e chances do baú"
+        className="self-end -mb-4 text-xs text-gray-400 hover:text-white border border-white/15 rounded-full w-6 h-6 flex items-center justify-center hover:bg-white/10"
+      >
+        ℹ️
+      </button>
+    )}
     {image ? (
       <img src={image} alt={name} className="w-24 h-24 object-contain drop-shadow-[0_0_15px_rgba(255,215,0,0.3)]" />
     ) : (
@@ -426,6 +722,21 @@ const ShopItem = ({ name, cost, icon, image, desc, type, onClick, disabled }: an
     )}
     <h3 className="text-xl font-bold">{name}</h3>
     <p className="text-sm text-gray-400 flex-1">{desc}</p>
+    {/* Barra de Pity: garantia do item topo após N aberturas sem sucesso */}
+    {pity && pity.limit > 0 && (
+      <div className="w-full">
+        <div className="flex justify-between text-[9px] text-gray-500 mb-1">
+          <span>🎁 {pity.guaranteed ? "⭐ GARANTIDO!" : `${pity.current}/${pity.limit}`}</span>
+          <span>{pity.pct}%</span>
+        </div>
+        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+          <div
+            className={`h-full transition-all ${pity.guaranteed ? "bg-[#ff6b35] animate-pulse-soft" : "bg-[#ffd700]"}`}
+            style={{ width: `${pity.pct}%` }}
+          />
+        </div>
+      </div>
+    )}
     <button onClick={onClick} disabled={disabled} className={`game-btn ${type === 'diamond' ? 'game-btn-purple' : 'game-btn-gold'} w-full ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}>
       {type === 'diamond' ? '💎' : '💰'} {cost}
     </button>

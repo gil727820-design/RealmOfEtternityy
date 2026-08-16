@@ -13,6 +13,18 @@ export const ENERGY_REGEN_MINUTES = 3;
 /** Milissegundos para gerar 1 ponto de energia. */
 export const ENERGY_REGEN_MS = ENERGY_REGEN_MINUTES * 60 * 1000;
 
+/**
+ * Energia máxima efetiva do personagem (base + bônus do Portal da guilda).
+ * O snapshot guildBuffs.energyBonus é gravado no personagem ao entrar/melhorar
+ * a guilda (ver syncGuildBuffsToCharacter).
+ */
+export function effectiveMaxEnergy(char: { maxEnergy?: number; guildBuffs?: unknown } | null | undefined): number {
+  const base = Math.max(0, Number(char?.maxEnergy) || 100);
+  const g = char?.guildBuffs;
+  const bonus = g && typeof g === "object" ? Number((g as Record<string, number>).energyBonus) || 0 : 0;
+  return base + bonus;
+}
+
 export interface EnergyRegenResult {
   /** Energia atual após a recarga computada. */
   energy: number;

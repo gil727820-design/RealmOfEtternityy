@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { VIP_TIERS, currentVipTier } from "@/game/vip";
+import { effectiveMaxEnergy } from "@/game/energy";
 import { requireCharacterAuth } from "@/game/auth";
+import { pityCounters, pityDecision, pityStatus } from "@/game/pity";
+import { hatchPetEgg, grantPetPatch, EGG_MAX_RARITY } from "@/game/pets";
 
 const SHOP_ITEMS: Record<string, { price: number; currency: "gold"|"diamonds"; type: string; value: number; value2?: number; value3?: string }> = {
   // Baús
@@ -13,6 +16,10 @@ const SHOP_ITEMS: Record<string, { price: number; currency: "gold"|"diamonds"; t
   mythic: { price: 900, currency: "diamonds", type: "chest", value: 4, value2: 6, value3: "mythic" },
   divine: { price: 1800, currency: "diamonds", type: "chest", value: 5, value2: 7, value3: "divine" },
   secret: { price: 4000, currency: "diamonds", type: "chest", value: 5, value2: 8, value3: "supreme" },
+  // Ovos de Pet (value: 0=básico, 1=raro, 2=épico)
+  pet_egg: { price: 25000, currency: "gold", type: "pet_egg", value: 0 },
+  pet_egg_rare: { price: 200, currency: "diamonds", type: "pet_egg", value: 1 },
+  pet_egg_epic: { price: 600, currency: "diamonds", type: "pet_egg", value: 2 },
   // Poções
   vida: { price: 250, currency: "gold", type: "potion", value: 100 },
   mana: { price: 250, currency: "gold", type: "potion", value: 100 },
@@ -92,8 +99,34 @@ export async function POST(req: NextRequest) {
       const totalW = weighted.reduce((s, w) => s + w.weight, 0);
 
       const rolled: Array<Record<string, unknown>> = [];
+      let pityState: Record<string, number> = pityCounters(char);
+      let pityTriggered = false;
       for (let i = 0; i < count; i++) {
         if (weighted.length > 0) {
+          // Topo do baú = raridade máxima permitida por ele.
+          const topRarity = shopItem.value3 ?? "rare";
+          const topIdx = Math.max(0, RARITY_ORDER.indexOf(topRarity));
+
+          // Pity: checa se ESTA abertura estoura o contador (current+1 >= lim).
+          // Se estourar → força o topo e zera; senão incrementa (conta abertura).
+          const check = pityDecision({ pityCounters: pityState }, itemId, false);
+          pityState = check.pityCounters;
+
+          if (check.guaranteed) {
+            pityTriggered = true;
+            // Seleciona apenas itens da raridade top do baú (pity garantido).
+            const tops = eligible.filter((it: any) => {
+              const idx = Math.max(0, RARITY_ORDER.indexOf(it.rarity || "common"));
+              return idx === topIdx;
+            });
+            if (tops.length > 0) {
+              const pick = tops[Math.floor(Math.random() * tops.length)];
+              await jsonDb.grantItem(characterId, Number(pick.id), 1);
+              rolled.push(pick);
+              continue; // pity já zerado pela chamada acima (guaranteed zera)
+            }
+          }
+
           let r = Math.random() * totalW;
           let pick = weighted[0].pick;
           for (const w of weighted) {
@@ -102,12 +135,72 @@ export async function POST(req: NextRequest) {
           }
           await jsonDb.grantItem(characterId, Number(pick.id), 1);
           rolled.push(pick);
+
+          // Se saiu o topo NATURALMENTE, zera o contador (a chamada de checagem
+          // já tinha incrementado; zera agora). Item não-topo mantém o incremento.
+          const gotTop = RARITY_ORDER.indexOf(String((pick as any).rarity || "common")) === topIdx;
+          if (gotTop) {
+            const after = pityDecision({ pityCounters: pityState }, itemId, true);
+            pityState = after.pityCounters;
+          }
         }
       }
+      await jsonDb.updateCharacter(characterId, { pityCounters: pityState });
       const updated = await jsonDb.findCharacterById(characterId);
-      return NextResponse.json({ success: true, type: "chest", items: rolled, character: updated });
+      return NextResponse.json({
+        success: true,
+        type: "chest",
+        items: rolled,
+        character: updated,
+        pity: pityStatus(updated ?? char, itemId),
+        pityTriggered,
+      });
     }
     
+    if (shopItem.type === "pet_egg") {
+      // Choca o ovo: pet aleatório ponderado pela raridade (teto do ovo).
+      const quality = (["basic", "rare", "epic"] as const)[shopItem.value] ?? "basic";
+      const eggKey = `egg_${quality}`;
+
+      // PITY do ovo 🎁: após N aberturas sem a raridade TOP do ovo, o próximo
+      // ovo GARANTE o melhor pet (básico → raro, raro → lendário, épico → divino).
+      let pityState: Record<string, number> = pityCounters(char);
+      const check = pityDecision({ pityCounters: pityState }, eggKey, false);
+      pityState = check.pityCounters;
+
+      const def = check.guaranteed ? hatchPetEgg(quality, true) : hatchPetEgg(quality);
+      const res = grantPetPatch(char, def.id);
+
+      // Saiu a raridade top NATURALMENTE → zera o contador (a checagem acima já
+      // tinha incrementado; zera agora). Pet abaixo do topo mantém o incremento.
+      if (def.rarity === EGG_MAX_RARITY[quality]) {
+        const after = pityDecision({ pityCounters: pityState }, eggKey, true);
+        pityState = after.pityCounters;
+      }
+
+      await jsonDb.updateCharacter(characterId, {
+        ...res.patch,
+        pityCounters: pityState,
+        lastActivity: new Date().toISOString(),
+      });
+      const updated = await jsonDb.findCharacterById(characterId);
+      return NextResponse.json({
+        success: true,
+        type: "pet_egg",
+        pet: {
+          id: def.id,
+          nameKey: def.nameKey,
+          icon: def.icon,
+          rarity: def.rarity,
+          added: res.added,
+          pityTriggered: check.guaranteed,
+        },
+        pity: pityStatus(updated ?? char, eggKey),
+        pityTriggered: check.guaranteed,
+        character: updated,
+      });
+    }
+
     if (shopItem.type === "potion") {
       // Poções principais passaram a ser itens de inventário (consumíveis empilháveis).
       // Se o template ainda não existir no banco (seed não rodado), mantém o efeito instantâneo antigo.
@@ -130,7 +223,7 @@ export async function POST(req: NextRequest) {
       } else if (itemId === "mana") {
         await jsonDb.updateCharacter(characterId, { mana: char.maxMana });
       } else if (itemId === "energia") {
-        const newEnergy = Math.min(char.maxEnergy || 100, (char.energy || 0) + (shopItem.value || 0));
+        const newEnergy = Math.min(effectiveMaxEnergy(char), (char.energy || 0) + (shopItem.value || 0));
         await jsonDb.updateCharacter(characterId, { energy: newEnergy });
       } else if (itemId === "forca") {
         await jsonDb.updateCharacter(characterId, { strength: (char.strength || 0) + (shopItem.value || 0) });

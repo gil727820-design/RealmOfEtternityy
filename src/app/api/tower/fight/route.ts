@@ -20,9 +20,29 @@ import { rollBossEnchant, isBossEnchant, equipmentBonus } from "@/game/forge";
 import { requireCharacterAuth } from "@/game/auth";
 import { trackProgress } from "@/game/dailyMissions";
 import { checkRateLimit } from "@/game/rateLimit";
+import {
+  sanitizeAutoBattleSettings,
+  shouldUsePotion,
+  decideAutoAction,
+} from "@/game/autoBattle";
+import { petCombatBuff, getActivePet, grantPetXp } from "@/game/pets";
+import { totalSetBonus } from "@/game/sets";
+import { grantGuildActivityXp } from "@/game/guildActivity";
+import { bestiaryDamageBonus, registerDefeat } from "@/game/bestiary";
+import { applyRelicCombat } from "@/game/relics";
+import { applySpecializationCombat } from "@/game/specializations";
+import { applyAdvancedClassCombat, advSkillDmgMult } from "@/game/advancedClasses";
+import { applyAscensionCombat } from "@/game/ascension";
+import { seasonPatch } from "@/game/season";
 
 const SKILL_COST = 15;
 const MAX_ROUNDS = 40;
+
+// Anti-burla "abandonar batalha": se o jogador inicia uma luta na torre e
+// troca de página (ou some por mais de 2 min), a batalha EXPIRA no servidor —
+// voltar não continua a luta antiga, ela recomeça do andar atual do zero.
+// Antes dava pra começar, sair, voltar e a batalha seguia sozinha no auto.
+const BATTLE_TTL_MS = 2 * 60 * 1000;
 
 // PRNG determinístico por semente (mesmo monstro mantém stats entre rodadas)
 function mulberry32(seed: number) {
@@ -61,16 +81,23 @@ function floorMonster(char: any, floor: number, kind: TowerMonsterKind | TowerBo
   // os monstros ficam mais fortes gradualmente a cada andar. Assim um jogador
   // de nível baixo não consegue quebrar o ranking global só por ser fraco —
   // ele bate no teto dele e quem sobe é quem realmente é forte.
+  //
+  // BALANCEAMENTO (anti "andar 5000 de graça"): o crescimento agora é
+  // SUPERLINEAR — HP ≈ f^1.9, ataque ≈ f^1.55, defesa ≈ f^1.45. Andares
+  // baixos continuam acessíveis, mas a cada centena o bicho fica MUITO mais
+  // forte: quem subia até o andar 5000 empurrando o mob com um golpe agora
+  // bate num muro real (a dificuldade não cresce mais em linha reta — ela
+  // dispara).
   const bossMult = boss ? 1.4 : 1;
   return {
     kind,
     image: towerMonsterImage(kind),
     nameKey: TOWER_MONSTER_NAMES[kind],
-    maxHp: Math.max(50, Math.round((40 + f * 16) * bossMult)),
-    attack: Math.max(4, Math.round((6 + f * 2.2) * bossMult)),
-    defense: Math.max(1, Math.round((1 + f * 1.1) * bossMult)),
-    speed: Math.max(1, Math.round((1 + f * 0.04) * 100) / 100),
-    critical: Math.min(30, Math.round(1 + f * 0.18)),
+    maxHp: Math.max(50, Math.round((25 + f * 8 + Math.pow(f, 1.9) * 0.5) * bossMult)),
+    attack: Math.max(4, Math.round((5 + f * 1.2 + Math.pow(f, 1.55) * 0.3) * bossMult)),
+    defense: Math.max(1, Math.round((1 + f * 0.9 + Math.pow(f, 1.45) * 0.2) * bossMult)),
+    speed: Math.max(1, Math.round((1 + f * 0.05) * 100) / 100),
+    critical: Math.min(30, Math.round(1 + f * 0.2)),
     dodge: Math.min(15, Math.round((0.5 + f * 0.1) * 10) / 10),
     goldReward: boss ? 120 + f * 30 : 30 + f * 20,
     // XP escala com a CURVA DE NÍVEL (mesmo conceito das missões): a recompensa
@@ -83,33 +110,40 @@ function floorMonster(char: any, floor: number, kind: TowerMonsterKind | TowerBo
 }
 
 /**
- * Anti-one-shot de CHEFE da torre: se o dano máximo do jogador num único
- * golpe já mataria o chefe (hitkill), o chefe é escalado na hora para virar
- * uma batalha de verdade — HP alto o bastante pra sobreviver vários golpes e
- * ataque forte o bastante pra derrubar o jogador (chance real dos dois lados).
- * Também loga no console do servidor para o admin acompanhar quando isso rola.
+ * Anti-one-shot da torre: se o dano máximo do jogador num único golpe já
+ * mataria o monstro (hitkill), ele é escalado na hora para virar uma batalha
+ * de verdade — HP alto o bastante pra sobreviver vários golpes e ataque forte
+ * o bastante pra derrubar o jogador (chance real dos dois lados).
+ *
+ * Antes só chefes eram escalados — um jogador forte passava os andares comuns
+ * no 1-hit e subia milhares de andares. Agora vale para TODO monstro: mob
+ * comum vira uma luta de ~3 golpes e chefe uma batalha épica de ~8. Só loga
+ * hitkill de chefe (mob comum escalado a cada andar encheria o painel).
  */
 function antiOneShot(char: any, mon: any, ca: any, atkFactor: number, floor: number) {
-  if (!mon.boss) return mon;
   const playerMaxHit = Math.round(ca.attack * Math.max(1, atkFactor) * 1.7);
   if (playerMaxHit < mon.maxHp) return mon;
-  const hp = Math.max(mon.maxHp, Math.round(playerMaxHit * 8));
-  const atk = Math.max(mon.attack, Math.round(ca.maxHp * 0.22));
-  console.log(
-    `[hitkill] ${char.name || "?"} causaria ~${playerMaxHit} de dano e o chefe tem ${mon.maxHp} HP — chefe escalado para batalha justa.`
-  );
-  // Registra no painel admin (aba Logs) para o admin acompanhar os hitkills.
-  jsonDb.addAdminLog("hitkill", {
-    source: "tower",
-    characterId: char.id,
-    characterName: char.name || "?",
-    floor: Math.max(1, Number(floor) || 1),
-    playerMaxHit,
-    bossHp: mon.maxHp,
-    scaledHp: hp,
-    scaledAttack: atk,
-    message: `${char.name || "?"} causaria ~${playerMaxHit} de dano e o chefe tem ${mon.maxHp} HP — chefe escalado para batalha justa.`,
-  });
+  const hpMult = mon.boss ? 8 : 3;
+  const atkMult = mon.boss ? 0.22 : 0.16;
+  const hp = Math.max(mon.maxHp, Math.round(playerMaxHit * hpMult));
+  const atk = Math.max(mon.attack, Math.round(ca.maxHp * atkMult));
+  if (mon.boss) {
+    console.log(
+      `[hitkill] ${char.name || "?"} causaria ~${playerMaxHit} de dano e o chefe tem ${mon.maxHp} HP — chefe escalado para batalha justa.`
+    );
+    // Registra no painel admin (aba Logs) para o admin acompanhar os hitkills.
+    jsonDb.addAdminLog("hitkill", {
+      source: "tower",
+      characterId: char.id,
+      characterName: char.name || "?",
+      floor: Math.max(1, Number(floor) || 1),
+      playerMaxHit,
+      bossHp: mon.maxHp,
+      scaledHp: hp,
+      scaledAttack: atk,
+      message: `${char.name || "?"} causaria ~${playerMaxHit} de dano e o chefe tem ${mon.maxHp} HP — chefe escalado para batalha justa.`,
+    });
+  }
   return { ...mon, maxHp: hp, attack: atk, scaled: true };
 }
 
@@ -134,6 +168,9 @@ export async function POST(req: NextRequest) {
     const characterId = body?.characterId;
     const action = body?.action as string;
     const state = body?.state as any;
+    // Preferências do Auto Battle (modo/auto-skill/auto-poção) — o servidor
+    // decide a ação usando estas preferências; o cliente NÃO manda a ação.
+    const autoSettings = sanitizeAutoBattleSettings(body?.auto);
 
     if (!characterId) {
       return NextResponse.json({ error: "ID do personagem é obrigatório" }, { status: 400 });
@@ -154,6 +191,29 @@ export async function POST(req: NextRequest) {
     const maxLevel = resolveMaxLevel(Number(settings?.maxLevel) || 0);
 
     const ca = getCharCombat(char);
+    // Bônus do BESTIÁRIO: +5% de dano por categoria completa.
+    const bestiaryBonus = bestiaryDamageBonus(char);
+    if (bestiaryBonus) ca.attack = Math.round(ca.attack * (1 + bestiaryBonus / 100));
+    // Buffs da RELÍQUIA equipada (ataque/defesa/HP/velocidade/crítico %).
+    applyRelicCombat(char, ca);
+    // Buffs da ESPECIALIZAÇÃO de classe (passivos permanentes).
+    applySpecializationCombat(char, ca);
+    // Buffs da CLASSE AVANÇADA (evolução nível 50+, passivos permanentes).
+    applyAdvancedClassCombat(char, ca);
+    // Buffs da ASCENSÃO (patamares divinos a cada 100 níveis: dano/HP/velocidade).
+    applyAscensionCombat(char, ca);
+    // Buffs da GUILDA (snapshot gravado ao entrar/melhorar): HP máx % e dano %.
+    const guildBuff = (char.guildBuffs && typeof char.guildBuffs === "object" ? char.guildBuffs : {}) as Record<string, number>;
+    if (guildBuff.maxHpPct) ca.maxHp = Math.round(ca.maxHp * (1 + (Number(guildBuff.maxHpPct) || 0) / 100));
+    if (guildBuff.damagePct) ca.attack = Math.round(ca.attack * (1 + (Number(guildBuff.damagePct) || 0) / 100));
+    // Buff do PET equipado: dano %, defesa %, HP máx % e crítico %.
+    const petBuff = petCombatBuff(char);
+    if (petBuff) {
+      if (petBuff.damagePct) ca.attack = Math.round(ca.attack * (1 + petBuff.damagePct / 100));
+      if (petBuff.defensePct) ca.defense = Math.round(ca.defense * (1 + petBuff.defensePct / 100));
+      if (petBuff.maxHpPct) ca.maxHp = Math.round(ca.maxHp * (1 + petBuff.maxHpPct / 100));
+      if (petBuff.critPct) ca.critical = Math.min(90, ca.critical + petBuff.critPct);
+    }
     // Buff ativado pela skin equipada (só ativa se for da própria classe)
     const skinBuff = getSkinClassBuff(char.classType, char.activeSkinId);
     const skinMult = skinBuff ? skinRarityMult(char.activeSkinId) : 1;
@@ -182,6 +242,7 @@ export async function POST(req: NextRequest) {
         floor,
         battle: {
           seed,
+          startedAt: Date.now(),
           floor,
           kind,
           monNameKey: mon.nameKey,
@@ -213,6 +274,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Estado de batalha inválido" }, { status: 400 });
     }
 
+    // Batalha abandonada (saiu da página / ficou parado demais) → expira.
+    const startedAt = Number(state.startedAt) || 0;
+    if (startedAt > 0 && Date.now() - startedAt > BATTLE_TTL_MS) {
+      return NextResponse.json(
+        { error: "Batalha expirada — você ficou fora tempo demais. Recomece!", code: "battle_expired" },
+        { status: 410 }
+      );
+    }
+
     const seed = Number(state.seed) || 1;
     const kind = isTowerMonsterKind(state.kind) ? (state.kind as TowerMonsterKind | TowerBossKind) : "slime";
     const mon = antiOneShot(char, floorMonster(char, state.floor || floor, kind, seed), ca, atkFactor, state.floor || floor);
@@ -234,14 +304,58 @@ export async function POST(req: NextRequest) {
     let monAttackMult = 1; // weaken/slow: -% de dano do inimigo
     let monCritReduction = 0; // blind: -pontos de crítico do inimigo
 
-    // ---- Ação do personagem ----
-    if (action === "defend") {
+    // ---- AUTO BATTLE: o servidor decide a ação (anti-cheat) ----
+    // Usa poção de HP do inventário se a vida estiver abaixo do limite e
+    // escolhe a ação conforme o modo (agressivo/equilibrado/defensivo).
+    let resolvedAction = action;
+    if (action === "auto") {
+      if (shouldUsePotion(charHp, ca.maxHp, autoSettings)) {
+        const inv = await jsonDb.getInventoryForCharacter(char.id);
+        const potion = inv.find(
+          (e: any) =>
+            e.template?.type === "consumable" &&
+            Number(e.template?.effect?.hp || 0) > 0 &&
+            !e.item?.equipped &&
+            !e.item?.listed &&
+            !e.item?.reservedFor &&
+            (Number(e.quantity) || 1) > 0
+        );
+        if (potion) {
+          const heal = Math.min(
+            ca.maxHp - charHp,
+            Math.round(Number(potion.template.effect.hp) || 0)
+          );
+          if (heal > 0) {
+            await jsonDb.decrementInventoryItem(String(potion.item.id), 1);
+            charHp = Math.min(ca.maxHp, charHp + heal);
+            log.push(`🧪 Você bebeu uma poção de vida! +${heal} HP`);
+            events.push({ type: "heal", target: "player", amount: heal });
+          }
+        }
+      }
+      resolvedAction = decideAutoAction(
+        {
+          hp: charHp,
+          maxHp: ca.maxHp,
+          mp: charMp,
+          maxMp: ca.maxMana,
+          enemyHp: monHp,
+          enemyMaxHp: mon.maxHp,
+          skillCost: skillFx.manaCost ?? SKILL_COST,
+          round,
+        },
+        autoSettings
+      );
+    }
+
+    // ---- Ação do personagem (definida pelo jogador OU pelo Auto Battle) ----
+    if (resolvedAction === "defend") {
       defended = true;
       const regen = Math.min(8, ca.maxMana - charMp);
       charMp += regen;
       log.push("🛡️ Você assume postura de defesa.");
       events.push({ type: "defend", target: "player" });
-    } else if (action === "skill") {
+    } else if (resolvedAction === "skill") {
       const cost = skillFx.manaCost ?? SKILL_COST;
       if (charMp < cost) {
         return NextResponse.json({ error: "Mana insuficiente", code: "no_mana" }, { status: 400 });
@@ -249,8 +363,10 @@ export async function POST(req: NextRequest) {
       charMp -= cost;
       skillUsed = true;
       const pierceDef = mon.defense * (1 - (skillFx.pierce || 0));
+      // Classe avançada: turbina o golpe poderoso (multiplica o dmgMult da classe).
+      const advSkillMult = advSkillDmgMult(char);
       const r = strike(
-        { attack: Math.round(ca.attack * (skillFx.dmgMult || 1.8) * atkFactor), critical: ca.critical + (skillFx.critBonus ?? 15) + critAdd, precision: ca.precision },
+        { attack: Math.round(ca.attack * (skillFx.dmgMult || 1.8) * atkFactor * advSkillMult), critical: ca.critical + (skillFx.critBonus ?? 15) + critAdd, precision: ca.precision },
         { defense: pierceDef, dodge: mon.dodge }
       );
       if (r.dodged) {
@@ -380,7 +496,16 @@ export async function POST(req: NextRequest) {
         log.push(`🗡️ O inimigo atacou você! -${taken}${r.crit ? " 💥CRÍTICO!" : ""}`);
         events.push({ type: r.crit ? "crit" : "hit", target: "player", amount: taken });
       }
-      if (charHp <= 0) lost = true;
+      // PET FÊNIX: revive 1x por batalha — ao invés de morrer, volta com 1 HP.
+      // O servidor controla o uso (state.petRevived) e nunca deixa reviver 2x.
+      if (charHp <= 0 && petBuff?.revive && !state.petRevived) {
+        charHp = 1;
+        state.petRevived = true;
+        log.push("🔥 Sua Fênix reviveu você! +1 HP");
+        events.push({ type: "revive", target: "player", amount: 1 });
+      } else if (charHp <= 0) {
+        lost = true;
+      }
     }
 
     // Cura da skin (ex.: paladino) a cada rodada
@@ -435,6 +560,11 @@ export async function POST(req: NextRequest) {
         }
         const newGold = (char.gold || 0) + Math.floor(mon.goldReward * goldMultiplier(char));
         const newCoins = (char.towerCoins || 0) + mon.coinsReward;
+        // O PET equipado ganha XP junto com o herói (escala com o andar).
+        const petXpGain = Math.max(5, Math.floor(mon.xpReward * 0.08));
+        const pet = grantPetXp(char, petXpGain);
+        // Guilda evolutiva: vitória na torre dá XP para a guilda.
+        const guildXp = await grantGuildActivityXp(char.id, "tower");
         // Avança 1 andar por vitória, respeitando o limite configurado no admin.
         const newTowerFloor = maxTowerFloor > 0 ? Math.min(maxTowerFloor, battleFloor + 1) : battleFloor + 1;
         const power = powerCalc({
@@ -473,6 +603,12 @@ export async function POST(req: NextRequest) {
                 total.speed += b.speed;
                 total.critical += b.critical;
               }
+              // Bônus de SETS (peças equipadas da mesma raridade) também entram.
+              const setBonus = totalSetBonus(freshInv.filter((e: any) => e.item?.equipped), newLevel);
+              total.attack += setBonus.attack;
+              total.defense += setBonus.defense;
+              total.maxHp += setBonus.maxHp;
+              total.critical += setBonus.critical;
               const base = (char.baseStats && typeof char.baseStats === "object" ? char.baseStats : {}) as Record<string, number>;
               const patchStats = {
                 attack: Math.max(0, (Number(base.attack) || 0) + total.attack),
@@ -500,8 +636,11 @@ export async function POST(req: NextRequest) {
           unspentStatPoints: newStatPoints,
           skillPoints: newSkillPoints,
           power,
+          pets: pet.pets,
           // Missões diárias/semanais: progresso de torre.
           ...trackProgress(char, "tower", 1),
+          // Temporada global: andar vencido dá pontos de temporada.
+          ...seasonPatch(char, "tower"),
           lastActivity: new Date().toISOString(),
         });
         rewards = {
@@ -511,6 +650,10 @@ export async function POST(req: NextRequest) {
           levelUp: newLevel > (char.level || 0),
           newLevel,
           newFloor: newTowerFloor,
+          guildXp,
+          petXp: petXpGain,
+          petLeveledUp: pet.leveledUp,
+          activePet: getActivePet(char) ? { id: getActivePet(char)!.def.id, nameKey: getActivePet(char)!.def.nameKey, level: getActivePet(char)!.level } : null,
           bossEnchant: bossEnchant ? { id: bossEnchant.id, icon: bossEnchant.icon, stat: bossEnchant.stat, amount: bossEnchant.amount } : null,
         };
       } else {
@@ -551,6 +694,7 @@ export async function POST(req: NextRequest) {
         monNameKey: mon.nameKey,
         boss: mon.boss,
         scaled: mon.scaled,
+        petRevived: !!state.petRevived,
         round,
       },
     });

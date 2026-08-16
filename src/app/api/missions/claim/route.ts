@@ -5,6 +5,10 @@ import { computeEnergyRegen } from "@/game/energy";
 import { xpMultiplier, energyMultiplier, goldMultiplier } from "@/game/boosts";
 import { requireCharacterAuth } from "@/game/auth";
 import { trackProgress } from "@/game/dailyMissions";
+import { rollMissionDrops } from "@/game/drops";
+import { grantGuildActivityXp } from "@/game/guildActivity";
+import { rollRandomEvent } from "@/game/randomEvents";
+import { seasonPatch } from "@/game/season";
 
 export async function POST(req: NextRequest) {
   try {
@@ -50,8 +54,13 @@ export async function POST(req: NextRequest) {
     const newGold = (char.gold || 0) + Math.floor((mission.goldReward || 0) * goldMultiplier(char));
     const power = powerCalc({ attack: char.attack, defense: char.defense, hp: char.maxHp, speed: char.speed, critical: char.critical, level: newLevel });
 
-    // Itens NÃO dropam mais em missões — apenas o painel admin concede itens.
-    const droppedItem = null;
+    // DROPS de missão: chance de equipamento (5%) e poção (12%) — dá emoção
+    // ao concluir missões sem virar farm de item (é uma chance pequena).
+    const allTemplates = await jsonDb.getAllItemTemplates();
+    const drops = rollMissionDrops(allTemplates, char.level || 1);
+    for (const d of drops) {
+      await jsonDb.grantItem(char.id, d.templateId, d.quantity);
+    }
 
     await jsonDb.updateCharacter(char.id, {
       xp: newXp,
@@ -66,12 +75,27 @@ export async function POST(req: NextRequest) {
       lastEnergyAt: regen.lastEnergyAt,
       // Missões diárias/semanais: progresso de missões concluídas.
       ...trackProgress(char, "missions", 1, now),
+      // Temporada global: missão concluída dá pontos de temporada.
+      ...seasonPatch(char, "mission", now),
       lastActivity: now.toISOString(),
     });
 
     await jsonDb.updateActiveMission(activeMissionId, { claimed: true, completed: true });
 
-    return NextResponse.json({ rewards: { xp: xpGain, gold: mission.goldReward, levelUp: newLevel > (char.level || 0), newLevel, droppedItem } });
+    // Guilda evolutiva: missão concluída dá XP para a guilda.
+    const guildXp = await grantGuildActivityXp(char.id, "mission");
+
+    // Evento aleatório: chance de aparecer um evento especial ao concluir.
+    // Se rolar, salva no personagem (expira em 5 min) e a UI oferece aceitar/ignorar.
+    let randomEvent: any = null;
+    const ev = rollRandomEvent();
+    if (ev) {
+      const evState = { id: ev.id, createdAt: Date.now() };
+      await jsonDb.updateCharacter(char.id, { pendingEvent: evState });
+      randomEvent = { ...ev, createdAt: evState.createdAt };
+    }
+
+    return NextResponse.json({ rewards: { xp: xpGain, gold: mission.goldReward, levelUp: newLevel > (char.level || 0), newLevel, drops }, guildXp, randomEvent });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : "Erro interno";
     return NextResponse.json({ error: msg }, { status: 500 });
