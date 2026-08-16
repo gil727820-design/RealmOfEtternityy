@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { t } from "@/i18n";
-import { RARITY_COLORS } from "@/game/constants";
+import { RARITY_COLORS, CLASS_ICONS, type ClassName } from "@/game/constants";
 import ItemIcon from "@/components/ui/ItemIcon";
 
 /** Traduz uma raridade para rótulo amigável. */
@@ -44,6 +44,7 @@ const SLOT_ICON: Record<string, string> = {
 export interface PreviewItem {
   template?: any;
   quantity?: number;
+  skin?: any;
 }
 
 /** Modal de pré-visualização: mostra todos os status do item. */
@@ -60,6 +61,52 @@ export function ItemPreviewModal({
   const tpl = item.template || {};
   const isConsumable = tpl.type === "consumable";
   const rarityHex = RARITY_COLORS[tpl.rarity] as string | undefined;
+
+  // Skin: visualização simples (imagem grande + nome + raridade + classe).
+  if (item.skin) {
+    const skin = item.skin;
+    const skinRarityHex = RARITY_COLORS[skin.rarity] as string | undefined;
+    return (
+      <div
+        className="fixed inset-0 z-[90] grid place-items-center bg-black/70 p-4 backdrop-blur-sm"
+        onClick={onClose}
+      >
+        <div
+          className="animate-fadeIn game-card flex w-full max-w-sm flex-col gap-3 p-4"
+          style={{ borderColor: skinRarityHex ? `${skinRarityHex}88` : "#ffffff33", boxShadow: skinRarityHex ? `0 0 40px ${skinRarityHex}44` : undefined }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-start gap-3">
+            <div
+              className="grid h-16 w-16 shrink-0 place-items-center rounded-xl border bg-bg-card"
+              style={{ borderColor: skinRarityHex ?? "#ffffff33" }}
+            >
+              <img src={skin.image} alt="" className="h-14 w-14 object-contain" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate text-base font-black text-gray-100">{t(skin.nameKey, locale)}</h3>
+              <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px]">
+                <span className="rounded-full px-2 py-0.5 font-bold text-white" style={{ background: skinRarityHex ?? "#3b4252" }}>
+                  {rarityLabel(skin.rarity, locale)}
+                </span>
+                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-gray-300">🎨 Skin</span>
+              </div>
+            </div>
+            <button onClick={onClose} className="shrink-0 rounded-lg bg-white/5 px-2 py-1 text-xs text-gray-400 hover:bg-white/15 hover:text-white">
+              ✕
+            </button>
+          </div>
+          <img src={skin.image} alt="" className="mx-auto h-48 w-48 rounded-2xl border border-white/10 object-contain" />
+          <p className="text-center text-[11px] text-gray-400">
+            {CLASS_ICONS[skin.className as ClassName]} {t(`class.${skin.className}`, locale)}
+          </p>
+          <button onClick={onClose} className="mt-1 w-full rounded-xl bg-gradient-to-r from-[#7c5cfc] to-[#e94560] py-2 text-xs font-black text-white hover:brightness-110">
+            Fechar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

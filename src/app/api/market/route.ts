@@ -11,6 +11,7 @@ import {
   sellUnlock,
 } from "@/game/market";
 import { requireCharacterAuth } from "@/game/auth";
+import { skinById } from "@/game/skins";
 
 /** Lista os anúncios ativos do mercado (mais recentes primeiro) + preços médios. */
 export async function GET() {
@@ -38,6 +39,7 @@ export async function GET() {
 
 /**
  * Cria um anúncio: { characterId, inventoryItemId, quantity, price, currency }.
+ *  - kind: "item" (padrão) | "skin" (skinId no lugar de inventoryItemId);
  *  - currency: "gold" | "diamonds"
  *  - itens equipados não podem ser anunciados;
  *  - consumíveis permitem anunciar parte do stack (quantity);
@@ -48,11 +50,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const characterId = body?.characterId as string;
     const inventoryItemId = body?.inventoryItemId as string;
+    const kind = body?.kind === "skin" ? "skin" : "item";
+    const skinId = String(body?.skinId || "");
     const quantity = Math.max(1, Math.floor(Number(body?.quantity) || 1));
     const price = Math.max(1, Math.floor(Number(body?.price) || 0));
     const currency = body?.currency === "diamonds" ? "diamonds" : "gold";
 
-    if (!characterId || !inventoryItemId) {
+    if (!characterId || (kind === "skin" ? !skinId : !inventoryItemId)) {
       return NextResponse.json({ error: "Personagem e item são obrigatórios" }, { status: 400 });
     }
     // Só o dono pode anunciar itens do próprio personagem.
@@ -87,6 +91,66 @@ export async function POST(req: NextRequest) {
     const global = (await jsonDb.listActiveListings()).length;
     if (global >= MAX_LISTINGS_GLOBAL) {
       return NextResponse.json({ error: "Mercado cheio! Tente mais tarde." }, { status: 400 });
+    }
+
+    // ----- Skins: anunciar uma skin que o personagem possui -----
+    if (kind === "skin") {
+      const template = skinById(skinId);
+      if (!template) return NextResponse.json({ error: "Skin não encontrada" }, { status: 404 });
+      const ownedSkins: string[] = Array.isArray(char.skins) ? (char.skins as string[]) : [];
+      if (!ownedSkins.includes(skinId)) {
+        return NextResponse.json({ error: "Você não possui esta skin" }, { status: 400 });
+      }
+
+      const fee = listingFee(price, currency);
+      if (currency === "diamonds") {
+        if ((Number(char.diamonds) || 0) < fee) {
+          return NextResponse.json({ error: `Taxa de anúncio: ${fee} 💎` }, { status: 400 });
+        }
+        await jsonDb.updateCharacter(characterId, { diamonds: (Number(char.diamonds) || 0) - fee });
+      } else {
+        if ((Number(char.gold) || 0) < fee) {
+          return NextResponse.json({ error: `Taxa de anúncio: ${fee} 🪙` }, { status: 400 });
+        }
+        await jsonDb.updateCharacter(characterId, { gold: (Number(char.gold) || 0) - fee });
+      }
+
+      // Remove a skin do vendedor enquanto estiver listada
+      const nextSkins = ownedSkins.filter((s: string) => s !== skinId);
+      await jsonDb.updateCharacter(characterId, { skins: nextSkins });
+
+      const listing = await jsonDb.insertMarketRec(
+        {
+          sellerId: characterId,
+          sellerName: char.name || "Jogador",
+          listingType: "skin",
+          skinId,
+          quantity: 1,
+          price,
+          currency,
+          fee,
+        },
+        "listing",
+        characterId
+      );
+
+      jsonDb.addAdminLog("economy", {
+        source: "market",
+        event: "listing",
+        characterId,
+        charName: char.name || "Jogador",
+        listingType: "skin",
+        skinId,
+        price,
+        currency,
+        fee,
+      });
+
+      return NextResponse.json({
+        success: true,
+        listing,
+        message: `🎨 Anunciado: ${price.toLocaleString("pt-BR")} ${currency === "diamonds" ? "💎" : "🪙"}`,
+      });
     }
 
     const entry = await jsonDb.getInventoryItemById(inventoryItemId);

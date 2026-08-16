@@ -11,6 +11,7 @@ import {
   listingFee,
   sellUnlock,
 } from "@/game/market";
+import { skinById } from "@/game/skins";
 import { MAX_TRADE_ADS_PER_CHAR } from "@/game/tradeAds";
 import { fmtNum } from "@/game/format";
 
@@ -137,8 +138,11 @@ function BrowseTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
     const q = normalize(query);
     return listings.filter((e: any) => {
       const tpl = e.template || {};
-      if (rarity && tpl.rarity !== rarity) return false;
-      if (q && !normalize(itemName(tpl, locale)).includes(q)) return false;
+      const skin = e.skin || null;
+      const name = skin ? t(skin.nameKey, locale) : itemName(tpl, locale);
+      const rar = skin?.rarity || tpl.rarity;
+      if (rarity && rar !== rarity) return false;
+      if (q && !normalize(name).includes(q)) return false;
       return true;
     });
   }, [listings, query, rarity, locale]);
@@ -220,9 +224,10 @@ function BrowseTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
           {filtered.map((entry: any) => {
             const l = entry.listing;
             const tpl = entry.template || {};
+            const skin = entry.skin || null;
             const seller = entry.seller;
             const mine = l.sellerId === characterId;
-            const rarityHex = RARITY_COLORS[tpl.rarity];
+            const rarityHex = skin ? RARITY_COLORS[skin.rarity] : RARITY_COLORS[tpl.rarity];
             return (
               <div
                 key={l.id}
@@ -231,36 +236,51 @@ function BrowseTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
               >
                 <div className="flex items-start gap-2.5">
                   <button
-                    onClick={() => setPreview({ template: tpl, quantity: l.quantity })}
-                    title="Ver status do item"
+                    onClick={() => skin ? setPreview({ skin }) : setPreview({ template: tpl, quantity: l.quantity })}
+                    title="Ver skin"
                     className="grid h-14 w-14 shrink-0 cursor-pointer place-items-center rounded-xl border bg-bg-card transition-all hover:scale-105 hover:brightness-125"
                     style={{ borderColor: rarityHex ?? "#ffffff33" }}
                   >
-                    <ItemIcon template={tpl} className="h-11 w-11 object-contain" emojiClass="text-2xl" alt="" />
+                    {skin ? (
+                      <img src={skin.image} alt="" className="h-11 w-11 object-contain" />
+                    ) : (
+                      <ItemIcon template={tpl} className="h-11 w-11 object-contain" emojiClass="text-2xl" alt="" />
+                    )}
                   </button>
                   <div className="min-w-0 flex-1">
-                    <button onClick={() => setPreview({ template: tpl, quantity: l.quantity })} className="block max-w-full cursor-pointer text-left" title="Ver status do item">
-                      <p className="truncate text-sm font-bold text-white transition-colors hover:text-[#7c5cfc]">{itemName(tpl, locale)}</p>
+                    <button onClick={() => skin ? setPreview({ skin }) : setPreview({ template: tpl, quantity: l.quantity })} className="block max-w-full cursor-pointer text-left" title="Ver skin">
+                      <p className="truncate text-sm font-bold text-white transition-colors hover:text-[#7c5cfc]">
+                        {skin ? t(skin.nameKey, locale) : itemName(tpl, locale)}
+                      </p>
                     </button>
                     <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
                       <span
                         className="rounded-full px-2 py-0.5 text-[9px] font-bold text-white"
                         style={{ background: rarityHex ?? "#3b4252" }}
                       >
-                        {rarityLabel(tpl.rarity, locale)}
+                        {rarityLabel(skin?.rarity ?? tpl.rarity, locale)}
                       </span>
+                      {skin && (
+                        <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] text-gray-400">
+                          🎨 Skin
+                        </span>
+                      )}
                       {(l.quantity || 1) > 1 && (
                         <span className="rounded-full border border-yellow-500/40 bg-yellow-500/10 px-2 py-0.5 text-[9px] font-bold text-yellow-300">
                           ×{l.quantity}
                         </span>
                       )}
-                      {tpl.minLevel > 1 && (
+                      {!skin && tpl.minLevel > 1 && (
                         <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[9px] text-gray-400">
                           Lv {tpl.minLevel}
                         </span>
                       )}
                     </div>
-                    {tpl.type === "consumable" ? (
+                    {skin ? (
+                      <p className="mt-1 text-[10px] text-gray-500">
+                        {CLASS_ICONS[skin.className as ClassName]} {t(`class.${skin.className}`, locale)}
+                      </p>
+                    ) : tpl.type === "consumable" ? (
                       <p className="mt-1 text-[10px] text-gray-500">🧪 Consumível</p>
                     ) : (
                       <p className="mt-1 text-[10px] text-gray-500">
@@ -339,6 +359,8 @@ function SellTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [myListings, setMyListings] = useState<any[]>([]);
   const [preview, setPreview] = useState<PreviewItem | null>(null);
+  const [sellKind, setSellKind] = useState<"item" | "skin">("item");
+  const [selectedSkin, setSelectedSkin] = useState<string>("");
 
   // Carrega os anúncios de venda ativos do próprio personagem.
   const loadMyListings = useCallback(async () => {
@@ -409,25 +431,52 @@ function SellTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selected = items.find((it) => it.inv.id === selectedId) ?? null;
 
+  // Skins do personagem disponíveis para venda (não pode vender a equipada).
+  const ownedSkins: string[] = Array.isArray(character?.skins) ? (character.skins as string[]) : [];
+  const activeSkin = character?.activeSkinId as string | null | undefined;
+  const skins = useMemo(
+    () => ownedSkins
+      .filter((id) => id !== activeSkin)
+      .map((id) => skinById(id))
+      .filter((s): s is NonNullable<ReturnType<typeof skinById>> => !!s),
+    [ownedSkins, activeSkin]
+  );
+  const selectedSkinTpl = skins.find((s) => s.id === selectedSkin) ?? null;
+
   const sell = async () => {
-    if (!characterId || !selected) return;
+    if (!characterId || !selected && sellKind === "item") return;
+    if (sellKind === "skin" && !selectedSkinTpl) {
+      notify("Selecione uma skin para vender", "error");
+      return;
+    }
     const p = Math.max(1, Math.floor(Number(price) || 0));
     if (p < 1) {
       notify("Preço inválido", "error");
       return;
     }
-    setBusy(selected.inv.id);
+    const busyId = sellKind === "skin" ? `skin_${selectedSkin}` : selected!.inv.id;
+    setBusy(busyId);
     try {
       const res = await fetch("/api/market", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          characterId,
-          inventoryItemId: selected.inv.id,
-          quantity: selected.stackable ? Math.min(Math.max(1, qty), selected.quantity) : 1,
-          price: p,
-          currency,
-        }),
+        body: JSON.stringify(
+          sellKind === "skin"
+            ? {
+                characterId,
+                kind: "skin",
+                skinId: selectedSkinTpl!.id,
+                price: p,
+                currency,
+              }
+            : {
+                characterId,
+                inventoryItemId: selected!.inv.id,
+                quantity: selected!.stackable ? Math.min(Math.max(1, qty), selected!.quantity) : 1,
+                price: p,
+                currency,
+              }
+        ),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -437,6 +486,7 @@ function SellTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
       notify(data.message || "📦 Anunciado!", "success");
       if (data.character) setCharacter(data.character);
       setSelectedId(null);
+      setSelectedSkin("");
       onRefreshCharacter();
     } catch {
       notify("Erro ao anunciar", "error");
@@ -445,7 +495,9 @@ function SellTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
     }
   };
 
-  const fee = selected ? listingFee(Math.max(1, Math.floor(Number(price) || 0)), currency) : 0;
+  const feeItem = selected && sellKind === "item" ? listingFee(Math.max(1, Math.floor(Number(price) || 0)), currency) : 0;
+  const feeSkin = selectedSkinTpl ? listingFee(Math.max(1, Math.floor(Number(price) || 0)), currency) : 0;
+  const fee = sellKind === "skin" ? feeSkin : feeItem;
 
   // Desbloqueio do leilão: nível mínimo + andar da torre (mostra o que falta).
   const sellUnlockInfo = sellUnlock(character);
@@ -521,6 +573,27 @@ function SellTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
 
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_300px]">
       <div className="flex flex-col gap-2">
+        <div className="flex gap-2 sm:gap-3">
+          <button
+            onClick={() => setSellKind("item")}
+            className={`flex-1 rounded-xl border px-3 py-2 text-sm font-bold transition-all sm:flex-none sm:px-5 ${
+              sellKind === "item" ? "border-[#e94560]/60 bg-[#e94560]/10 text-white" : "border-white/10 bg-white/5 text-gray-400"
+            }`}
+          >
+            📦 Itens
+          </button>
+          <button
+            onClick={() => setSellKind("skin")}
+            className={`flex-1 rounded-xl border px-3 py-2 text-sm font-bold transition-all sm:flex-none sm:px-5 ${
+              sellKind === "skin" ? "border-[#e94560]/60 bg-[#e94560]/10 text-white" : "border-white/10 bg-white/5 text-gray-400"
+            }`}
+          >
+            🎨 Skins
+          </button>
+        </div>
+
+        {sellKind === "item" ? (
+          <>
         <p className="text-[11px] text-gray-400">
           Selecione um item do inventário para anunciar. Itens equipados, anunciados ou em troca não aparecem.
         </p>
@@ -559,11 +632,107 @@ function SellTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
             })}
           </div>
         )}
+          </>
+        ) : (
+          <>
+        <p className="text-[11px] text-gray-400">
+          Selecione uma skin para anunciar. A skin equipada não pode ser vendida — a venda é definitiva.
+        </p>
+        {skins.length === 0 ? (
+          <div className="grid place-items-center rounded-xl border border-dashed border-white/15 py-14 text-sm text-gray-500">
+            Nenhuma skin disponível para vender.
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+            {skins.map((s) => {
+              const active = selectedSkin === s.id;
+              const rarityHex = RARITY_COLORS[s.rarity];
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setSelectedSkin(active ? "" : s.id)}
+                  className={`group relative flex flex-col items-center gap-1 rounded-xl border bg-bg-card px-2 pt-2 pb-1.5 transition-all hover:-translate-y-0.5 hover:bg-bg-surface ${
+                    active ? "border-[#e94560] ring-2 ring-[#e94560]/40" : ""
+                  }`}
+                  style={!active && rarityHex ? { borderColor: `${rarityHex}55` } : undefined}
+                >
+                  <img src={s.image} alt="" className="h-12 w-12 object-contain" />
+                  <span className="w-full truncate text-center text-[10px] font-semibold text-gray-200">
+                    {t(s.nameKey, locale)}
+                  </span>
+                  <span
+                    className="rounded-full px-1.5 py-0.5 text-[8px] font-bold text-white"
+                    style={{ background: rarityHex ?? "#3b4252" }}
+                  >
+                    {rarityLabel(s.rarity, locale)}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+          </>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-bg-surface p-4 lg:sticky lg:top-4">
         <h3 className="text-sm font-black">📦 Novo anúncio</h3>
-        {!selected ? (
+        {sellKind === "skin" ? (
+          !selectedSkinTpl ? (
+            <p className="text-xs text-gray-500">Escolha uma skin ao lado.</p>
+          ) : (
+            <>
+              <div className="flex items-center gap-2.5">
+                <img
+                  src={selectedSkinTpl.image}
+                  alt=""
+                  className="h-12 w-12 shrink-0 rounded-xl border bg-bg-card object-contain"
+                  style={{ borderColor: RARITY_COLORS[selectedSkinTpl.rarity] ?? "#ffffff33" }}
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-white">{t(selectedSkinTpl.nameKey, locale)}</p>
+                  <p className="text-[10px] text-gray-500">
+                    {rarityLabel(selectedSkinTpl.rarity, locale)} · {CLASS_ICONS[selectedSkinTpl.className as ClassName]} {t(`class.${selectedSkinTpl.className}`, locale)}
+                  </p>
+                </div>
+              </div>
+
+              <label className="flex flex-col gap-1 text-[11px] text-gray-400">
+                Preço
+                <input
+                  type="number"
+                  min={1}
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  className="rounded-xl border border-white/10 bg-[#0f141f]/80 px-3 py-2 text-sm text-white focus:border-[#e94560] focus:outline-none"
+                />
+              </label>
+
+              <div className="flex gap-2">
+                <button onClick={() => setCurrency("gold")} className={`flex-1 rounded-xl border px-3 py-2 text-sm font-bold transition-all ${currency === "gold" ? "border-yellow-400/60 bg-yellow-400/10 text-yellow-300" : "border-white/10 bg-white/5 text-gray-400"}`}>
+                  🪙 Ouro
+                </button>
+                <button onClick={() => setCurrency("diamonds")} className={`flex-1 rounded-xl border px-3 py-2 text-sm font-bold transition-all ${currency === "diamonds" ? "border-cyan-400/60 bg-cyan-400/10 text-cyan-300" : "border-white/10 bg-white/5 text-gray-400"}`}>
+                  💎 Diamantes
+                </button>
+              </div>
+
+              <p className="rounded-lg bg-white/5 px-3 py-2 text-[11px] text-gray-400">
+                Taxa de anúncio: <b className="text-white">{currency === "diamonds" ? `${fee} 💎` : `${fmt(fee)} 🪙`}</b>
+                {currency === "gold" ? " (5%, máx. 1.000)" : ""}
+              </p>
+
+              <button
+                onClick={sell}
+                disabled={busy !== null}
+                className="w-full rounded-xl bg-gradient-to-r from-[#e94560] to-[#ff7b81] py-2.5 text-sm font-black text-white transition-all hover:brightness-110 disabled:opacity-50"
+              >
+                {busy !== null ? "…" : "🎨 Anunciar skin no mercado"}
+              </button>
+            </>
+          )
+        ) : (
+        !selected ? (
           <p className="text-xs text-gray-500">Escolha um item ao lado.</p>
         ) : (
           <>
@@ -633,6 +802,7 @@ function SellTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
               {busy !== null ? "…" : "📦 Anunciar no mercado"}
             </button>
           </>
+        )
         )}
       </div>
     </div>

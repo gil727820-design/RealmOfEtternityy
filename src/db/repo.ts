@@ -1041,7 +1041,8 @@ export async function listActiveListings(limit = 300) {
     .map((m: any) => {
       const template = templates.find((tp: any) => tp.id === m.templateId) ?? null;
       const seller = chars.find((c: any) => c.id === m.sellerId) ?? null;
-      return { listing: m, template, seller: seller ? { id: seller.id, name: seller.name, level: seller.level } : null };
+      const skin = m.listingType === "skin" ? skinById(String(m.skinId || "")) ?? null : null;
+      return { listing: m, template, skin, seller: seller ? { id: seller.id, name: seller.name, level: seller.level } : null };
     });
 }
 

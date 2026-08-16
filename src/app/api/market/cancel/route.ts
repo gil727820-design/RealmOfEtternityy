@@ -33,25 +33,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Você não é o dono deste anúncio" }, { status: 400 });
     }
 
-    // Devolve o item ao vendedor
-    const listed = await jsonDb.getInventoryItemById(listing.inventoryItemId);
-    if (listed?.item) {
-      const qty = Number(listing.quantity) || 1;
-      if (listed.stackable) {
-        await jsonDb.insertInventoryItem({
-          id: uuidv4(),
-          characterId,
-          templateId: listed.item.templateId,
-          equipped: false,
-          quantity: qty,
-          obtainedAt: new Date().toISOString(),
-        });
-        await jsonDb.removeInventoryItem(listed.item.id);
-      } else {
-        await jsonDb.updateInventoryItem(listed.item.id, {
-          characterId,
-          listed: false,
-        });
+    // Devolve a skin ao vendedor
+    if (listing.listingType === "skin") {
+      await jsonDb.addCharacterSkins(characterId, [String(listing.skinId || "")]);
+    } else {
+      // Devolve o item ao vendedor
+      const listed = await jsonDb.getInventoryItemById(listing.inventoryItemId);
+      if (listed?.item) {
+        const qty = Number(listing.quantity) || 1;
+        if (listed.stackable) {
+          await jsonDb.insertInventoryItem({
+            id: uuidv4(),
+            characterId,
+            templateId: listed.item.templateId,
+            equipped: false,
+            quantity: qty,
+            obtainedAt: new Date().toISOString(),
+          });
+          await jsonDb.removeInventoryItem(listed.item.id);
+        } else {
+          await jsonDb.updateInventoryItem(listed.item.id, {
+            characterId,
+            listed: false,
+          });
+        }
       }
     }
 
@@ -62,7 +67,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "📦 Anúncio cancelado — item devolvido ao inventário.",
+      message: listing.listingType === "skin" ? "🎨 Anúncio cancelado — skin devolvida." : "📦 Anúncio cancelado — item devolvido ao inventário.",
       character: await jsonDb.findCharacterById(characterId),
     });
   } catch (e: unknown) {

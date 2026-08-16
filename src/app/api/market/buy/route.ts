@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import jsonDb, { MARKET_SYSTEM_ID } from "@/db/repo";
 import { MARKET_MIN_LEVEL } from "@/game/market";
 import { requireCharacterAuth } from "@/game/auth";
+import { skinById } from "@/game/skins";
 
 /**
  * Compra um anúncio: { characterId, listingId }.
@@ -46,6 +47,60 @@ export async function POST(req: NextRequest) {
     }
     if (currency === "diamonds" && (Number(buyer.diamonds) || 0) < price) {
       return NextResponse.json({ error: "Diamantes insuficientes" }, { status: 400 });
+    }
+
+    // ----- Skin: transfere a skin do vendedor para o comprador -----
+    const isSkin = listing.listingType === "skin";
+    if (isSkin) {
+      const template = skinById(String(listing.skinId || ""));
+      if (!template) {
+        return NextResponse.json({ error: "Skin deste anúncio não está disponível" }, { status: 400 });
+      }
+      // Vendedor recebe o preço
+      const seller = await jsonDb.findCharacterById(listing.sellerId);
+      if (seller) {
+        if (currency === "gold") {
+          await jsonDb.updateCharacter(seller.id, { gold: (Number(seller.gold) || 0) + price });
+        } else {
+          await jsonDb.updateCharacter(seller.id, { diamonds: (Number(seller.diamonds) || 0) + price });
+        }
+      }
+      // Comprador paga
+      if (currency === "gold") {
+        await jsonDb.updateCharacter(characterId, { gold: (Number(buyer.gold) || 0) - price });
+      } else {
+        await jsonDb.updateCharacter(characterId, { diamonds: (Number(buyer.diamonds) || 0) - price });
+      }
+      // Comprador recebe a skin
+      await jsonDb.addCharacterSkins(characterId, [template.id]);
+
+      await jsonDb.updateMarketRec(listingId, {
+        status: "sold",
+        buyerId: characterId,
+        buyerName: buyer.name || "Jogador",
+        soldAt: new Date().toISOString(),
+      });
+
+      const fresh = await jsonDb.findCharacterById(characterId);
+
+      jsonDb.addAdminLog("economy", {
+        source: "market",
+        event: "buy",
+        characterId,
+        charName: buyer.name || "Jogador",
+        sellerId: listing.sellerId,
+        sellerName: listing.sellerName || "Jogador",
+        listingType: "skin",
+        skinId: template.id,
+        price,
+        currency,
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: `🎨 Comprada por ${price.toLocaleString("pt-BR")} ${currency === "diamonds" ? "💎" : "🪙"}!`,
+        character: fresh,
+      });
     }
 
     // Item guardado no "sistema" enquanto listado
