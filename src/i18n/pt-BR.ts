@@ -214,6 +214,14 @@ const ptBR: Record<string, string> = {
   "worldBoss.joinHint": "Entre na batalha para atacar o boss e formar um squad com outros jogadores!",
   "worldBoss.inviteNameRequired": "Digite o nome do jogador.",
   "worldBoss.log": "Registro da batalha",
+  "worldBoss.shieldActive": "Escudo ativo!",
+  "worldBoss.shieldImmune": "O boss está IMUNE enquanto o escudo estiver ativo. Compre um quebra-escudo para removê-lo.",
+  "worldBoss.shieldInactive": "O boss pode erguer um escudo ao chegar a 75%, 50% e 25% de vida.",
+  "worldBoss.shieldExpires": "O escudo some sozinho em",
+  "worldBoss.buyBreakShield": "🔨 Quebra-escudo",
+  "worldBoss.shieldBroken": "🔨 Escudo quebrado! O boss está vulnerável novamente.",
+  "worldBoss.mobs": "Criaturas do boss",
+  "worldBoss.mobKilled": "aberto",
 
   // Currencies
   "currency.gold": "Ouro",

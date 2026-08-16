@@ -7,8 +7,10 @@ import {
   computeBossHit,
   computePlayerDamage,
   fmtBig,
+  randomUUID,
   type WorldBossConfig,
   type WorldBossEventState,
+  type WorldBossMob,
 } from "@/game/worldBoss";
 
 /** Distribui as recompensas a todos os participantes (proporcional ao dano). */
@@ -63,10 +65,109 @@ async function distributeRewards(event: WorldBossEventState, cfg: WorldBossConfi
   return granted;
 }
 
+/** Ativa o escudo por fase (75/50/25% restante) quando o HP cruza um threshold ainda não atingido. */
+function maybeActivateShield(event: WorldBossEventState, cfg: WorldBossConfig, nowMs: number) {
+  if (!cfg.shield.enabled || event.status !== "open" || event.shieldActive) return false;
+  const pct = event.bossMaxHp > 0 ? event.bossHp / event.bossMaxHp : 0;
+  // Só os thresholds acima do HP atual ainda não disparados; pega o MAIOR (primeiro a ser cruzado).
+  const candidates = cfg.shield.thresholds
+    .filter((t) => pct <= t && !(event.shieldThresholdsHit || []).includes(t))
+    .sort((a, b) => b - a);
+  if (!candidates.length) return false;
+  const threshold = candidates[0];
+  event.shieldActive = true;
+  event.shieldThreshold = threshold;
+  event.shieldPhaseAt = new Date(nowMs).toISOString();
+  event.shieldExpiresAt = nowMs + cfg.shield.durationSec * 1000;
+  event.shieldThresholdsHit = [...(event.shieldThresholdsHit || []), threshold];
+  event.log.push(`🛡️ O boss ergueu um escudo ao chegar a ${Math.round(threshold * 100)}% de vida! Quebre-o ou ele conjurará criaturas.`);
+  return true;
+}
+
+/** Remove o escudo e, se configurado, spawna uma nova leva de mobs. */
+function deactivateShieldAndSpawnMobs(event: WorldBossEventState, cfg: WorldBossConfig, nowMs: number) {
+  event.shieldActive = false;
+  event.shieldPhaseAt = null;
+  event.shieldThreshold = undefined;
+  event.shieldExpiresAt = undefined;
+
+  if (cfg.spawnMobs.enabled && cfg.spawnMobs.count > 0 && cfg.spawnMobs.kinds.length) {
+    const mobs: WorldBossMob[] = [];
+    for (let i = 0; i < cfg.spawnMobs.count; i++) {
+      const kind = cfg.spawnMobs.kinds[Math.floor(Math.random() * cfg.spawnMobs.kinds.length)];
+      mobs.push({
+        id: randomUUID(),
+        kind,
+        maxHp: cfg.spawnMobs.hp,
+        hp: cfg.spawnMobs.hp,
+        damageDone: 0,
+        damageBy: {},
+        spawnedAt: new Date(nowMs).toISOString(),
+        rewardGiven: false,
+      });
+    }
+    event.mobs = [...(event.mobs || []), ...mobs];
+    event.mobsSpawnedAt = nowMs;
+    event.log.push(`🐉 O boss conjurou ${mobs.length} criatura(s)! Derrote-as para ganhar recompensas.`);
+  }
+}
+
+/** Recompensa proporcional aos jogadores que causaram dano a um mob morto. */
+async function rewardMobKillers(
+  mob: WorldBossMob,
+  cfg: WorldBossConfig,
+  nowMs: number
+): Promise<{ characterId: string; name: string; gold: number; xp: number; levelUp: boolean; newLevel: number }[]> {
+  const settings = await jsonDb.getServerSettings();
+  const maxLevel = resolveMaxLevel(Number(settings?.maxLevel) || 0);
+  const total = Math.max(1, mob.damageDone);
+  const granted: { characterId: string; name: string; gold: number; xp: number; levelUp: boolean; newLevel: number }[] = [];
+
+  for (const [charId, dmg] of Object.entries(mob.damageBy)) {
+    try {
+      const char = await jsonDb.findCharacterById(charId);
+      if (!char) continue;
+      const share = dmg / total;
+      const gold = Math.floor(cfg.spawnMobs.reward.gold * share);
+      const xp = Math.floor(cfg.spawnMobs.reward.xp * share);
+
+      const { patch, newLevel } = applyXp(char, xp, maxLevel);
+      const power = powerCalc({
+        attack: Number(char.attack) || 0,
+        defense: Number(char.defense) || 0,
+        hp: Number(char.maxHp) || 0,
+        speed: Number(char.speed) || 0,
+        critical: Number(char.critical) || 0,
+        level: newLevel,
+      });
+
+      await jsonDb.updateCharacter(charId, {
+        ...patch,
+        gold: (Number(char.gold) || 0) + gold,
+        power,
+        lastActivity: new Date(nowMs).toISOString(),
+      });
+
+      granted.push({
+        characterId: charId,
+        name: String(char.name || "?"),
+        gold,
+        xp,
+        levelUp: newLevel > (Number(char.level) || 1),
+        newLevel,
+      });
+    } catch (e) {
+      console.error(`[world-boss] falha ao recompensar killer do mob ${charId}:`, e);
+    }
+  }
+  return granted;
+}
+
 /** Ataque ao boss: dano ao HP compartilhado + revide do boss + cooldown por jogador. */
 export async function POST(req: NextRequest) {
   try {
-    const { characterId } = await req.json();
+    const body = await req.json();
+    const { characterId } = body;
     if (!characterId) return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
 
     const open = await requireOpenEvent(req, characterId);
@@ -129,6 +230,87 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ─── ATAQUE A MOB (target adicional durante o escudo) ────────────────
+    const mobId = typeof body.mobId === "string" ? body.mobId : null;
+    if (mobId) {
+      event.mobs = event.mobs || [];
+      const idx = event.mobs.findIndex((m) => m.id === mobId);
+      const mob = idx >= 0 ? event.mobs[idx] : null;
+      if (!mob || mob.hp <= 0 || mob.rewardGiven) {
+        return NextResponse.json({ error: "Esta criatura já foi derrotada." }, { status: 400 });
+      }
+
+      let { damage, crit } = computePlayerDamage(auth.char, cfg);
+      // Cap suave (máx 50% do HP do mob por golpe) para não matar instantaneamente.
+      const mobCap = Math.max(1, Math.floor(mob.maxHp * 0.5));
+      if (damage > mobCap) damage = mobCap;
+
+      me.lastAttackAt = now;
+      me.damageDealt += damage; // conta também como participação no evento
+      me.hits += 1;
+
+      mob.damageDone += damage;
+      mob.hp = Math.max(0, mob.hp - damage);
+      mob.damageBy[auth.char.id] = (mob.damageBy[auth.char.id] || 0) + damage;
+      event.totalDamage += Math.min(damage, mob.maxHp);
+      event.participants[auth.char.id] = me;
+
+      let mobRewards: unknown = null;
+      if (mob.hp <= 0 && !mob.rewardGiven) {
+        mob.rewardGiven = true;
+        mob.killerName = me.name;
+        mobRewards = await rewardMobKillers(mob, cfg, now);
+        event.log.push(`💀 ${me.name} abateu uma criatura! ${(mobRewards as any[])?.length || 0} participante(s) receberam recompensa.`);
+      } else {
+        event.log.push(`${crit ? "💥" : "🐉"} ${me.name} causou ${fmtBig(damage)} de dano numa criatura${crit ? " (CRÍTICO!)" : ""}.`);
+      }
+      if (event.log.length > 30) event.log = event.log.slice(-30);
+
+      await jsonDb.saveWorldBossEvent(event);
+      return NextResponse.json({
+        success: true,
+        mobId,
+        damage,
+        crit,
+        mobHp: mob.hp,
+        mobMaxHp: mob.maxHp,
+        mobAlive: mob.hp > 0,
+        mobRewards,
+        playerHp: me.hp,
+        playerMaxHp: me.maxHp,
+        playerDead: me.deadAt != null,
+        cooldownMs,
+        shieldActive: event.shieldActive,
+        mobs: event.mobs.map((m) => ({ id: m.id, kind: m.kind, hp: m.hp, maxHp: m.maxHp })),
+      });
+    }
+
+    // ─── ATAQUE AO BOSS ──────────────────────────────────────────────────
+    // Escudo: se o boss está protegido, o jogador NÃO causa dano (fica imune)
+    // e precisa comprar um quebra-escudo (ou esperar expirar).
+    if (event.shieldActive) {
+      const expiresAt = event.shieldExpiresAt ?? 0;
+      if (expiresAt > now) {
+        // Registrar cooldown usado para evitar spam de erro.
+        me.lastAttackAt = now;
+        event.participants[auth.char.id] = me;
+        await jsonDb.saveWorldBossEvent(event);
+        return NextResponse.json(
+          {
+            error: `O boss está protegido por um escudo! Compre um quebra-escudo para removê-lo.`,
+            shieldActive: true,
+            shieldExpiresInMs: expiresAt - now,
+            shieldThreshold: event.shieldThreshold,
+            cooldownMs,
+          },
+          { status: 400 }
+        );
+      }
+      // Escudo EXPIRADO sozinho: some e spawna mobs.
+      deactivateShieldAndSpawnMobs(event, cfg, now);
+      await jsonDb.saveWorldBossEvent(event);
+    }
+
     let { damage, crit } = computePlayerDamage(auth.char, cfg);
 
     // Anti-one-shot: um único golpe NUNCA derruba o boss de uma vez (máx ~12%
@@ -162,7 +344,7 @@ export async function POST(req: NextRequest) {
     me.hits += 1;
     me.lastAttackAt = now;
 
-    // Revide do boss no jogador.
+    // Revide do boss no jogador (somente se o boss está "atacável").
     const bossHit = computeBossHit(cfg, { defense: Number(auth.char.defense) || 0, maxHp: me.maxHp });
     me.hp = Math.max(0, Math.round(me.hp - bossHit.damage));
     if (me.hp <= 0) me.deadAt = now;
@@ -176,12 +358,30 @@ export async function POST(req: NextRequest) {
     cur.log.push(`👹 O boss revidou em ${me.name} por ${fmtBig(bossHit.damage)}${bossHit.crit ? " (crítico)" : ""}.`);
     if (cur.log.length > 40) cur.log = cur.log.slice(-40);
 
+    // O dano pode ter levado o HP do boss até um threshold → ativa o escudo.
+    const shieldActivated = maybeActivateShield(cur, cfg, now);
+
     let rewards: unknown = null;
     if (!bossAlive && !cur.rewardsGiven) {
       cur.status = "won";
       cur.rewardsGiven = true;
       rewards = await distributeRewards(cur, cfg, now);
       cur.log.push(`🏆 O BOSS MUNDIAL FOI DERROTADO! Todos os participantes receberam recompensas!`);
+
+      // Log administrativo do RESULTADO do Boss Mundial: ranking top3 (dano).
+      const ranked = Object.values(cur.participants)
+        .map((p) => ({ name: p.name, characterId: p.characterId, damageDealt: p.damageDealt }))
+        .sort((a, b) => b.damageDealt - a.damageDealt)
+        .slice(0, 3);
+      jsonDb.addAdminLog("worldboss_result", {
+        source: "world-boss",
+        message: `🏆 Boss Mundial DERROTADO! 1º ${ranked[0]?.name ?? "?"} (${fmtBig(ranked[0]?.damageDealt ?? 0)}), 2º ${ranked[1]?.name ?? "?"} (${fmtBig(ranked[1]?.damageDealt ?? 0)}), 3º ${ranked[2]?.name ?? "?"} (${fmtBig(ranked[2]?.damageDealt ?? 0)}). Participantes: ${Object.keys(cur.participants).length}.`,
+        top1: ranked[0] ?? null,
+        top2: ranked[1] ?? null,
+        top3: ranked[2] ?? null,
+        participants: Object.keys(cur.participants).length,
+        totalDamage: cur.totalDamage,
+      });
     }
     if (cur.log.length > 30) cur.log = cur.log.slice(-30);
 
@@ -201,6 +401,12 @@ export async function POST(req: NextRequest) {
       cooldownMs,
       playerDead: me.deadAt != null,
       respawnSec: cfg.respawnSec,
+      shieldActivated,
+      shieldActive: cur.shieldActive,
+      shieldThreshold: cur.shieldThreshold,
+      shieldExpiresInMs: cur.shieldActive ? (cur.shieldExpiresAt ?? now) - now : 0,
+      breakShieldCost: cfg.shield.breakCost,
+      mobs: (cur.mobs || []).map((m) => ({ id: m.id, kind: m.kind, hp: m.hp, maxHp: m.maxHp })),
       rewards,
     });
   } catch (e: unknown) {

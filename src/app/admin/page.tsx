@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { RARITY_COLORS, CLASS_ICONS, REGIONS, TOWER_BOSS_KINDS, MAX_LEVEL } from "@/game/constants";
+import { RARITY_COLORS, CLASS_ICONS, REGIONS, TOWER_BOSS_KINDS, MAX_LEVEL, towerMonsterImage, TOWER_MONSTER_NAMES, TOWER_MONSTER_IMAGES } from "@/game/constants";
 import type { ClassName } from "@/game/constants";
 import { SKIN_CATALOG } from "@/game/skins";
 import { VIP_TIERS, currentVipTier } from "@/game/vip";
@@ -139,7 +139,27 @@ export default function AdminPage() {
   const [wbCooldown, setWbCooldown] = useState("5");
   const [wbRegen, setWbRegen] = useState("60");
   const [wbRespawn, setWbRespawn] = useState("20");
+  // Escudo por fases (75/50/25%)
+  const [wbShieldEnabled, setWbShieldEnabled] = useState(true);
+  const [wbShieldThresholds, setWbShieldThresholds] = useState("75,50,25");
+  const [wbShieldDuration, setWbShieldDuration] = useState("180");
+  const [wbShieldCostCurrency, setWbShieldCostCurrency] = useState<"gold" | "diamonds">("diamonds");
+  const [wbShieldCostAmount, setWbShieldCostAmount] = useState("50");
+  // Mobs spawnados quando o escudo some
+  const [wbMobsEnabled, setWbMobsEnabled] = useState(true);
+  const [wbMobsKinds, setWbMobsKinds] = useState<string[]>(["dragao"]);
+  const [wbMobsHp, setWbMobsHp] = useState("4000000");
+  const [wbMobsCount, setWbMobsCount] = useState("2");
+  const [wbMobsGold, setWbMobsGold] = useState("100000");
+  const [wbMobsXp, setWbMobsXp] = useState("15000");
+  // Foto customizada do boss (upload/remoção)
+  const [wbBossImage, setWbBossImage] = useState("");
+  const wbBossImageRef = useRef<HTMLInputElement>(null);
   const [wbLoaded, setWbLoaded] = useState(false);
+  // Relatório do Boss Mundial (ranking + logs) no painel
+  const [wbReport, setWbReport] = useState<Record<string, unknown> | null>(null);
+  const [wbKillLogs, setWbKillLogs] = useState<Record<string, unknown>[]>([]);
+  const [wbReportLoaded, setWbReportLoaded] = useState(false);
   // Enviar (presentes → correio)
   const [sendCharId, setSendCharId] = useState("");
   const [sendKind, setSendKind] = useState<"resource" | "item" | "skin">("resource");
@@ -330,14 +350,16 @@ export default function AdminPage() {
     setBusy(null);
   };
 
-  // ---- Logs administrativos (hitkill, economia etc.) ----
+  // ---- Logs administrativos (hitkill, economia, boss mundial) ----
   const logKindParam = () => (logsFilter === "hitkill" || logsFilter === "economy" ? logsFilter : "");
+  const logSourceParam = () => (logsFilter === "worldboss" ? "world-boss" : "");
 
   const loadLogs = async () => {
     setLoading(true);
     try {
       const kind = logKindParam();
-      const res = await fetch(`/api/admin?action=logs&kind=${encodeURIComponent(kind)}&limit=200`, { headers });
+      const source = logSourceParam();
+      const res = await fetch(`/api/admin?action=logs&kind=${encodeURIComponent(kind)}&source=${encodeURIComponent(source)}&limit=200`, { headers });
       const d = await res.json();
       setLogsList(Array.isArray(d.logs) ? (d.logs as Record<string, unknown>[]) : []);
     } catch { /* ignore */ }
@@ -345,10 +367,14 @@ export default function AdminPage() {
   };
 
   const clearLogs = async (kind: string) => {
-    const label = kind === "hitkill" ? "os logs de hitkill" : kind === "economy" ? "os logs de economia" : "TODOS os logs";
+    const label =
+      kind === "hitkill" ? "os logs de hitkill" :
+      kind === "economy" ? "os logs de economia" :
+      kind === "worldboss" ? "os logs do Boss Mundial" :
+      "TODOS os logs";
     if (!window.confirm(`Apagar ${label}? Essa ação não pode ser desfeita.`)) return;
     setBusy("clear_logs");
-    const d = await callAdmin({ action: "clear_logs", kind: logKindParam() });
+    const d = await callAdmin({ action: "clear_logs", kind: logKindParam(), source: logSourceParam() });
     setMessage(d.success ? `✅ ${d.message}` : `❌ ${d.error || "Erro"}`);
     await loadLogs();
     setBusy(null);
@@ -363,7 +389,7 @@ export default function AdminPage() {
       guilds: loadGuilds,
       send: async () => { await loadCharacters(); await loadItems(); },
       ghost: loadGhostShop,
-      worldboss: loadWorldBoss,
+      worldboss: async () => { await loadWorldBoss(); await loadWorldBossReport(); },
       excluded: loadExcluded,
       music: loadMusic,
       server: undefined,
@@ -682,6 +708,10 @@ export default function AdminPage() {
       const wb = (s.worldBoss || {}) as Record<string, unknown>;
       const boss = (wb.boss || {}) as Record<string, unknown>;
       const rewards = (wb.rewards || {}) as Record<string, unknown>;
+      const shield = (wb.shield || {}) as Record<string, unknown>;
+      const shCost = (shield.breakCost || {}) as Record<string, unknown>;
+      const mobs = (wb.spawnMobs || {}) as Record<string, unknown>;
+      const mobReward = (mobs.reward || {}) as Record<string, unknown>;
       setWbEnabled(!!wb.enabled);
       setWbSchedule(Array.isArray(wb.schedule) ? (wb.schedule as string[]) : []);
       setWbDuration(String(Math.max(1, Math.floor(Number(wb.durationMinutes) || 60))));
@@ -698,8 +728,44 @@ export default function AdminPage() {
       setWbCooldown(String(Math.max(1, Math.floor(Number(wb.attackCooldownSec) || 5))));
       setWbRegen(String(Math.max(5, Math.floor(Number(wb.regenSec) || 60))));
       setWbRespawn(String(Math.max(1, Math.floor(Number(wb.respawnSec) || 10))));
+      // Escudo
+      setWbShieldEnabled(shield.enabled !== false);
+      const thr: number[] = Array.isArray(shield.thresholds) && shield.thresholds.length
+        ? (shield.thresholds as number[])
+        : [0.75, 0.5, 0.25];
+      setWbShieldThresholds(thr.map((v) => Math.round(Number(v) * 100)).join(","));
+      setWbShieldDuration(String(Math.max(10, Math.floor(Number(shield.durationSec) || 180))));
+      setWbShieldCostCurrency(shCost.currency === "gold" ? "gold" : "diamonds");
+      setWbShieldCostAmount(String(Number(shCost.amount) || 50));
+      // Mobs
+      setWbMobsEnabled(mobs.enabled !== undefined ? !!mobs.enabled : true);
+      setWbMobsKinds(Array.isArray(mobs.kinds) && mobs.kinds.length ? (mobs.kinds as string[]) : ["dragao"]);
+      setWbMobsHp(String(Number(mobs.hp) || 4000000));
+      setWbMobsCount(String(Math.max(0, Math.floor(Number(mobs.count) || 2))));
+      setWbMobsGold(String(Number(mobReward.gold) || 100000));
+      setWbMobsXp(String(Number(mobReward.xp) || 15000));
+      // Foto customizada — padrão usa a foto local do dragão (public/images/worldboss_boss.png),
+      // o admin pode trocar por upload ou remover (volta ao visual da torre).
+      setWbBossImage(
+        typeof s.worldBossImage === "string" && s.worldBossImage
+          ? s.worldBossImage
+          : "/images/worldboss_boss.png"
+      );
     } catch { /* ignora */ }
     setWbLoaded(true);
+    setLoading(false);
+  };
+
+  /** Carrega o relatório do Boss Mundial (ranking de dano + logs recentes). */
+  const loadWorldBossReport = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/admin?action=world_boss_report`, { headers });
+      const d = await res.json();
+      if (d.report) setWbReport(d.report);
+      setWbKillLogs(Array.isArray(d.hitkillLogs) ? (d.hitkillLogs as Record<string, unknown>[]) : []);
+    } catch { /* ignora */ }
+    setWbReportLoaded(true);
     setLoading(false);
   };
 
@@ -745,6 +811,7 @@ export default function AdminPage() {
           speed: Math.max(0, Math.floor(Number(wbSpeed) || 8)),
           critical: Math.min(100, Math.max(0, Math.floor(Number(wbCritical) || 12))),
         },
+        bossImage: wbBossImage || "",
         rewards: {
           gold: Math.max(0, Math.floor(Number(wbGold) || 0)),
           xp: Math.max(0, Math.floor(Number(wbXp) || 0)),
@@ -754,6 +821,28 @@ export default function AdminPage() {
         attackCooldownSec: Math.max(1, Math.floor(Number(wbCooldown) || 5)),
         regenSec: Math.max(5, Math.floor(Number(wbRegen) || 60)),
         respawnSec: Math.max(1, Math.floor(Number(wbRespawn) || 10)),
+        shield: {
+          enabled: wbShieldEnabled,
+          thresholds: wbShieldThresholds
+            .split(",")
+            .map((v) => Number(v.trim()) / 100)
+            .filter((v) => v > 0 && v <= 1),
+          durationSec: Math.max(10, Math.floor(Number(wbShieldDuration) || 180)),
+          breakCost: {
+            currency: wbShieldCostCurrency,
+            amount: Math.max(1, Math.floor(Number(wbShieldCostAmount) || 50)),
+          },
+        },
+        spawnMobs: {
+          enabled: wbMobsEnabled,
+          kinds: wbMobsKinds,
+          hp: Math.max(100000, Math.floor(Number(wbMobsHp) || 100000)),
+          count: Math.min(12, Math.max(0, Math.floor(Number(wbMobsCount) || 0))),
+          reward: {
+            gold: Math.max(0, Math.floor(Number(wbMobsGold) || 0)),
+            xp: Math.max(0, Math.floor(Number(wbMobsXp) || 0)),
+          },
+        },
       },
     });
     setMessage(
@@ -886,6 +975,47 @@ export default function AdminPage() {
     setMessage(d.success ? `✅ ${d.message}` : `❌ ${d.error || "Falha"}`);
     await loadMusic();
     setBusy(null);
+  };
+
+  /** Envia a foto do Boss Mundial (upload) e salva no servidor. */
+  const uploadWorldBossImage = async (file: File) => {
+    if (!file) return;
+    setBusy("wb_image");
+    try {
+      const fd = new FormData();
+      fd.append("action", "upload_world_boss_image");
+      fd.append("file", file);
+      const res = await fetch("/api/admin", { method: "POST", headers: audioHeaders, body: fd });
+      const d = await res.json();
+      if (d.success) {
+        setWbBossImage(d.url);
+        setMessage(`✅ Foto do boss enviada! Lembre de SALVAR o evento para persistir.`);
+      } else {
+        setMessage(`❌ ${d.error || "Falha no upload"}`);
+      }
+    } catch {
+      setMessage("❌ Erro no upload da foto");
+    }
+    setBusy(null);
+  };
+
+  /** Remove a foto customizada do boss (volta ao visual da torre). */
+  const removeWorldBossImage = async () => {
+    if (!window.confirm("Remover a foto customizada do boss? Ele volta ao visual padrão da torre.")) return;
+    setBusy("wb_image_rm");
+    const d = await callAdmin({ action: "reset_world_boss_image" });
+    if (d.success) {
+      setWbBossImage("");
+      setMessage("✅ Foto do boss removida.");
+    } else {
+      setMessage(`❌ ${d.error || "Falha"}`);
+    }
+    setBusy(null);
+  };
+
+  /** Alterna um kind de mob dos spawnados pelo boss. */
+  const toggleWbMobKind = (kind: string) => {
+    setWbMobsKinds((prev) => prev.includes(kind) ? prev.filter((k) => k !== kind) : [...prev, kind]);
   };
 
   // ---- Mensagem global / manutenção ----
@@ -2355,6 +2485,55 @@ export default function AdminPage() {
                         className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#ef4444] focus:outline-none" />
                     </div>
                   </div>
+
+                  {/* Foto customizada + prévia */}
+                  <div className="mt-4 flex flex-wrap items-center gap-5 bg-[#0a0a12] border border-gray-800 rounded-xl p-4">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-28 h-28 rounded-xl overflow-hidden border-2 border-white/10 bg-black flex items-center justify-center">
+                        <img
+                          src={wbBossImage || (TOWER_BOSS_KINDS.includes(wbBossKind as any) ? towerMonsterImage(wbBossKind as any) : "/images/tower/monsters/realm_of_eternity_void_wyrm_clean.png") || ""}
+                          alt="Boss"
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-gray-500 uppercase tracking-wide font-mono">Prévia</span>
+                    </div>
+                    <div className="flex-1 min-w-[220px]">
+                      <p className="text-xs text-gray-400 mb-2">
+                        Envie uma <b className="text-red-300">foto PNG/JPG personalizada</b> para substituir o visual padrão da torre
+                        no evento. Sem foto, o boss usa a imagem do <b className="text-gray-300">{wbBossKind}</b>.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <input
+                          ref={wbBossImageRef}
+                          type="file"
+                          accept="image/png,image/jpeg,image/gif,image/webp"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) uploadWorldBossImage(f);
+                          }}
+                        />
+                        <button
+                          onClick={() => wbBossImageRef.current?.click()}
+                          disabled={busy === "wb_image"}
+                          className="bg-[#ef4444] hover:bg-[#e03030] text-white rounded-xl px-4 py-2 text-sm font-bold disabled:opacity-50"
+                        >
+                          {busy === "wb_image" ? "📤 Enviando..." : "📤 Enviar foto"}
+                        </button>
+                        {wbBossImage && (
+                          <button
+                            onClick={removeWorldBossImage}
+                            disabled={busy === "wb_image_rm"}
+                            className="border border-gray-700 hover:border-red-500 text-gray-400 hover:text-red-400 rounded-xl px-4 py-2 text-sm font-bold disabled:opacity-50"
+                          >
+                            🗑️ Remover
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
@@ -2411,10 +2590,235 @@ export default function AdminPage() {
                   </div>
                 </div>
 
+                {/* 🛡️ Escudo por fases */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <div className="flex items-center justify-between mb-2 gap-2">
+                    <h3 className="text-sm font-bold text-[#38bdf8]">🛡️ Escudo por fases</h3>
+                    <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer select-none">
+                      <input type="checkbox" checked={wbShieldEnabled} onChange={(e) => setWbShieldEnabled(e.target.checked)} className="accent-[#ef4444] w-4 h-4" />
+                      Ativado
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-3">
+                    Quando o HP do boss <b className="text-sky-300">cruza um percentual de vida restante</b>, ele ergue um escudo e fica IMUNE (não recebe dano). Os jogadores precisam <b className="text-sky-300">comprar um quebra-escudo</b> para removê-lo (ou esperar o escudo sumir sozinho — quando ele some, o boss conjura os mobs abaixo).
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Fases (vida restante %)</label>
+                      <input type="text" value={wbShieldThresholds} onChange={(e) => setWbShieldThresholds(e.target.value)}
+                        placeholder="75,50,25"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-sky-400 focus:outline-none" />
+                      <p className="text-[10px] text-gray-600 mt-1">Separadas por vírgula (ex.: 75,50,25)</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">⏱️ Duração sozinho (s)</label>
+                      <input type="number" min={10} max={3600} value={wbShieldDuration} onChange={(e) => setWbShieldDuration(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-sky-400 focus:outline-none" />
+                    </div>
+                    <div className="col-span-2 md:col-span-1 flex items-end gap-2">
+                      <div className="flex-1">
+                        <label className="block text-xs text-gray-500 mb-1">🔨 Custo do quebra-escudo</label>
+                        <input type="number" min={1} value={wbShieldCostAmount} onChange={(e) => setWbShieldCostAmount(e.target.value)}
+                          className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-sky-400 focus:outline-none" />
+                      </div>
+                      <div className="w-32">
+                        <label className="block text-xs text-gray-500 mb-1">Moeda</label>
+                        <select value={wbShieldCostCurrency} onChange={(e) => setWbShieldCostCurrency(e.target.value as "gold" | "diamonds")}
+                          className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-sky-400 focus:outline-none">
+                          <option value="diamonds">💎 Diamantes</option>
+                          <option value="gold">🪙 Ouro</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 🐉 Mobs spawnados */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <div className="flex items-center justify-between mb-2 gap-2">
+                    <h3 className="text-sm font-bold text-[#4ade80]">🐉 Mobs spawnados pelo boss</h3>
+                    <label className="flex items-center gap-2 text-xs text-gray-400 cursor-pointer select-none">
+                      <input type="checkbox" checked={wbMobsEnabled} onChange={(e) => setWbMobsEnabled(e.target.checked)} className="accent-[#ef4444] w-4 h-4" />
+                      Ativado
+                    </label>
+                  </div>
+                  <p className="text-xs text-gray-400 mb-3">
+                    Quando o escudo <b className="text-green-300">some</b> (compra ou expira), o boss conjura <b className="text-green-300">{Math.max(0, Math.floor(Number(wbMobsCount) || 0))} criatura(s)</b> que os jogadores atacam como alvos separados. Ao abater um mob (HP baixo, {Number(wbMobsHp).toLocaleString()}), quem causou dano recebe uma pequena recompensa em ouro/XP.
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">❤️ HP de cada mob</label>
+                      <input type="number" min={100000} value={wbMobsHp} onChange={(e) => setWbMobsHp(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-green-400 focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">🔢 Quantidade por leva</label>
+                      <input type="number" min={0} max={12} value={wbMobsCount} onChange={(e) => setWbMobsCount(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-green-400 focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">💰 Ouro (por mob)</label>
+                      <input type="number" min={0} value={wbMobsGold} onChange={(e) => setWbMobsGold(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-green-400 focus:outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">⚡ XP (por mob)</label>
+                      <input type="number" min={0} value={wbMobsXp} onChange={(e) => setWbMobsXp(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2.5 text-white text-sm focus:border-green-400 focus:outline-none" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mb-2">Monstros que podem ser conjurados (clique para ligar/desligar):</p>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(TOWER_MONSTER_IMAGES).map(([kind, img]) => {
+                      const on = wbMobsKinds.includes(kind);
+                      return (
+                        <button
+                          key={kind}
+                          onClick={() => toggleWbMobKind(kind)}
+                          className={`flex items-center gap-2 rounded-xl px-2 py-1.5 border text-xs font-bold transition select-none ${
+                            on
+                              ? "bg-green-500/15 border-green-500/50 text-green-300"
+                              : "bg-[#0a0a12] border-gray-700 text-gray-500 hover:border-gray-500"
+                          }`}
+                        >
+                          <img src={img} alt={kind} className="w-8 h-8 rounded-md object-cover bg-black" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                          <span>{TOWER_MONSTER_NAMES[kind as keyof typeof TOWER_MONSTER_NAMES] ? t(TOWER_MONSTER_NAMES[kind as keyof typeof TOWER_MONSTER_NAMES]) : kind}</span>
+                          <span className={`text-[10px] ${on ? "text-green-400" : "text-gray-600"}`}>{on ? "✓" : "○"}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {wbMobsKinds.length === 0 && wbMobsEnabled && (
+                    <p className="text-[11px] text-red-400 mt-2">⚠️ Nenhum mob selecionado — com escudos ativos o boss não conjurará nada.</p>
+                  )}
+                </div>
+
                 <button onClick={saveWorldBoss} disabled={busy === "worldboss"}
                   className="w-full bg-[#ef4444] hover:bg-[#e03030] text-white rounded-xl px-4 py-3 font-black text-sm disabled:opacity-40 transition">
                   {busy === "worldboss" ? "Salvando..." : "💾 Salvar Evento Global"}
                 </button>
+
+                {/* 🏆 Ranking do Boss Mundial (Top 1/2/3 dano) + logs seletivos */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-amber-300">🏆 Ranking do Boss Mundial</h3>
+                      {wbReport && (
+                        <p className="text-[11px] text-gray-400 mt-0.5">
+                          {String(wbReport.eventStatus || "—") === "won"
+                            ? "Vitória registrada ✓"
+                            : String(wbReport.eventStatus || "—") === "open"
+                            ? `Evento aberto — ${Number(wbReport.participantsCount) || 0} participante(s)`
+                            : "Sem evento ativo no momento"}
+                          {wbReport.shieldActive ? ` • 🛡️ Escudo ativo (${Math.round(Number(wbReport.shieldThreshold) * 100)}%)` : ""}
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => loadWorldBossReport()}
+                      disabled={loading}
+                      className="text-xs px-3 py-1.5 rounded-xl border border-white/10 text-gray-300 hover:text-white hover:bg-white/5 disabled:opacity-40"
+                    >
+                      🔄 Atualizar ranking
+                    </button>
+                  </div>
+
+                  {!wbReportLoaded ? (
+                    <div className="text-center text-gray-500 text-sm py-8">Carregando relatório...</div>
+                  ) : wbReport?.top3 && (wbReport.top3 as unknown[]).length > 0 ? (
+                    <>
+                      {/* Pódio Top 3 */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {(wbReport.top3 as Array<Record<string, unknown>>).map((p, i) => (
+                          <div
+                            key={String(p.characterId)}
+                            className={`rounded-2xl border p-4 flex items-center gap-3 ${
+                              i === 0
+                                ? "border-amber-400/60 bg-gradient-to-b from-amber-500/10 to-transparent"
+                                : i === 1
+                                ? "border-slate-300/40 bg-gradient-to-b from-slate-300/5 to-transparent"
+                                : "border-orange-400/40 bg-gradient-to-b from-orange-500/5 to-transparent"
+                            }`}
+                          >
+                            <div className="text-3xl">{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</div>
+                            <div className="min-w-0 flex-1">
+                              <div className={`text-sm font-black truncate ${i === 0 ? "text-amber-200" : i === 1 ? "text-slate-200" : "text-orange-200"}`}>
+                                {String(p.name || "?")}
+                              </div>
+                              <div className="text-[10px] text-gray-400">Lv.{Number(p.level) || 0} • 🗡️ {String(p.classType || "")}</div>
+                            </div>
+                            <div className="text-right">
+                              <div className={`text-sm font-black tabular-nums ${i === 0 ? "text-amber-300" : "text-gray-200"}`}>
+                                {Number(p.damageDealt || 0).toLocaleString("pt-BR")}
+                              </div>
+                              <div className="text-[10px] text-gray-500">{Number(p.sharePct) || 0}% · {Number(p.hits) || 0} golpes</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Lista completa de participantes */}
+                      {wbReport.participants && (wbReport.participants as unknown[]).length > 3 && (
+                        <details className="mt-3">
+                          <summary className="text-xs text-gray-400 cursor-pointer hover:text-white select-none">
+                            📋 Ver todos ({String((wbReport.participants as unknown[])?.length || 0)})
+                          </summary>
+                          <div className="mt-2 space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                            {(wbReport.participants as Array<Record<string, unknown>>)
+                              .slice(3)
+                              .map((p, i) => (
+                                <div key={String(p.characterId)} className="flex items-center justify-between gap-2 bg-[#0a0a12] rounded-xl px-3 py-2 border border-white/5 text-xs">
+                                  <span className="text-gray-400 font-mono w-8">{i + 4}º</span>
+                                  <span className="text-white font-bold truncate flex-1">{String(p.name || "?")}</span>
+                                  <span className="text-[10px] text-gray-500">{Number(p.hits) || 0} golpes</span>
+                                  <span className="text-amber-300 font-black tabular-nums">{Number(p.damageDealt || 0).toLocaleString("pt-BR")}</span>
+                                </div>
+                              ))}
+                          </div>
+                        </details>
+                      )}
+
+                      {/* Dano total */}
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <span className="text-[10px] px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300">
+                          🧮 Dano total: <b className="text-white">{Number(wbReport.totalDamage).toLocaleString("pt-BR")}</b>
+                        </span>
+                        <span className="text-[10px] px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300">
+                          👥 Participantes: <b className="text-white">{Number(wbReport.participantsCount) || 0}</b>
+                        </span>
+                        <span className="text-[10px] px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300">
+                          ❤️ Boss: <b className="text-red-300">{(Number(wbReport.bossHp) ?? 0).toLocaleString("pt-BR")}</b> / {(Number(wbReport.bossMaxHp) ?? 0).toLocaleString("pt-BR")}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center text-gray-500 text-sm py-8">
+                      Nenhum participante ainda. Quando o Boss Mundial abrir e alguém atacar, o ranking aparece aqui — incluindo os logs de hitkill.
+                    </div>
+                  )}
+                </div>
+
+                {/* 💥 Logs de hitkill do Boss Mundial */}
+                {wbKillLogs.length > 0 && (
+                  <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                    <h3 className="text-sm font-bold text-red-300 mb-2">💥 Hitkills no Boss Mundial</h3>
+                    <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                      {wbKillLogs.map((l) => (
+                        <div key={String(l.id)} className="rounded-xl border border-red-500/30 bg-red-950/20 p-3">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 font-bold">💥 HITKILL</span>
+                            <span className="text-[11px] font-bold text-white">⚔️ {String(l.characterName || l.charName || "?")}</span>
+                            {l.createdAt ? <span className="ml-auto text-[10px] text-gray-500">🕐 {new Date(String(l.createdAt)).toLocaleString("pt-BR")}</span> : null}
+                          </div>
+                          <p className="text-xs text-gray-300">{String(l.message || "")}</p>
+                          <p className="text-[10px] text-gray-500 mt-1 font-mono">
+                            Dano: <b className="text-red-400">{Number(l.damage || 0).toLocaleString("pt-BR")}</b> • Cap: {Number(l.cappedDamage || 0).toLocaleString("pt-BR")} • HP do boss: {Number(l.bossHp || 0).toLocaleString("pt-BR")}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             {tab === "inventory" && (
@@ -2621,6 +3025,7 @@ export default function AdminPage() {
                         { id: "all", label: "Todos" },
                         { id: "hitkill", label: "💥 Hitkill" },
                         { id: "economy", label: "💰 Economia" },
+                        { id: "worldboss", label: "🌍 Boss Mundial" },
                       ].map((f) => (
                         <button
                           key={f.id}
@@ -2659,14 +3064,17 @@ export default function AdminPage() {
                       const source = String(l.source || "");
                       const isHitkill = kind === "hitkill";
                       const isEconomy = kind === "economy";
+                      const isWbResult = kind === "worldboss_result";
                       const ts = l.createdAt ? new Date(String(l.createdAt)) : null;
                       return (
-                        <div key={String(l.id)} className={`rounded-xl border p-3 ${isHitkill ? "border-red-500/30 bg-red-950/20" : isEconomy ? "border-yellow-500/30 bg-yellow-950/15" : "border-white/10 bg-[#0a0a12]"}`}>
+                        <div key={String(l.id)} className={`rounded-xl border p-3 ${isHitkill ? "border-red-500/30 bg-red-950/20" : isEconomy ? "border-yellow-500/30 bg-yellow-950/15" : isWbResult ? "border-amber-400/40 bg-gradient-to-r from-amber-950/30 to-black/40" : "border-white/10 bg-[#0a0a12]"}`}>
                           <div className="flex flex-wrap items-center gap-2 mb-1.5">
                             {isHitkill ? (
                               <span className="text-[10px] px-2 py-0.5 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 font-bold">💥 HITKILL</span>
                             ) : isEconomy ? (
                               <span className="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 font-bold">💰 ECONOMIA</span>
+                            ) : isWbResult ? (
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-400/20 border border-amber-400/50 text-amber-300 font-bold">🏆 BOSS MUNDIAL — RESULTADO</span>
                             ) : (
                               <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-500/20 border border-gray-500/40 text-gray-300 font-bold">📋 LOG</span>
                             )}
@@ -2691,6 +3099,33 @@ export default function AdminPage() {
                               {l.playerMaxHit !== undefined && <>Dano máximo: <b className="text-red-400">{String(l.playerMaxHit)}</b> • HP do chefe: {String(l.bossHp)} • HP escalado: {String(l.scaledHp)} • Ataque escalado: {String(l.scaledAttack)}</>}
                               {l.damage !== undefined && <>Dano: <b className="text-red-400">{String(l.damage)}</b> • Cap aplicado: {String(l.cappedDamage)} • HP do boss: {String(l.bossHp)}</>}
                             </p>
+                          )}
+                          {isWbResult && l.top1 != null && (
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1.5">
+                              {[
+                                { medal: "🥇", label: "1º", data: l.top1, cls: "border-amber-400/60 bg-amber-400/10 text-amber-200" },
+                                { medal: "🥈", label: "2º", data: l.top2, cls: "border-slate-300/50 bg-slate-300/10 text-slate-200" },
+                                { medal: "🥉", label: "3º", data: l.top3, cls: "border-orange-400/50 bg-orange-400/10 text-orange-200" },
+                              ].map((slot) => {
+                                const d = slot.data as Record<string, unknown> | null | undefined;
+                                if (!d) {
+                                  return (
+                                    <div key={slot.medal} className={`rounded-xl border border-dashed border-white/10 p-2.5 text-center text-[11px] text-gray-600`}>
+                                      {slot.medal} {slot.label} — vazio
+                                    </div>
+                                  );
+                                }
+                                return (
+                                  <div key={slot.medal} className={`rounded-xl border p-2.5 flex items-center gap-2 ${slot.cls}`}>
+                                    <span className="text-xl">{slot.medal}</span>
+                                    <div className="min-w-0">
+                                      <div className="text-xs font-black truncate">{String(d.name || "?")}</div>
+                                      <div className="text-[10px] text-gray-400">⚔ {Number(d.damageDealt || 0).toLocaleString("pt-BR")} de dano</div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           )}
                           {isEconomy && (
                             <p className="text-[10px] text-gray-500 mt-1 font-mono">

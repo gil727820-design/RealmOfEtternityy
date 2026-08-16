@@ -870,12 +870,12 @@ export async function addAdminLog(kind: string, entry: Record<string, unknown>) 
   return full;
 }
 
-/** Lista logs administrativos, do mais recente para o mais antigo. */
-export async function listAdminLogs(kind?: string, limit = 100) {
+/** Lista logs administrativos, do mais recente para o mais antigo. Aceita
+ * filtro por `kind` (ex.: "hitkill") e/ou por `source` (ex.: "world-boss"). */
+export async function listAdminLogs(kind?: string, limit = 100, sourceArg?: string) {
   const all = await rowsOf(adminLogs);
-  const filtered = kind
-    ? all.filter((l: any) => String(l.kind) === String(kind))
-    : all;
+  let filtered = kind ? all.filter((l: any) => String(l.kind) === String(kind)) : all;
+  if (sourceArg) filtered = filtered.filter((l: any) => String(l.source) === String(sourceArg));
   return filtered
     .sort((a: any, b: any) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
     .slice(0, Math.max(1, Math.min(1000, Number(limit) || 100)));
@@ -887,6 +887,20 @@ export async function clearAdminLogs(kind?: string) {
   const target = kind
     ? all.filter((l: any) => String(l.kind) === String(kind))
     : all;
+  for (const rec of target) {
+    try {
+      await deleteRec(adminLogs, rec.id);
+    } catch { /* ignora */ }
+  }
+  return target.length;
+}
+
+/** Apaga logs administrativos por origem (ex.: todos os "world-boss"). */
+export async function clearAdminLogsBySource(kind: string | undefined, source: string) {
+  const all = await rowsOf(adminLogs);
+  const target = all.filter(
+    (l: any) => String(l.source) === String(source) && (!kind || String(l.kind) === String(kind))
+  );
   for (const rec of target) {
     try {
       await deleteRec(adminLogs, rec.id);
@@ -1273,6 +1287,7 @@ export default {
   addAdminLog,
   listAdminLogs,
   clearAdminLogs,
+  clearAdminLogsBySource,
   // códigos de resgate
   listCodes,
   findCodeByCodeValue,

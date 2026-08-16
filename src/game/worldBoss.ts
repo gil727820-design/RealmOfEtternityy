@@ -21,6 +21,9 @@ import {
   type DailyWindowStatus,
 } from "./schedule";
 import { MAX_LEVEL } from "./constants";
+import { randomUUID } from "crypto";
+
+export { randomUUID };
 
 export interface WorldBossStats {
   kind: string;
@@ -39,6 +42,8 @@ export interface WorldBossConfig {
   durationMinutes: number;
   /** Estatísticas do boss (kind = um chefe da torre, reusa imagem/nome). */
   boss: WorldBossStats;
+  /** Imagem personalizada do boss (caminho /images/...). Vazio = moeda da torre. */
+  bossImage?: string;
   /** Recompensas: pools distribuídas pela participação + moedas da torre fixas. */
   rewards: { gold: number; xp: number; towerCoins: number };
   /** Tamanho máximo do squad (líder + convidados). */
@@ -49,6 +54,28 @@ export interface WorldBossConfig {
   regenSec: number;
   /** Segundos para um jogador morto na batalha RENASCER (respaw) com HP cheio. */
   respawnSec: number;
+  /** Escudo por fases de HP (75%, 50%, 25% restante) — boss imune até comprarem quebra-escudo. */
+  shield: {
+    enabled: boolean;
+    /** Thresholds (fracão do HP restante) em que o escudo aparece. */
+    thresholds: number[];
+    /** Quanto tempo o escudo dura sozinho (s) antes de sumir e spawnar mobs. */
+    durationSec: number;
+    /** Custo do quebra-escudo comprado pelo jogador. */
+    breakCost: { currency: "gold" | "diamonds"; amount: number };
+  };
+  /** Mobs que o boss spawna quando o escudo SOME (via compra ou por expirar). */
+  spawnMobs: {
+    enabled: boolean;
+    /** kinds de monstros da torre que podem spawnar. */
+    kinds: string[];
+    /** HP de cada mob. */
+    hp: number;
+    /** Quantos mobs spawnam por vez. */
+    count: number;
+    /** Recompensa para QUEM matar o mob (ouro/XP). */
+    reward: { gold: number; xp: number };
+  };
 }
 
 export const DEFAULT_WORLD_BOSS: WorldBossConfig = {
@@ -63,11 +90,25 @@ export const DEFAULT_WORLD_BOSS: WorldBossConfig = {
     speed: 8,
     critical: 12,
   },
+  bossImage: "",
   rewards: { gold: 500_000, xp: 60_000, towerCoins: 1_000 },
   maxSquadSize: 4,
   attackCooldownSec: 5,
   regenSec: 60,
   respawnSec: 10,
+  shield: {
+    enabled: true,
+    thresholds: [0.75, 0.5, 0.25],
+    durationSec: 180,
+    breakCost: { currency: "diamonds", amount: 50 },
+  },
+  spawnMobs: {
+    enabled: true,
+    kinds: ["dragao"],
+    hp: 4_000_000,
+    count: 2,
+    reward: { gold: 100_000, xp: 15_000 },
+  },
 };
 
 /* ─── Estado do evento (persistido em server_settings.worldBossEvent) ─── */
@@ -99,6 +140,21 @@ export interface WorldBossSquad {
   invites: { targetId: string; at: number }[];
 }
 
+/** Um mob spawnado pelo boss enquanto o escudo some. */
+export interface WorldBossMob {
+  id: string;
+  kind: string;
+  maxHp: number;
+  hp: number;
+  /** Dano total recebido pelo mob (para a recompensa ser proporcional). */
+  damageDone: number;
+  /** Dano causado por cada jogador (proporcional para reward). */
+  damageBy: Record<string, number>;
+  spawnedAt: string;
+  killerName?: string;
+  rewardGiven: boolean;
+}
+
 export interface WorldBossEventState {
   /** Muda a cada janela — identifica a ocorrência atual do evento. */
   occurrenceId: string;
@@ -112,12 +168,28 @@ export interface WorldBossEventState {
   squads: WorldBossSquad[];
   log: string[];
   rewardsGiven: boolean;
+  /** Escudo por fases de HP (75/50/25). */
+  shieldActive: boolean;
+  shieldPhaseAt?: string | null;
+  /** threshold (fracao) em que o escudo atual apareceu. */
+  shieldThreshold?: number;
+  shieldExpiresAt?: number;
+  /** Thresholds que JÁ foram acionados (evita reactivar o mesmo). */
+  shieldThresholdsHit?: number[];
+  /** Mobs spawnados pelo boss. */
+  mobs: WorldBossMob[];
+  /** Quando os mobs foram spawnados (para expirar sozinhos). */
+  mobsSpawnedAt?: number;
 }
 
 export function sanitizeWorldBossConfig(raw: unknown): WorldBossConfig {
   if (!raw || typeof raw !== "object") return { ...DEFAULT_WORLD_BOSS };
   const g = raw as Record<string, unknown>;
   const b = (g.boss || {}) as Record<string, unknown>;
+  const sh = (g.shield || {}) as Record<string, unknown>;
+  const shCost = (sh.breakCost || {}) as Record<string, unknown>;
+  const mobs = (g.spawnMobs || {}) as Record<string, unknown>;
+  const mobReward = (mobs.reward || {}) as Record<string, unknown>;
 
   const num = (v: unknown, d: number, min = 0, max = Infinity) => {
     const n = Math.floor(Number(v));
@@ -127,6 +199,15 @@ export function sanitizeWorldBossConfig(raw: unknown): WorldBossConfig {
   const schedule: string[] = Array.isArray(g.schedule)
     ? g.schedule.filter(isValidScheduleTime).map(normalizeScheduleTime)
     : [];
+
+  const thresholds: number[] = (Array.isArray(sh.thresholds) ? sh.thresholds : [0.75, 0.5, 0.25])
+    .map((t) => {
+      const n = Number(t);
+      return Number.isFinite(n) && n > 0 && n <= 1 ? n : NaN;
+    })
+    .filter((n) => !Number.isNaN(n))
+    .sort((a, b) => a - b);
+  const kinds: string[] = (Array.isArray(mobs.kinds) ? mobs.kinds : []).filter((k) => typeof k === "string").slice(0, 20);
 
   return {
     enabled: !!g.enabled,
@@ -140,6 +221,7 @@ export function sanitizeWorldBossConfig(raw: unknown): WorldBossConfig {
       speed: num(b.speed, 8, 0, 1000),
       critical: num(b.critical, 12, 0, 100),
     },
+    bossImage: typeof g.bossImage === "string" ? g.bossImage : "",
     rewards: {
       gold: num((g.rewards as Record<string, unknown>)?.gold, 500_000, 0),
       xp: num((g.rewards as Record<string, unknown>)?.xp, 60_000, 0),
@@ -149,6 +231,25 @@ export function sanitizeWorldBossConfig(raw: unknown): WorldBossConfig {
     attackCooldownSec: num(g.attackCooldownSec, 5, 1, 3600),
     regenSec: num(g.regenSec, 60, 5, 3600),
     respawnSec: num(g.respawnSec, 10, 1, 600),
+    shield: {
+      enabled: !!sh.enabled,
+      thresholds: thresholds.length ? thresholds : [0.75, 0.5, 0.25],
+      durationSec: num(sh.durationSec, 180, 10, 3600),
+      breakCost: {
+        currency: shCost.currency === "diamonds" ? "diamonds" : "gold",
+        amount: num(shCost.amount, 50, 1, 100_000_000),
+      },
+    },
+    spawnMobs: {
+      enabled: !!mobs.enabled,
+      kinds: kinds.length ? kinds : (mobs.enabled ? ["dragao"] : []),
+      hp: num(mobs.hp, 4_000_000, 100_000, 2_000_000_000),
+      count: Math.min(12, Math.max(0, num(mobs.count, 2, 0, 12))),
+      reward: {
+        gold: num(mobReward.gold, 100_000, 0),
+        xp: num(mobReward.xp, 15_000, 0),
+      },
+    },
   };
 }
 
@@ -166,6 +267,13 @@ export function freshWorldBossEvent(cfg: WorldBossConfig, status: DailyWindowSta
     squads: [],
     log: [`👹 O Boss Mundial apareceu! Reúna sua squad e derrube-o!`],
     rewardsGiven: false,
+    shieldActive: false,
+    shieldPhaseAt: null,
+    shieldThreshold: undefined,
+    shieldExpiresAt: undefined,
+    shieldThresholdsHit: [],
+    mobs: [],
+    mobsSpawnedAt: undefined,
   };
 }
 

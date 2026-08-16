@@ -214,6 +214,14 @@ const es: Record<string, string> = {
   "worldBoss.joinHint": "¡Únete a la batalla para atacar al jefe y formar un escuadrón con otros jugadores!",
   "worldBoss.inviteNameRequired": "Escribe el nombre del jugador.",
   "worldBoss.log": "Registro de la batalla",
+  "worldBoss.shieldActive": "¡Escudo activo!",
+  "worldBoss.shieldImmune": "¡El jefe es INMUNE mientras el escudo esté activo! Compra un rompe-escudos para quitarlo.",
+  "worldBoss.shieldInactive": "El jefe puede levantar un escudo al llegar al 75%, 50% y 25% de vida.",
+  "worldBoss.shieldExpires": "El escudo desaparece solo en",
+  "worldBoss.buyBreakShield": "🔨 Rompe-escudos",
+  "worldBoss.shieldBroken": "🔨 ¡Escudo roto! El jefe vuelve a ser vulnerable.",
+  "worldBoss.mobs": "Criaturas del jefe",
+  "worldBoss.mobKilled": "eliminado",
 
   // Currencies
   "currency.gold": "Oro",

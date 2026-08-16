@@ -46,6 +46,9 @@ interface WorldBossData {
   attackCooldownSec: number;
   regenSec: number;
   respawnSec?: number;
+  bossImage?: string;
+  shieldConfig?: { enabled: boolean; thresholds: number[]; durationSec: number; breakCost: { currency: "gold" | "diamonds"; amount: number } };
+  spawnMobs?: { enabled: boolean; kinds: string[]; hp: number; count: number; reward: { gold: number; xp: number } };
   event: {
     status: string;
     bossHp: number;
@@ -55,6 +58,13 @@ interface WorldBossData {
     participantsCount: number;
     squads: SquadInfo[];
     log: string[];
+    shield?: {
+      active: boolean;
+      threshold: number | null;
+      phaseAt: string | null;
+      expiresInMs: number;
+    };
+    mobs?: Array<{ id: string; kind: string; hp: number; maxHp: number }>;
   } | null;
   me: { characterId: string; name: string; damageDealt: number; hits: number; hp: number; maxHp: number; deadAt: number | null } | null;
   mySquad: SquadInfo | null;
@@ -142,6 +152,7 @@ export default function WorldBossPanel() {
   if (!character) return null;
 
   const bossKind = (data?.boss?.kind || "void_wyrm") as TowerBossKind;
+  const bossImage = data?.bossImage || towerMonsterImage(bossKind);
   const open = !!data?.open;
   const event = data?.event ?? null;
   const bossAlive = event ? event.status === "open" && event.bossHp > 0 : true;
@@ -241,6 +252,55 @@ export default function WorldBossPanel() {
   };
   attackRef.current = attack;
 
+  /** Compra um quebra-escudo: remove o escudo do boss pelo custo configurado. */
+  const buyBreakShield = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/world-boss/break-shield", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characterId: character.id }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        notify(d.error || t("general.error", locale), "error");
+        return;
+      }
+      notify(d.message || t("worldBoss.shieldBroken", locale), "success");
+      await load();
+    } catch {
+      notify(t("general.error", locale), "error");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** Ataca um mob (target) spawnado pelo boss. */
+  const attackMob = async (mobId: string) => {
+    if (cooldownMs > 0 || busy) return;
+    setBusy(true);
+    try {
+      const res = await fetch("/api/world-boss/attack", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characterId: character.id, mobId }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        if (typeof d?.cooldownMs === "number" && d.cooldownMs > 0) setCooldownMs(d.cooldownMs);
+        if (!autoRef.current) notify(d.error || t("general.error", locale), "error");
+        return;
+      }
+      setCooldownMs(d.cooldownMs || 0);
+      await load();
+    } catch {
+      if (!autoRef.current) notify(t("general.error", locale), "error");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const mySquad = data?.mySquad ?? null;
   const me = data?.me ?? null;
   const isLeader = mySquad ? mySquad.leaderId === character.id : false;
@@ -251,13 +311,15 @@ export default function WorldBossPanel() {
   const deadButRespawnReady = me?.deadAt != null && playerRespawnMs != null && playerRespawnMs <= 0;
 
   // Condição do auto-ataque: só ataca se o jogador está apto (vivo OU com o
-  // respawn já pronto) e o boss está de pé — para não ficar batendo em evento morto.
+  // respawn já pronto), o boss está de pé e NÃO está com escudo (imune) —
+  // para não ficar golpeando no ar enquanto o escudo está ativo.
   const canAuto =
     !!data?.open &&
     !data?.won &&
     !!bossAlive &&
     !!me &&
     !respawnActive &&
+    !event?.shield?.active &&
     (me.hp > 0 || deadButRespawnReady);
   canAutoRef.current = canAuto;
 
@@ -321,9 +383,10 @@ export default function WorldBossPanel() {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.12),transparent_70%)]" />
             <div className="relative flex flex-col sm:flex-row items-center gap-6">
               <img
-                src={towerMonsterImage(bossKind)}
+                src={bossImage}
                 alt={t(`monster.${bossKind}`, locale)}
                 className="w-36 h-36 rounded-2xl border-2 border-red-500/60 object-cover shadow-[0_0_35px_rgba(239,68,68,0.4)] animate-floatSlow"
+                onError={(e) => { (e.target as HTMLImageElement).src = towerMonsterImage(bossKind); }}
               />
               <div className="flex-1 w-full">
 <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
@@ -366,6 +429,102 @@ export default function WorldBossPanel() {
               </div>
             </div>
           </div>
+
+          {/* 🛡️ Escudo ativo + quebra-escudo */}
+          {(event?.shield?.active || data?.shieldConfig?.enabled) && (
+            <div className="game-card p-5 rounded-2xl border-sky-800 bg-gradient-to-b from-sky-950/40 to-black/60 relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.08),transparent_70%)]" />
+              <div className="relative flex flex-wrap items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-sky-500/15 border-2 border-sky-500/50 flex items-center justify-center text-3xl animate-pulse-soft">
+                  🛡️
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                  <div className="text-sm font-bold text-sky-300 flex items-center gap-2">
+                    {t("worldBoss.shieldActive", locale)}
+                    {event?.shield?.threshold != null && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/15 border border-sky-500/40">
+                        {Math.round(event.shield.threshold * 100)}%
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {event?.shield?.active
+                      ? t("worldBoss.shieldImmune", locale)
+                      : t("worldBoss.shieldInactive", locale)}
+                  </p>
+                  {event?.shield?.active && typeof event.shield.expiresInMs === "number" && event.shield.expiresInMs > 0 && (
+                    <div className="mt-1 text-xs text-sky-400 tabular-nums font-bold">
+                      ⏱️ {t("worldBoss.shieldExpires", locale)}: {fmtCountdown(event.shield.expiresInMs)}
+                    </div>
+                  )}
+                </div>
+                {event?.shield?.active && (
+                  <button
+                    onClick={buyBreakShield}
+                    disabled={busy}
+                    className="game-btn game-btn-purple px-5 py-3 text-sm"
+                  >
+                    🔨 {t("worldBoss.buyBreakShield", locale)}
+                    {data?.shieldConfig?.breakCost && (
+                      <span className="block text-[10px] text-white/70">
+                        {data.shieldConfig.breakCost.currency === "diamonds" ? "💎" : "🪙"} {data.shieldConfig.breakCost.amount.toLocaleString()}
+                      </span>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 🐉 Mobs spawnados pelo boss */}
+          {event?.mobs && event.mobs.length > 0 && (
+            <div className="game-card p-5 rounded-2xl border-green-800 bg-gradient-to-b from-green-950/30 to-black/60">
+              <h3 className="text-sm font-bold text-green-300 mb-3 flex items-center gap-2">
+                🐉 {t("worldBoss.mobs", locale)}
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/15 border border-green-500/40 text-green-300">
+                  {event.mobs.length}
+                </span>
+              </h3>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {event.mobs.map((mob) => {
+                  const mobKind = mob.kind as TowerBossKind;
+                  const pct = mob.maxHp > 0 ? Math.max(0, Math.min(100, (mob.hp / mob.maxHp) * 100)) : 0;
+                  const alive = mob.hp > 0;
+                  return (
+                    <div key={mob.id} className="bg-white/5 rounded-2xl p-3 border border-white/10 flex items-center gap-3">
+                      <img
+                        src={towerMonsterImage(mobKind)}
+                        alt={t(`monster.${mob.kind}`, locale)}
+                        className={`w-16 h-16 rounded-xl object-cover border ${alive ? "border-green-500/50" : "border-gray-700 grayscale"}`}
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold text-white truncate">{t(`monster.${mob.kind}`, locale)}</div>
+                        <div className="mt-1 h-2 rounded-full bg-gray-800 overflow-hidden border border-white/10">
+                          <div
+                            className={`h-full transition-all duration-500 ${alive ? "bg-gradient-to-r from-green-600 to-green-400" : "bg-green-900"}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <div className="mt-1 text-[10px] text-gray-400 tabular-nums">
+                          {alive ? `${fmtBig(mob.hp)} / ${fmtBig(mob.maxHp)}` : "💀 " + t("worldBoss.mobKilled", locale)}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => attackMob(mob.id)}
+                        disabled={busy || cooldownMs > 0 || !alive || respawnActive || (me != null && me.hp <= 0 && !deadButRespawnReady)}
+                        className={`text-xs px-3 py-2 rounded-xl font-bold transition disabled:opacity-40 ${
+                          alive ? "bg-green-600 hover:bg-green-500 text-white" : "bg-gray-700 text-gray-500"
+                        }`}
+                      >
+                        {alive ? "⚔️ " + t("worldBoss.attack", locale) : "☠️"}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {!me ? (
             /* Entrar */

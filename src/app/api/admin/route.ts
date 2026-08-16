@@ -156,9 +156,69 @@ export async function GET(req: NextRequest) {
     if (action === "logs") {
       // Logs administrativos (ex.: avisos de hitkill da torre / boss mundial).
       const kind = url.searchParams.get("kind") || "";
+      const sourceArg = url.searchParams.get("source") || "";
       const limit = Math.max(1, Math.min(500, Number(url.searchParams.get("limit")) || 100));
-      const logs = await jsonDb.listAdminLogs(kind || undefined, limit);
+      const logs = await jsonDb.listAdminLogs(kind || undefined, limit, sourceArg || undefined);
       return NextResponse.json({ logs });
+    }
+
+    if (action === "world_boss_report") {
+      // Relatório do Boss Mundial para o painel: ranking de dano dos
+      // participantes do evento ATUAL + logs de hitkill com source "world-boss".
+      const { sanitizeWorldBossConfig } = await import("@/game/worldBoss");
+      const settings = await jsonDb.getServerSettings();
+      const cfg = sanitizeWorldBossConfig(settings?.worldBoss);
+      const event = settings?.worldBossEvent ?? null;
+
+      const participants: Array<Record<string, unknown>> = event?.participants
+        ? Object.values(event.participants)
+            .map((p: any) => ({
+              characterId: p.characterId,
+              name: p.name,
+              level: p.level,
+              classType: p.classType,
+              damageDealt: Number(p.damageDealt) || 0,
+              hits: Number(p.hits) || 0,
+              hp: Math.round(Number(p.hp) || 0),
+              maxHp: Math.round(Number(p.maxHp) || 0),
+              deadAt: p.deadAt ?? null,
+            }))
+            .sort((a: any, b: any) => Number(b.damageDealt) - Number(a.damageDealt))
+        : [];
+
+      // Top 3 de dano (medalhas 1/2/3).
+      const top3 = participants.slice(0, 3);
+
+      // Rotula com o dano "%" do total (depois de ordenar, o total real = soma).
+      const totalD = participants.reduce((s: number, p: any) => s + Number(p.damageDealt || 0), 0);
+      const top3WithShare = top3.map((p: any) => ({
+        ...p,
+        sharePct: totalD > 0 ? Math.round((Number(p.damageDealt) / totalD) * 100) : 0,
+      }));
+
+      // Logs de hitkill do boss mundial.
+      const logs = await jsonDb.listAdminLogs("hitkill", 200, "world-boss");
+      // + logs gerais com source world-boss de qualquer tipo.
+      const worldBossLogs = await jsonDb.listAdminLogs(undefined, 300, "world-boss");
+      const hitkillLogs = logs.filter((l: any) => String(l.source) === "world-boss");
+
+      return NextResponse.json({
+        report: {
+          enabled: cfg.enabled,
+          eventStatus: event?.status ?? null,
+          bossHp: Number(event?.bossHp) || 0,
+          bossMaxHp: Number(event?.bossMaxHp) || 0,
+          totalDamage: Number(event?.totalDamage) || 0,
+          participantsCount: participants.length,
+          shieldActive: !!event?.shieldActive,
+          shieldThreshold: event?.shieldThreshold ?? null,
+          participants,
+          top3: top3WithShare,
+          log: Array.isArray(event?.log) ? event.log.slice(-50) : [],
+        },
+        hitkillLogs,
+        worldBossLogs,
+      });
     }
 
     if (action === "purchases") {
@@ -645,6 +705,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, url, donateQrCode: settings.donateQrCode, message: "QR Code de donate atualizado!" });
     }
 
+    // ---- Foto do Boss Mundial (upload pelo Admin) ----
+    if (action === "upload_world_boss_image") {
+      if (!files) return NextResponse.json({ error: "Envie um arquivo de imagem" }, { status: 400 });
+      const file = files.get("file");
+      if (!file || typeof file === "string") {
+        return NextResponse.json({ error: "Arquivo ausente" }, { status: 400 });
+      }
+      const ext = path.extname(file.name).toLowerCase();
+      const IMG_EXT = [".png", ".jpg", ".jpeg", ".gif", ".webp"];
+      if (!IMG_EXT.includes(ext)) {
+        return NextResponse.json({ error: `Formato inválido. Use: ${IMG_EXT.join(", ")}` }, { status: 400 });
+      }
+      const buffer = Buffer.from(await file.arrayBuffer());
+      if (buffer.length === 0 || buffer.length > 10 * 1024 * 1024) {
+        return NextResponse.json({ error: "Arquivo inválido ou maior que 10MB" }, { status: 400 });
+      }
+      const dir = path.join(process.cwd(), "public", "uploads", "worldboss");
+      await fs.mkdir(dir, { recursive: true });
+      const fileName = `world_boss_${randomUUID()}${ext}`;
+      await fs.writeFile(path.join(dir, fileName), buffer);
+
+      const url = `/uploads/worldboss/${fileName}`;
+      await jsonDb.updateServerSettings({ worldBossImage: url });
+      return NextResponse.json({ success: true, url, message: "Foto do boss atualizada!" });
+    }
+
+    if (action === "reset_world_boss_image") {
+      await jsonDb.updateServerSettings({ worldBossImage: "" });
+      return NextResponse.json({ success: true, message: "Foto do boss removida (usa o visual da torre)." });
+    }
+
     // --- Skins (SKIN FULL) ---
 
     if (action === "give_skin") {
@@ -799,8 +890,16 @@ export async function POST(req: NextRequest) {
 
     // ---- Logs administrativos: limpar (todos ou por tipo) ----
     if (action === "clear_logs") {
-      const { kind } = body;
-      const removed = await jsonDb.clearAdminLogs(typeof kind === "string" && kind ? kind : undefined);
+      const { kind, source } = body;
+      let removed = 0;
+      if (typeof source === "string" && source) {
+        removed = await jsonDb.clearAdminLogsBySource(
+          typeof kind === "string" && kind ? kind : undefined,
+          source
+        );
+      } else {
+        removed = await jsonDb.clearAdminLogs(typeof kind === "string" && kind ? kind : undefined);
+      }
       return NextResponse.json({
         success: true,
         removed,

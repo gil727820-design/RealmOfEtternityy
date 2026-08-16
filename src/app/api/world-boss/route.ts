@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loadCtx } from "./_state";
-import { fmtBig, nextWorldBossOpening } from "@/game/worldBoss";
+import { fmtBig, nextWorldBossOpening, type WorldBossMob } from "@/game/worldBoss";
+import { randomUUID } from "@/game/worldBoss";
+import jsonDb from "@/db/repo";
 
 /**
  * Estado público do Evento Global (Boss Mundial).
@@ -14,12 +16,48 @@ export async function GET(req: NextRequest) {
     const { cfg, status, event } = await loadCtx();
     const characterId = new URL(req.url).searchParams.get("characterId") || null;
 
-    const bossImage = ""; // resolvido no cliente via towerMonsterImage(kind)
+    // Foto customizada do admin (server_settings.worldBossImage) tem prioridade;
+    // caso contrário o cliente resolve via towerMonsterImage(kind).
+    const settings = await jsonDb.getServerSettings();
+    const bossImage = cfg.bossImage || settings?.worldBossImage || "";
 
     // Evento CLOSED se o boss já foi derrotado (não respawna na mesma janela).
     // Nesse caso `nextOpening` aponta para a próxima abertura agendada.
     const won = event?.status === "won";
     const nextOpening = won ? nextWorldBossOpening(cfg) : status.nextOpening;
+
+    // Escudo expirado sozinho: remove e spawna a leva de mobs (mesma regra do
+    // ataque) — sem precisar de um jogador atacando para desbloquear.
+    const nowMs = Date.now();
+    if (event && event.status === "open" && event.shieldActive && (event.shieldExpiresAt ?? 0) <= nowMs) {
+      event.shieldActive = false;
+      event.shieldPhaseAt = null;
+      event.shieldThreshold = undefined;
+      event.shieldExpiresAt = undefined;
+      if (cfg.spawnMobs.enabled && cfg.spawnMobs.count > 0 && cfg.spawnMobs.kinds.length) {
+        const mobs: WorldBossMob[] = [];
+        for (let i = 0; i < cfg.spawnMobs.count; i++) {
+          const kind = cfg.spawnMobs.kinds[Math.floor(Math.random() * cfg.spawnMobs.kinds.length)];
+          mobs.push({
+            id: randomUUID(),
+            kind,
+            maxHp: cfg.spawnMobs.hp,
+            hp: cfg.spawnMobs.hp,
+            damageDone: 0,
+            damageBy: {},
+            spawnedAt: new Date(nowMs).toISOString(),
+            rewardGiven: false,
+          });
+        }
+        event.mobs = [...(event.mobs || []), ...mobs];
+        event.mobsSpawnedAt = nowMs;
+        event.log.push(`🛡️ O escudo caiu sozinho! O boss conjurou ${mobs.length} criatura(s).`);
+      } else {
+        event.log.push(`🛡️ O escudo do boss caiu sozinho!`);
+      }
+      if (event.log.length > 30) event.log = event.log.slice(-30);
+      await jsonDb.saveWorldBossEvent(event);
+    }
 
     const squadsPublic = event
       ? event.squads.map((s) => ({
@@ -47,6 +85,15 @@ export async function GET(req: NextRequest) {
           participantsCount: Object.keys(event.participants).length,
           squads: squadsPublic,
           log: event.log.slice(-25),
+          shield: {
+            active: !!event.shieldActive,
+            threshold: event.shieldThreshold ?? null,
+            phaseAt: event.shieldPhaseAt ?? null,
+            expiresInMs: event.shieldActive && event.shieldExpiresAt ? Math.max(0, event.shieldExpiresAt - Date.now()) : 0,
+          },
+          mobs: (event.mobs || [])
+            .filter((m) => m.hp > 0)
+            .map((m) => ({ id: m.id, kind: m.kind, hp: m.hp, maxHp: m.maxHp })),
         }
       : null;
 
@@ -98,6 +145,8 @@ export async function GET(req: NextRequest) {
       regenSec: cfg.regenSec,
       respawnSec: cfg.respawnSec,
       bossImage,
+      shieldConfig: cfg.shield,
+      spawnMobs: cfg.spawnMobs,
       event: publicEvent,
       me,
       mySquad,
