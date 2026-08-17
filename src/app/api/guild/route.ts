@@ -10,6 +10,7 @@ import {
   type GuildUpgrades,
 } from "@/game/guildLevels";
 import { syncGuildBuffsToCharacter, syncGuildBuffsToAllMembers } from "@/game/guildActivity";
+import { parseAbbrev } from "@/game/format";
 
 const MAX_MEMBERS = 10;
 
@@ -194,8 +195,10 @@ export async function POST(req: NextRequest) {
       const isMember = (Array.isArray(guild.members) ? guild.members : []).some((m: any) => m.id === String(characterId));
       if (!isMember) return NextResponse.json({ error: "Você não é membro desta guilda" }, { status: 403 });
 
-      const qty = Math.floor(Number(amount));
-      if (!Number.isFinite(qty) || qty < 100) {
+      // Aceita número ou abreviação (1K, 2.5M, 1B, 2T, 2QA, 2QD...)
+      const parsed = parseAbbrev(amount as string | number);
+      const qty = parsed ?? 0;
+      if (parsed == null || qty < 100) {
         return NextResponse.json({ error: "Doe pelo menos 100 de ouro" }, { status: 400 });
       }
       if ((char.gold || 0) < qty) {

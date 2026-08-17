@@ -4,6 +4,7 @@ import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
 import { classImage, CLASS_ICONS, type ClassName } from "@/game/constants";
 import BossBattle from "@/components/ui/BossBattle";
+import { fmtNum, parseAbbrev } from "@/game/format";
 
 type Member = { id: string; name: string; classType: string; sex: string; level: number; power?: number; rank: string; joinedAt?: string };
 type Invite = { id: string; guildId: string; guildName?: string; targetCharacterId?: string; targetName?: string; createdAt?: string };
@@ -71,6 +72,9 @@ export default function GuildPanel() {
   // Guerra de guildas
   const [warData, setWarData] = useState<Record<string, unknown> | null>(null);
   const [warTarget, setWarTarget] = useState("");
+
+  // Doação personalizada (aceita 1K, 2.5M, 1B, 2T, 2QA, 2QD...)
+  const [donateInput, setDonateInput] = useState("");
 
   // Boss de Guilda
   const [guildBoss, setGuildBoss] = useState<Record<string, unknown> | null>(null);
@@ -259,14 +263,21 @@ export default function GuildPanel() {
   const donate = async (amount: number) => {
     if (!characterId || !myGuild) return;
     if (!amount || amount < 100) { notify(t("guild.donateMin", locale), "error"); return; }
-    if (!window.confirm(`${t("guild.donate", locale)} ${amount.toLocaleString()} 🪙?`)) return;
+    if (!window.confirm(`${t("guild.donate", locale)} ${fmtNum(amount)} 🪙 (${amount.toLocaleString()})?`)) return;
     setBusy("donate");
     const d = await call({ action: "donate", characterId, guildId: String(myGuild.id), amount });
     setBusy(null);
     if (!d.success) { notify(d.error, "error"); return; }
-    notify(`✅ ${amount.toLocaleString()} 🪙 ${t("guild.donateOk", locale)}`, "success");
+    notify(`✅ ${fmtNum(amount)} 🪙 ${t("guild.donateOk", locale)}`, "success");
+    setDonateInput("");
     await load();
     await refreshChar();
+  };
+
+  // Doa o valor digitado (com sufixos K/M/B/T/QA/QD)
+  const donateCustom = () => {
+    if (donateParsed == null) { notify(t("guild.donateBad", locale), "error"); return; }
+    donate(donateParsed);
   };
 
   const upgradeGuild = async (upgradeId: string, nameKey: string) => {
@@ -385,6 +396,12 @@ export default function GuildPanel() {
   const members = (Array.isArray(myGuild?.members) ? (myGuild?.members as Member[]) : []) as Member[];
   const isLeader = members.some((m) => m.id === characterId && m.rank === "leader");
   const isLeaderOrOfficer = members.some((m) => m.id === characterId && (m.rank === "leader" || m.rank === "officer"));
+
+  // Pré-visualização do valor digitado (ex.: "1.5M" → 1.500.000)
+  const donateParsed = parseAbbrev(donateInput);
+  const myGold = Number(character?.gold) || 0;
+  const donateTooMuch = donateParsed != null && donateParsed > myGold;
+  const donateValid = donateParsed != null && donateParsed >= 100 && !donateTooMuch;
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="animate-fadeInDown">
@@ -433,7 +450,7 @@ export default function GuildPanel() {
               </div>
               <div className="bg-[#0a0a12] rounded-xl p-4 text-center border border-white/10">
                 <div className="text-gray-400 text-sm">{t("guild.bank", locale)}</div>
-                <div className="text-2xl font-black text-[#ffd700]">💰 {Number(myGuild.gold || 0).toLocaleString()}</div>
+                <div className="text-2xl font-black text-[#ffd700]">💰 {fmtNum(Number(myGuild.gold))}</div>
               </div>
             </div>
 
@@ -455,11 +472,39 @@ export default function GuildPanel() {
             {/* Doação */}
             <div className="bg-[#0a0a12] rounded-xl p-4 border border-white/10 mb-4">
               <h4 className="text-sm font-bold text-gray-300 mb-2">💛 {t("guild.donate", locale)}</h4>
-              <div className="flex gap-2 flex-wrap">
-                {[500, 2000, 5000, 10000].map((amt) => (
-                  <button key={amt} onClick={() => donate(amt)} disabled={busy === "donate"}
+              <div className="text-[10px] text-gray-500 mb-2">
+                {t("guild.donateMax", locale).replace("{0}", fmtNum(myGold))}
+              </div>
+              {/* digitar a quantidade (aceita 1K, 2.5M, 1B, 2T, 2QA, 2QD...) */}
+              <div className="flex gap-2">
+                <input
+                  value={donateInput}
+                  onChange={(e) => setDonateInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && donateValid && donateCustom()}
+                  placeholder={t("guild.donateCustom", locale)}
+                  className="game-input flex-1 min-w-0 text-sm"
+                />
+                <button onClick={donateCustom} disabled={busy === "donate" || !donateValid}
+                  className="text-sm bg-[#ffd700] hover:bg-yellow-400 text-black rounded-lg px-4 py-2 font-black disabled:opacity-40 whitespace-nowrap">
+                  {busy === "donate" ? "..." : `💛 ${t("guild.donateGo", locale)}`}
+                </button>
+              </div>
+              {/* pré-visualização do valor */}
+              {donateInput.trim() !== "" && (
+                <div className={`mt-1.5 text-[11px] font-bold ${donateTooMuch ? "text-red-400" : "text-[#ffd700]"}`}>
+                  {donateParsed == null
+                    ? `⚠ ${t("guild.donateBad", locale)}`
+                    : donateTooMuch
+                      ? `⚠ ${t("guild.donateMax", locale).replace("{0}", fmtNum(myGold))}`
+                      : `= ${fmtNum(donateParsed)} 🪙 (${donateParsed.toLocaleString()})`}
+                </div>
+              )}
+              {/* atalhos rápidos */}
+              <div className="flex gap-2 flex-wrap mt-2">
+                {[500, 2000, 5000, 10000, 50000, 100000].map((amt) => (
+                  <button key={amt} onClick={() => donate(amt)} disabled={busy === "donate" || amt > myGold}
                     className="text-xs bg-[#ffd700]/10 border border-[#ffd700]/30 text-[#ffd700] rounded-lg px-3 py-1.5 font-bold hover:bg-[#ffd700]/20 disabled:opacity-40">
-                    🪙 {amt.toLocaleString()}
+                    🪙 {fmtNum(amt)}
                   </button>
                 ))}
               </div>
@@ -483,7 +528,7 @@ export default function GuildPanel() {
                         {isLeaderOrOfficer && !atMax && (
                           <button onClick={() => upgradeGuild(String(def.id), String(def.nameKey))} disabled={busy === `up_${String(def.id)}`}
                             className="text-[10px] bg-[#00ff88]/10 border border-[#00ff88]/40 text-[#00ff88] rounded-lg px-2.5 py-1.5 font-bold hover:bg-[#00ff88]/20 disabled:opacity-40 whitespace-nowrap ml-2">
-                            {busy === `up_${String(def.id)}` ? "..." : `⬆️ ${Number(def.cost).toLocaleString()} 🪙`}
+                            {busy === `up_${String(def.id)}` ? "..." : `⬆️ ${fmtNum(Number(def.cost))} 🪙`}
                           </button>
                         )}
                         {atMax && <span className="text-[10px] text-[#ffd700] font-bold ml-2 whitespace-nowrap">MAX</span>}
@@ -604,7 +649,7 @@ export default function GuildPanel() {
                                 {busy === "declare" ? "..." : `⚔️ ${t("war.declare", locale)}`}
                               </button>
                             </div>
-                            <div className="text-[10px] text-gray-500">💰 {t("war.cost", locale)}: <b className="text-[#ffd700]">{declareCost.toLocaleString()} 🪙</b> • {t("war.duration", locale)}: 24h</div>
+                            <div className="text-[10px] text-gray-500">💰 {t("war.cost", locale)}: <b className="text-[#ffd700]">{fmtNum(declareCost)} 🪙</b> • {t("war.duration", locale)}: 24h</div>
                           </>
                         )}
                       </>
@@ -682,7 +727,7 @@ export default function GuildPanel() {
                         </button>
                         <button onClick={() => { setGuildBossExtra(true); setGuildBossBattle(true); }}
                           className="text-sm bg-[#ffd700]/15 border border-[#ffd700]/40 text-[#ffd700] rounded-lg px-3 py-2 font-bold hover:bg-[#ffd700]/25 disabled:opacity-40 whitespace-nowrap">
-                          💰 {t("gb.extra", locale)} ({extraCost.toLocaleString()})
+                          💰 {t("gb.extra", locale)} ({fmtNum(extraCost)})
                         </button>
                       </div>
                       {freeLeft <= 0 && <div className="text-[10px] text-gray-500 text-center">⏳ {t("gb.freeUsed", locale)}</div>}
