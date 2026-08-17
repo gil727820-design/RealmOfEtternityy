@@ -14,7 +14,7 @@ import { hatchPetEgg, grantPetPatch } from "@/game/pets";
 import { bossBattleStart, bossBattleStep } from "@/game/bossBattle";
 import {
   regionBossFor,
-  regionBossStats,
+  regionBossBattleMonster,
   bossKilledToday,
   bossDateKey,
   getBossKills,
@@ -72,13 +72,21 @@ export async function POST(req: NextRequest) {
     const allTemplates = await jsonDb.getAllItemTemplates();
     const now = new Date();
 
-    // Monstro da batalha (stats fixos da região, imagem do boss).
+    // Monstro da batalha (combate falso 🎬: stats de batalha + RAGE).
     const monster = {
       nameKey: boss.nameKey,
       image: boss.image,
       icon: boss.icon,
-      stats: regionBossStats(boss, char.level || 1),
+      stats: regionBossBattleMonster(char, boss),
       boss: true,
+      noScale: true,
+      // Arranha pelo menos 3% da vida máxima por rodada (não some contra defesa).
+      chipPct: 3,
+      // RAGE: o chefe parece fraco (o jogador domina no começo), mas ao
+      // chegar a 25% de vida ele se enfurece e desfere um SUPER ATAQUE
+      // (≈80% da vida máxima do jogador). Se sobreviver, ele se ESGOTA e
+      // você finaliza — se morrer, foi HUMILHADO. 🤡
+      rage: { at: 25, buffPct: 60, superMult: 2.5, superPctMaxHp: 80, exhaustPct: 15 },
     };
 
     const action = String(body?.action || "");

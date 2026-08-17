@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
 import { requireCharacterAuth } from "@/game/auth";
-import { regionBossFor, regionBossStats, bossKilledToday, bossDateKey, bossPowerPreview } from "@/game/regionBosses";
+import { regionBossFor, regionBossBattleMonster, bossKilledToday, bossDateKey, bossPowerPreview } from "@/game/regionBosses";
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,7 +20,8 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Nenhum boss nesta região" }, { status: 404 });
     }
 
-    const stats = regionBossStats(boss, char.level || 1);
+    // Stats da BATALHA (combate falso 🎬) — a prévia mostra o chefe "fraco".
+    const stats = regionBossBattleMonster(char, boss);
     const todayKey = bossDateKey();
 
     return NextResponse.json({

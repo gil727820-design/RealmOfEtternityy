@@ -111,6 +111,8 @@ export async function POST(req: NextRequest) {
       stats: miniBossBattleMonster(char, mb),
       boss: true,
       noScale: true,
+      // Arranha pelo menos 3% da vida máxima por rodada (não some contra defesa).
+      chipPct: 3,
       // RAGE MODE: o chefe parece fraco (o jogador domina no começo), mas ao
       // chegar a 30% de vida ele se enfurece e desfere um SUPER ATAQUE
       // (≈80% da vida máxima do jogador) que humilha quem subestimou.

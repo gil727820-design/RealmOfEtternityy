@@ -42,6 +42,12 @@ export interface BossBattleMonster {
    */
   noScale?: boolean;
   /**
+   * Piso de dano por rodada (% da vida MÁXIMA do jogador). Garante que o
+   * chefe "arranha" mesmo contra defesa alta — o jogador domina, mas a
+   * vida dele vai drenando até a RAGE (ex.: 5 = mínimo 5% da vida por golpe).
+   */
+  chipPct?: number;
+  /**
    * RAGE MODE 🎬 (cinemática do mini-boss): quando a vida do chefe cai abaixo
    * de `at`%, ele se enfurece, ganha `buffPct`% de ataque e desfere um
    * SUPER ATAQUE (não dá para esquivar). Se o jogador sobreviver, ainda
@@ -53,6 +59,13 @@ export interface BossBattleMonster {
     superMult: number; // multiplicador do SUPER ATAQUE (ex.: 2.5)
     /** Piso do super ataque: % da vida MÁXIMA do jogador (ex.: 80 = 80%). */
     superPctMaxHp?: number;
+    /**
+     * Se definido, DEPOIS do super ataque o chefe fica EXAUSTO e seu ataque
+     * cai para essa % do ataque base (ex.: 30 = 30%). O "all-in" cômico:
+     * ele se esgota te humilhando e você finaliza. Sem isso, o ataque fica
+     * buffado pelo resto da luta (mini-boss).
+     */
+    exhaustPct?: number;
   };
 }
 
@@ -78,6 +91,8 @@ export interface BossBattleState {
   petRevived: boolean;
   /** Chefe em RAGE MODE (ativou o super ataque). */
   monRaged: boolean;
+  /** Chefe EXAUSTO após o super ataque (ataque reduzido). */
+  monExhausted?: boolean;
 }
 
 /** Batalha abandonada expira após 2 min (mesmo TTL da torre). */
@@ -177,6 +192,7 @@ export function bossBattleStart(char: any, monster: BossBattleMonster) {
       round: 0,
       petRevived: false,
       monRaged: false,
+      monExhausted: false,
     },
   };
 }
@@ -217,10 +233,15 @@ export function bossBattleStep(
   const mon = monster.noScale
     ? { ...monster.stats, boss: monster.boss !== false }
     : antiOneShot({ ...monster.stats, boss: monster.boss !== false }, ca);
-  // Se o chefe já está em RAGE, o ataque dele fica buffado.
+  // Se o chefe já está em RAGE, o ataque dele fica buffado... ou EXAUSTO
+  // (quando `exhaustPct` está definido — o "all-in" que se esgota).
   const rage = monster.rage;
   if (rage && state.monRaged) {
-    mon.attack = Math.round(mon.attack * (1 + (rage.buffPct || 0) / 100));
+    if (state.monExhausted && rage.exhaustPct != null) {
+      mon.attack = Math.max(1, Math.round(mon.attack * (rage.exhaustPct / 100)));
+    } else {
+      mon.attack = Math.round(mon.attack * (1 + (rage.buffPct || 0) / 100));
+    }
   }
 
   // Estado atual (não confia cegamente no cliente).
@@ -230,6 +251,7 @@ export function bossBattleStep(
   let round = Math.max(0, Number(state.round) || 0);
   let petRevived = !!state.petRevived;
   let monRaged = !!state.monRaged;
+  let monExhausted = !!state.monExhausted;
 
   const log: string[] = [];
   const events: any[] = [];
@@ -347,6 +369,11 @@ export function bossBattleStep(
     if (charHp <= 0) {
       log.push(`😤 Você foi HUMILHADO pelo chefe... 🤡`);
     }
+    // O chefe se esgota com o "all-in": ataque despenca (virada cômica).
+    if (rage.exhaustPct != null) {
+      monExhausted = true;
+      log.push(`😮‍💨 O chefe se ESGOTOU com o SUPER ATAQUE... agora é sua vez!`);
+    }
   } else if (monHp > 0) {
     // Contra-ataque normal do chefe (se ainda vivo).
     const recv = skillFx.receivedMult != null && resolvedAction === "skill" ? skillFx.receivedMult : 1;
@@ -359,7 +386,14 @@ export function bossBattleStep(
       events.push({ type: "dodge", target: "player" });
     } else {
       const resistMult = Math.max(0.7, 1 - ca.resistance * 0.0033);
-      const taken = Math.max(1, Math.round((defended ? Math.max(1, Math.round(r.dmg * 0.5)) : r.dmg) * recv * resistMult));
+      const baseTaken = Math.max(1, Math.round((defended ? Math.max(1, Math.round(r.dmg * 0.5)) : r.dmg) * recv * resistMult));
+      // Piso de chip: o chefe sempre "arranha" % da vida máxima (anti-defesa),
+      // exceto quando está EXAUSTO (se esgotou no super ataque — ai é fraquinho).
+      const chipFloor =
+        monster.chipPct && !monExhausted
+          ? Math.max(1, Math.round(ca.maxHp * (monster.chipPct / 100) * (defended ? 0.5 : 1)))
+          : 0;
+      const taken = Math.max(baseTaken, chipFloor);
       charHp = Math.max(0, charHp - taken);
       log.push(`🗡️ O chefe atacou você! -${taken}${r.crit ? " 💥CRÍTICO!" : ""}`);
       events.push({ type: r.crit ? "crit" : "hit", target: "player", amount: taken });
@@ -405,6 +439,7 @@ export function bossBattleStep(
     round,
     petRevived,
     monRaged,
+    monExhausted,
   };
 
   return { battle, log, events, won, lost, rageKilled };

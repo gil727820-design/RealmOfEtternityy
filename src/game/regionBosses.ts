@@ -76,6 +76,28 @@ export function regionBossStats(boss: RegionBossDef, _charLevel?: number) {
   };
 }
 
+/**
+ * Stats do boss regional na BATALHA (combate falso 🎬): a vida aguenta ~7
+ * golpes do jogador e o ataque só arranha (~7% da vida máxima por rodada),
+ * então o jogador domina como num mega PvP e parece que vai ganhar. A
+ * ameaça real é a RAGE (super ataque) — e depois ele se esgota.
+ */
+export function regionBossBattleMonster(char: any, boss: RegionBossDef) {
+  const s = regionBossStats(boss, Math.max(1, Number(char?.level) || 1));
+  const playerMaxHit = Math.max(150, Math.round((Number(char?.attack) || 0) * 1.7));
+  const playerMaxHp = Math.max(250, Number(char?.maxHp) || 250);
+  return {
+    maxHp: Math.round(playerMaxHit * 7),
+    // Dominação: ataque CAPADO em ~5% da vida do jogador (sem hitkill no
+    // começo — o chefe "parece fraco" e o jogador domina como num mega PvP).
+    attack: Math.max(1, Math.min(s.attack, Math.round(playerMaxHp * 0.05))),
+    defense: Math.max(1, Math.round(s.defense * 0.7)),
+    speed: s.speed,
+    critical: Math.max(5, Math.round(s.critical * 0.6)),
+    dodge: Math.max(2, Math.round(s.dodge * 0.6)),
+  };
+}
+
 /** Chave de data local (YYYY-MM-DD) para o cooldown diário. */
 export function bossDateKey(now: Date = new Date()): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
