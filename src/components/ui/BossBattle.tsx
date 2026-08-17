@@ -57,9 +57,11 @@ export default function BossBattle({
   const [battle, setBattle] = useState<any>(null);
   const [result, setResult] = useState<any>(null);
   const [log, setLog] = useState<string[]>([]);
-  const [floats, setFloats] = useState<Array<{ id: number; target: string; amount: number; crit: boolean }>>([]);
+  const [floats, setFloats] = useState<Array<{ id: number; target: string; amount: number; crit: boolean; super?: boolean }>>([]);
   const [pShake, setPShake] = useState(0);
   const [mShake, setMShake] = useState(0);
+  const [rageFx, setRageFx] = useState(false);
+  const rageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoStop = useRef(false);
   const starting = useRef(false);
   const floatId = useRef(0);
@@ -99,6 +101,19 @@ export default function BossBattle({
         const id = ++floatId.current;
         setFloats((f) => [...f, { id, target: ev.target, amount: ev.amount, crit: ev.type === "crit" }]);
         setTimeout(() => setFloats((f) => f.filter((x) => x.id !== id)), 1100);
+      }
+      // SUPER ATAQUE: float gigante vermelho + tremor forte no jogador
+      if (ev.type === "super") {
+        const id = ++floatId.current;
+        setFloats((f) => [...f, { id, target: "player", amount: ev.amount, crit: true, super: true }]);
+        setTimeout(() => setFloats((f) => f.filter((x) => x.id !== id)), 1500);
+        setPShake((x) => x + 2);
+      }
+      // RAGE: banner "😡 RAGE!" no meio da tela
+      if (ev.type === "rage") {
+        setRageFx(true);
+        if (rageTimer.current) clearTimeout(rageTimer.current);
+        rageTimer.current = setTimeout(() => setRageFx(false), 1900);
       }
       if (ev.target === "monster" && ev.type !== "dodge") setMShake((x) => x + 1);
       if (ev.target === "player" && ev.type !== "dodge") setPShake((x) => x + 1);
@@ -163,6 +178,8 @@ export default function BossBattle({
     setBattle(null);
     setLog([]);
     setResult(null);
+    setRageFx(false);
+    if (rageTimer.current) clearTimeout(rageTimer.current);
     setStage("arena");
     onExit();
   };
@@ -171,8 +188,12 @@ export default function BossBattle({
     floats
       .filter((f) => f.target === side)
       .map((f) => (
-        <span key={f.id} className={`damage-float ${f.crit ? "damage-float-crit" : ""}`}>
-          {f.crit ? "💥" : ""}-{f.amount}
+        <span
+          key={f.id}
+          className={`damage-float ${f.crit ? "damage-float-crit" : ""}`}
+          style={f.super ? { fontSize: "1.9rem", color: "#ef4444", textShadow: "0 0 18px rgba(239,68,68,0.95)" } : undefined}
+        >
+          {f.super ? "💢" : f.crit ? "💥" : ""}-{f.amount}
         </span>
       ));
 
@@ -237,7 +258,16 @@ export default function BossBattle({
 
       {/* Batalha: barras de HP + log */}
       {stage === "battle" && battle && (
-        <div>
+        <div className="relative">
+          {/* Banner de RAGE (super ataque do chefe) */}
+          {rageFx && (
+            <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+              <div className="animate-bounceIn text-center">
+                <div className="text-6xl font-black text-red-500 drop-shadow-[0_0_30px_rgba(239,68,68,0.95)]">😡 RAGE!</div>
+                <div className="mt-1 text-sm font-black uppercase tracking-widest text-red-400 animate-pulse-soft">Super Ataque</div>
+              </div>
+            </div>
+          )}
           <div className="flex justify-between items-center mb-4 gap-2 flex-wrap">
             <div>
               <div className="text-xl font-black" style={{ color: accent }}>{title}</div>
@@ -272,13 +302,19 @@ export default function BossBattle({
 
             <div className="flex-1 text-center">
               <div className="relative inline-block">
-                <div key={mShake} className={mShake > 0 ? "animate-hit-shake" : ""}>
+                <div key={mShake} className={`${mShake > 0 ? "animate-hit-shake" : ""} ${battle.monRaged ? "animate-rage-pulse" : ""}`}>
                   <img
                     src={battle.monImage || monster.image}
                     alt={monsterName}
                     className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl border-2 object-cover"
-                    style={{ borderColor: `${accent}aa`, boxShadow: `0 0 25px ${accent}55` }}
+                    style={{
+                      borderColor: battle.monRaged ? "#ef4444" : `${accent}aa`,
+                      boxShadow: battle.monRaged ? "0 0 30px rgba(239,68,68,0.75)" : `0 0 25px ${accent}55`,
+                    }}
                   />
+                  {battle.monRaged && (
+                    <span className="absolute -top-2 -right-2 text-xl animate-pulse-soft" title="RAGE!">😡</span>
+                  )}
                 </div>
                 {floatEls("monster")}
               </div>
@@ -308,9 +344,13 @@ export default function BossBattle({
         <div className="text-center animate-scaleIn">
           <div className="text-7xl mb-3 animate-bounceIn">{result.won ? "🏆" : "💀"}</div>
           <h3 className={`text-3xl font-black mb-2 ${result.won ? "text-gold" : "text-hp-red"}`}>
-            {result.won ? t("tower.youWin", locale) : t("tower.youLose", locale)}
+            {result.won ? t("tower.youWin", locale) : result.rageKilled ? "🤡 HUMILHADO!" : t("tower.youLose", locale)}
           </h3>
-          <p className="text-gray-300 mb-1">{monsterName}</p>
+          <p className="text-gray-300 mb-1">
+            {result.rageKilled
+              ? `${monsterName} fingiu ser fraco só para te humilhar no final... 😤💢`
+              : monsterName}
+          </p>
           {result.won && result.rewards && (
             <div className="my-4 flex justify-center flex-wrap gap-3">
               <span className="px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/40 text-yellow-300 font-bold">🪙 {fmtNum(result.rewards.gold)}</span>

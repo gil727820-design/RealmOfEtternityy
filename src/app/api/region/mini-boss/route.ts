@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Nenhum mini-boss nesta região" }, { status: 404 });
     }
 
-    const stats = miniBossStats(mb, char.level || 1);
+    const stats = miniBossBattleMonster(char, mb);
     const lastKill = Number(char.miniBossKilledAt) || 0;
     const remainingMs = Math.max(0, MINI_BOSS_COOLDOWN_MS - (Date.now() - lastKill));
 
@@ -108,8 +108,13 @@ export async function POST(req: NextRequest) {
       nameKey: mb.nameKey,
       image: mb.image,
       icon: mb.icon,
-      stats: miniBossStats(mb, Math.max(1, Number(char.level) || 1)),
+      stats: miniBossBattleMonster(char, mb),
       boss: true,
+      noScale: true,
+      // RAGE MODE: o chefe parece fraco (o jogador domina no começo), mas ao
+      // chegar a 30% de vida ele se enfurece e desfere um SUPER ATAQUE
+      // (≈80% da vida máxima do jogador) que humilha quem subestimou.
+      rage: { at: 30, buffPct: 50, superMult: 2.5, superPctMaxHp: 80 },
     };
 
     const action = String(body?.action || "");
@@ -191,6 +196,26 @@ export async function POST(req: NextRequest) {
     const msg = e instanceof Error ? e.message : "Erro interno";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
+}
+
+/**
+ * Stats do mini-boss na BATALHA: "fraco entre aspas" 😈 — a vida aguenta
+ * ~5 golpes do jogador e o ataque só arranha (~7% da vida máxima por
+ * rodada), então o jogador domina como num mega PvP e parece que vai
+ * ganhar. A ameaça REAL é a RAGE (super ataque) no final.
+ */
+function miniBossBattleMonster(char: any, mb: any) {
+  const s = miniBossStats(mb, Math.max(1, Number(char?.level) || 1));
+  const playerMaxHit = Math.max(120, Math.round((Number(char?.attack) || 0) * 1.7));
+  const playerMaxHp = Math.max(200, Number(char?.maxHp) || 200);
+  return {
+    maxHp: Math.round(playerMaxHit * 5),
+    attack: Math.max(s.attack, Math.round(playerMaxHp * 0.07)),
+    defense: Math.max(1, Math.round(s.defense * 0.6)),
+    speed: s.speed,
+    critical: Math.max(5, Math.round(s.critical * 0.5)),
+    dodge: Math.max(2, Math.round(s.dodge * 0.5)),
+  };
 }
 
 /** Aplica as recompensas da vitória contra o mini-boss (XP/ouro/drops/cooldown). */

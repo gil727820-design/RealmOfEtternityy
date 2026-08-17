@@ -35,6 +35,25 @@ export interface BossBattleMonster {
   };
   /** Marca o monstro como chefe (borda dourada na UI). */
   boss?: boolean;
+  /**
+   * Pula o anti-one-shot (escala automática). Usado no mini-boss com RAGE:
+   * os stats reais da batalha já são calculados na rota (chefe "fraco" que
+   * o jogador domina) — o anti-one-shot inflaria o bicho e quebraria a cena.
+   */
+  noScale?: boolean;
+  /**
+   * RAGE MODE 🎬 (cinemática do mini-boss): quando a vida do chefe cai abaixo
+   * de `at`%, ele se enfurece, ganha `buffPct`% de ataque e desfere um
+   * SUPER ATAQUE (não dá para esquivar). Se o jogador sobreviver, ainda
+   * vence — a "virada" cômica que humilha quem subestimou o bicho.
+   */
+  rage?: {
+    at: number;       // % de vida que dispara a raiva (ex.: 30)
+    buffPct: number;  // % de ataque extra após a raiva (ex.: 40)
+    superMult: number; // multiplicador do SUPER ATAQUE (ex.: 2.5)
+    /** Piso do super ataque: % da vida MÁXIMA do jogador (ex.: 80 = 80%). */
+    superPctMaxHp?: number;
+  };
 }
 
 export interface BossBattleState {
@@ -57,6 +76,8 @@ export interface BossBattleState {
   charMp: number;
   round: number;
   petRevived: boolean;
+  /** Chefe em RAGE MODE (ativou o super ataque). */
+  monRaged: boolean;
 }
 
 /** Batalha abandonada expira após 2 min (mesmo TTL da torre). */
@@ -129,7 +150,9 @@ function antiOneShot(mon: any, ca: any) {
 /** Inicia a batalha: estado fresco com stats do monstro e do herói. */
 export function bossBattleStart(char: any, monster: BossBattleMonster) {
   const { ca, petBuff } = buildCharCombat(char);
-  const mon = antiOneShot({ ...monster.stats, boss: monster.boss !== false }, ca);
+  const mon = monster.noScale
+    ? { ...monster.stats, boss: monster.boss !== false }
+    : antiOneShot({ ...monster.stats, boss: monster.boss !== false }, ca);
   return {
     ca,
     petBuff,
@@ -153,6 +176,7 @@ export function bossBattleStart(char: any, monster: BossBattleMonster) {
       charMp: ca.maxMana,
       round: 0,
       petRevived: false,
+      monRaged: false,
     },
   };
 }
@@ -163,6 +187,8 @@ export interface BossBattleStepResult {
   events: any[];
   won: boolean;
   lost: boolean;
+  /** Jogador foi morto pelo SUPER ATAQUE da raiva (derrota cômica). */
+  rageKilled?: boolean;
   error?: string;
   code?: string;
 }
@@ -188,7 +214,14 @@ export function bossBattleStep(
   }
 
   const { ca, petBuff } = buildCharCombat(char);
-  const mon = antiOneShot({ ...monster.stats, boss: monster.boss !== false }, ca);
+  const mon = monster.noScale
+    ? { ...monster.stats, boss: monster.boss !== false }
+    : antiOneShot({ ...monster.stats, boss: monster.boss !== false }, ca);
+  // Se o chefe já está em RAGE, o ataque dele fica buffado.
+  const rage = monster.rage;
+  if (rage && state.monRaged) {
+    mon.attack = Math.round(mon.attack * (1 + (rage.buffPct || 0) / 100));
+  }
 
   // Estado atual (não confia cegamente no cliente).
   let charHp = Math.min(ca.maxHp, Math.max(1, Number(state.charHp) || ca.maxHp));
@@ -196,6 +229,7 @@ export function bossBattleStep(
   let monHp = Math.min(mon.maxHp, Math.max(0, Number(state.monHp) || mon.maxHp));
   let round = Math.max(0, Number(state.round) || 0);
   let petRevived = !!state.petRevived;
+  let monRaged = !!state.monRaged;
 
   const log: string[] = [];
   const events: any[] = [];
@@ -287,8 +321,34 @@ export function bossBattleStep(
   let won = monHp <= 0;
   let lost = false;
 
-  // Contra-ataque do chefe (se ainda vivo).
-  if (monHp > 0) {
+  // ---- RAGE MODE 🎬 ----
+  // O chefe parecia fraco (mega PvP de um lado só)... até a vida dele cair
+  // abaixo do limite: ele se enfurece e desfere um SUPER ATAQUE que humilha.
+  let superAttack = false;
+  if (rage && !monRaged && monHp > 0 && monHp <= mon.maxHp * Math.max(0.05, Math.min(0.9, (rage.at || 30) / 100))) {
+    monRaged = true;
+    const buffMult = 1 + (rage.buffPct || 0) / 100;
+    log.push(`😡 O chefe ficou FURIOSO! ⚠️`);
+    log.push(`🌀 Ele carrega um SUPER ATAQUE devastador...`);
+    events.push({ type: "rage", target: "monster" });
+    // O contra-ataque desta rodada vira o SUPER ATAQUE (impossível esquivar).
+    superAttack = true;
+    const pctFloor = Math.max(0.3, Math.min(1.5, (rage.superPctMaxHp ?? 80) / 100));
+    const superDmg = Math.max(
+      1,
+      Math.round(mon.attack * buffMult * (rage.superMult || 2.5)),
+      Math.round(ca.maxHp * pctFloor)
+    );
+    const resistMult = Math.max(0.7, 1 - ca.resistance * 0.0033);
+    const taken = Math.max(1, Math.round((defended ? Math.round(superDmg * 0.5) : superDmg) * resistMult) - Math.round(ca.defense * 0.4));
+    charHp = Math.max(0, charHp - taken);
+    log.push(`💢💥 SUPER ATAQUE! -${taken} 💢`);
+    events.push({ type: "super", target: "player", amount: taken });
+    if (charHp <= 0) {
+      log.push(`😤 Você foi HUMILHADO pelo chefe... 🤡`);
+    }
+  } else if (monHp > 0) {
+    // Contra-ataque normal do chefe (se ainda vivo).
     const recv = skillFx.receivedMult != null && resolvedAction === "skill" ? skillFx.receivedMult : 1;
     const r = strike(
       { attack: mon.attack, critical: mon.critical, precision: 0 },
@@ -304,16 +364,17 @@ export function bossBattleStep(
       log.push(`🗡️ O chefe atacou você! -${taken}${r.crit ? " 💥CRÍTICO!" : ""}`);
       events.push({ type: r.crit ? "crit" : "hit", target: "player", amount: taken });
     }
-    // Fênix revive 1x por batalha.
-    if (charHp <= 0 && petBuff?.revive && !petRevived) {
-      charHp = 1;
-      petRevived = true;
-      log.push("🔥 Sua Fênix reviveu você! +1 HP");
-      events.push({ type: "revive", target: "player", amount: 1 });
-    } else if (charHp <= 0) {
-      lost = true;
-    }
   }
+  // Fênix revive 1x por batalha.
+  if (charHp <= 0 && petBuff?.revive && !petRevived) {
+    charHp = 1;
+    petRevived = true;
+    log.push("🔥 Sua Fênix reviveu você! +1 HP");
+    events.push({ type: "revive", target: "player", amount: 1 });
+  } else if (charHp <= 0) {
+    lost = true;
+  }
+  const rageKilled = lost && superAttack;
 
   round += 1;
 
@@ -343,7 +404,8 @@ export function bossBattleStep(
     charMp,
     round,
     petRevived,
+    monRaged,
   };
 
-  return { battle, log, events, won, lost };
+  return { battle, log, events, won, lost, rageKilled };
 }
