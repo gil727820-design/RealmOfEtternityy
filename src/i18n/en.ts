@@ -1308,6 +1308,13 @@ const en: Record<string, string> = {
   "inv.power": "Power",
   "inv.classRestriction": "Your class cannot use this item.",
   "inv.includes": "includes",
+  "inv.bulkSelect": "Multi-select",
+  "inv.bulkExit": "Exit",
+  "inv.bulkSell": "Sell Selected",
+  "inv.bulkConfirm": "Confirm sale",
+  "inv.bulkSelected": "selected",
+  "inv.bulkTotal": "Total value",
+  "inv.bulkHint": "Click items to mark them — equipped items can't be sold.",
 
   // Potions / consumables
   "item.hp_potion": "Health Potion",

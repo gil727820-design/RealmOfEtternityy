@@ -1081,6 +1081,13 @@ const es: Record<string, string> = {
   "inv.power": "Poder",
   "inv.classRestriction": "Tu clase no puede usar este objeto.",
   "inv.includes": "incluye",
+  "inv.bulkSelect": "Seleccionar Varios",
+  "inv.bulkExit": "Salir",
+  "inv.bulkSell": "Vender Seleccionados",
+  "inv.bulkConfirm": "Confirmar venta",
+  "inv.bulkSelected": "seleccionado(s)",
+  "inv.bulkTotal": "Valor total",
+  "inv.bulkHint": "Haz clic en los objetos para marcarlos — los equipados no se pueden vender.",
 
   // Potions / consumables
   "item.hp_potion": "Poción de Vida",

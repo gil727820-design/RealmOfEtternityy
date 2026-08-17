@@ -1379,6 +1379,13 @@ const ptBR: Record<string, string> = {
   "inv.power": "Poder",
   "inv.classRestriction": "Sua classe não pode usar este item.",
   "inv.includes": "inclui",
+  "inv.bulkSelect": "Selecionar Vários",
+  "inv.bulkExit": "Sair",
+  "inv.bulkSell": "Vender Selecionados",
+  "inv.bulkConfirm": "Confirmar venda",
+  "inv.bulkSelected": "selecionado(s)",
+  "inv.bulkTotal": "Valor total",
+  "inv.bulkHint": "Clique nos itens para marcar — equipados não podem ser vendidos.",
 
   // Poções / consumíveis
   "item.hp_potion": "Poção de Vida",

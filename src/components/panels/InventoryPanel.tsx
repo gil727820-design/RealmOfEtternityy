@@ -436,6 +436,10 @@ export default function InventoryPanel() {
   const [removePending, setRemovePending] = useState<string | null>(null);
   const [sellAllPending, setSellAllPending] = useState<string | null>(null);
   const [amount, setAmount] = useState(1);
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkSelected, setBulkSelected] = useState<Set<string>>(new Set());
+  const [bulkArmed, setBulkArmed] = useState(false);
+  const [bulkPending, setBulkPending] = useState(false);
   const [equipFx, setEquipFx] = useState<{ tick: number; slot: string | null }>({ tick: 0, slot: null });
   const timers = useRef<Array<ReturnType<typeof setTimeout>>>([]);
 
@@ -459,6 +463,34 @@ export default function InventoryPanel() {
     setSelectedId(id);
     setAmount(1);
   };
+
+  // ── Seleção em massa (vender vários de uma vez) ──
+  const toggleBulk = (id: string) => {
+    const it = items.find((x) => x.inv.id === id);
+    if (it?.inv?.equipped) return; // equipado não pode ser vendido
+    setBulkSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const exitBulk = () => {
+    setBulkMode(false);
+    setBulkSelected(new Set());
+    setBulkArmed(false);
+    setBulkPending(false);
+  };
+
+  const bulkValue = useMemo(() => {
+    let v = 0;
+    bulkSelected.forEach((id) => {
+      const it = items.find((x) => x.inv.id === id);
+      if (it) v += (it.template?.sellPrice || 0) * (it.quantity ?? 1);
+    });
+    return v;
+  }, [bulkSelected, items]);
 
   const loadAll = useCallback(async () => {
     if (!characterId) return;
@@ -512,7 +544,7 @@ export default function InventoryPanel() {
   );
 
   const totalSlots = items.length;
-  const capacity = 60;
+  const capacity = 1000;
   const totalValue = useMemo(
     () => items.reduce((acc, it) => acc + (it.template?.sellPrice || 0) * (it.quantity ?? 1), 0),
     [items]
@@ -703,6 +735,42 @@ const selected = items.find((it) => it.inv.id === selectedId) ?? null;
     }
   };
 
+  // 1º clique arma a confirmação, 2º clique vende TUDO selecionado de uma vez
+  const doBulkSell = async () => {
+    if (!bulkArmed) {
+      setBulkArmed(true);
+      const timer = setTimeout(() => setBulkArmed(false), 4000);
+      timers.current.push(timer);
+      return;
+    }
+    setBulkArmed(false);
+    const list = items
+      .filter((it) => bulkSelected.has(it.inv.id) && !it.inv?.equipped)
+      .map((it) => ({ inventoryItemId: it.inv.id, quantity: it.quantity ?? 1 }));
+    if (list.length === 0) {
+      exitBulk();
+      return;
+    }
+    setBulkPending(true);
+    try {
+      const res: any = await run("/api/inventory/sell", { items: list });
+      if (res.failed) {
+        notify(res.error ?? t("general.error", locale), "error");
+        return;
+      }
+      notify(
+        `${t("inv.sold", locale)} ${fmt(res.goldEarned ?? 0)} 🪙 (${res.sold ?? list.length} ${t("inv.items", locale)})`,
+        "success"
+      );
+      exitBulk();
+    } catch {
+      notify(t("general.error", locale), "error");
+    } finally {
+      await loadAll();
+      setBulkPending(false);
+    }
+  };
+
   const doRemove = async (id: string, qty: number) => {
     setBusy(id);
     try {
@@ -793,6 +861,21 @@ const categories = [
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          {/* Seleção em massa: marca vários itens para vender de uma vez */}
+          {category !== "skins" && category !== "visual" && (
+            <button
+              onClick={() => (bulkMode ? exitBulk() : setBulkMode(true))}
+              disabled={busy !== null}
+              className={`rounded-xl border px-3 py-2 text-xs font-black transition-all disabled:opacity-40 ${
+                bulkMode
+                  ? "border-[#e94560] bg-[#e94560]/20 text-white"
+                  : "border-white/15 bg-white/10 text-gray-200 hover:bg-white/20"
+              }`}
+              title={t("inv.bulkSelect", locale)}
+            >
+              {bulkMode ? "✕ " + t("inv.bulkExit", locale) : "☑️ " + t("inv.bulkSelect", locale)}
+            </button>
+          )}
           {/* Equipar Melhor: equipa o melhor item de cada slot automaticamente */}
           {category !== "skins" && category !== "visual" && (
             <button
@@ -826,6 +909,43 @@ const categories = [
           </div>
         </div>
       </header>
+
+      {/* ---------- barra de seleção em massa ---------- */}
+      {bulkMode && (
+        <div className="sticky top-2 z-20 flex flex-wrap items-center gap-3 rounded-2xl border border-[#e94560]/50 bg-[#1a0f1a]/95 px-4 py-3 shadow-[0_0_24px_rgba(233,69,96,0.25)] backdrop-blur">
+          <span className="text-sm font-black text-white">
+            ☑️ {bulkSelected.size} {t("inv.bulkSelected", locale)}
+          </span>
+          <span className="text-xs text-gray-400">
+            {t("inv.bulkTotal", locale)}:{" "}
+            <span className="font-black text-yellow-300">{fmt(bulkValue)} 🪙</span>
+          </span>
+          <span className="hidden text-[10px] text-gray-500 md:inline">{t("inv.bulkHint", locale)}</span>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={doBulkSell}
+              disabled={bulkSelected.size === 0 || bulkPending}
+              className={`rounded-xl px-4 py-2 text-sm font-black transition-all disabled:opacity-40 ${
+                bulkArmed
+                  ? "animate-pulse-soft border border-yellow-500/60 bg-yellow-500/20 text-yellow-300"
+                  : "bg-gradient-to-r from-[#e94560] to-[#ff7b81] text-white shadow-[0_0_18px_rgba(233,69,96,0.35)] hover:brightness-110"
+              }`}
+            >
+              {bulkPending
+                ? "…"
+                : bulkArmed
+                  ? `${t("inv.bulkConfirm", locale)}!`
+                  : `${t("inv.bulkSell", locale)} (${bulkSelected.size})`}
+            </button>
+            <button
+              onClick={exitBulk}
+              className="rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-sm font-bold text-gray-300 transition-all hover:bg-white/20"
+            >
+              ✕ {t("inv.bulkExit", locale)}
+            </button>
+          </div>
+        </div>
+      )}
 
       {category === "skins" ? (
         <>
@@ -1023,6 +1143,7 @@ const categories = [
                 const tpl = it.template || {};
                 const id = it.inv.id;
                 const active = selectedId === id;
+                const isBulkSel = bulkMode && bulkSelected.has(id);
                 const rarityHex = RARITY_COLORS[tpl.rarity];
                 const ench = it.inv?.enchant ? enchantById(String(it.inv.enchant)) : null;
                 const bossEnch = !!it.inv?.enchant && isBossEnchant(String(it.inv.enchant));
@@ -1031,9 +1152,9 @@ const categories = [
                 return (
                   <button
                     key={id}
-                    onClick={() => selectItem(id)}
+                    onClick={() => (bulkMode ? toggleBulk(id) : selectItem(id))}
                     className={`group relative flex flex-col items-center gap-1 overflow-hidden rounded-xl border bg-bg-card px-2 pt-2 pb-1.5 transition-all hover:-translate-y-0.5 hover:bg-bg-surface hover:shadow-lg ${
-                      active ? "border-[#e94560] ring-2 ring-[#e94560]/40" : ""
+                      active || isBulkSel ? "border-[#e94560] ring-2 ring-[#e94560]/40" : ""
                     }`}
                     style={
                       !active && ench
@@ -1044,6 +1165,20 @@ const categories = [
                     }
                   >
                     <div className="relative grid w-full place-items-center">
+                      {/* checkbox da seleção em massa */}
+                      {bulkMode && (
+                        <span
+                          className={`absolute top-0 left-0 z-10 grid h-5 w-5 place-items-center rounded-md border text-[10px] font-black transition-all ${
+                            isBulkSel
+                              ? "border-[#e94560] bg-[#e94560] text-white shadow-[0_0_10px_rgba(233,69,96,0.6)]"
+                              : it.inv?.equipped
+                                ? "border-white/10 bg-black/40 text-transparent opacity-40"
+                                : "border-white/30 bg-black/50 text-transparent"
+                          }`}
+                        >
+                          ✓
+                        </span>
+                      )}
                       <ItemIcon template={tpl} className="h-12 w-12 object-contain" emojiClass="text-3xl" alt="" />
                       {/* ✦ item ENCANTADO — selo roxo com brilho (🔥 vermelho se for de CHEFE) */}
                       {ench && (
