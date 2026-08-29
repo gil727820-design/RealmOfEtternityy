@@ -82,6 +82,11 @@ export default function GuildPanel() {
   const [guildBossBattle, setGuildBossBattle] = useState(false);
   const [guildBossExtra, setGuildBossExtra] = useState(false);
 
+  // Skills da Guilda
+  const [guildSkills, setGuildSkills] = useState<Array<Record<string, unknown>>>([]);
+  const [guildCoins, setGuildCoins] = useState(0);
+  const [skillBusy, setSkillBusy] = useState<string | null>(null);
+
   const load = useCallback(async () => {
     if (!characterId) return;
     setLoading(true);
@@ -128,6 +133,38 @@ export default function GuildPanel() {
     } catch { /* ignore */ }
   }, [characterId]);
 
+  const loadGuildSkills = useCallback(async () => {
+    if (!characterId) return;
+    try {
+      const res = await fetch(`/api/guild/skills?characterId=${encodeURIComponent(characterId)}`);
+      const d = await res.json();
+      if (!d.error) {
+        setGuildSkills(d.skills || []);
+        setGuildCoins(d.guildCoins || 0);
+      }
+    } catch { /* ignore */ }
+  }, [characterId]);
+
+  const upgradeSkill = async (skillId: string) => {
+    if (!characterId || skillBusy) return;
+    setSkillBusy(skillId);
+    try {
+      const res = await fetch("/api/guild/skills", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ characterId, skillId }),
+      });
+      const d = await res.json();
+      if (res.ok) {
+        notify(d.message || "Skill upgraded!", "success");
+        await loadGuildSkills();
+      } else {
+        notify(d.error || "Error", "error");
+      }
+    } catch { notify("Error", "error"); }
+    setSkillBusy(null);
+  };
+
   useEffect(() => { load(); }, [load]);
 
   // Carrega a guerra junto com a guilda e a cada 15s enquanto houver guerra ativa
@@ -135,9 +172,10 @@ export default function GuildPanel() {
     if (!myGuild?.id) return;
     loadWar();
     loadGuildBoss();
+    loadGuildSkills();
     const id = setInterval(loadWar, 15000);
     return () => clearInterval(id);
-  }, [myGuild?.id, loadWar, loadGuildBoss]);
+  }, [myGuild?.id, loadWar, loadGuildBoss, loadGuildSkills]);
 
   // Polling do chat a cada 4 segundos enquanto estiver na guilda
   useEffect(() => {
@@ -749,6 +787,53 @@ export default function GuildPanel() {
                 </div>
               );
             })()}
+
+            {/* Skills da Guilda */}
+            {guildSkills.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-bold text-[#a855f7]">⚔️ Skills da Guilda</h4>
+                  <span className="text-[10px] text-[#ffd700] font-bold">🪙 {guildCoins.toLocaleString()}</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {guildSkills.map((s) => {
+                    const level = Number(s.currentLevel) || 0;
+                    const maxed = level >= Number(s.maxLevel);
+                    const canUpgrade = s.canUpgrade && !maxed;
+                    return (
+                      <div key={String(s.id)} className={`rounded-xl border p-2.5 ${maxed ? "border-[#ffd700]/40 bg-[#ffd700]/5" : "border-white/10 bg-[#0a0a12]"}`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-lg">{String(s.icon)}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-[11px] font-bold text-white truncate">{String(s.nameKey)}</div>
+                            <div className="text-[9px] text-gray-500">Lv.{level}/{String(s.maxLevel)}</div>
+                          </div>
+                        </div>
+                        <div className="text-[9px] text-gray-400 mb-1.5">{String(s.description)}</div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[9px] text-[#00ff88] font-bold">+{String(s.currentBonus)}%</span>
+                          {!maxed ? (
+                            <button
+                              onClick={() => upgradeSkill(String(s.id))}
+                              disabled={!canUpgrade || skillBusy !== null}
+                              className={`text-[9px] px-2 py-0.5 rounded-lg font-bold transition ${
+                                canUpgrade
+                                  ? "bg-[#a855f7]/20 border border-[#a855f7]/40 text-[#a855f7] hover:bg-[#a855f7]/30"
+                                  : "bg-white/5 text-gray-600 cursor-not-allowed"
+                              }`}
+                            >
+                              {skillBusy === s.id ? "..." : `🪙 ${Number(s.upgradeCost).toLocaleString()}`}
+                            </button>
+                          ) : (
+                            <span className="text-[9px] text-[#ffd700] font-bold">MAX ✓</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Membros */}
             <div>
