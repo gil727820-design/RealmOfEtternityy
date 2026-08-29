@@ -21,6 +21,7 @@ const NAV_SECTIONS: NavSection[] = [
       { tab: "missions", icon: "📜", image: "/images/sidebar/menu_missoes.png", labelKey: "nav.missions", color: "#4ecdc4" },
       { tab: "inventory", icon: "🎒", image: "/images/sidebar/menu_inventario.png", labelKey: "nav.inventory", color: "#ffd700" },
       { tab: "crafting", icon: "🧪", image: "/images/sidebar/menu_inventario.png", labelKey: "nav.crafting", color: "#f59e0b" },
+      { tab: "trade", icon: "🔄", image: "/images/sidebar/menu_inventario.png", labelKey: "nav.trade", color: "#3b82f6" },
       { tab: "map", icon: "🗺️", image: "/images/sidebar/menu_mapa.png", labelKey: "nav.map", color: "#22c55e" },
       { tab: "tower", icon: "🗼", image: "/images/sidebar/menu_torre.png", labelKey: "nav.tower", color: "#a855f7" },
       { tab: "pets", icon: "🐾", image: "/images/sidebar/menu_pets.png", labelKey: "nav.pets", color: "#22d3ee" },
