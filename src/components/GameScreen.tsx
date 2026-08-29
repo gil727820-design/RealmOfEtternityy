@@ -8,7 +8,6 @@ import TopBar from "./TopBar";
 import DashboardPanel from "./panels/DashboardPanel";
 import MissionsPanel from "./panels/MissionsPanel";
 import InventoryPanel from "./panels/InventoryPanel";
-import ChallengePanel from "./panels/ChallengePanel";
 import DailyEventsPanel from "./panels/DailyEventsPanel";
 import InheritancePanel from "./panels/InheritancePanel";
 import EnchantmentsPanel from "./panels/EnchantmentsPanel";
@@ -190,7 +189,6 @@ export default function GameScreen() {
       case "dashboard": case "character": return <DashboardPanel />;
       case "missions": return <MissionsPanel />;
       case "inventory": return <InventoryPanel />;
-      case "challenge": return <ChallengePanel />;
       case "dailyevents": return <DailyEventsPanel />;
       case "skinshop": return <SkinShopPanel />;
       case "questlines": return <QuestlinesPanel />;

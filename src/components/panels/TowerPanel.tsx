@@ -268,12 +268,6 @@ export default function TowerPanel() {
           >
             👻 {t("nav.ghostShop", locale)}
           </button>
-          <button
-            onClick={() => setTab("challenge")}
-            className="flex items-center gap-2 rounded-xl px-4 py-2 border border-red-500/50 bg-red-500/10 text-red-200 hover:bg-red-500/20 hover:text-white transition-colors text-sm font-bold cursor-pointer"
-          >
-            🏰 Desafio
-          </button>
           <div className="text-sm bg-purple-900/50 px-3 py-1 rounded-full border border-purple-500">
             {t("tower.coins", locale)}: {towerCoins} 🪙
           </div>
@@ -354,7 +348,7 @@ export default function TowerPanel() {
                 {t("tower.fightAuto", locale)}
               </button>
             </div>
-            <p className="text-gray-500 text-xs mt-4">{t("tower.challenge", locale)}</p>
+
             <div className="mt-4 flex flex-wrap justify-center gap-2.5">
               {compareRows({ monAttack: 0, monDefense: 0, monSpeed: 0, monCritical: 0, monDodge: 0 }).map((s) => (
                 <span
