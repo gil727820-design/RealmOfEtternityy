@@ -4,6 +4,7 @@ import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
 import { classImage, CLASS_ICONS, type ClassName } from "@/game/constants";
 import BossBattle from "@/components/ui/BossBattle";
+import GuildShopSection from "@/components/ui/GuildShopSection";
 import { fmtNum, parseAbbrev } from "@/game/format";
 
 type Member = { id: string; name: string; classType: string; sex: string; level: number; power?: number; rank: string; joinedAt?: string };
@@ -834,6 +835,9 @@ export default function GuildPanel() {
                 </div>
               </div>
             )}
+
+            {/* Loja da Guilda */}
+            <GuildShopSection characterId={characterId || undefined} guildId={String(myGuild?.id || "")} guildLevel={Number(myGuild?.level) || 1} notify={notify} />
 
             {/* Membros */}
             <div>
