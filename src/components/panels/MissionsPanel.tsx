@@ -78,7 +78,7 @@ export default function MissionsPanel() {
   const renderMissionList = (list: Array<Record<string, unknown>>, listType: "daily" | "weekly") => {
     if (list.length === 0) return null;
     return (
-      <div className="grid md:grid-cols-2 gap-3">
+      <div className="space-y-2">
         {list.map((m) => {
           const id = String(m.id);
           const target = Number(m.target) || 1;
@@ -88,35 +88,44 @@ export default function MissionsPanel() {
           const claimed = !!m.claimed;
           const rw = (m.reward || {}) as Record<string, number>;
           return (
-            <div key={id} className={`game-card p-3 flex flex-col gap-2 ${done && !claimed ? "border-[#ffd700]/50" : ""}`}>
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{String(m.icon || "📋")}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-bold truncate">{t(String(m.nameKey), locale)}</div>
-                  <div className="text-[11px] text-gray-400">{t(String(m.descKey), locale).replace("{n}", String(target))}</div>
+            <div key={id} className={`rounded-xl border p-3 transition-all ${done && !claimed ? "border-[#ffd700]/50 bg-[#ffd700]/5 shadow-[0_0_15px_rgba(255,215,0,0.1)]" : claimed ? "border-green-500/30 bg-green-500/5" : "border-white/10 bg-[#1a1a2e]"}`}>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl shrink-0" style={{ background: done ? "rgba(34,197,94,0.15)" : "rgba(255,215,0,0.1)" }}>
+                  {String(m.icon || "📋")}
                 </div>
-                {claimed ? (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/40 text-green-300 font-bold">✓ {t("ach.claimed", locale)}</span>
-                ) : done ? (
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-white truncate">{t(String(m.nameKey), locale)}</span>
+                    {done && !claimed && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-[#ffd700]/20 text-[#ffd700] font-bold animate-pulse">PRONTO!</span>}
+                    {claimed && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400 font-bold">✓ Coletado</span>}
+                  </div>
+                  <div className="text-[10px] text-gray-500 mt-0.5">{t(String(m.descKey), locale).replace("{n}", String(target))}</div>
+                </div>
+                {claimed ? null : done ? (
                   <button
                     onClick={() => claimDailyMission(id, listType)}
                     disabled={claimingDaily !== null}
-                    className="text-[10px] px-2.5 py-1 rounded-full bg-gradient-to-r from-[#ffd700] to-[#f59e0b] text-black font-black disabled:opacity-40"
+                    className="px-3 py-1.5 rounded-xl text-[11px] font-black bg-gradient-to-r from-[#ffd700] to-[#f59e0b] text-black disabled:opacity-40 hover:scale-105 transition-transform"
                   >
-                    {claimingDaily === `${listType}_${id}` ? "…" : "🎁 " + t("mission.claim", locale)}
+                    {claimingDaily === `${listType}_${id}` ? "…" : "🎁 Coletar"}
                   </button>
                 ) : null}
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 h-1.5 rounded-full bg-gray-800 overflow-hidden">
-                  <div className={`h-full rounded-full ${done ? "bg-[#22c55e]" : "bg-[#ffd700]"}`} style={{ width: `${pct}%` }} />
+              {/* Barra de progresso */}
+              <div className="mt-2 flex items-center gap-2">
+                <div className="flex-1 h-2 rounded-full bg-black/40 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${done ? "bg-gradient-to-r from-[#22c55e] to-[#84cc16]" : "bg-gradient-to-r from-[#ffd700] to-[#f59e0b]"}`}
+                    style={{ width: `${pct}%` }}
+                  />
                 </div>
-                <span className="text-[10px] text-gray-400 tabular-nums">{progress}/{target}</span>
+                <span className="text-[10px] text-gray-400 tabular-nums font-bold min-w-[40px] text-right">{progress}/{target}</span>
               </div>
-              <div className="flex gap-2 text-[10px] text-gray-500 flex-wrap">
-                {rw.gold ? <span>💰 {String(rw.gold)}</span> : null}
-                {rw.crystals ? <span>🔮 {String(rw.crystals)}</span> : null}
-                {rw.towerCoins ? <span>🗼 {String(rw.towerCoins)}</span> : null}
+              {/* Recompensas */}
+              <div className="mt-2 flex gap-3 text-[10px] flex-wrap">
+                {rw.gold ? <span className="text-[#ffd700] font-bold">💰 {String(rw.gold)}</span> : null}
+                {rw.crystals ? <span className="text-[#a855f7] font-bold">🔮 {String(rw.crystals)}</span> : null}
+                {rw.towerCoins ? <span className="text-[#60a5fa] font-bold">🗼 {String(rw.towerCoins)}</span> : null}
               </div>
             </div>
           );
@@ -223,16 +232,16 @@ export default function MissionsPanel() {
   }
 
   return (
-    <div className="space-y-6 animate-fadeIn">
+    <div className="space-y-4 sm:space-y-6 animate-fadeIn">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-black flex items-center gap-3">
-          <img src="/images/sidebar/menu_missoes.png" alt={t("nav.missions", locale)} className="w-10 h-10 object-contain" />
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-xl sm:text-2xl lg:text-3xl font-black flex items-center gap-2 sm:gap-3">
+          <img src="/images/sidebar/menu_missoes.png" alt={t("nav.missions", locale)} className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
           <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
             {t("nav.missions", locale)}
           </span>
         </h2>
-        <div className="flex items-center gap-2 bg-[#1a1a2e] rounded-xl px-4 py-2 border border-gray-800">
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-[#1a1a2e] rounded-xl px-2.5 sm:px-4 py-1.5 sm:py-2 border border-gray-800 flex-shrink-0">
           <span className="text-xl">⚡</span>
           <span className="flex flex-col leading-tight text-left">
             <span className="text-[#ffcc00] font-bold">{String(character?.energy ?? 0)}<span className="text-gray-500 text-xs font-normal"> / {String(character?.maxEnergy ?? 100)}</span></span>
@@ -297,23 +306,23 @@ export default function MissionsPanel() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-3 pb-1 flex-wrap">
+      <div className="flex gap-2 sm:gap-3 pb-1 flex-wrap">
         <button
           onClick={() => setActiveTab('available')}
-          className={`bg-transparent text-lg font-bold px-6 py-3 rounded-xl transition-all border border-white/25 text-white/90 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 ${activeTab === 'available' ? "border-white/60 bg-white/10" : ""}`}
+          className={`bg-transparent text-sm sm:text-base lg:text-lg font-bold px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl transition-all border border-white/25 text-white/90 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 touch-target ${activeTab === 'available' ? "border-white/60 bg-white/10" : ""}`}
         >
           {t("mission.available", locale)} ({available.length})
         </button>
         <button
           onClick={() => setActiveTab('active')}
-          className={`bg-transparent text-lg font-bold px-6 py-3 rounded-xl transition-all border border-white/25 text-white/90 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 ${activeTab === 'active' ? "border-white/60 bg-white/10" : ""}`}
+          className={`bg-transparent text-sm sm:text-base lg:text-lg font-bold px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl transition-all border border-white/25 text-white/90 backdrop-blur-sm hover:bg-white/10 hover:border-white/50 touch-target ${activeTab === 'active' ? "border-white/60 bg-white/10" : ""}`}
         >
           {t("mission.active", locale)} ({active.length})
         </button>
       </div>
 
       {activeTab === 'available' ? (
-        <div className="grid md:grid-cols-2 gap-4 animate-fadeIn">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 animate-fadeIn">
           {available.length === 0 ? (
             <div className="md:col-span-2 empty-state p-10 text-center">
               {t("mission.noMissions", locale)}
@@ -330,7 +339,7 @@ export default function MissionsPanel() {
               return (
                 <div 
                   key={mission.id as number} 
-                  className="game-card p-4 hover:border-gray-600 transition-all stagger-item"
+                  className="game-card p-3 sm:p-4 hover:border-gray-600 transition-all stagger-item card-hover"
                   style={{ animationDelay: (index * 0.05) + 's' }}
                 >
                   <div className="flex items-start gap-4">
@@ -379,7 +388,7 @@ export default function MissionsPanel() {
                       onClick={() => startMission(mission.id as number)} 
                       disabled={!canStartAll || startingMission === mission.id}
                       className={
-                        "w-full mt-4 py-3 rounded-xl font-black text-sm transition-all " +
+                        "w-full mt-3 sm:mt-4 py-2.5 sm:py-3 rounded-xl font-black text-xs sm:text-sm transition-all touch-target " +
                         (startingMission === mission.id
                           ? "bg-blue-600 text-white cursor-wait"
                           : canStartAll
