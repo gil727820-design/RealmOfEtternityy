@@ -1,7 +1,7 @@
 # Dependências
 /node_modules
 
-# Next.js (build/cache NÃO deve ir pro git — foi a causa do cache corrompido)
+# Next.js (build/cache NÃO deve ir pro git)
 /.next/
 /out/
 
@@ -38,15 +38,10 @@ Thumbs.db
 _typecheck.txt
 
 # Uploads gerados em runtime (comprovantes PIX, QR codes)
-# Obs.: as músicas de ilha (public/uploads/music) são assets versionados e
-# ficam de fora desta regra.
 /public/uploads/proofs/
 /public/uploads/donate/
 
 # Banco de dados SQLite local
-/data/*.db
-/data/*.db-wal
-/data/*.db-shm
-
-# Backups automáticos do banco (scripts/backup-db.mjs)
+# ⚠️ Removido o bloqueio para enviar o banco
+# Se quiser ignorar apenas backups, mantenha:
 /backups/
