@@ -143,6 +143,7 @@ const ptBR: Record<string, string> = {
   "nav.skills": "Habilidades",
   "nav.dailyLogin": "Login Diário",
   "nav.dailyEvents": "Eventos Diários",
+  "nav.skinShop": "Loja de Skins",
   "nav.bestiary": "Bestiário",
   "nav.relics": "Relíquias",
   "nav.specialization": "Especialização",
