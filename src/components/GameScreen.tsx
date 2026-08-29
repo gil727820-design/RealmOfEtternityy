@@ -8,6 +8,7 @@ import TopBar from "./TopBar";
 import DashboardPanel from "./panels/DashboardPanel";
 import MissionsPanel from "./panels/MissionsPanel";
 import InventoryPanel from "./panels/InventoryPanel";
+import CraftingPanel from "./panels/CraftingPanel";
 import MapPanel from "./panels/MapPanel";
 import TowerPanel from "./panels/TowerPanel";
 import PvPPanel from "./panels/PvPPanel";
@@ -162,9 +163,9 @@ export default function GameScreen() {
     if (initialLoading) {
       return (
         <div className="flex flex-col items-center justify-center py-32 animate-fadeIn">
-          <div className="text-6xl mb-6 animate-bounce">⚔️</div>
+          <div className="text-6xl mb-6 animate-float">⚔️</div>
           <div className="spinner mb-4"></div>
-          <p className="text-gray-400 text-lg">{t("general.loading", locale)}</p>
+          <p className="text-gray-400 text-lg font-display tracking-widest">{t("general.loading", locale)}</p>
         </div>
       );
     }
@@ -184,6 +185,7 @@ export default function GameScreen() {
       case "dashboard": case "character": return <DashboardPanel />;
       case "missions": return <MissionsPanel />;
       case "inventory": return <InventoryPanel />;
+      case "crafting": return <CraftingPanel />;
       case "map": return <MapPanel />;
       case "tower": return <TowerPanel />;
       case "pvp": return <PvPPanel />;
@@ -237,7 +239,7 @@ export default function GameScreen() {
       <PreloadImages urls={[avatarSrc, currentRegion.bg, currentRegion.image]} />
       {/* Background Effects — fundo da ilha atual */}
       <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[#0a0a12]" />
+        <div className="absolute inset-0 bg-[#060a14]" />
         <img
           key={regionId}
           src={currentRegion.bg}
@@ -274,7 +276,7 @@ export default function GameScreen() {
 
       <div className={"relative z-10 transition-all duration-500 ease-in-out " + (collapsed ? "md:pl-0" : "md:pl-60")}>
         <header
-          className="sticky top-0 z-30 px-6 py-4 border-b glass-effect transition-colors duration-700"
+          className="sticky top-0 z-30 px-3 sm:px-4 lg:px-6 py-2.5 sm:py-3 lg:py-4 border-b glass-effect transition-colors duration-700 safe-top"
           style={{
             borderColor: regionWithAlpha(regionAccent, 0.25),
             boxShadow: `0 1px 0 ${regionWithAlpha(regionAccent, 0.15)}, 0 8px 30px ${regionWithAlpha(regionAccent, 0.06)}`,
@@ -283,19 +285,27 @@ export default function GameScreen() {
           <TopBar onRefresh={refreshGame} refreshing={refreshing} />
         </header>
 
-        <main className="p-6 max-w-7xl mx-auto">
+        <main className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto pb-20 md:pb-6">
           {/* key={refreshKey} remonta o painel após o refresh para buscar dados novos */}
           <div key={refreshKey}>{renderPanel()}</div>
         </main>
       </div>
 
       {notification && (
-        <div className="fixed bottom-6 right-6 z-50 animate-slideInRight max-w-md rounded-2xl px-6 py-4 text-sm font-medium shadow-2xl border backdrop-blur-xl toast">
+        <div
+          className="fixed bottom-4 left-4 right-4 sm:bottom-6 sm:left-auto sm:right-6 z-50 animate-slideInRight max-w-md rounded-2xl px-4 sm:px-6 py-3 sm:py-4 text-sm font-medium shadow-2xl border backdrop-blur-xl toast safe-bottom"
+          style={{
+            borderColor:
+              notification.type === "success" ? "rgba(52,211,153,0.4)" :
+              notification.type === "error" ? "rgba(240,82,82,0.4)" :
+              "rgba(212,168,67,0.4)",
+          }}
+        >
           <div className="flex items-center gap-3">
-            <span className="text-2xl">
+            <span className="text-xl sm:text-2xl">
               {notification.type === "success" ? "✅" : notification.type === "error" ? "❌" : "ℹ️"}
             </span>
-            <span>{notification.message}</span>
+            <span className="text-xs sm:text-sm">{notification.message}</span>
           </div>
         </div>
       )}
