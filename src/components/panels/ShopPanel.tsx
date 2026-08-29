@@ -130,7 +130,7 @@ export default function ShopPanel() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    fetch("/api/server/settings")
+    fetch("/api/game?action=server-settings")
       .then((r) => r.json())
       .then((d) => {
         setPixSettings({
@@ -174,7 +174,7 @@ export default function ShopPanel() {
 
     setBuying(itemId);
     try {
-      const res = await fetch("/api/shop/buy", {
+      const res = await fetch("/api/shop?action=shop-buy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId: character.id, itemId, costType, costValue }),
@@ -234,7 +234,7 @@ export default function ShopPanel() {
         notify(t("general.error", locale), "error");
         return;
       }
-      const res = await fetch("/api/pix/purchase", {
+      const res = await fetch("/api/shop?action=pix-purchase", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId: character.id, valueBRL: pixPack, screenshotData }),

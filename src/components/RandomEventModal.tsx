@@ -45,7 +45,7 @@ export default function RandomEventModal() {
     if (!characterId || !event || busy) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/random-event", {
+      const res = await fetch("/api/game?action=random-event", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, action }),

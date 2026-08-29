@@ -24,7 +24,7 @@ export default function DailyEventsPanel() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/daily-events?characterId=${characterId}`);
+      const res = await fetch(`/api/missions?action=daily-events&characterId=${characterId}`);
       const json = await res.json();
       setData(json);
       // Check if already claimed
@@ -43,7 +43,7 @@ export default function DailyEventsPanel() {
     if (claiming || !characterId) return;
     setClaiming(true);
     try {
-      const res = await fetch("/api/daily-events", {
+      const res = await fetch("/api/missions?action=daily-events", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, action: "claim_rewards" }),

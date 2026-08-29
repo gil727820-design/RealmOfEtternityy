@@ -73,7 +73,7 @@ export default function GameScreen() {
     }
     
     try {
-      const res = await fetch(`/api/character/${characterId}`);
+      const res = await fetch(`/api/character?id=${characterId}`);
       if (res.status === 401 || res.status === 403 || res.status === 404) {
         // 401 = sessão inválida/expirada, 403 = conta banida, 404 = personagem
         // removido. Em todos os casos volta ao login — sem travar numa tela de
@@ -130,14 +130,14 @@ export default function GameScreen() {
   }, [notification, clearNotification]);
 
   // Heartbeat de presença: mantém o personagem marcado como "online" enquanto o
-  // jogo está aberto (o SettingsPanel mostra a contagem real em "/api/presence").
+  // jogo está aberto (o SettingsPanel mostra a contagem real em "/api/game?action=presence").
   useEffect(() => {
     if (!characterId) return;
     let stopped = false;
     let timer: ReturnType<typeof setInterval> | null = null;
     const ping = () => {
       if (stopped) return;
-      fetch("/api/presence", {
+      fetch("/api/game?action=presence", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId }),

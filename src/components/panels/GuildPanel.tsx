@@ -106,7 +106,7 @@ export default function GuildPanel() {
   const loadChat = useCallback(async () => {
     if (!myGuild?.id) return;
     try {
-      const res = await fetch(`/api/guild/chat?guildId=${encodeURIComponent(String(myGuild.id))}`);
+      const res = await fetch(`/api/guild?action=chat&guildId=${encodeURIComponent(String(myGuild.id))}`);
       const d = await res.json();
       const ms = Array.isArray(d.messages) ? (d.messages as ChatMsg[]) : [];
       setMessages((prev) => {
@@ -137,7 +137,7 @@ export default function GuildPanel() {
   const loadGuildSkills = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/guild/skills?characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/guild?action=skills&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       if (!d.error) {
         setGuildSkills(d.skills || []);
@@ -150,7 +150,7 @@ export default function GuildPanel() {
     if (!characterId || skillBusy) return;
     setSkillBusy(skillId);
     try {
-      const res = await fetch("/api/guild/skills", {
+      const res = await fetch("/api/guild?action=skills", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, skillId }),
@@ -204,7 +204,7 @@ export default function GuildPanel() {
 
   const refreshChar = useCallback(async () => {
     if (!characterId) return;
-    const res = await fetch(`/api/character/${characterId}`);
+    const res = await fetch(`/api/character?id=${characterId}`);
     const d = await res.json();
     if (d.character) setCharacter(d.character);
   }, [characterId, setCharacter]);
@@ -346,7 +346,7 @@ export default function GuildPanel() {
 
   const warCall = async (body: Record<string, unknown>) => {
     try {
-      const res = await fetch("/api/guild-war", {
+      const res = await fetch("/api/guild?action=guild-war", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -371,7 +371,7 @@ export default function GuildPanel() {
     if (!characterId) return;
     setBusy(extra ? "gb_extra" : "gb_free");
     try {
-      const res = await fetch("/api/guild-boss", {
+      const res = await fetch("/api/guild?action=guild-boss", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, extra }),
@@ -400,7 +400,7 @@ export default function GuildPanel() {
   const sendChat = async () => {
     if (!characterId || !myGuild || !chatText.trim()) return;
     setBusy("chat");
-    const res = await fetch("/api/guild/chat", {
+    const res = await fetch("/api/guild?action=chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ characterId, guildId: String(myGuild.id), text: chatText.trim() }),
@@ -744,7 +744,7 @@ export default function GuildPanel() {
                     <div className="text-center text-[#00ff88] font-bold text-sm py-2">🏆 {t("gb.defeated", locale)}!</div>
                   ) : guildBossBattle ? (
                     <BossBattle
-                      apiUrl="/api/guild-boss"
+                      apiUrl="/api/guild?action=guild-boss"
                       monster={gbMonster}
                       title={`🐲 ${t("gb.title", locale)}`}
                       fightLabel={`⚔️ ${t("gb.attack", locale)}`}

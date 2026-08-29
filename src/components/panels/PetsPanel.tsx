@@ -27,7 +27,7 @@ export default function PetsPanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const r = await fetch(`/api/pets?characterId=${characterId}`);
+      const r = await fetch(`/api/game?action=pets&characterId=${characterId}`);
       const d = await r.json();
       if (!r.ok) {
         notify(d.error || "Erro ao carregar pets", "error");
@@ -50,7 +50,7 @@ export default function PetsPanel() {
 
   const refreshChar = async () => {
     try {
-      const r = await fetch(`/api/character/${characterId}`);
+      const r = await fetch(`/api/character?id=${characterId}`);
       const d = await r.json();
       if (d.character) setCharacter(d.character);
     } catch {
@@ -61,7 +61,7 @@ export default function PetsPanel() {
   const equip = async (id: string) => {
     setBusyId(id);
     try {
-      const r = await fetch("/api/pets", {
+      const r = await fetch("/api/game?action=pets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, action: "equip", petId: id }),

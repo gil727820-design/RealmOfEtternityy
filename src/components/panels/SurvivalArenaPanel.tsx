@@ -35,7 +35,7 @@ export default function SurvivalArenaPanel() {
     setFighting(true);
     setResult(null);
     try {
-      const res = await fetch("/api/survival-arena", {
+      const res = await fetch("/api/combat?action=survival-arena", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, action: "fight", startWave: selectedStart }),

@@ -33,7 +33,7 @@ export default function AdvancedClassPanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/advanced-class?characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/progression?action=advanced-class&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       if (!d.error) setData(d);
     } catch { /* ignore */ }
@@ -49,7 +49,7 @@ export default function AdvancedClassPanel() {
     if (!window.confirm(t("adv.confirm", locale))) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/advanced-class", {
+      const res = await fetch("/api/progression?action=advanced-class", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId }),
@@ -58,7 +58,7 @@ export default function AdvancedClassPanel() {
       if (!d.success) { notify(d.error, "error"); return; }
       notify(t("adv.evolved", locale), "success");
       await load();
-      const res2 = await fetch(`/api/character/${characterId}`);
+      const res2 = await fetch(`/api/character?id=${characterId}`);
       const d2 = await res2.json();
       if (d2.character) setCharacter(d2.character);
     } catch {

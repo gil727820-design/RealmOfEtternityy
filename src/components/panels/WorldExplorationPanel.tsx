@@ -44,7 +44,7 @@ export default function WorldExplorationPanel() {
     setExploring(true);
     setLastEvent(null);
     try {
-      const res = await fetch("/api/world-exploration", {
+      const res = await fetch("/api/game?action=world-exploration", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, action: "explore" }),

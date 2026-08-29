@@ -73,7 +73,7 @@ export default function TowerPanel() {
   ];
 
   const sendAction = async (action: string, state: any, auto?: any) => {
-    const res = await fetch("/api/tower/fight", {
+    const res = await fetch("/api/combat?action=tower", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ characterId, action, state, auto }),
@@ -86,7 +86,7 @@ export default function TowerPanel() {
 
   const refreshChar = async () => {
     try {
-      const r = await fetch(`/api/character/${characterId}`);
+      const r = await fetch(`/api/character?id=${characterId}`);
       const d = await r.json();
       if (d.character) setCharacter(d.character);
     } catch {

@@ -31,7 +31,7 @@ export default function RankingsPanel() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/rankings?type=${type}`);
+      const res = await fetch(`/api/game?action=rankings&type=${type}`);
       const data = await res.json();
       setRankings(data.rankings ?? []);
     } catch { /* ignore */ }
@@ -44,7 +44,7 @@ export default function RankingsPanel() {
     setSearch(q);
     if (q.length < 2) { setSearchResults([]); return; }
     try {
-      const res = await fetch(`/api/rankings?type=power&search=${encodeURIComponent(q)}`);
+      const res = await fetch(`/api/game?action=rankings&type=power&search=${encodeURIComponent(q)}`);
       const data = await res.json();
       setSearchResults(data.rankings ?? []);
     } catch { setSearchResults([]); }

@@ -35,7 +35,7 @@ export default function DungeonPanel() {
   const refresh = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/character/${characterId}`);
+      const res = await fetch(`/api/character?id=${characterId}`);
       const data = await res.json();
       if (data.character) setCharacter(data.character);
     } catch { /* ignore */ }
@@ -46,7 +46,7 @@ export default function DungeonPanel() {
   
 
   useEffect(() => {
-    fetch("/api/dungeon/ranking").then(r => r.json()).then(d => setRanking(d.ranking || [])).catch(() => {});
+    fetch("/api/dungeon?action=ranking").then(r => r.json()).then(d => setRanking(d.ranking || [])).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -90,7 +90,7 @@ export default function DungeonPanel() {
     if (!characterId) return;
     setStarting(true);
     try {
-      const res = await fetch("/api/dungeon/start", {
+      const res = await fetch("/api/dungeon?action=start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, durationSec: selectedSec, attemptFloor: attempt, difficulty }),
@@ -111,7 +111,7 @@ export default function DungeonPanel() {
     if (!characterId) return;
     setCollecting(true);
     try {
-      const res = await fetch("/api/dungeon/collect", {
+      const res = await fetch("/api/dungeon?action=collect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId }),

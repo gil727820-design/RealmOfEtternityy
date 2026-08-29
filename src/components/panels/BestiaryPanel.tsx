@@ -46,7 +46,7 @@ export default function BestiaryPanel() {
   const load = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/bestiary?characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/progression?action=bestiary&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       setProgress(d.progress ?? null);
       setCategories(Array.isArray(d.categories) ? d.categories : []);
@@ -60,7 +60,7 @@ export default function BestiaryPanel() {
     if (!characterId) return;
     setBusy(category);
     try {
-      const res = await fetch("/api/bestiary", {
+      const res = await fetch("/api/progression?action=bestiary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, category }),

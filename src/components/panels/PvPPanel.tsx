@@ -51,7 +51,7 @@ export default function PvPPanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/pvp/fight?characterId=${characterId}`);
+      const res = await fetch(`/api/combat?action=pvp-fight&characterId=${characterId}`);
       const data = await res.json();
       setBots(data.bots ?? []);
       setPlayers(data.players ?? []);
@@ -64,7 +64,7 @@ export default function PvPPanel() {
   const loadHistory = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/pvp/history?characterId=${characterId}&limit=20`);
+      const res = await fetch(`/api/combat?action=pvp-history&characterId=${characterId}&limit=20`);
       const data = await res.json();
       setHistory(data.battles ?? []);
     } catch (e) {
@@ -75,7 +75,7 @@ export default function PvPPanel() {
   const loadRanking = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/pvp/ranking?characterId=${characterId}`);
+      const res = await fetch(`/api/combat?action=pvp-ranking&characterId=${characterId}`);
       const data = await res.json();
       setRanking(data);
     } catch { /* ignore */ }
@@ -130,7 +130,7 @@ export default function PvPPanel() {
 
   const sendAction = async (action: string, state: any, opp: any) => {
     if (!opp) return null;
-    const res = await fetch("/api/pvp/battle", {
+    const res = await fetch("/api/combat?action=pvp-battle", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ characterId, action, state, defender: opp }),
@@ -140,7 +140,7 @@ export default function PvPPanel() {
 
   const refreshCharacter = async () => {
     try {
-      const r = await fetch(`/api/character/${characterId}`);
+      const r = await fetch(`/api/character?id=${characterId}`);
       const d = await r.json();
       if (d.character) setCharacter(d.character);
     } catch {

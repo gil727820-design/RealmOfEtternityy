@@ -71,7 +71,7 @@ export default function MailboxPanel() {
   const reload = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/mailbox?characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/social?action=mailbox-send&characterId=${encodeURIComponent(characterId)}`);
       const data = await res.json();
       const list = Array.isArray(data.mails) ? data.mails : [];
       setMails(list);
@@ -88,7 +88,7 @@ export default function MailboxPanel() {
   // Após resgatar, atualiza inventário, personagem (recursos/skins) e skins no store.
   const refreshCharacter = useCallback(async () => {
     if (!characterId) return;
-    const res = await fetch(`/api/character/${characterId}`).catch(() => null);
+    const res = await fetch(`/api/character?id=${characterId}`).catch(() => null);
     if (res && res.ok) {
       const data = await res.json();
       if (Array.isArray(data.inventory)) setInventory(data.inventory);
@@ -99,7 +99,7 @@ export default function MailboxPanel() {
   const claimOne = async (id: string) => {
     setBusy(id);
     try {
-      const res = await fetch("/api/mailbox", {
+      const res = await fetch("/api/social?action=mailbox-send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "claim", id }),
@@ -124,7 +124,7 @@ export default function MailboxPanel() {
   const claimAll = async () => {
     setBusyAll(true);
     try {
-      const res = await fetch("/api/mailbox", {
+      const res = await fetch("/api/social?action=mailbox-send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "claim_all", characterId }),

@@ -28,13 +28,13 @@ export default function SettingsPanel() {
     let active = true;
     const load = async () => {
       try {
-        const res = await fetch("/api/presence");
+        const res = await fetch("/api/game?action=presence");
         const d = await res.json();
         if (active && typeof d.online === "number") setOnlineCount(d.online);
       } catch { /* ignora */ }
     };
     if (characterId) {
-      fetch("/api/presence", {
+      fetch("/api/game?action=presence", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId }),

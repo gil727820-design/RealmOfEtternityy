@@ -67,7 +67,7 @@ export default function CraftingPanel() {
   const loadData = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/character/${characterId}`);
+      const res = await fetch(`/api/character?id=${characterId}`);
       const data = await res.json();
       if (data.character) setCharacter(data.character);
       
@@ -93,7 +93,7 @@ export default function CraftingPanel() {
 
   const loadRecipes = useCallback(async () => {
     try {
-      const res = await fetch("/api/craft/recipes");
+      const res = await fetch("/api/game?action=craft-recipes");
       if (res.ok) {
         const data = await res.json();
         setRecipes(data.recipes || []);
@@ -107,7 +107,7 @@ export default function CraftingPanel() {
     if (!characterId || busy) return;
     setBusy(recipe.id);
     try {
-      const res = await fetch("/api/craft", {
+      const res = await fetch("/api/game?action=craft", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, recipeId: recipe.id }),

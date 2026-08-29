@@ -59,7 +59,7 @@ function BrowseTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/market");
+      const res = await fetch("/api/shop?action=market");
       const data = await res.json();
       if (Array.isArray(data.listings)) setListings(data.listings);
       if (data.avgPrices) setAvgPrices(data.avgPrices as Record<string, number>);
@@ -80,7 +80,7 @@ function BrowseTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
     if (!characterId || busy) return;
     setBusy(listingId);
     try {
-      const res = await fetch("/api/market/buy", {
+      const res = await fetch("/api/shop?action=market-buy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, listingId }),
@@ -108,7 +108,7 @@ function BrowseTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
     if (!ok) return;
     setBusy(listingId);
     try {
-      const res = await fetch("/api/market/cancel", {
+      const res = await fetch("/api/shop?action=market-cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, listingId }),
@@ -366,7 +366,7 @@ function SellTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
   const loadMyListings = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch("/api/market");
+      const res = await fetch("/api/shop?action=market");
       const data = await res.json();
       if (Array.isArray(data.listings)) {
         setMyListings(
@@ -389,7 +389,7 @@ function SellTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
     if (!ok) return;
     setBusy(listingId);
     try {
-      const res = await fetch("/api/market/cancel", {
+      const res = await fetch("/api/shop?action=market-cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, listingId }),
@@ -457,7 +457,7 @@ function SellTab({ onRefreshCharacter }: { onRefreshCharacter: () => void }) {
     const busyId = sellKind === "skin" ? `skin_${selectedSkin}` : selected!.inv.id;
     setBusy(busyId);
     try {
-      const res = await fetch("/api/market", {
+      const res = await fetch("/api/shop?action=market", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(
@@ -849,7 +849,7 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
   const load = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/trade-session/chat?sessionId=${encodeURIComponent(sessionId)}&characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/social?action=trade-chat&sessionId=${encodeURIComponent(sessionId)}&characterId=${encodeURIComponent(characterId)}`);
       const data = await res.json();
       if (!res.ok) {
         if (data?.error) notify(data.error, "error");
@@ -883,7 +883,7 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
   const refreshInv = async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/character/${characterId}`);
+      const res = await fetch(`/api/character?id=${characterId}`);
       const data = await res.json();
       if (data.inventory) useGameStore.getState().setInventory(data.inventory);
       if (data.character) setCharacter(data.character);
@@ -914,7 +914,7 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
           const it = myItems.find((x) => x.inv.id === id);
           return { inventoryItemId: id, templateId: it?.template.id ?? 0, quantity: qty };
         });
-      const res = await fetch("/api/trade-session/select", {
+      const res = await fetch("/api/social?action=trade-select", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, sessionId, items, gold: goldNum, diamonds: diamondsNum }),
@@ -945,12 +945,12 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
           const it = myItems.find((x) => x.inv.id === id);
           return { inventoryItemId: id, templateId: it?.template.id ?? 0, quantity: qty };
         });
-      await fetch("/api/trade-session/select", {
+      await fetch("/api/social?action=trade-select", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, sessionId, items, gold: goldNum, diamonds: diamondsNum }),
       });
-      const res = await fetch("/api/trade-session/confirm", {
+      const res = await fetch("/api/social?action=trade-confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, sessionId }),
@@ -978,7 +978,7 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
     if (!characterId || !msg.trim() || busy) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/trade-session/chat", {
+      const res = await fetch("/api/social?action=trade-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, sessionId, text: msg }),
@@ -998,7 +998,7 @@ function TradeSessionView({ sessionId, onClose }: { sessionId: string; onClose: 
     if (!characterId) return;
     setBusy(true);
     try {
-      await fetch("/api/trade-session/cancel", {
+      await fetch("/api/social?action=trade-cancel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, sessionId }),
@@ -1290,7 +1290,7 @@ function TradeAdsTab({ onRefreshCharacter, onOpenSession }: { onRefreshCharacter
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/trade-ads");
+      const res = await fetch("/api/social?action=trade-ads");
       const data = await res.json();
       if (Array.isArray(data.ads)) setAds(data.ads);
     } catch {}
@@ -1307,7 +1307,7 @@ function TradeAdsTab({ onRefreshCharacter, onOpenSession }: { onRefreshCharacter
     async (adId: string) => {
       if (!characterId) return;
       try {
-        const res = await fetch(`/api/trade-ads/chat?adId=${encodeURIComponent(adId)}&characterId=${encodeURIComponent(characterId)}`);
+        const res = await fetch(`/api/social?action=trade-ads-chat&adId=${encodeURIComponent(adId)}&characterId=${encodeURIComponent(characterId)}`);
         const data = await res.json();
         if (!res.ok) {
           notify(data.error || "Erro", "error");
@@ -1344,7 +1344,7 @@ function TradeAdsTab({ onRefreshCharacter, onOpenSession }: { onRefreshCharacter
     if (!characterId || !chatMsg.trim() || busy) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/trade-ads/chat", {
+      const res = await fetch("/api/social?action=trade-ads-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, adId, text: chatMsg, toId }),
@@ -1373,7 +1373,7 @@ function TradeAdsTab({ onRefreshCharacter, onOpenSession }: { onRefreshCharacter
         const it = myItems.find((x) => x.inv.id === id);
         return { inventoryItemId: id, templateId: it?.template.id ?? 0, quantity: qty };
       });
-      const res = await fetch("/api/trade-ads", {
+      const res = await fetch("/api/social?action=trade-ads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, title, want, offeredItems }),
@@ -1401,7 +1401,7 @@ function TradeAdsTab({ onRefreshCharacter, onOpenSession }: { onRefreshCharacter
     if (!characterId || openingSession) return;
     setOpeningSession(true);
     try {
-      const res = await fetch("/api/trade-session/open", {
+      const res = await fetch("/api/social?action=trade-open", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, adId, targetId }),
@@ -1427,7 +1427,7 @@ function TradeAdsTab({ onRefreshCharacter, onOpenSession }: { onRefreshCharacter
     if (!ok) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/trade-ads/remove", {
+      const res = await fetch("/api/social?action=trade-ads-remove", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, adId }),
@@ -1449,7 +1449,7 @@ function TradeAdsTab({ onRefreshCharacter, onOpenSession }: { onRefreshCharacter
   const loadSessions = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/trade-session/sessions?characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/social?action=trade-sessions&characterId=${encodeURIComponent(characterId)}`);
       const data = await res.json();
       if (Array.isArray(data.sessions)) setSessions(data.sessions);
     } catch {}
@@ -1777,7 +1777,7 @@ export default function MarketPanel() {
   const refreshAll = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/character/${characterId}`);
+      const res = await fetch(`/api/character?id=${characterId}`);
       const data = await res.json();
       if (data.character) setCharacter(data.character);
       if (data.inventory) {

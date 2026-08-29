@@ -19,7 +19,7 @@ export default function RelicsPanel() {
   const load = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/relics?characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/game?action=relics&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       setOwned(Array.isArray(d.relics) ? d.relics : []);
       setActiveId(d.activeRelicId ?? null);
@@ -32,7 +32,7 @@ export default function RelicsPanel() {
     if (!characterId) return;
     setBusy(itemId);
     try {
-      const res = await fetch("/api/relics", {
+      const res = await fetch("/api/game?action=relics", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, itemId, action: equipped ? "unequip" : "equip" }),

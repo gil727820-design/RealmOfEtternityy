@@ -12,7 +12,7 @@ export default function DonatePanel() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/server/settings");
+        const res = await fetch("/api/game?action=server-settings");
         const d = await res.json();
         setPixKey(typeof d.donatePixKey === "string" ? d.donatePixKey : "");
         setQrCode(typeof d.donateQrCode === "string" ? d.donateQrCode : "");

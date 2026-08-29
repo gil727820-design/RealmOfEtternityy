@@ -24,7 +24,7 @@ export default function SeasonPanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/season?characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/game?action=season&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       if (!d.error) setData(d);
     } catch { /* ignore */ }

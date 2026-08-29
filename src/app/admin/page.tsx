@@ -291,7 +291,7 @@ export default function AdminPage() {
     if (!typed) return setMessage("Digite a chave de acesso.");
     setLoginLoading(true);
     try {
-      const res = await fetch("/api/admin/login", {
+      const res = await fetch("/api/admin?action=login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: typed, rememberMe }),
@@ -1727,7 +1727,7 @@ export default function AdminPage() {
             <button
               onClick={() => {
                 // Limpa o cookie httpOnly do admin no servidor antes de sair.
-                fetch("/api/admin/logout", { method: "POST" }).catch(() => {});
+                fetch("/api/admin?action=logout", { method: "POST" }).catch(() => {});
                 setAuthenticated(false);
                 setAdminKey("");
                 setMessage("");

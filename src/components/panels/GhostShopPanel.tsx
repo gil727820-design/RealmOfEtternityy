@@ -44,7 +44,7 @@ export default function GhostShopPanel() {
 
   const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/ghost-shop");
+      const res = await fetch("/api/shop?action=ghost-shop");
       if (!res.ok) return;
       const d = await res.json();
       setShop(d);
@@ -110,7 +110,7 @@ export default function GhostShopPanel() {
     }
     setBuying(String(templateId));
     try {
-      const res = await fetch("/api/ghost-shop/buy", {
+      const res = await fetch("/api/shop?action=ghost-buy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId: character.id, templateId }),

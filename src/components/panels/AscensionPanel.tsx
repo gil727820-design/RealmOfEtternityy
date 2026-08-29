@@ -13,7 +13,7 @@ export default function AscensionPanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/ascension?characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/progression?action=ascension&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       if (!d.error) setData(d);
     } catch { /* ignore */ }
@@ -29,7 +29,7 @@ export default function AscensionPanel() {
     if (!window.confirm(t("ascension.confirm", locale))) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/ascension", {
+      const res = await fetch("/api/progression?action=ascension", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId }),
@@ -38,7 +38,7 @@ export default function AscensionPanel() {
       if (!d.success) { notify(d.error, "error"); return; }
       notify(`🌌 ${t("ascension.done", locale)} ${d.ascension}!`, "success");
       await load();
-      const res2 = await fetch(`/api/character/${characterId}`);
+      const res2 = await fetch(`/api/character?id=${characterId}`);
       const d2 = await res2.json();
       if (d2.character) setCharacter(d2.character);
     } catch {

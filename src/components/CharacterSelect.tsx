@@ -13,7 +13,7 @@ export default function CharacterSelect() {
     setBusy(c.id);
     try {
       // Carrega o personagem completo antes de entrar.
-      const res = await fetch(`/api/character/${c.id}`);
+      const res = await fetch(`/api/character?id=${c.id}`);
       const data = await res.json();
       if (!res.ok) {
         notify(data.error || "Erro ao entrar no personagem", "error");

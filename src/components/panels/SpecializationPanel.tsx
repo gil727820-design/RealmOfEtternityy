@@ -33,7 +33,7 @@ export default function SpecializationPanel() {
   const load = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/specialization?characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/progression?action=specialization&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       setSpecs(Array.isArray(d.specs) ? d.specs : []);
       setActive(d.active ?? null);
@@ -52,7 +52,7 @@ export default function SpecializationPanel() {
     }
     setBusy(true);
     try {
-      const res = await fetch("/api/specialization", {
+      const res = await fetch("/api/progression?action=specialization", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, specId: spec.id }),

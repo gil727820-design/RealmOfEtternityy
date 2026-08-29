@@ -21,7 +21,7 @@ export default function CharacterCreation() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("/api/character/create", {
+      const res = await fetch("/api/character?action=create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, name: name.trim(), sex, classType, avatarId: 1 }),

@@ -23,7 +23,7 @@ export default function CodePanel() {
     if (!characterId) return notify("Personagem não encontrado.", "error");
     setRedeeming(true);
     try {
-      const res = await fetch("/api/codes/redeem", {
+      const res = await fetch("/api/game?action=codes-redeem", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code: value, characterId }),

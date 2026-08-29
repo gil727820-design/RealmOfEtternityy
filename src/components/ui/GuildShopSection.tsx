@@ -47,7 +47,7 @@ export default function GuildShopSection({ characterId, guildId, guildLevel, not
     if (!characterId || busy) return;
     setBusy(item.id);
     try {
-      const res = await fetch("/api/guild/shop", {
+      const res = await fetch("/api/guild?action=shop", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, itemId: item.id }),

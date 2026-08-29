@@ -85,7 +85,7 @@ export default function BossBattle({
 
   const refreshChar = async () => {
     try {
-      const r = await fetch(`/api/character/${characterId}`);
+      const r = await fetch(`/api/character?id=${characterId}`);
       const d = await r.json();
       if (d.character) setCharacter(d.character);
     } catch {

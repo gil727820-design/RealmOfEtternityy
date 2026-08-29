@@ -68,7 +68,7 @@ export default function SkinShopPanel() {
     if (!characterId) return;
     setBuying(skinId);
     try {
-      const res = await fetch("/api/skin-shop", {
+      const res = await fetch("/api/shop?action=skin-shop", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, skinId }),

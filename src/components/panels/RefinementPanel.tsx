@@ -40,7 +40,7 @@ export default function RefinementPanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/refinement?characterId=${characterId}`);
+      const res = await fetch(`/api/progression?action=refinement&characterId=${characterId}`);
       const data = await res.json();
       setMaterials(data.materials ?? []);
       setLevels(data.levels ?? []);
@@ -55,7 +55,7 @@ export default function RefinementPanel() {
     setRefining(true);
     setShowResult(null);
     try {
-      const res = await fetch("/api/refinement", {
+      const res = await fetch("/api/progression?action=refinement", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, action: "refine", itemId: "main_weapon", targetLevel: selectedLevel }),

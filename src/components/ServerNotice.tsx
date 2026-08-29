@@ -59,7 +59,7 @@ export default function ServerNotice() {
     let active = true;
     const load = async () => {
       try {
-        const res = await fetch("/api/server/settings");
+        const res = await fetch("/api/game?action=server-settings");
         if (!res.ok) return;
         const d = await res.json();
         if (!active) return;

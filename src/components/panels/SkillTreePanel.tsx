@@ -88,7 +88,7 @@ export default function SkillTreePanel() {
     if (busy || !characterId) return;
     setBusy(s.id);
     try {
-      const res = await fetch("/api/character/skill", {
+      const res = await fetch("/api/character?action=skill", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, skillId: s.id }),
@@ -125,7 +125,7 @@ export default function SkillTreePanel() {
     if (!ok) return;
     setBusy("reset");
     try {
-      const res = await fetch("/api/character/skill", {
+      const res = await fetch("/api/character?action=skill", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, reset: true }),

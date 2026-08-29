@@ -82,7 +82,7 @@ export default function AuthScreen() {
         resetSession();
       }
 
-      await fetch("/api/seed", { method: "POST" }).catch(() => {});
+      await fetch("/api/game?action=seed", { method: "POST" }).catch(() => {});
     } catch (err) {
       console.error("Auth error:", err);
       setError(t("general.error", locale));

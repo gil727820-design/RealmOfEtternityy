@@ -37,7 +37,7 @@ export default function DashboardPanel() {
         energyRefetchedRef.current = true;
         try {
           if (characterId) {
-            const res = await fetch(`/api/character/${characterId}`);
+            const res = await fetch(`/api/character?id=${characterId}`);
             const data = await res.json();
             if (data?.character) setCharacter({ ...data.character, _energyAt: Date.now() });
           }
@@ -143,7 +143,7 @@ export default function DashboardPanel() {
     const amount = Math.max(1, Math.min(qtyOverride ?? allocQty, pointsLeft));
     setAllocating(row.stat);
     try {
-      const res = await fetch("/api/character/allocate", {
+      const res = await fetch("/api/character?action=allocate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, stat: row.stat, amount }),
@@ -176,7 +176,7 @@ export default function DashboardPanel() {
     if (!window.confirm(confirmMsg)) return;
     setResetting(true);
     try {
-      const res = await fetch("/api/character/reset-stats", {
+      const res = await fetch("/api/character?action=reset-stats", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId }),
@@ -215,7 +215,7 @@ export default function DashboardPanel() {
 
     setChangingClass(true);
     try {
-      const res = await fetch("/api/character/change-class", {
+      const res = await fetch("/api/character?action=change-class", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, newClassType }),
@@ -410,7 +410,7 @@ export default function DashboardPanel() {
             <button
               onClick={() => {
                 if (!window.confirm(t("prestige.confirm", locale).replace("{n}", String(c.prestige || 0)).replace("{n2}", String((Number(c.prestige) || 0) + 1)))) return;
-                fetch("/api/character/prestige", {
+                fetch("/api/character?action=prestige", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ characterId: c.id }),

@@ -27,7 +27,7 @@ export default function AchievementsPanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/achievements?characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/progression?action=achievements&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       setAchievements(d.achievements ?? []);
       setTitles(d.titles ?? []);
@@ -41,7 +41,7 @@ export default function AchievementsPanel() {
     if (!characterId) return;
     setBusy(`claim_${id}`);
     try {
-      const res = await fetch("/api/achievements", {
+      const res = await fetch("/api/progression?action=achievements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "claim", characterId, achievementId: id }),
@@ -63,7 +63,7 @@ export default function AchievementsPanel() {
     if (!characterId) return;
     setBusy(`title_${id}`);
     try {
-      const res = await fetch("/api/achievements", {
+      const res = await fetch("/api/progression?action=achievements", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "equip_title", characterId, titleId: id }),

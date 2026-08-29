@@ -46,7 +46,7 @@ export default function Notifications() {
     const poll = async () => {
       if (stopped || !enabledRef.current || !characterId) return;
       try {
-        const res = await fetch(`/api/notifications/check?characterId=${encodeURIComponent(characterId)}`);
+        const res = await fetch(`/api/game?action=notifications&characterId=${encodeURIComponent(characterId)}`);
         const d = await res.json();
         const last = lastRef.current;
         if (d.energyFull && !last.energyFull) {
@@ -65,7 +65,7 @@ export default function Notifications() {
     // Estado inicial silencioso (não dispara notificação logo de cara).
     (async () => {
       try {
-        const res = await fetch(`/api/notifications/check?characterId=${encodeURIComponent(characterId)}`);
+        const res = await fetch(`/api/game?action=notifications&characterId=${encodeURIComponent(characterId)}`);
         const d = await res.json();
         lastRef.current = { energyFull: !!d.energyFull, ghostShopOpen: !!d.ghostShopOpen, worldBossOpen: !!d.worldBossOpen };
       } catch { /* silencioso */ }

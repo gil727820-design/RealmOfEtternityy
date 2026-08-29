@@ -53,7 +53,7 @@ export default function TradePanel() {
 
   const loadAds = useCallback(async () => {
     try {
-      const res = await fetch("/api/trade-ads");
+      const res = await fetch("/api/social?action=trade-ads");
       const data = await res.json();
       setAds(data.ads || []);
     } catch { /* ignore */ }
@@ -64,7 +64,7 @@ export default function TradePanel() {
 
   const loadChat = useCallback(async (adId: string) => {
     try {
-      const res = await fetch(`/api/trade-ads/chat?adId=${adId}`);
+      const res = await fetch(`/api/social?action=trade-ads-chat&adId=${adId}`);
       const data = await res.json();
       setChatMessages(data.messages || []);
     } catch { /* ignore */ }
@@ -86,7 +86,7 @@ export default function TradePanel() {
     if (!characterId || busy || !adTitle.trim()) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/trade-ads", {
+      const res = await fetch("/api/social?action=trade-ads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, title: adTitle, want: adWant, offeredItems: adItems }),
@@ -109,7 +109,7 @@ export default function TradePanel() {
   const sendChat = async () => {
     if (!characterId || !selectedAd || !chatInput.trim()) return;
     try {
-      await fetch("/api/trade-ads/chat", {
+      await fetch("/api/social?action=trade-ads-chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, adId: selectedAd.id, text: chatInput.trim() }),
@@ -123,7 +123,7 @@ export default function TradePanel() {
     if (!characterId || busy) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/trade-session/open", {
+      const res = await fetch("/api/social?action=trade-open", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, adId: ad.id }),

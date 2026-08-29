@@ -30,7 +30,7 @@ export default function AfkPanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/character/${characterId}`);
+      const res = await fetch(`/api/character?id=${characterId}`);
       const data = await res.json();
       if (data.character) {
         setCharacter(data.character);
@@ -70,7 +70,7 @@ export default function AfkPanel() {
   const startAFK = async () => {
     setStartingAFK(true);
     try {
-      const res = await fetch("/api/afk/start", {
+      const res = await fetch("/api/game?action=afk-start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId }),
@@ -92,7 +92,7 @@ export default function AfkPanel() {
     if (collecting) return;
     setCollecting(true);
     try {
-      const res = await fetch("/api/afk/claim", {
+      const res = await fetch("/api/game?action=afk-claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId }),

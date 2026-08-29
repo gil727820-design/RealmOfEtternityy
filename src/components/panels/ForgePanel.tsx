@@ -32,7 +32,7 @@ export default function ForgePanel() {
   const refresh = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/character/${characterId}`);
+      const res = await fetch(`/api/character?id=${characterId}`);
       const d = await res.json();
       if (d.character) setCharacter(d.character);
       if (d.inventory) setInventory(d.inventory);
@@ -46,7 +46,7 @@ export default function ForgePanel() {
     if (tab !== "craft" || !characterId) return;
     (async () => {
       try {
-        const res = await fetch(`/api/craft?characterId=${encodeURIComponent(characterId)}`);
+        const res = await fetch(`/api/game?action=craft&characterId=${encodeURIComponent(characterId)}`);
         const d = await res.json();
         if (d.recipes) setRecipes(d.recipes);
         if (d.materials) setMaterials(d.materials);
@@ -62,7 +62,7 @@ export default function ForgePanel() {
     }
     setBusy(true);
     try {
-      const res = await fetch("/api/forge", {
+      const res = await fetch("/api/progression?action=forge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, characterId, itemId: selectedId }),
@@ -88,7 +88,7 @@ export default function ForgePanel() {
     if (FORGE_MAINTENANCE) { notify("⚠️ A forja está em manutenção!", "error"); return; }
     setBusy(true);
     try {
-      const res = await fetch("/api/craft", {
+      const res = await fetch("/api/game?action=craft", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, recipeId }),
@@ -101,7 +101,7 @@ export default function ForgePanel() {
         notify(`🛠️ ${t("forge.craft.success", locale)} ${crafted?.icon || "⚔️"} ${crafted?.nameKey ? t(String(crafted.nameKey), locale) : ""}!`, "success");
         await refresh();
         // Recarrega materiais/receitas (quantidades mudaram).
-        const r = await fetch(`/api/craft?characterId=${encodeURIComponent(characterId)}`);
+        const r = await fetch(`/api/game?action=craft&characterId=${encodeURIComponent(characterId)}`);
         const dr = await r.json();
         if (dr.recipes) setRecipes(dr.recipes);
         if (dr.materials) setMaterials(dr.materials);
