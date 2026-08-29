@@ -15,19 +15,19 @@ export const CLASS_ICONS: Record<ClassName, string> = {
 };
 
 export const CLASS_IMAGES: Record<ClassName, { male: string; female: string }> = {
-  warrior:     { male: "/classes/masculino/pixel_guerreiro.png",  female: "/classes/feminino/pixel_guerreira.png" },
-  paladin:     { male: "/classes/masculino/pixel_paladino.png",   female: "/classes/feminino/pixel_paladina.png" },
-  berserker:   { male: "/classes/masculino/pixel_berserker.png",  female: "/classes/feminino/pixel_berserker_fem.png" },
-  mage:        { male: "/classes/masculino/pixel_mago.png",       female: "/classes/feminino/pixel_maga.png" },
-  necromancer: { male: "/classes/masculino/pixel_necromante.png", female: "/classes/feminino/pixel_necromante_fem.png" },
-  assassin:    { male: "/classes/masculino/pixel_assassino.png",  female: "/classes/feminino/pixel_assassina.png" },
-  hunter:      { male: "/classes/masculino/pixel_cacador.png",    female: "/classes/feminino/pixel_cacadora.png" },
-  monk:        { male: "/classes/masculino/pixel_monge.png",      female: "/classes/feminino/pixel_monja.png" },
-  samurai:     { male: "/classes/masculino/pixel_samurai.png",    female: "/classes/feminino/pixel_samurai_fem.png" },
-  knight:      { male: "/classes/masculino/pixel_cavaleiro.png",  female: "/classes/feminino/pixel_cavaleira.png" },
-  summoner:    { male: "/classes/masculino/pixel_invocador.png",  female: "/classes/feminino/pixel_invocadora.png" },
-  templar:     { male: "/classes/masculino/pixel_templario.png",  female: "/classes/feminino/pixel_templaria.png" },
-  archer:      { male: "/classes/masculino/pixel_arqueiro.png",   female: "/classes/feminino/pixel_arqueira.png" },
+  warrior:     { male: "/images/classes/classe_guerreiro.png",  female: "/images/classes/classe_guerreiro.png" },
+  paladin:     { male: "/images/classes/classe_paladino.png",   female: "/images/classes/classe_paladino.png" },
+  berserker:   { male: "/images/classes/classe_berserker.png",  female: "/images/classes/classe_berserker.png" },
+  mage:        { male: "/images/classes/classe_mago.png",       female: "/images/classes/classe_mago.png" },
+  necromancer: { male: "/images/classes/classe_necromante.png", female: "/images/classes/classe_necromante.png" },
+  assassin:    { male: "/images/classes/classe_assassino.png",  female: "/images/classes/classe_assassino.png" },
+  hunter:      { male: "/images/classes/classe_cacador.png",    female: "/images/classes/classe_cacador.png" },
+  monk:        { male: "/images/classes/classe_monge.png",      female: "/images/classes/classe_monge.png" },
+  samurai:     { male: "/images/classes/classe_samurai.png",    female: "/images/classes/classe_samurai.png" },
+  knight:      { male: "/images/classes/classe_cavaleiro.png",  female: "/images/classes/classe_cavaleiro.png" },
+  summoner:    { male: "/images/classes/classe_invocador.png",  female: "/images/classes/classe_invocador.png" },
+  templar:     { male: "/images/classes/classe_templario.png",  female: "/images/classes/classe_templario.png" },
+  archer:      { male: "/images/classes/classe_arqueiro.png",   female: "/images/classes/classe_arqueiro.png" },
 };
 
 export function classImage(classType: ClassName, sex: string): string {
@@ -392,12 +392,67 @@ export function resolveMaxLevel(configuredMaxLevel?: number): number {
   return v > 0 ? v : MAX_LEVEL;
 }
 
-// Curva de XP: exige mais XP por nível para o up não ser tão rápido.
-// A curva antiga (130 * 1.17) deixava subir fácil demais; a atual (165 * 1.18)
-// pede ~+40% no meio do jogo (ex.: Lv15 1.170 → 1.674) e escala mais nas fases
-// altas — ritmo "nem tão fácil, nem tão difícil".
+// Curva de XP: progressão suave e agradável.
+// Base 120 × 1.16^(n-1) — subir nível é gratificante mas não trivial.
+// Ex.: Lv10=~520, Lv25=~2.500, Lv50=~11.700, Lv100=~53.000, Lv200=~1.1M
+// ~3-4 missões do seu tier = 1 nível (ritmo constante).
 export function xpForLevel(level: number): number {
-  return Math.floor(165 * Math.pow(1.18, level - 1));
+  return Math.floor(120 * Math.pow(1.16, level - 1));
+}
+
+export interface LevelUpResult {
+  level: number;
+  xp: number;
+  xpToNext: number;
+  unspentStatPoints: number;
+  skillPoints: number;
+  levelsGained: number;
+}
+
+/**
+ * Aplica XP e calcula o level-up respeitando o NÍVEL MÁXIMO.
+ *
+ * O loop só sobe enquanto `newLevel < maxLevel`; ao atingir o cap o XP é
+ * ZERADO em vez de acumular — antigamente, no nível 999+, o XP acumulava
+ * infinitamente (e se o admin aumentasse o maxLevel depois, o personagem
+ * subia dezenas de níveis de uma vez com o XP acumulado).
+ */
+export function applyXpAndLevels(
+  char: {
+    level?: number;
+    xp?: number;
+    xpToNext?: number;
+    unspentStatPoints?: number;
+    skillPoints?: number;
+  },
+  xpGain: number,
+  maxLevel: number
+): LevelUpResult {
+  let newXp = (Number(char.xp) || 0) + Math.max(0, xpGain);
+  let newLevel = Number(char.level) || 1;
+  let newXpToNext = Number(char.xpToNext) || xpForLevel(newLevel);
+  let newStatPoints = Number(char.unspentStatPoints) || 0;
+  let newSkillPoints = Number(char.skillPoints) || 0;
+  while (newLevel < maxLevel && newXp >= newXpToNext) {
+    newXp -= newXpToNext;
+    newLevel++;
+    newXpToNext = xpForLevel(newLevel);
+    newStatPoints += 3;
+    if (newLevel % 3 === 0) newSkillPoints += 1;
+  }
+  // Cap no nível máximo: não acumula XP além do necessário.
+  if (newLevel >= maxLevel) {
+    newXp = 0;
+    newXpToNext = 0;
+  }
+  return {
+    level: newLevel,
+    xp: newXp,
+    xpToNext: newXpToNext,
+    unspentStatPoints: newStatPoints,
+    skillPoints: newSkillPoints,
+    levelsGained: newLevel - (Number(char.level) || 1),
+  };
 }
 
 /**
@@ -409,7 +464,7 @@ export function xpForLevel(level: number): number {
  * ritmo consistente (~3-4 missões do seu tier ≈ 1 nível) — nem fácil demais
  * no fim do jogo, nem impossível no começo.
  */
-const MISSION_XP_RATIO = 0.26;
+const MISSION_XP_RATIO = 0.32;
 export function missionXpReward(mission: { minLevel?: number; xpReward?: number }): number {
   const lv = Math.max(1, mission.minLevel ?? 1);
   const scaled = Math.floor(xpForLevel(lv) * MISSION_XP_RATIO);

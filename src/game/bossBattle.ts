@@ -158,7 +158,7 @@ function antiOneShot(mon: any, ca: any) {
   const playerMaxHit = Math.round(ca.attack * 1.7);
   if (playerMaxHit < mon.maxHp) return { ...mon, scaled: false };
   const hp = Math.max(mon.maxHp, Math.round(playerMaxHit * 6));
-  const atk = Math.max(mon.attack, Math.round(ca.maxHp * 0.2));
+  const atk = Math.max(mon.attack, Math.round(ca.maxHp * 0.12));
   return { ...mon, maxHp: hp, attack: atk, scaled: true };
 }
 

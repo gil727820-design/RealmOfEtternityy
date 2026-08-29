@@ -9,6 +9,7 @@ import {
   type ClassName,
 } from "@/game/constants";
 import useBattleFx, { BattleFxLayer } from "@/components/ui/BattleFx";
+import useSpriteAnim from "@/components/ui/useSpriteAnim";
 import Confetti from "@/components/ui/Confetti";
 
 // Cooldown (ms) entre andares no modo automático (anti-spam).
@@ -26,6 +27,7 @@ export default function TowerPanel() {
   const [mShake, setMShake] = useState(0);
   const [flash, setFlash] = useState(0);
   const fx = useBattleFx();
+  const spriteAnim = useSpriteAnim();
   const autoStop = useRef(false);
   const floatId = useRef(0);
   // Guarda contra cliques duplicados no botão de lutar: sem isso, dois "start"
@@ -101,6 +103,9 @@ export default function TowerPanel() {
     // Efeitos visuais: partículas, anel de impacto, debuffs e curas.
     fx.applyRound(data, { player: "player", enemy: "monster" });
 
+    // Animações de sprite (investida, recuo, esquiva, fúria, morte...).
+    spriteAnim.processEvents(data.events, !!data.won, !!data.lost);
+
     (data.events || []).forEach((ev: any) => {
       if (ev.amount && (ev.type === "hit" || ev.type === "crit" || ev.type === "skill")) {
         const id = ++floatId.current;
@@ -141,10 +146,11 @@ export default function TowerPanel() {
         return;
       }
       setBattle(data.battle);
-      setLog([]);
-      setResult(null);
-      fx.clear();
-      autoActive.current = true;
+            setLog([]);
+            setResult(null);
+            fx.clear();
+            spriteAnim.triggerRunIn();
+            autoActive.current = true;
       setStage("battle");
       autoStop.current = false;
       setTimeout(() => autoLoop(data.battle), 900);
@@ -330,30 +336,7 @@ export default function TowerPanel() {
                     className="accent-purple-500 w-4 h-4 cursor-pointer"
                   />
                 </label>
-                <label className="flex items-center justify-between gap-3 text-xs text-gray-300 cursor-pointer">
-                  <span>🧪 {t("tower.autoPotion", locale)}</span>
-                  <input
-                    type="checkbox"
-                    checked={autoBattle.potionEnabled}
-                    onChange={(e) => setAutoBattle({ potionEnabled: e.target.checked })}
-                    className="accent-purple-500 w-4 h-4 cursor-pointer"
-                  />
-                </label>
-                {autoBattle.potionEnabled && (
-                  <div className="flex items-center gap-2 text-xs text-gray-400 pl-1">
-                    <span>{t("tower.potionBelow", locale)}:</span>
-                    <input
-                      type="range"
-                      min={10}
-                      max={90}
-                      step={10}
-                      value={autoBattle.potionPct}
-                      onChange={(e) => setAutoBattle({ potionPct: Number(e.target.value) })}
-                      className="flex-1 accent-purple-500"
-                    />
-                    <span className="font-bold text-purple-300 w-10 text-right">{autoBattle.potionPct}%</span>
-                  </div>
-                )}
+                <div className="text-[10px] text-gray-600 text-center italic">🧪 Poções automáticas em breve — ainda não disponíveis no jogo.</div>
               </div>
             </div>
             <div className="flex justify-center gap-3 flex-wrap mt-4">
@@ -414,17 +397,19 @@ export default function TowerPanel() {
           {/* Lutadores */}
           <div className="flex items-start justify-between gap-2 relative">
             <div className="flex-1 text-center">
-              <div className="relative inline-block">
-                <div key={pShake} className={pShake > 0 ? "animate-hit-shake" : ""}>
-                  <img
-                    src={playerImg}
-                    alt={playerName}
-                    className={`w-28 h-28 sm:w-36 sm:h-36 rounded-2xl border-2 border-[#4ecdc4]/60 object-cover shadow-[0_0_25px_rgba(78,205,196,0.35)] ${pShake > 0 ? "" : "animate-float"}`}
-                  />
-                </div>
-                {floatEls("player")}
-                <BattleFxLayer fx={fx} target="player" />
-              </div>
+                          <div className="relative inline-block">
+                            <div key={pShake}>
+                              <div className={`relative w-28 h-28 sm:w-36 sm:h-36 ${spriteAnim.playerAnim || (pShake > 0 ? "animate-hit-shake" : "")}`}>
+                                <img
+                                  src={playerImg}
+                                  alt={playerName}
+                                  className={`w-full h-full rounded-2xl border-2 border-[#4ecdc4]/60 object-cover shadow-[0_0_25px_rgba(78,205,196,0.35)] ${!spriteAnim.playerAnim && !pShake ? "animate-float" : ""}`}
+                                />
+                              </div>
+                            </div>
+                            {floatEls("player")}
+                            <BattleFxLayer fx={fx} target="player" />
+                          </div>
               <div className="mt-2 font-bold text-white tracking-wider truncate max-w-[140px] mx-auto">{playerName}</div>
               <div className="mt-1 mx-auto max-w-[170px]">
                 <div className="h-3 rounded-full bg-gray-800 overflow-hidden border border-white/10">
@@ -442,16 +427,22 @@ export default function TowerPanel() {
 
             <div className="flex-1 text-center">
               <div className="relative inline-block">
-                <div key={mShake} className={mShake > 0 ? "animate-hit-shake" : ""}>
-                  <img
-                    src={battle.monImage}
-                    alt={monsterName}
-                    className={`w-28 h-28 sm:w-36 sm:h-36 rounded-2xl border-2 object-cover ${
-                      battle.boss
-                        ? "border-yellow-500/70 shadow-[0_0_25px_rgba(234,179,8,0.4)]"
-                        : "border-red-500/50 shadow-[0_0_25px_rgba(239,68,68,0.3)]"
-                    } ${mShake > 0 ? "" : "animate-floatSlow"}`}
-                  />
+                <div key={mShake}>
+                  <div className={`relative w-28 h-28 sm:w-36 sm:h-36 ${spriteAnim.monsterAnim || (mShake > 0 ? "animate-hit-shake" : "")}`}>
+                    <img
+                      src={battle.monImage}
+                      alt={monsterName}
+                      className={`w-full h-full rounded-2xl border-2 object-cover ${
+                        battle.boss
+                          ? "border-yellow-500/70 shadow-[0_0_25px_rgba(234,179,8,0.4)]"
+                          : "border-red-500/50 shadow-[0_0_25px_rgba(239,68,68,0.3)]"
+                      } ${!spriteAnim.monsterAnim && !mShake ? "animate-floatSlow" : ""}`}
+                    />
+                    {/* Arco de corte no alvo */}
+                    {spriteAnim.showSlash && (
+                      <span className={`slash-trail ${spriteAnim.slashCrit ? "slash-trail-crit" : ""}`} />
+                    )}
+                  </div>
                 </div>
                 {floatEls("monster")}
                 <BattleFxLayer fx={fx} target="enemy" />

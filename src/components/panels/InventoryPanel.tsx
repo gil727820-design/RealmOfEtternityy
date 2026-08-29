@@ -1138,8 +1138,26 @@ const categories = [
               <p className="text-sm">{t("inv.empty", locale)}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
-              {visible.map((it) => {
+            <div className="space-y-4">
+              {/* Agrupar itens por slot */}
+              {(() => {
+                const slotOrder = ["weapon","shield","helmet","armor","pants","boots","gloves","ring","amulet","relic","artifact","consumable"];
+                const grouped: Record<string, typeof visible> = {};
+                for (const it of visible) {
+                  const slot = it.template?.slot || (it.template?.type === "consumable" ? "consumable" : "other");
+                  if (!grouped[slot]) grouped[slot] = [];
+                  grouped[slot].push(it);
+                }
+                const slotNames: Record<string, string> = { weapon: "⚔️ Armas", shield: "🛡️ Escudos", helmet: "⛑️ Capacetes", armor: "🦺 Armaduras", pants: "👖 Calças", boots: "👢 Botas", gloves: "🧤 Luvas", ring: "💍 Anéis", amulet: "📿 Amuletos", relic: "🔮 Relíquias", artifact: "🗿 Artefatos", consumable: "🧪 Consumíveis", other: "📦 Outros" };
+                return slotOrder.filter((s) => grouped[s]?.length).map((slot) => (
+                  <div key={slot}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">{slotNames[slot] || slot}</span>
+                      <span className="text-[10px] text-gray-600 bg-white/5 rounded-full px-2 py-0.5">{grouped[slot].length}</span>
+                      <div className="flex-1 h-px bg-white/10" />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+              {grouped[slot].map((it) => {
                 const tpl = it.template || {};
                 const id = it.inv.id;
                 const active = selectedId === id;
@@ -1214,6 +1232,10 @@ const categories = [
                   </button>
                 );
               })}
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           )}
         </section>

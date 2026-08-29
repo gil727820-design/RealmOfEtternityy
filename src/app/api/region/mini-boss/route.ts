@@ -115,8 +115,8 @@ export async function POST(req: NextRequest) {
       chipPct: 3,
       // RAGE MODE: o chefe parece fraco (o jogador domina no começo), mas ao
       // chegar a 30% de vida ele se enfurece e desfere um SUPER ATAQUE
-      // (≈80% da vida máxima do jogador) que humilha quem subestimou.
-      rage: { at: 30, buffPct: 50, superMult: 2.5, superPctMaxHp: 80 },
+      // (~40% da vida máxima do jogador) — perigoso mas não hitkill.
+      rage: { at: 30, buffPct: 40, superMult: 2.0, superPctMaxHp: 40 },
     };
 
     const action = String(body?.action || "");
@@ -211,8 +211,8 @@ function miniBossBattleMonster(char: any, mb: any) {
   const playerMaxHit = Math.max(120, Math.round((Number(char?.attack) || 0) * 1.7));
   const playerMaxHp = Math.max(200, Number(char?.maxHp) || 200);
   return {
-    maxHp: Math.round(playerMaxHit * 5),
-    attack: Math.max(s.attack, Math.round(playerMaxHp * 0.07)),
+    maxHp: Math.round(playerMaxHit * 3.5),
+    attack: Math.max(s.attack, Math.round(playerMaxHp * 0.03)),
     defense: Math.max(1, Math.round(s.defense * 0.6)),
     speed: s.speed,
     critical: Math.max(5, Math.round(s.critical * 0.5)),
@@ -235,7 +235,12 @@ async function applyMiniBossWin(char: any, mb: any, rewards: { xp: number; gold:
     newXpToNext = xpForLevel(newLevel);
     newStatPoints += 3;
     if (newLevel % 3 === 0) newSkillPoints += 1;
+  }  // Cap no nível máximo: não acumula XP além do necessário.
+  if (newLevel >= maxLevel) {
+    newXp = 0;
+    newXpToNext = 0;
   }
+
 
   const newGold = (char.gold || 0) + Math.floor(rewards.gold * goldMultiplier(char));
 

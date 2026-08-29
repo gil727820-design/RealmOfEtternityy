@@ -81,12 +81,12 @@ export async function POST(req: NextRequest) {
       boss: true,
       noScale: true,
       // Arranha pelo menos 3% da vida máxima por rodada (não some contra defesa).
-      chipPct: 3,
+      chipPct: 1.5,
       // RAGE: o chefe parece fraco (o jogador domina no começo), mas ao
       // chegar a 25% de vida ele se enfurece e desfere um SUPER ATAQUE
       // (≈80% da vida máxima do jogador). Se sobreviver, ele se ESGOTA e
       // você finaliza — se morrer, foi HUMILHADO. 🤡
-      rage: { at: 25, buffPct: 60, superMult: 2.5, superPctMaxHp: 80, exhaustPct: 15 },
+      rage: { at: 25, buffPct: 30, superMult: 1.8, superPctMaxHp: 20, exhaustPct: 10 },
     };
 
     const action = String(body?.action || "");
@@ -186,7 +186,12 @@ async function applyRegionBossWin(char: any, boss: any, result: any, now: Date, 
     newXpToNext = xpForLevel(newLevel);
     newStatPoints += 3;
     if (newLevel % 3 === 0) newSkillPoints += 1;
+  }  // Cap no nível máximo: não acumula XP além do necessário.
+  if (newLevel >= maxLevel) {
+    newXp = 0;
+    newXpToNext = 0;
   }
+
 
   const newGold = (char.gold || 0) + Math.floor(result.rewards.gold * goldMultiplier(char));
 

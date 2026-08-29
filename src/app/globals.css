@@ -1,46 +1,77 @@
 ﻿@import "tailwindcss";
 
+/* ============================================================
+   REALM OF ETERNITY — Design System "Reino Eterno"
+   Paleta: azul-noite profundo + dourado/bronze + rubi.
+   Tipografia display: Cinzel (épica) · Corpo: Inter.
+   ============================================================ */
 @theme {
-  --color-bg-primary: rgba(6, 6, 17, 0.55);
-  --color-bg-secondary: rgba(12, 12, 29, 0.5);
-  --color-bg-card: rgba(17, 17, 39, 0.48);
-  --color-bg-card-alt: rgba(21, 21, 50, 0.5);
-  --color-bg-hover: rgba(26, 26, 58, 0.55);
-  --color-bg-surface: rgba(14, 14, 34, 0.42);
-  --color-bg-elevated: rgba(24, 24, 56, 0.55);
-  --color-accent: #e94560;
-  --color-accent-light: #ff6b8a;
-  --color-accent-dark: #c73050;
-  --color-accent-secondary: #00d4aa;
-  --color-accent-tertiary: #7c5cfc;
-  --color-gold: #ffd700;
-  --color-gold-dark: #c8a600;
-  --color-gold-light: #ffe44d;
-  --color-diamond: #00cfff;
-  --color-diamond-light: #66e5ff;
-  --color-crystal: #c77dff;
-  --color-xp-green: #00ff88;
-  --color-xp-dark: #00cc6a;
-  --color-hp-red: #ff4757;
-  --color-mana-blue: #00b4d8;
-  --color-energy-yellow: #ffc800;
+  --color-bg-primary: rgba(7, 10, 20, 0.55);
+  --color-bg-secondary: rgba(12, 16, 30, 0.5);
+  --color-bg-card: rgba(16, 21, 38, 0.48);
+  --color-bg-card-alt: rgba(20, 26, 46, 0.5);
+  --color-bg-hover: rgba(26, 33, 56, 0.55);
+  --color-bg-surface: rgba(13, 18, 33, 0.42);
+  --color-bg-elevated: rgba(23, 30, 52, 0.55);
+  /* Accent principal: dourado real do reino */
+  --color-accent: #d4a843;
+  --color-accent-light: #f0c86a;
+  --color-accent-dark: #a8812a;
+  /* Contrastes: rubi (guerra) e teal sóbrio (magia) */
+  --color-accent-secondary: #2a9d8f;
+  --color-accent-tertiary: #8b5cf6;
+  --color-gold: #f0c86a;
+  --color-gold-dark: #a8812a;
+  --color-gold-light: #ffe9ad;
+  --color-diamond: #7dd3fc;
+  --color-diamond-light: #bae6fd;
+  --color-crystal: #c084fc;
+  --color-xp-green: #34d399;
+  --color-xp-dark: #0f9d6e;
+  --color-hp-red: #f05252;
+  --color-mana-blue: #38bdf8;
+  --color-energy-yellow: #fbbf24;
+  --font-display: "Cinzel", "Trajan Pro", Georgia, serif;
+  --font-body: "Inter", "SF Pro Display", system-ui, -apple-system, sans-serif;
 }
 
-* { scrollbar-width: thin; scrollbar-color: rgba(233,69,96,0.3) transparent; }
+* { scrollbar-width: thin; scrollbar-color: rgba(212,168,67,0.35) transparent; }
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #e94560, #7c5cfc); border-radius: 10px; }
+::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #d4a843, #7c5cfc); border-radius: 10px; }
 
 html { scroll-behavior: smooth; }
 body {
-  background: #060611;
-  color: #e2e4f0;
+  background:
+    radial-gradient(1100px 600px at 85% -10%, rgba(212, 168, 67, 0.07), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(124, 92, 252, 0.06), transparent 55%),
+    #060a14;
+  color: #dde3f0;
   font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
 }
-::selection { background: rgba(233,69,96,0.3); color: white; }
+::selection { background: rgba(212,168,67,0.35); color: white; }
+
+/* Tipografia display — títulos épicos do reino */
+.font-display, .font-epic {
+  font-family: 'Cinzel', 'Trajan Pro', Georgia, 'Times New Roman', serif;
+  letter-spacing: 0.02em;
+}
+
+/* Cabeçalho padrão dos painéis — ícone + título épico */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+.section-header h2 {
+  font-family: 'Cinzel', 'Trajan Pro', Georgia, 'Times New Roman', serif;
+  letter-spacing: 0.03em;
+  font-weight: 700;
+}
 
 @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
 @keyframes fadeInUp { from { opacity:0; transform:translateY(30px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
@@ -51,7 +82,7 @@ body {
 @keyframes bounceIn { 0% { opacity:0; transform:scale(0.3); } 50% { transform:scale(1.08); } 70% { transform:scale(0.95); } 100% { opacity:1; transform:scale(1); } }
 @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
 @keyframes floatSlow { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-12px); } }
-@keyframes pulse-glow { 0%,100% { box-shadow:0 0 8px rgba(233,69,96,0.4),0 0 16px rgba(233,69,96,0.2); } 50% { box-shadow:0 0 20px rgba(233,69,96,0.6),0 0 40px rgba(233,69,96,0.3),0 0 60px rgba(233,69,96,0.15); } }
+@keyframes pulse-glow { 0%,100% { box-shadow:0 0 8px rgba(212,168,67,0.4),0 0 16px rgba(212,168,67,0.2); } 50% { box-shadow:0 0 20px rgba(212,168,67,0.6),0 0 40px rgba(212,168,67,0.3),0 0 60px rgba(212,168,67,0.15); } }
 @keyframes pulse-soft { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
 @keyframes shimmer { 0% { background-position:-200% 0; } 100% { background-position:200% 0; } }
 @keyframes gradientFlow { 0% { background-position:0% 50%; } 50% { background-position:100% 50%; } 100% { background-position:0% 50%; } }
@@ -141,7 +172,7 @@ body {
 
 /* Vidro / blur do header e superfícies */
 .glass-effect {
-  background: linear-gradient(180deg, rgba(13, 15, 28, 0.5), rgba(13, 15, 28, 0.3));
+  background: linear-gradient(180deg, rgba(10, 14, 26, 0.5), rgba(10, 14, 26, 0.3));
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
@@ -149,7 +180,7 @@ body {
 /* Cartões — vidro translúcido para o fundo da ilha aparecer */
 .game-card {
   position: relative;
-  background: linear-gradient(160deg, rgba(21, 20, 46, 0.55) 0%, rgba(13, 13, 34, 0.42) 100%);
+  background: linear-gradient(160deg, rgba(18, 23, 42, 0.55) 0%, rgba(11, 15, 29, 0.42) 100%);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 1rem;
   backdrop-filter: blur(14px);
@@ -159,10 +190,10 @@ body {
 .game-card-glow {
   box-shadow:
     0 0 0 1px rgba(255, 255, 255, 0.04),
-    0 10px 34px rgba(233, 69, 96, 0.08),
-    0 0 22px rgba(233, 69, 96, 0.06);
+    0 10px 34px rgba(212, 168, 67, 0.08),
+    0 0 22px rgba(212, 168, 67, 0.06);
 }
-.game-card-accent { border-color: rgba(233, 69, 96, 0.35); }
+.game-card-accent { border-color: rgba(212, 168, 67, 0.35); }
 
 /* Estatísticas (cards de atributo) */
 .stat-card {
@@ -206,28 +237,31 @@ body {
 .xp-bar { background: linear-gradient(90deg, #00cc6a, #00ff88); box-shadow: 0 0 8px rgba(0, 255, 136, 0.4); }
 .mission-bar { background: linear-gradient(90deg, #4f46e5, #8b5cf6); box-shadow: 0 0 8px rgba(139, 92, 246, 0.4); }
 
-/* Botões — translúcidos para o fundo da ilha aparecer através deles */
+/* Botões — translúcidos com brilho dourado/bronze */
 .game-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
-  padding: 0.5rem 1.1rem;
-  border-radius: 0.7rem;
-  font-weight: 600;
+  gap: 0.5rem;
+  padding: 0.6rem 1.3rem;
+  border-radius: 0.75rem;
+  font-weight: 800;
+  font-size: 0.85rem;
   color: #fff;
   cursor: pointer;
-  border: 1px solid rgba(255, 107, 138, 0.45);
-  background: linear-gradient(135deg, rgba(233, 69, 96, 0.6), rgba(199, 48, 80, 0.4));
+  font-family: 'Inter', system-ui, sans-serif;
+  border: 2px solid rgba(212, 168, 67, 0.6);
+  background: linear-gradient(135deg, rgba(212, 168, 67, 0.75), rgba(168, 129, 42, 0.55));
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 4px 14px rgba(233, 69, 96, 0.2);
+  box-shadow: 0 4px 20px rgba(212, 168, 67, 0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
 }
 .game-btn:hover {
-  transform: translateY(-1px);
-  background: linear-gradient(135deg, rgba(233, 69, 96, 0.8), rgba(199, 48, 80, 0.6));
-  box-shadow: 0 6px 18px rgba(233, 69, 96, 0.35);
+  transform: translateY(-2px) scale(1.02);
+  background: linear-gradient(135deg, rgba(212, 168, 67, 0.95), rgba(168, 129, 42, 0.75));
+  box-shadow: 0 6px 24px rgba(212, 168, 67, 0.5);
 }
 .game-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .game-btn-secondary {
@@ -236,10 +270,11 @@ body {
   justify-content: center;
   gap: 0.4rem;
   padding: 0.5rem 1.1rem;
-  border-radius: 0.7rem;
+  border-radius: 0.6rem;
   font-weight: 600;
-  color: #e2e4f0;
+  color: #dde3f0;
   cursor: pointer;
+  font-family: 'Inter', system-ui, sans-serif;
   background: rgba(255, 255, 255, 0.07);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -248,11 +283,11 @@ body {
 }
 .game-btn-secondary:hover { border-color: rgba(255, 255, 255, 0.35); background: rgba(255, 255, 255, 0.14); transform: translateY(-1px); }
 
-/* Campos de input — com borda profissional e brilho no foco */
+/* Campos de input — com borda profissional e brilho dourado no foco */
 .game-input {
   width: 100%;
   padding: 0.7rem 1rem;
-  border-radius: 0.7rem;
+  border-radius: 0.6rem;
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.22);
   color: #fff;
@@ -266,32 +301,32 @@ body {
 .game-input::placeholder { color: rgba(255, 255, 255, 0.35); }
 .game-input:hover { border-color: rgba(255, 255, 255, 0.32); }
 .game-input:focus {
-  border-color: rgba(0, 212, 170, 0.75);
+  border-color: rgba(212, 168, 67, 0.8);
   background: rgba(255, 255, 255, 0.09);
-  box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.16), 0 0 18px rgba(0, 212, 170, 0.28);
+  box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.16), 0 0 18px rgba(212, 168, 67, 0.25);
 }
 
-/* Variante de destaque (campo de senha) — borda de cor que pulsa */
+/* Variante de destaque (campo de senha) — borda dourada que pulsa */
 .game-input-accent {
-  border-color: rgba(233, 69, 96, 0.6);
-  box-shadow: 0 0 0 1px rgba(233, 69, 96, 0.18), 0 0 12px rgba(233, 69, 96, 0.2);
+  border-color: rgba(212, 168, 67, 0.6);
+  box-shadow: 0 0 0 1px rgba(212, 168, 67, 0.18), 0 0 12px rgba(212, 168, 67, 0.2);
 }
-.game-input-accent:hover { border-color: rgba(233, 69, 96, 0.75); }
+.game-input-accent:hover { border-color: rgba(212, 168, 67, 0.75); }
 .game-input-accent:focus {
-  border-color: rgba(233, 69, 96, 0.9);
-  box-shadow: 0 0 0 3px rgba(233, 69, 96, 0.2), 0 0 20px rgba(233, 69, 96, 0.35);
+  border-color: rgba(240, 200, 106, 0.95);
+  box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.2), 0 0 20px rgba(212, 168, 67, 0.35);
 }
 
-/* Título com letras em gradiente arco-íris animado (loop RGB) */
+/* Título com letras em gradiente dourado metálico animado */
 .gradient-text {
-  background: linear-gradient(90deg, #ff4757, #ff8c2e, #ffd700, #00ff88, #38bdf8, #a855f7, #ff4757);
+  background: linear-gradient(90deg, #f0c86a, #d4a843, #fff3c4, #d4a843, #a8812a, #f0c86a);
   background-size: 300% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
   animation: gradientFlow 6s ease-in-out infinite;
-  filter: drop-shadow(0 0 14px rgba(233, 69, 96, 0.25));
+  filter: drop-shadow(0 0 14px rgba(212, 168, 67, 0.25));
 }
 /* ---- Telas de login: moldura cinematográfica estilo MMORPG ---- */
 /* Vinheta escura nas bordas para dar profundidade */
@@ -338,18 +373,18 @@ body {
 }
 .glow-red-blink { animation: glowRed 1.8s ease-in-out infinite; }
 
-/* Badges MMORPG / IDLE — chip com borda e brilho vermelho piscando */
+/* Badges MMORPG / IDLE — chip com borda e brilho dourado piscando */
 @keyframes blinkRed {
-  0%, 100% { box-shadow: 0 0 0 1px rgba(233, 69, 96, 0.12), 0 0 6px rgba(233, 69, 96, 0.16); }
-  50% { box-shadow: 0 0 0 1px rgba(233, 69, 96, 0.55), 0 0 14px rgba(233, 69, 96, 0.45); }
+  0%, 100% { box-shadow: 0 0 0 1px rgba(212, 168, 67, 0.12), 0 0 6px rgba(212, 168, 67, 0.16); }
+  50% { box-shadow: 0 0 0 1px rgba(212, 168, 67, 0.55), 0 0 14px rgba(212, 168, 67, 0.45); }
 }
 .badge {
   display: inline-block;
   padding: 0.35rem 0.95rem;
   border-radius: 9999px;
-  border: 1px solid rgba(233, 69, 96, 0.5);
-  background: rgba(233, 69, 96, 0.12);
-  color: #ffe9ec;
+  border: 1px solid rgba(212, 168, 67, 0.5);
+  background: rgba(212, 168, 67, 0.12);
+  color: #f5e6c8;
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -524,9 +559,507 @@ body {
 }
 
 
+/* ---- Sprites animados de batalha (Torre / Boss / PvP) ----
+   Os sprites são imagens estáticas; as animações CSS dão vida:
+   corrida, investida de ataque, recuo ao tomar dano, esquiva,
+   fúria do chefe, morte e vitória. */
+
+/* Corrida de entrada — o lutador "corre" para a arena (bob + avanço) */
+@keyframes spriteRunIn {
+  0% { transform: translateX(var(--run-from, -120px)) translateY(0) scale(0.92); opacity: 0; }
+  15% { opacity: 1; }
+  40% { transform: translateX(calc(var(--run-from, -120px) * 0.55)) translateY(-4px) rotate(-4deg) scale(1.02); }
+  55% { transform: translateX(calc(var(--run-from, -120px) * 0.35)) translateY(2px) rotate(3deg) scale(1.02); }
+  70% { transform: translateX(calc(var(--run-from, -120px) * 0.15)) translateY(-3px) rotate(-2deg) scale(1.01); }
+  100% { transform: translateX(0) translateY(0) rotate(0deg) scale(1); }
+}
+.sprite-run-in { animation: spriteRunIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+/* Investida de ataque (lunge) — direção via --lunge-x (ex.: 46px p/ direita) */
+@keyframes spriteLunge {
+  0% { transform: translateX(0) rotate(0deg) scale(1); }
+  35% { transform: translateX(calc(var(--lunge-x, 46px) * 0.7)) translateY(-4px) rotate(calc(var(--lunge-rot, -8deg))) scale(1.04); }
+  55% { transform: translateX(var(--lunge-x, 46px)) translateY(2px) rotate(calc(var(--lunge-rot, -8deg) * 1.4)) scale(1.08); }
+  75% { transform: translateX(calc(var(--lunge-x, 46px) * 0.45)) translateY(-2px) rotate(calc(var(--lunge-rot, -8deg) * 0.6)) scale(1.02); }
+  100% { transform: translateX(0) translateY(0) rotate(0deg) scale(1); }
+}
+.sprite-lunge { animation: spriteLunge 0.45s cubic-bezier(0.3, 0.8, 0.4, 1) forwards; }
+
+/* Golpe especial — investida maior com giro dramático */
+@keyframes spriteSkill {
+  0% { transform: translateX(0) rotate(0deg) scale(1); }
+  20% { transform: translateX(calc(var(--lunge-x, 46px) * -0.25)) translateY(-6px) rotate(calc(var(--lunge-rot, -8deg) * -0.8)); }
+  45% { transform: translateX(calc(var(--lunge-x, 46px) * 1.15)) translateY(-8px) rotate(calc(var(--lunge-rot, -8deg) * 1.8)) scale(1.15); }
+  70% { transform: translateX(calc(var(--lunge-x, 46px) * 0.5)) translateY(0) rotate(calc(var(--lunge-rot, -8deg) * 0.5)) scale(1.05); }
+  100% { transform: translateX(0) translateY(0) rotate(0deg) scale(1); }
+}
+.sprite-skill { animation: spriteSkill 0.55s cubic-bezier(0.3, 0.8, 0.4, 1) forwards; }
+
+/* Recuo ao tomar dano — sacode e flutua para trás com flash */
+@keyframes spriteHit {
+  0% { transform: translateX(0) scale(1); filter: brightness(1); }
+  20% { transform: translateX(calc(var(--hit-x, -14px))) scale(0.96); filter: brightness(1.9) saturate(1.4); }
+  45% { transform: translateX(calc(var(--hit-x, -14px) * 0.5)) translateY(-3px) scale(0.98); filter: brightness(1.4); }
+  70% { transform: translateX(calc(var(--hit-x, -14px) * 0.2)) translateY(2px) scale(0.99); filter: brightness(1.15); }
+  100% { transform: translateX(0) scale(1); filter: brightness(1); }
+}
+.sprite-hit { animation: spriteHit 0.5s ease-out forwards; }
+
+/* Esquiva — desliza para o lado e volta (fantasma) */
+@keyframes spriteDodge {
+  0% { transform: translateX(0) scale(1); filter: none; }
+  25% { transform: translateX(calc(var(--dodge-x, -30px))) scale(0.95); filter: blur(1px) brightness(1.3); }
+  50% { transform: translateX(calc(var(--dodge-x, -30px) * 0.6)) scale(1); filter: blur(0.5px); }
+  100% { transform: translateX(0) scale(1); filter: none; }
+}
+.sprite-dodge { animation: spriteDodge 0.5s ease-in-out forwards; }
+
+/* Fúria do chefe — treme e pulsa em vermelho */
+@keyframes spriteRage {
+  0%, 100% { transform: translateX(0) rotate(0deg) scale(1.05); filter: drop-shadow(0 0 14px rgba(239, 68, 68, 0.6)) saturate(1.3); }
+  10% { transform: translateX(-5px) rotate(-4deg) scale(1.1); }
+  20% { transform: translateX(5px) rotate(4deg) scale(1.12); }
+  30% { transform: translateX(-4px) rotate(-3deg) scale(1.14); }
+  40% { transform: translateX(4px) rotate(3deg) scale(1.12); }
+  50% { transform: translateX(-3px) rotate(-2deg) scale(1.15); filter: drop-shadow(0 0 26px rgba(239, 68, 68, 0.95)) saturate(1.6) brightness(1.2); }
+  60% { transform: translateX(3px) rotate(2deg) scale(1.12); }
+  70% { transform: translateX(-2px) rotate(-1deg) scale(1.1); }
+  80% { transform: translateX(2px) rotate(1deg) scale(1.08); }
+}
+.sprite-rage { animation: spriteRage 1.2s ease-in-out infinite; }
+
+/* Morte — cai e desvanece */
+@keyframes spriteDeath {
+  0% { transform: rotate(0deg) translateY(0) scale(1); opacity: 1; filter: none; }
+  30% { transform: rotate(-12deg) translateY(8px) scale(1.05); opacity: 1; filter: grayscale(0.6); }
+  70% { transform: rotate(-28deg) translateY(26px) scale(0.95); opacity: 0.75; filter: grayscale(1) brightness(0.8); }
+  100% { transform: rotate(-34deg) translateY(38px) scale(0.9); opacity: 0; filter: grayscale(1) brightness(0.6); }
+}
+.sprite-death { animation: spriteDeath 1s ease-in forwards; }
+
+/* Vitória — pulo de comemoração */
+@keyframes spriteVictory {
+  0% { transform: translateY(0) scale(1); }
+  25% { transform: translateY(-22px) scale(1.06) rotate(4deg); }
+  50% { transform: translateY(0) scale(1.02) rotate(-2deg); }
+  70% { transform: translateY(-12px) scale(1.05) rotate(2deg); }
+  90% { transform: translateY(0) scale(1.01); }
+  100% { transform: translateY(0) scale(1); }
+}
+.sprite-victory { animation: spriteVictory 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 2; }
+
+/* Arco de corte — brilho em meia-lua na direção do golpe */
+@keyframes slashArc {
+  0% { opacity: 0; transform: translate(var(--slash-x, 40px), var(--slash-y, -30px)) rotate(-30deg) scale(0.4); }
+  30% { opacity: 0.95; }
+  60% { opacity: 0.7; transform: translate(var(--slash-x, 40px), var(--slash-y, -40px)) rotate(10deg) scale(1.1); }
+  100% { opacity: 0; transform: translate(var(--slash-x, 40px), var(--slash-y, -60px)) rotate(40deg) scale(1.25); }
+}
+.slash-trail {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 90px;
+  height: 46px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 215, 0, 0.8);
+  border-left-color: transparent;
+  border-bottom-color: transparent;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.5), inset 0 0 12px rgba(255, 215, 0, 0.25);
+  pointer-events: none;
+  z-index: 22;
+  animation: slashArc 0.4s ease-out forwards;
+}
+.slash-trail-crit { border-color: rgba(255, 82, 82, 0.9); border-left-color: transparent; border-bottom-color: transparent; box-shadow: 0 0 20px rgba(255, 82, 82, 0.65), inset 0 0 14px rgba(255, 82, 82, 0.3); }
+
+/* Pulso de dano recebido (flash vermelho no próprio sprite) */
+@keyframes spriteDamageFlash {
+  0% { box-shadow: inset 0 0 0 rgba(255, 60, 60, 0); }
+  30% { box-shadow: inset 0 0 40px rgba(255, 60, 60, 0.55); }
+  100% { box-shadow: inset 0 0 0 rgba(255, 60, 60, 0); }
+}
+.sprite-dmg-flash { animation: spriteDamageFlash 0.5s ease-out forwards; }
+
 /* ---- Sidebar: scrollbar fina integrada ao tema ---- */
 .sidebar-scroll::-webkit-scrollbar { width: 6px; }
 .sidebar-scroll::-webkit-scrollbar-track { background: transparent; }
 .sidebar-scroll::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 999px; }
 .sidebar-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.22); }
 .sidebar-scroll { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.12) transparent; }
+
+/* ============================================================
+   MEGA UPDATE — Mobile-First Responsive Utilities
+   ============================================================ */
+
+/* Safe area para notch / barra do iPhone */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+  .safe-top { padding-top: env(safe-area-inset-top); }
+}
+
+/* Touch-friendly: alvos de toque mínimos de 44px */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Smooth scroll para mobile */
+.scroll-y-smooth {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* No scrollbar em mobile para clean look */
+@media (max-width: 767px) {
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* Grid responsivo melhorado — 1 coluna no mobile, 2 no tablet, 3+ no desktop */
+.grid-responsive {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 640px) {
+  .grid-responsive { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .grid-responsive { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* Cards com hover lift só em desktop (evita sticky hover no mobile) */
+@media (hover: hover) and (pointer: fine) {
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.4);
+  }
+}
+.card-hover {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* Bottom sheet mobile (painéis que abrem de baixo) */
+@media (max-width: 767px) {
+  .bottom-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 85vh;
+    border-radius: 1.5rem 1.5rem 0 0;
+    animation: slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    z-index: 90;
+  }
+}
+
+/* fab (floating action button) para mobile */
+.fab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.fab:active { transform: scale(0.92); }
+@media (min-width: 768px) {
+  .fab { display: none; }
+}
+
+/* Tab bar mobile — navegação inferior fixa */
+.tab-bar-mobile {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-around;
+  padding: 0.5rem 0;
+  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(6, 6, 17, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 40;
+}
+@media (min-width: 768px) {
+  .tab-bar-mobile { display: none; }
+}
+
+/* Melhorar leitura em telas pequenas */
+@media (max-width: 640px) {
+  .text-responsive-sm { font-size: 0.75rem; }
+  .text-responsive-base { font-size: 0.875rem; }
+  .text-responsive-lg { font-size: 1rem; }
+  .text-responsive-xl { font-size: 1.25rem; }
+  .text-responsive-2xl { font-size: 1.5rem; }
+  .text-responsive-3xl { font-size: 1.875rem; }
+  .p-responsive { padding: 0.75rem; }
+  .px-responsive { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .py-responsive { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+  .gap-responsive { gap: 0.5rem; }
+  .space-y-responsive > * + * { margin-top: 0.5rem; }
+}
+@media (min-width: 641px) {
+  .text-responsive-sm { font-size: 0.875rem; }
+  .text-responsive-base { font-size: 1rem; }
+  .text-responsive-lg { font-size: 1.125rem; }
+  .text-responsive-xl { font-size: 1.25rem; }
+  .text-responsive-2xl { font-size: 1.5rem; }
+  .text-responsive-3xl { font-size: 1.875rem; }
+  .p-responsive { padding: 1.5rem; }
+  .px-responsive { padding-left: 1.5rem; padding-right: 1.5rem; }
+  .py-responsive { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+  .gap-responsive { gap: 1rem; }
+  .space-y-responsive > * + * { margin-top: 1rem; }
+}
+
+/* Glass card melhorado — mais contraste em mobile */
+.glass-card-improved {
+  background: linear-gradient(160deg, rgba(21, 20, 46, 0.65) 0%, rgba(13, 13, 34, 0.55) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Animação de entrada stagger melhorada */
+@keyframes staggerFadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.stagger-item {
+  animation: staggerFadeIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Glow ring para botões importantes */
+@keyframes glowRing {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(233, 69, 96, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(233, 69, 96, 0); }
+}
+.glow-ring { animation: glowRing 2s ease-in-out infinite; }
+
+/* Badge level para missões */
+.badge-level {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #a0a0b8;
+}
+
+/* Empty state — mensagem quando não há conteúdo */
+.empty-state {
+  background: linear-gradient(160deg, rgba(21, 20, 46, 0.35) 0%, rgba(13, 13, 34, 0.25) 100%);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+  color: #6b7280;
+}
+
+/* Purple button variant */
+.game-btn-purple {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 0.7rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  border: 1px solid rgba(168, 85, 247, 0.45);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.5), rgba(124, 92, 252, 0.35));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(168, 85, 247, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+}
+.game-btn-purple:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.7), rgba(124, 92, 252, 0.55));
+  box-shadow: 0 6px 18px rgba(168, 85, 247, 0.35);
+}
+.game-btn-purple:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Gold button variant */
+.game-btn-gold {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 0.7rem;
+  font-weight: 700;
+  color: #000;
+  cursor: pointer;
+  border: 1px solid rgba(255, 215, 0, 0.5);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.7), rgba(245, 158, 11, 0.5));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(255, 215, 0, 0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+}
+.game-btn-gold:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.85), rgba(245, 158, 11, 0.7));
+  box-shadow: 0 6px 18px rgba(255, 215, 0, 0.4);
+}
+.game-btn-gold:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Green button variant */
+.game-btn-green {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 0.7rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.5), rgba(22, 163, 74, 0.35));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(34, 197, 94, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+}
+.game-btn-green:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.7), rgba(22, 163, 74, 0.55));
+  box-shadow: 0 6px 18px rgba(34, 197, 94, 0.35);
+}
+.game-btn-green:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Red button variant */
+.game-btn-red {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 0.7rem;
+  font-weight: 600;
+  color: #fff;
+  cursor: pointer;
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.5), rgba(220, 38, 38, 0.35));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+}
+.game-btn-red:hover {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.7), rgba(220, 38, 38, 0.55));
+  box-shadow: 0 6px 18px rgba(239, 68, 68, 0.35);
+}
+.game-btn-red:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Tooltip mobile-friendly */
+@media (max-width: 767px) {
+  [title] { position: relative; }
+}
+
+/* Melhorar inputs em iOS */
+@supports (-webkit-touch-callout: none) {
+  .game-input {
+    font-size: 16px !important; /* Previne zoom automático no iOS */
+  }
+}
+
+/* Skeleton loading melhorado */
+@keyframes skeletonShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+/* Progress bar com stripe animation */
+.progress-stripe {
+  background-image: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.08) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.08) 75%,
+    transparent 75%,
+    transparent
+  );
+  background-size: 1rem 1rem;
+  animation: progress-stripe 1s linear infinite;
+}
+
+/* ═══════════════════════════════════════════════════
+   Dashboard-specific enhancements
+   ═══════════════════════════════════════════════════ */
+
+/* XP ring glow animation */
+@keyframes ringPulse {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(0, 255, 136, 0.3)); }
+  50% { filter: drop-shadow(0 0 12px rgba(0, 255, 136, 0.6)); }
+}
+.ring-glow { animation: ringPulse 3s ease-in-out infinite; }
+
+/* Radar chart animation */
+@keyframes radarExpand {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+.radar-animate { animation: radarExpand 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+/* Stat card hover glow */
+.stat-card:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Currency row hover */
+.currency-row:hover {
+  transform: translateX(4px);
+}
+
+/* Floating action pulse for available points */
+@keyframes pointsPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(0, 255, 136, 0); }
+}
+.points-pulse { animation: pointsPulse 2s ease-in-out infinite; }
+
+/* Quick action hover ripple */
+@keyframes actionRipple {
+  0% { transform: scale(0); opacity: 0.6; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+.action-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  width: 40px;
+  height: 40px;
+  pointer-events: none;
+  animation: actionRipple 0.6s ease-out forwards;
+}

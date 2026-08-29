@@ -87,7 +87,7 @@ export function regionBossBattleMonster(char: any, boss: RegionBossDef) {
   const playerMaxHit = Math.max(150, Math.round((Number(char?.attack) || 0) * 1.7));
   const playerMaxHp = Math.max(250, Number(char?.maxHp) || 250);
   return {
-    maxHp: Math.round(playerMaxHit * 7),
+    maxHp: Math.round(playerMaxHit * 5),
     // Dominação: ataque CAPADO em ~5% da vida do jogador (sem hitkill no
     // começo — o chefe "parece fraco" e o jogador domina como num mega PvP).
     attack: Math.max(1, Math.min(s.attack, Math.round(playerMaxHp * 0.05))),

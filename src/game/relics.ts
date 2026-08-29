@@ -37,19 +37,19 @@ export interface RelicDef {
 
 /** Catálogo de relíquias. */
 export const RELICS: RelicDef[] = [
-  { id: "relic_ember", nameKey: "relic.ember", icon: "🔥", image: "/images/relics/ember.png", rarity: "rare", attackPct: 4 },
-  { id: "relic_glacier", nameKey: "relic.glacier", icon: "🧊", image: "/images/relics/glacier.png", rarity: "rare", defensePct: 5 },
-  { id: "relic_heart", nameKey: "relic.heart", icon: "❤️", image: "/images/relics/heart.png", rarity: "rare", maxHpPct: 6 },
-  { id: "relic_wind", nameKey: "relic.wind", icon: "💨", image: "/images/relics/wind.png", rarity: "epic", speed: 4 },
-  { id: "relic_eye", nameKey: "relic.eye", icon: "👁️", image: "/images/relics/eye.png", rarity: "epic", critical: 4 },
-  { id: "relic_wisdom", nameKey: "relic.wisdom", icon: "📜", image: "/images/relics/wisdom.png", rarity: "epic", xpMult: 1.08 },
-  { id: "relic_golden", nameKey: "relic.golden", icon: "💰", image: "/images/relics/golden.png", rarity: "epic", goldMult: 1.08 },
-  { id: "relic_dragon", nameKey: "relic.dragon", icon: "🐉", image: "/images/relics/dragon.png", rarity: "legendary", attackPct: 8, maxHpPct: 5 },
-  { id: "relic_void", nameKey: "relic.void", icon: "🌑", image: "/images/relics/void.png", rarity: "legendary", attackPct: 6, critical: 5 },
-  { id: "relic_guardian", nameKey: "relic.guardian", icon: "🛡️", image: "/images/relics/guardian.png", rarity: "legendary", defensePct: 10, maxHpPct: 6 },
-  { id: "relic_titan", nameKey: "relic.titan", icon: "🏔️", image: "/images/relics/titan.png", rarity: "mythic", maxHpPct: 15, defensePct: 8, attackPct: 4 },
-  { id: "relic_phoenix", nameKey: "relic.phoenix", icon: "🔥", image: "/images/relics/phoenix.png", rarity: "mythic", attackPct: 12, speed: 4, xpMult: 1.05 },
-  { id: "relic_eternal", nameKey: "relic.eternal", icon: "⏳", image: "/images/relics/eternal.png", rarity: "divine", attackPct: 10, defensePct: 10, maxHpPct: 10, critical: 5, speed: 3, xpMult: 1.1, goldMult: 1.1 },
+  { id: "relic_ember", nameKey: "relic.ember", icon: "🔥", image: "/images/relics/reliquia_brasa_carmesim.png", rarity: "rare", attackPct: 4 },
+  { id: "relic_glacier", nameKey: "relic.glacier", icon: "🧊", image: "/images/relics/reliquia_coracao_glacial.png", rarity: "rare", defensePct: 5 },
+  { id: "relic_heart", nameKey: "relic.heart", icon: "❤️", image: "/images/relics/reliquia_coracao_vital.png", rarity: "rare", maxHpPct: 6 },
+  { id: "relic_wind", nameKey: "relic.wind", icon: "💨", image: "/images/relics/reliquia_vento_veloz.png", rarity: "epic", speed: 4 },
+  { id: "relic_eye", nameKey: "relic.eye", icon: "👁️", image: "/images/relics/reliquia_olho_cacador.png", rarity: "epic", critical: 4 },
+  { id: "relic_wisdom", nameKey: "relic.wisdom", icon: "📜", image: "/images/relics/reliquia_sabio_pergaminho.png", rarity: "epic", xpMult: 1.08 },
+  { id: "relic_golden", nameKey: "relic.golden", icon: "💰", image: "/images/relics/reliquia_talisma_dourado.png", rarity: "epic", goldMult: 1.08 },
+  { id: "relic_dragon", nameKey: "relic.dragon", icon: "🐉", image: "/images/relics/reliquia_escama_dragao.png", rarity: "legendary", attackPct: 8, maxHpPct: 5 },
+  { id: "relic_void", nameKey: "relic.void", icon: "🌑", image: "/images/relics/reliquia_fragmento_vazio.png", rarity: "legendary", attackPct: 6, critical: 5 },
+  { id: "relic_guardian", nameKey: "relic.guardian", icon: "🛡️", image: "/images/relics/reliquia_guardiao_ancestral.png", rarity: "legendary", defensePct: 10, maxHpPct: 6 },
+  { id: "relic_titan", nameKey: "relic.titan", icon: "🏔️", image: "/images/relics/reliquia_brasa_carmesim.png", rarity: "mythic", maxHpPct: 15, defensePct: 8, attackPct: 4 },
+  { id: "relic_phoenix", nameKey: "relic.phoenix", icon: "🔥", image: "/images/relics/reliquia_escama_dragao.png", rarity: "mythic", attackPct: 12, speed: 4, xpMult: 1.05 },
+  { id: "relic_eternal", nameKey: "relic.eternal", icon: "⏳", image: "/images/relics/reliquia_guardiao_ancestral.png", rarity: "divine", attackPct: 10, defensePct: 10, maxHpPct: 10, critical: 5, speed: 3, xpMult: 1.1, goldMult: 1.1 },
 ];
 
 /** TemplateId no banco (6000 + índice — espelha RELIC_TEMPLATES do seed). */

@@ -61,11 +61,14 @@ export default function AscensionPanel() {
 
   return (
     <div className="space-y-6 animate-fadeIn">
-      <div className="animate-fadeInDown">
-        <h2 className="text-3xl font-black flex items-center gap-3">
-          <span className="text-4xl">🌌</span>
-          <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{t("ascension.title", locale)}</span>
-        </h2>
+      <div className="animate-fadeInDown flex items-center gap-4">
+        <img src="/images/ascension/cristal_ascensao.png" alt="Cristal" className="w-16 h-16 object-contain drop-shadow-[0_0_15px_rgba(192,132,252,0.5)]" />
+        <div>
+          <h2 className="text-3xl font-black flex items-center gap-3">
+            <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{t("ascension.title", locale)}</span>
+          </h2>
+          <p className="text-xs text-gray-500">{t("ascension.desc", locale) || "Alcance o nível máximo e ascenda para evoluir ainda mais!"}</p>
+        </div>
       </div>
 
       {loading ? (
