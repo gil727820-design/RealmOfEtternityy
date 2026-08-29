@@ -123,6 +123,84 @@ export const RECIPES: RecipeDef[] = [
     costs: { 5012: 8, 5013: 6, 5011: 6 }, goldCost: 400_000,
     nameKey: "craft.supreme.name", descKey: "craft.supreme.desc", icon: "👑",
   },
+
+  // --- Receitas por Classe ---
+  {
+    id: "craft_warrior_epic", resultRarity: "epic", minLevel: 20,
+    costs: { 5000: 20, 5003: 10, 5004: 5 }, goldCost: 8_000,
+    nameKey: "craft.warrior.name", descKey: "craft.warrior.desc", icon: "⚔️",
+  },
+  {
+    id: "craft_mage_epic", resultRarity: "epic", minLevel: 20,
+    costs: { 5004: 15, 5001: 10, 5002: 8 }, goldCost: 8_000,
+    nameKey: "craft.mage.name", descKey: "craft.mage.desc", icon: "🔮",
+  },
+  {
+    id: "craft_assassin_epic", resultRarity: "epic", minLevel: 20,
+    costs: { 5000: 15, 5002: 12, 5005: 5 }, goldCost: 8_000,
+    nameKey: "craft.assassin.name", descKey: "craft.assassin.desc", icon: "🗡️",
+  },
+  {
+    id: "craft_paladin_epic", resultRarity: "epic", minLevel: 20,
+    costs: { 5000: 25, 5003: 8, 5004: 8 }, goldCost: 10_000,
+    nameKey: "craft.paladin.name", descKey: "craft.paladin.desc", icon: "🛡️",
+  },
+  {
+    id: "craft_berserker_epic", resultRarity: "epic", minLevel: 20,
+    costs: { 5000: 18, 5005: 10, 5006: 5 }, goldCost: 8_000,
+    nameKey: "craft.berserker.name", descKey: "craft.berserker.desc", icon: "🪓",
+  },
+
+  // --- Receitas de Upgrade (subir rarity de item existente) ---
+  {
+    id: "upgrade_uncommon_to_rare", resultRarity: "rare", minLevel: 10,
+    costs: { 5000: 15, 5002: 10, 5003: 5 }, goldCost: 5_000,
+    nameKey: "craft.upgrade.rare.name", descKey: "craft.upgrade.rare.desc", icon: "⬆️",
+  },
+  {
+    id: "upgrade_rare_to_epic", resultRarity: "epic", minLevel: 25,
+    costs: { 5004: 12, 5005: 8, 5006: 5 }, goldCost: 15_000,
+    nameKey: "craft.upgrade.epic.name", descKey: "craft.upgrade.epic.desc", icon: "⬆️",
+  },
+  {
+    id: "upgrade_epic_to_legendary", resultRarity: "legendary", minLevel: 45,
+    costs: { 5007: 10, 5008: 8, 5009: 5 }, goldCost: 40_000,
+    nameKey: "craft.upgrade.legendary.name", descKey: "craft.upgrade.legendary.desc", icon: "⬆️",
+  },
+
+  // --- Receitas de Encantamento ---
+  {
+    id: "enchant_basic", resultRarity: "rare", minLevel: 15,
+    costs: { 5004: 8, 5000: 20 }, goldCost: 3_000,
+    nameKey: "craft.enchant.basic.name", descKey: "craft.enchant.basic.desc", icon: "✨",
+  },
+  {
+    id: "enchant_advanced", resultRarity: "epic", minLevel: 35,
+    costs: { 5006: 10, 5004: 15, 5005: 8 }, goldCost: 20_000,
+    nameKey: "craft.enchant.advanced.name", descKey: "craft.enchant.advanced.desc", icon: "✨",
+  },
+  {
+    id: "enchant_master", resultRarity: "legendary", minLevel: 60,
+    costs: { 5008: 10, 5009: 8, 5007: 8 }, goldCost: 80_000,
+    nameKey: "craft.enchant.master.name", descKey: "craft.enchant.master.desc", icon: "✨",
+  },
+
+  // --- Receitas de Consumíveis ---
+  {
+    id: "craft_hp_potion", resultRarity: "uncommon", minLevel: 1,
+    costs: { 5001: 5, 5000: 3 }, goldCost: 500,
+    nameKey: "craft.potion.hp.name", descKey: "craft.potion.hp.desc", icon: "🧪",
+  },
+  {
+    id: "craft_mana_potion", resultRarity: "uncommon", minLevel: 1,
+    costs: { 5002: 5, 5001: 3 }, goldCost: 500,
+    nameKey: "craft.potion.mana.name", descKey: "craft.potion.mana.desc", icon: "🧪",
+  },
+  {
+    id: "craft_energy_potion", resultRarity: "uncommon", minLevel: 10,
+    costs: { 5003: 8, 5004: 3 }, goldCost: 2_000,
+    nameKey: "craft.potion.energy.name", descKey: "craft.potion.energy.desc", icon: "⚡",
+  },
 ];
 
 /** Verifica se o personagem tem os materiais da receita (por templateId). */
