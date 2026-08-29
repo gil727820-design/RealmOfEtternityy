@@ -268,8 +268,19 @@ export default function TowerPanel() {
           >
             👻 {t("nav.ghostShop", locale)}
           </button>
-          <div className="text-sm bg-purple-900/50 px-3 py-1 rounded-full border border-purple-500">
-            {t("tower.coins", locale)}: {towerCoins} 🪙
+          <div className="group relative">
+            <div className="text-sm bg-purple-900/50 px-3 py-1 rounded-full border border-purple-500 cursor-help">
+              {t("tower.coins", locale)}: {towerCoins} 🪙
+            </div>
+            <div className="absolute right-0 top-full mt-2 w-64 bg-[#1a1a2e] border border-purple-500/50 rounded-xl p-3 text-xs text-gray-300 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-xl">
+              <div className="font-bold text-purple-300 mb-1">🪙 Moedas da Torre</div>
+              <p className="text-gray-400 text-[10px] mb-2">Ganhas a cada andar conquistado na torre.</p>
+              <div className="text-[10px] text-gray-500">
+                <div>• Mob comum: 6 + (andar/10)</div>
+                <div>• Boss: 40 + (andar/8)</div>
+              </div>
+              <div className="text-[10px] text-purple-400 mt-1">🛍️ Use na Loja Fantasma!</div>
+            </div>
           </div>
         </div>
       </div>

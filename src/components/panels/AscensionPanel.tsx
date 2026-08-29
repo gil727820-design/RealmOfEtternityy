@@ -167,6 +167,30 @@ export default function AscensionPanel() {
               <li>• {t("ascension.how3", locale)}</li>
             </ul>
           </div>
+
+          {/* Onde ganhar Cristais */}
+          <div className="game-card p-5">
+            <h3 className="font-bold text-sm text-[#06b6d4] mb-3">🔮 Onde ganhar Cristais</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {[
+                { icon: "📜", label: "Missões Diárias", desc: "5-25 cristais/missão", color: "#4ecdc4" },
+                { icon: "🕳️", label: "Masmorras (Bosses)", desc: "3-50+ cristais por andar", color: "#ec4899" },
+                { icon: "📅", label: "Eventos Diários", desc: "5-20 cristais por evento", color: "#f59e0b" },
+                { icon: "⚔️", label: "PvP Temporada", desc: "10-450 cristais por patente", color: "#ef4444" },
+                { icon: "📚", label: "Bestiário Novo", desc: "2-10 cristais por monstro", color: "#22c55e" },
+                { icon: "😴", label: "Exploração Mundial", desc: "5-20 cristais por exploração", color: "#a855f7" },
+              ].map((src) => (
+                <div key={src.label} className="flex items-center gap-2 bg-black/30 rounded-lg px-3 py-2 border border-white/5">
+                  <span className="text-lg">{src.icon}</span>
+                  <div>
+                    <div className="text-xs font-bold text-white">{src.label}</div>
+                    <div className="text-[10px] text-gray-500">{src.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-gray-600 mt-2">💡 Dica: Masmorras e Eventos Diários são as melhores fontes!</p>
+          </div>
         </div>
       )}
     </div>
