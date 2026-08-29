@@ -27,20 +27,33 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ rankings: matches, type: "search" });
     }
 
-    const chars = await jsonDb.listCharacters("", 100);
-    const normalized = chars.map((c: any) => ({
-      id: c.id,
-      name: c.name,
-      classType: c.classType || "warrior",
-      sex: c.sex || "male",
-      level: c.level || 1,
-      power: c.power || 0,
-      pvpRating: c.pvpRating || 0,
-      pvpLeague: c.pvpLeague || "bronze",
-      towerFloor: c.towerFloor || 1,
-      gold: c.gold || 0,
-      prestige: c.prestige || 0,
-    }));
+    const chars = await jsonDb.listCharacters("", 500);
+    const normalized = chars.map((c: any) => {
+      const bestiary = Array.isArray(c.bestiary) ? c.bestiary : [];
+      const bestiaryCount = bestiary.length;
+      const collection = Array.isArray(c.collection) ? c.collection : [];
+      const collectionCount = collection.length;
+      const dungeonStats = c.dungeonStats || {};
+      const dungeonCleared = dungeonStats.cleared || 0;
+      const ascensionCount = c.ascension?.count || 0;
+      return {
+        id: c.id,
+        name: c.name,
+        classType: c.classType || "warrior",
+        sex: c.sex || "male",
+        level: c.level || 1,
+        power: c.power || 0,
+        pvpRating: c.pvpRating || 0,
+        pvpLeague: c.pvpLeague || "bronze",
+        towerFloor: c.towerFloor || 1,
+        gold: c.gold || 0,
+        prestige: c.prestige || 0,
+        bestiaryCount,
+        collectionCount,
+        dungeonCleared,
+        ascensionCount,
+      };
+    });
 
     let sorted;
     switch (type) {
@@ -49,6 +62,10 @@ export async function GET(req: NextRequest) {
       case "tower": sorted = normalized.sort((a: any, b: any) => b.towerFloor - a.towerFloor); break;
       case "wealth": sorted = normalized.sort((a: any, b: any) => b.gold - a.gold); break;
       case "prestige": sorted = normalized.sort((a: any, b: any) => b.prestige - a.prestige); break;
+      case "bestiary": sorted = normalized.sort((a: any, b: any) => b.bestiaryCount - a.bestiaryCount); break;
+      case "collection": sorted = normalized.sort((a: any, b: any) => b.collectionCount - a.collectionCount); break;
+      case "dungeon": sorted = normalized.sort((a: any, b: any) => b.dungeonCleared - a.dungeonCleared); break;
+      case "ascension": sorted = normalized.sort((a: any, b: any) => b.ascensionCount - a.ascensionCount); break;
       default: sorted = normalized.sort((a: any, b: any) => b.power - a.power);
     }
 
