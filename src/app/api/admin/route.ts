@@ -375,10 +375,6 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  if (!(await checkAdmin(req))) {
-    return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
-  }
-
   try {
     const contentType = req.headers.get("content-type") || "";
     let body: Record<string, unknown> = {};
@@ -393,6 +389,34 @@ export async function POST(req: NextRequest) {
       body = await req.json();
     }
     const { action } = body;
+
+    // Login NÃO exige auth prévia — é justamente ele que cria a sessão.
+    if (action === "login") {
+      const { key, rememberMe } = body;
+      const validKey = process.env.ADMIN_KEY;
+      if (!validKey) {
+        return NextResponse.json({ error: "ADMIN_KEY não configurada no servidor" }, { status: 500 });
+      }
+      if (String(key).trim() !== validKey) {
+        return NextResponse.json({ error: "Chave de acesso inválida!" }, { status: 401 });
+      }
+      const { setAdminCookie } = await import("@/game/auth");
+      const res = NextResponse.json({ success: true });
+      setAdminCookie(res, rememberMe ? 60 * 60 * 24 * 30 : undefined);
+      return res;
+    }
+
+    // Logout também não exige validação da sessão — só limpa o cookie.
+    if (action === "logout") {
+      const { clearAdminCookie } = await import("@/game/auth");
+      const res = NextResponse.json({ success: true });
+      clearAdminCookie(res);
+      return res;
+    }
+
+    if (!(await checkAdmin(req))) {
+      return NextResponse.json({ error: "Acesso negado" }, { status: 403 });
+    }
     if (action === "edit_character") {
       const { characterId, updates } = body;
       if (!characterId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
