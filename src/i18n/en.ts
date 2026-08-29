@@ -153,6 +153,7 @@ const en: Record<string, string> = {
   "nav.dailyLogin": "Daily Login",
   "nav.dailyEvents": "Daily Events",
   "nav.skinShop": "Skin Shop",
+  "nav.questlines": "Epic Questlines",
   "nav.bestiary": "Bestiary",
   "nav.relics": "Relics",
   "nav.specialization": "Specialization",

@@ -73,6 +73,7 @@ const NAV_SECTIONS: NavSection[] = [
       { tab: "dailylogin", icon: "📅", image: "/images/sidebar/menu_login_diario.png", labelKey: "nav.dailyLogin", color: "#22c55e" },
       { tab: "dailyevents", icon: "🎉", image: "/images/sidebar/menu_evento_global.png", labelKey: "nav.dailyEvents", color: "#e94560" },
       { tab: "skinshop", icon: "🎨", image: "/images/sidebar/menu_colecao.png", labelKey: "nav.skinShop", color: "#ec4898" },
+      { tab: "questlines", icon: "📜", image: "/images/sidebar/menu_como_jogar.png", labelKey: "nav.questlines", color: "#f59e0b" },
     ],
   },
   {
