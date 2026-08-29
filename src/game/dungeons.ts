@@ -52,8 +52,8 @@ export function difficultyDef(id: string | null | undefined): DungeonDifficultyD
   return DUNGEON_DIFFICULTIES.find((d) => d.id === id) ?? DUNGEON_DIFFICULTIES[0];
 }
 
-/** Limite de masmorras por dia (recurso escasso → drops competitivos). */
-export const DUNGEON_DAILY_CAP = 3;
+/** Limite de masmorras por dia (generoso para progressão constante). */
+export const DUNGEON_DAILY_CAP = 8;
 /** Energia gasta para iniciar uma expedição (custo base da duração de 2h). */
 export const DUNGEON_ENERGY_COST = 10;
 /** Energia por hora de expedição: o custo escala junto com a duração. */
@@ -81,7 +81,7 @@ export function dungeonFloorPower(floor: number, diff: DungeonDifficultyDef = DU
 
 /** Máximo de andares que o personagem consegue tentar (baseado no nível). */
 export function dungeonCapFloor(level: number): number {
-  return Math.max(1, Math.min(60, 3 + Math.floor((Number(level) || 1) / 2)));
+  return Math.max(1, Math.min(150, 3 + Math.floor((Number(level) || 1) / 1.5)));
 }
 
 /** Quantos andares o personagem limpa atendado a `attemptFloor`. */
@@ -176,33 +176,33 @@ export function dungeonDateKey(date: Date = new Date()): string {
   return `${y}-${m}-${d}`;
 }
 
-/** Ouro gerado por masmorra (escala com a duração da expedição). */
+/** Ouro gerado por masmorra (escala com a duração da expedição). Generoso! */
 export function dungeonGoldByClears(clears: number, hours: number): number {
   if (clears <= 0) return 0;
   const factor = dungeonDurationFactor(hours);
   let sum = 0;
-  for (let f = 1; f <= clears; f++) sum += Math.floor(22 + f * 13);
+  for (let f = 1; f <= clears; f++) sum += Math.floor(35 + f * 18);
   return Math.floor(sum * factor);
 }
 
-/** XP gerado (escala com a duração da expedição, sem aplicar boost). */
+/** XP gerado (escala com a duração da expedição, sem aplicar boost). Generoso! */
 export function dungeonXpByClears(clears: number, hours: number): number {
   if (clears <= 0) return 0;
   const factor = dungeonDurationFactor(hours);
   let sum = 0;
-  for (let f = 1; f <= clears; f++) sum += Math.floor(15 + f * 13);
+  for (let f = 1; f <= clears; f++) sum += Math.floor(25 + f * 18);
   return Math.floor(sum * factor);
 }
 
-/** Cristais extras pelo avanço (escala com a duração da expedição). */
+/** Cristais extras pelo avanço (escala com a duração da expedição). Generoso! */
 export function dungeonCrystalsByClears(clears: number, hours: number, diff: DungeonDifficultyDef = DUNGEON_DIFFICULTIES[0]): number {
   if (clears <= 0) return 0;
-  return Math.floor((clears / 14) * dungeonDurationFactor(hours) * diff.rewardMult);
+  return Math.floor((clears / 8) * dungeonDurationFactor(hours) * diff.rewardMult);
 }
 
 /** Prêmio extra por vencer o chefe do piso atual. */
 export function dungeonBossBonus(): { gold: number; xp: number } {
-  return { gold: 120, xp: 120 };
+  return { gold: 200, xp: 200 };
 }
 
 /**
@@ -284,4 +284,43 @@ export function computeDungeonStatus(char: any, now: Date = new Date()) {
   const preview = computeDungeonRewards(char, Number(run?.attemptFloor) || 1, Number(run?.hours) || 2, diff);
 
   return { active, daily, preview, cost: DUNGEON_ENERGY_COST, difficulty: diff };
+}
+/** Bosses nomeados a cada 10 andares (15 bosses no total). */
+export interface DungeonBossDef {
+  floor: number;
+  name: string;
+  icon: string;
+  description: string;
+  bonusGold: number;
+  bonusXp: number;
+  bonusCrystals: number;
+  dropChance: number; // chance de drop raro extra (0-1)
+}
+
+export const DUNGEON_BOSSES: DungeonBossDef[] = [
+  { floor: 10, name: "Goblin Rei", icon: "\u{1F479}", description: "Um goblin coroado que guarda o primeiro tesouro.", bonusGold: 500, bonusXp: 500, bonusCrystals: 3, dropChance: 0.3 },
+  { floor: 20, name: "Aranha Gigante", icon: "\u{1F577}\uFE0F", description: "Teia mortal que engole aventureiros desprevenidos.", bonusGold: 1000, bonusXp: 1000, bonusCrystals: 5, dropChance: 0.35 },
+  { floor: 30, name: "Esqueleto Ancestral", icon: "\u{1F480}", description: "Guardiao de ossos que protege relíquias antigas.", bonusGold: 2000, bonusXp: 2000, bonusCrystals: 8, dropChance: 0.4 },
+  { floor: 40, name: "Ogro de Guerra", icon: "\u{1F47F}", description: "Forca bruta que esmaga escudos e armaduras.", bonusGold: 3500, bonusXp: 3500, bonusCrystals: 12, dropChance: 0.45 },
+  { floor: 50, name: "Draconide Somrio", icon: "\u{1F409}", description: "Metade humano, metade dragao, 100% destruicao.", bonusGold: 5000, bonusXp: 5000, bonusCrystals: 18, dropChance: 0.5 },
+  { floor: 60, name: "Lich Supremo", icon: "\u{1F9D9}", description: "Mago necromante que comanda exercitos mortos.", bonusGold: 8000, bonusXp: 8000, bonusCrystals: 25, dropChance: 0.55 },
+  { floor: 70, name: "Hidra de 7 Cabecas", icon: "\u{1F409}", description: "Cada cabeca que voce corta nasce duas novas.", bonusGold: 12000, bonusXp: 12000, bonusCrystals: 35, dropChance: 0.6 },
+  { floor: 80, name: "Golem de Obsidiana", icon: "\u{1F9F1}", description: "Feito de rocha vulcanica, quase indestrutivel.", bonusGold: 18000, bonusXp: 18000, bonusCrystals: 45, dropChance: 0.65 },
+  { floor: 90, name: "Vampiro Anciao", icon: "\u{1F9DB}", description: "Rouba vida com cada golpe, envelhece seus ossos.", bonusGold: 25000, bonusXp: 25000, bonusCrystals: 55, dropChance: 0.7 },
+  { floor: 100, name: "Rei Demônio", icon: "\u{1F47F}", description: "O governante do abismo, senhor de todos os monstros.", bonusGold: 40000, bonusXp: 40000, bonusCrystals: 80, dropChance: 0.8 },
+  { floor: 110, name: "Fenix do Caos", icon: "\u{1F525}", description: "Renascida das chamas, cada morte a fortalece.", bonusGold: 55000, bonusXp: 55000, bonusCrystals: 100, dropChance: 0.8 },
+  { floor: 120, name: "Anjo Caído", icon: "\u{1F607}", description: "Serenidade divina corrompida pela escuridao.", bonusGold: 70000, bonusXp: 70000, bonusCrystals: 120, dropChance: 0.85 },
+  { floor: 130, name: "Basilisco Primordial", icon: "\u{1F409}", description: "Seu olhar pedrifica e seu veneno dissolve a alma.", bonusGold: 90000, bonusXp: 90000, bonusCrystals: 150, dropChance: 0.85 },
+  { floor: 140, name: "Ceifador Dimensional", icon: "\u{1F480}", description: "Corta o tecido da realidade com sua foice.", bonusGold: 120000, bonusXp: 120000, bonusCrystals: 200, dropChance: 0.9 },
+  { floor: 150, name: "O Vazio Absoluto", icon: "\u2B50", description: "A entidade final — nada pode sobreviver ao seu toque.", bonusGold: 200000, bonusXp: 200000, bonusCrystals: 300, dropChance: 1.0 },
+];
+
+/** Busca o boss de um determinado andar (so retorna se for andar de boss: multiplo de 10). */
+export function getDungeonBoss(floor: number): DungeonBossDef | undefined {
+  return DUNGEON_BOSSES.find((b) => b.floor === floor);
+}
+
+/** Busca todos os bosses disponiveis. */
+export function getAllDungeonBosses(): DungeonBossDef[] {
+  return DUNGEON_BOSSES;
 }
