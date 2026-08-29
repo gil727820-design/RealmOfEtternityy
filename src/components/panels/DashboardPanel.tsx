@@ -2,10 +2,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
-import { classImage, classStatCap, CLASS_LIST, CLASS_ICONS, REGIONS, regionWithAlpha, STAT_RESET_COST, type ClassName, type AllocStatKey } from "@/game/constants";
+import { classImage, classStatCap, CLASS_LIST, CLASS_ICONS, CLASS_REPRESENTATIVE, REGIONS, regionWithAlpha, STAT_RESET_COST, type ClassName, type AllocStatKey } from "@/game/constants";
 import { skinById } from "@/game/skins";
 import { effectiveStats, skinBuffDesc } from "@/game/skinBuffs";
 import StatHelpModal from "@/components/StatHelpModal";
+import ClassChangeScreen from "@/components/admin/ClassChangeScreen";
 
 export default function DashboardPanel() {
   const { character, locale, setTab, setCharacter, notify, characterId } = useGameStore();
@@ -19,6 +20,7 @@ export default function DashboardPanel() {
   const [resetting, setResetting] = useState(false);
   const [changingClass, setChangingClass] = useState(false);
   const [showClassModal, setShowClassModal] = useState(false);
+  const [showClassChangeScreen, setShowClassChangeScreen] = useState(false);
   const [hoveredStat, setHoveredStat] = useState<string | null>(null);
   const [showRadar, setShowRadar] = useState(true);
 
@@ -714,76 +716,51 @@ export default function DashboardPanel() {
               {resetting ? t("general.loading", locale) : t("dash.resetStatsBtn", locale)}
             </button>
           </div>
-        </div>
-
-        {/* ═══════════════════════════════════════════════════════════
+        </div>        {/* ═══════════════════════════════════════════════════════════
             CHANGE CLASS — Trocar classe base (cobra ouro)
             ═══════════════════════════════════════════════════════════ */}
-        <div className="game-card p-4 sm:p-5 lg:p-6 animate-fadeInUp" style={{ animationDelay: "0.18s" }}>
-          <h3 className="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
-            <span className="text-xl sm:text-2xl">🔄</span>
-            <span className="gradient-text">Trocar Classe</span>
-          </h3>
+        {!showClassChangeScreen ? (
+          <div className="game-card p-4 sm:p-5 lg:p-6 animate-fadeInUp" style={{ animationDelay: "0.18s" }}>
+            <h3 className="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2">
+              <span className="text-xl sm:text-2xl">🔄</span>
+              <span className="gradient-text">Trocar Classe</span>
+            </h3>
 
-          <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-            <div>
-              <div className="text-xs sm:text-sm text-gray-300 font-bold flex items-center gap-2">
-                <span>{CLASS_ICONS[(c.classType as ClassName) || "warrior"]}</span>
-                <span>Classe atual: <span className="text-white capitalize">{String(c.classType)}</span></span>
-              </div>
-              <div className="text-[10px] sm:text-[11px] text-gray-500 mt-1">
-                Custo: {classChangeCost.toLocaleString("pt-BR")} 💰 • Stats resetam para padrão da nova classe
-              </div>
-            </div>
-            <button
-              onClick={() => setShowClassModal(true)}
-              disabled={changingClass || num(c.gold) < classChangeCost}
-              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs font-black transition-all border active:scale-95 ${
-                num(c.gold) < classChangeCost
-                  ? "bg-white/5 border-white/10 text-gray-500 cursor-not-allowed"
-                  : "bg-gradient-to-br from-[#ff9500] to-[#ff6b00] text-black hover:brightness-110 hover:scale-105 shadow-[0_0_12px_rgba(255,149,0,0.3)]"
-              }`}
-            >
-              🔄 Trocar
-            </button>
-          </div>
-
-          {/* Modal de seleção de classe */}
-          {showClassModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4" onClick={() => setShowClassModal(false)}>
-              <div className="bg-[#1a1a2e] rounded-2xl border border-white/20 p-4 sm:p-6 max-w-md w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-                <h3 className="text-lg font-bold text-white mb-1 flex items-center gap-2">
-                  🔄 Escolha a nova classe
-                </h3>
-                <p className="text-xs text-gray-400 mb-4">
-                  Custo: <span className="text-[#ffd700] font-bold">{classChangeCost.toLocaleString("pt-BR")} 💰</span> • Stats voltam ao padrão da classe
-                </p>
-                <div className="grid grid-cols-2 gap-2">
-                  {CLASS_LIST.filter((cl) => cl !== c.classType).map((cl) => (
-                    <button
-                      key={cl}
-                      onClick={() => changeClass(cl)}
-                      disabled={changingClass}
-                      className="flex items-center gap-2 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-[#ff9500]/50 hover:bg-[#ff9500]/10 transition-all text-left disabled:opacity-50"
-                    >
-                      <span className="text-2xl">{CLASS_ICONS[cl]}</span>
-                      <div>
-                        <div className="text-sm font-bold text-white capitalize">{cl}</div>
-                        <div className="text-[10px] text-gray-500">Lv.{Math.max(1, Number(c.level) || 1)}</div>
-                      </div>
-                    </button>
-                  ))}
+            <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+              <div>
+                <div className="text-xs sm:text-sm text-gray-300 font-bold flex items-center gap-2">
+                  <img src={CLASS_REPRESENTATIVE[(c.classType as ClassName) || "warrior"]} alt="" className="w-6 h-6 rounded object-cover" />
+                  <span>Classe atual: <span className="text-white capitalize">{String(c.classType)}</span></span>
                 </div>
-                <button
-                  onClick={() => setShowClassModal(false)}
-                  className="mt-4 w-full py-2 rounded-xl text-sm font-bold text-gray-400 bg-white/5 border border-white/10 hover:bg-white/10 transition-all"
-                >
-                  Cancelar
-                </button>
+                <div className="text-[10px] sm:text-[11px] text-gray-500 mt-1">
+                  Custo: {classChangeCost.toLocaleString("pt-BR")} 💰 • Stats resetam para padrão da nova classe
+                </div>
               </div>
+              <button
+                onClick={() => setShowClassChangeScreen(true)}
+                disabled={changingClass || num(c.gold) < classChangeCost}
+                className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-[11px] sm:text-xs font-black transition-all border active:scale-95 ${
+                  num(c.gold) < classChangeCost
+                    ? "bg-white/5 border-white/10 text-gray-500 cursor-not-allowed"
+                    : "bg-gradient-to-br from-[#ff9500] to-[#ff6b00] text-black hover:brightness-110 hover:scale-105 shadow-[0_0_12px_rgba(255,149,0,0.3)]"
+                }`}>
+                🔄 Trocar
+              </button>
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="game-card p-4 sm:p-5 lg:p-6 animate-fadeInUp">
+            <ClassChangeScreen
+              currentClass={(c.classType as ClassName) || "warrior"}
+              cost={classChangeCost}
+              gold={num(c.gold)}
+              locale={locale}
+              onSelect={(newClass) => changeClass(newClass)}
+              onBack={() => setShowClassChangeScreen(false)}
+              changing={changingClass}
+            />
+          </div>
+        )}
 
         {/* ═══════════════════════════════════════════════════════════
             QUICK ACTIONS + CURRENCIES
