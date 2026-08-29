@@ -44,6 +44,8 @@ export interface WorldBossConfig {
   boss: WorldBossStats;
   /** Imagem personalizada do boss (caminho /images/...). Vazio = moeda da torre. */
   bossImage?: string;
+  /** Múltiplas imagens do boss (carrossel que aparece durante o evento). */
+  bossImages?: string[];
   /** Recompensas: pools distribuídas pela participação + moedas da torre fixas. */
   rewards: { gold: number; xp: number; towerCoins: number };
   /** Tamanho máximo do squad (líder + convidados). */
@@ -222,6 +224,7 @@ export function sanitizeWorldBossConfig(raw: unknown): WorldBossConfig {
       critical: num(b.critical, 12, 0, 100),
     },
     bossImage: typeof g.bossImage === "string" ? g.bossImage : "",
+  bossImages: Array.isArray(g.bossImages) ? (g.bossImages as string[]).filter((u) => typeof u === "string" && u).slice(0, 20) : undefined,
     rewards: {
       gold: num((g.rewards as Record<string, unknown>)?.gold, 500_000, 0),
       xp: num((g.rewards as Record<string, unknown>)?.xp, 60_000, 0),

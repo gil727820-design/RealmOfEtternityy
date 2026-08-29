@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import {
   users, characters, itemTemplates, inventoryItems, missionTemplates,
@@ -20,11 +20,21 @@ import { skinById } from "@/game/skins";
  */
 
 type Table = any;
-type Column = any;
+
+/* ─── Helpers internos (SQLite: data é TEXT, precisa de parse/stringify) ─── */
+
+function parseData<T = any>(row: any): T {
+  if (!row) return row as T;
+  const raw = row.data ?? row;
+  if (raw && typeof raw === "string") {
+    try { return JSON.parse(raw) as T; } catch { return raw as T; }
+  }
+  return raw as T;
+}
 
 async function rowsOf(table: Table): Promise<any[]> {
   const rows = await db.select().from(table);
-  return (rows as any[]).map((r) => r.data);
+  return (rows as any[]).map((r) => parseData(r));
 }
 
 async function getRec(table: Table, idVal: string | number, idCol = "id"): Promise<any | null> {
@@ -33,7 +43,8 @@ async function getRec(table: Table, idVal: string | number, idCol = "id"): Promi
     .from(table)
     .where(eq((table as any)[idCol], idVal))
     .limit(1);
-  return ((rows as any[])[0]?.data as any) ?? null;
+  const row = (rows as any[])[0];
+  return row ? parseData(row) : null;
 }
 
 async function insertRec(
@@ -42,8 +53,9 @@ async function insertRec(
   keyCols: [string, string][] = [],
   idCol = "id"
 ): Promise<any> {
-  const values: any = { data: rec };
-  if (idCol === "id" && rec.id !== undefined) values.id = rec.id;
+  const serialized = typeof rec === "string" ? rec : JSON.stringify(rec);
+  const values: any = { data: serialized };
+  if (idCol === "id" && rec.id !== undefined) values.id = String(rec.id);
   for (const [col, key] of keyCols) {
     if (rec[key] !== undefined) values[col] = rec[key];
   }
@@ -61,7 +73,8 @@ async function updateRec(
   const existing = await getRec(table, idVal, idCol);
   if (!existing) return null;
   const merged = { ...existing, ...patch };
-  const set: any = { data: merged };
+  const serialized = JSON.stringify(merged);
+  const set: any = { data: serialized };
   for (const [col, key] of keyCols) {
     if (merged[key] !== undefined) set[col] = merged[key];
   }
@@ -380,13 +393,12 @@ export async function insertMissionTemplates(missions: any[]) {
 }
 
 export async function upsertMissionTemplates(missions: any[]) {
-  // Insere missões geradas automaticamente com IDs explícitos (negativos),
-  // sem sobrescrever missões já existentes — é idempotente entre chamadas.
   for (const m of missions) {
-    await db
-      .insert(missionTemplates)
-      .values({ id: Number(m.id), data: m })
-      .onConflictDoNothing({ target: missionTemplates.id });
+    const id = Number(m.id);
+    const existing = await getRec(missionTemplates, id);
+    if (!existing) {
+      await insertRec(missionTemplates, { id, ...m });
+    }
   }
   return missions.length;
 }
@@ -788,7 +800,10 @@ export async function hardDeleteUser(userId: string) {
   const charIds = chars.map((c: any) => c.id);
   for (const cid of charIds) {
     await deleteRec(characters, cid);
-    await db.delete(inventoryItems).where(eq(inventoryItems.characterId, cid));
+    const invItems = (await rowsOf(inventoryItems)).filter((i: any) => i.characterId === cid);
+    for (const item of invItems) {
+      await deleteRec(inventoryItems, item.id);
+    }
   }
   return { user, deletedCharacters: charIds.length };
 }
@@ -979,6 +994,20 @@ export async function updatePurchase(id: string, patch: any) {
   return next.find((p: any) => p.id === id) ?? null;
 }
 
+export async function deletePurchase(id: string) {
+  const all = await getPurchasesData();
+  const filtered = all.filter((p: any) => p.id !== id);
+  await updateServerSettings({ purchases: filtered });
+  return all.length > filtered.length;
+}
+
+export async function deletePurchaseLedgerEntry(id: string) {
+  const all = await getPurchaseLedgerData();
+  const filtered = all.filter((e: any) => e.id !== id);
+  await updateServerSettings({ purchaseLedger: filtered });
+  return all.length > filtered.length;
+}
+
 /* ─── Livro-razão de compras PERMANENTE (sobrevive ao reset do jogo) ─── */
 /* Cada compra APROVADA vira um registro eterno aqui: se o jogo for
  * resetado, o ADM reenvia os diamantes pelo painel (aba 💎 Já Compraram).
@@ -1028,21 +1057,17 @@ export async function saveWorldBossEvent(event: any) {
  * atacando ao mesmo tempo). Retorna o estado do evento ATUALIZADO (ou null).
  */
 export async function decrementWorldBossHp(damage: number) {
-  const rows = await db.execute(sql`
-    UPDATE server_settings
-    SET data = jsonb_set(
-      data,
-      '{worldBossEvent,bossHp}',
-      to_jsonb(GREATEST(0, (data #>> '{worldBossEvent,bossHp}')::bigint - ${Math.max(1, Math.floor(damage))})),
-      true
-    )
-    WHERE key = 'core'
-    RETURNING data
-  `);
-  const row = (rows as any).rows?.[0];
-  if (!row) return null;
-  const data = typeof row.data === "string" ? JSON.parse(row.data) : row.data;
-  return data?.worldBossEvent ?? null;
+  const settings = await getServerSettings();
+  const event = settings?.worldBossEvent;
+  if (!event) return null;
+
+  const currentHp = Number(event.bossHp) || 0;
+  const delta = Math.max(1, Math.floor(damage));
+  const newHp = Math.max(0, currentHp - delta);
+
+  event.bossHp = newHp;
+  await updateServerSettings({ worldBossEvent: event });
+  return event;
 }
 
 /* ─── Mercado entre jogadores (anúncios + trocas) ─── */
@@ -1235,6 +1260,81 @@ export async function resetGameData() {
   return true;
 }
 
+/**
+ * Reseta TODOS os personagens para o nível 1 com stats padrão da classe,
+ * mas NÃO exclui as contas (users). Inventário, missões ativas, batalhas,
+ * guildas, correio e códigos também são limpos.
+ */
+export async function resetCharacterData() {
+  // 1. Limpa tabelas dependentes de personagens
+  for (const table of [
+    inventoryItems,
+    activeMissions,
+    afkRewards,
+    battles,
+    guildInvites,
+    guildChats,
+    mailbox,
+    marketplace,
+  ]) {
+    await db.delete(table);
+  }
+  // 2. Limpa guildas (precisa limpar member references)
+  await db.delete(guilds);
+  // 3. Reseta todos os personagens mantendo conta e nome
+  const all = await rowsOf(characters);
+  for (const c of all) {
+    await updateRec(characters, c.id, {
+      level: 1,
+      xp: 0,
+      xpToNext: 120,
+      prestige: 0,
+      unspentStatPoints: 0,
+      talentPoints: 0,
+      talents: {},
+      advancedClassId: null,
+      ascensionLevel: 0,
+      seasonPoints: 0,
+      // Moedas
+      gold: 500,
+      diamonds: 0,
+      crystals: 0,
+      pvpCoins: 0,
+      guildCoins: 0,
+      towerCoins: 0,
+      // Energia
+      energy: 100,
+      maxEnergy: 100,
+      lastEnergyAt: new Date().toISOString(),
+      // Região / PvP / Torre
+      currentRegion: "starter_village",
+      pvpLeague: "bronze",
+      pvpRating: 0,
+      towerFloor: 1,
+      // Pet inicial
+      pets: { lobo_sombrio: { id: "lobo_sombrio", level: 1, equipped: true } },
+      activePetId: "lobo_sombrio",
+      // Status serão recalculados pelo admin se necessário
+      hp: 100,
+      maxHp: 100,
+      attack: 10,
+      defense: 10,
+      speed: 10,
+      critical: 5,
+      precision: 5,
+      dodge: 5,
+      resistance: 5,
+      mana: 50,
+      maxMana: 50,
+      power: 0,
+      // Timestamps
+      afkSince: new Date().toISOString(),
+      lastActivity: new Date().toISOString(),
+    }, [["userId", "userId"], ["name", "name"]]);
+  }
+  return true;
+}
+
 export default {
   // users
   findUserByUsername,
@@ -1355,13 +1455,16 @@ export default {
   listPurchases,
   createPurchase,
   updatePurchase,
+  deletePurchase,
   // Livro-razão permanente (reenvio de diamantes após reset)
   listPurchaseLedger,
   appendPurchaseLedger,
   updatePurchaseLedgerEntry,
+  deletePurchaseLedgerEntry,
   // evento global — Boss Mundial
   getWorldBossEvent,
   saveWorldBossEvent,
   decrementWorldBossHp,
   resetGameData,
+  resetCharacterData,
 };

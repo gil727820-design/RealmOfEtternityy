@@ -78,11 +78,16 @@ export async function GET(req: NextRequest) {
       const charsList = await jsonDb.listCharacters();
       const guildsList = await jsonDb.listGuilds();
       const excluded = await jsonDb.listExcludedUsers();
+      // Estatísticas extras
+      const onlineCount = await jsonDb.countRecentlyActive(3);
+      const recentLogs = await jsonDb.listAdminLogs(undefined, 20);
       return NextResponse.json({
         users: usersList.length,
         characters: charsList.length,
         guilds: guildsList.length,
         excluded: excluded.length,
+        online: onlineCount,
+        logs: recentLogs,
       });
     }
 
@@ -228,6 +233,98 @@ export async function GET(req: NextRequest) {
         },
         hitkillLogs,
         worldBossLogs,
+      });
+    }
+
+    // ---- Auto-balance Boss Mundial baseado no poder médio dos jogadores ----
+    if (action === "auto_balance_worldboss") {
+      const allChars = await jsonDb.listCharacters("", 999999);
+      if (allChars.length === 0) {
+        return NextResponse.json({ error: "Nenhum personagem encontrado" }, { status: 400 });
+      }
+      const powers = allChars.map((c: any) => powerCalc({
+        attack: Number(c.attack) || 0,
+        defense: Number(c.defense) || 0,
+        hp: Number(c.maxHp) || 0,
+        speed: Number(c.speed) || 0,
+        critical: Number(c.critical) || 0,
+        level: Number(c.level) || 1,
+      }));
+      const avgPower = powers.reduce((s: number, p: number) => s + p, 0) / powers.length;
+      const maxPower = Math.max(...powers);
+      const medianPower = powers.sort((a: number, b: number) => a - b)[Math.floor(powers.length / 2)];
+      const top20Powers = powers.sort((a: number, b: number) => b - a).slice(0, Math.ceil(powers.length * 0.2));
+      const avgTop20 = top20Powers.length > 0 ? top20Powers.reduce((s: number, p: number) => s + p, 0) / top20Powers.length : avgPower;
+      
+      // Boss baseado nos top 20% (para ser um desafio para os mais fortes)
+      const bossMultiplier = 15; // Boss deve ter ~15x o poder médio dos top20
+      const avgMaxHp = allChars.reduce((s: number, c: any) => s + (Number(c.maxHp) || 0), 0) / allChars.length;
+      const avgAttack = allChars.reduce((s: number, c: any) => s + (Number(c.attack) || 0), 0) / allChars.length;
+      const avgDefense = allChars.reduce((s: number, c: any) => s + (Number(c.defense) || 0), 0) / allChars.length;
+      const avgSpeed = allChars.reduce((s: number, c: any) => s + (Number(c.speed) || 0), 0) / allChars.length;
+      const avgCritical = allChars.reduce((s: number, c: any) => s + (Number(c.critical) || 0), 0) / allChars.length;
+      
+      // HP: precisa que ~20-30 jogadores consigam matar em 30-45 min
+      // Cada jogador dá ~avgAttack * 1.5 de dano por ataque, cooldown 5s
+      // Em 30 min = 360 ataques por jogador
+      // 20 jogadores * 360 * avgAttack * 1.5 = HP total estimado
+      const estimatedDpsPerPlayer = (avgAttack * 1.5) / 5; // dano por segundo
+      const targetKillTimeSec = 30 * 60; // 30 minutos
+      const estimatedParticipants = Math.max(5, Math.floor(allChars.length * 0.1));
+      const suggestedMaxHp = Math.floor(estimatedDpsPerPlayer * targetKillTimeSec * estimatedParticipants);
+      
+      const suggestedBoss = {
+        kind: "void_wyrm",
+        maxHp: Math.max(1_000_000, suggestedMaxHp),
+        attack: Math.floor(avgAttack * 3),
+        defense: Math.floor(avgDefense * 2.5),
+        speed: Math.min(15, Math.floor(avgSpeed * 1.5)),
+        critical: Math.min(30, Math.floor(avgCritical * 1.5)),
+      };
+      
+      // Recompensas baseadas no poder
+      const goldPerPower = 0.5; // 0.5 ouro por ponto de poder
+      const xpPerPower = 0.1;
+      const suggestedRewards = {
+        gold: Math.floor(avgTop20 * goldPerPower * 10),
+        xp: Math.floor(avgTop20 * xpPerPower * 10),
+        towerCoins: Math.floor(500 + avgTop20 * 0.05),
+      };
+      
+      // Escudo: thresholds baseados na complexidade
+      const suggestedShield = {
+        enabled: allChars.length > 10,
+        thresholds: allChars.length > 20 ? [75, 50, 25] : allChars.length > 10 ? [50, 25] : [25],
+        durationSec: 120,
+        breakCost: { currency: "diamonds" as const, amount: Math.floor(10 + avgTop20 * 0.001) },
+      };
+      
+      // Mobs baseados no nível médio
+      const avgLevel = allChars.reduce((s: number, c: any) => s + (Number(c.level) || 1), 0) / allChars.length;
+      const suggestedMobs = {
+        enabled: allChars.length > 5,
+        kinds: avgLevel > 30 ? ["lich_trono", "invocador_almas", "cavaleiro_corrompido"] : avgLevel > 15 ? ["beholder_vigilancia", "mago_caos", "gargula_ferro"] : ["monstro_esqueleto", "monstro_lobo"],
+        hp: Math.floor(avgMaxHp * 0.3),
+        count: Math.min(6, Math.max(2, Math.floor(allChars.length / 10))),
+        reward: { gold: Math.floor(avgTop20 * 0.1), xp: Math.floor(avgTop20 * 0.02) },
+      };
+      
+      return NextResponse.json({
+        success: true,
+        stats: {
+          totalCharacters: allChars.length,
+          avgPower: Math.floor(avgPower),
+          maxPower: Math.floor(maxPower),
+          medianPower: Math.floor(medianPower),
+          avgTop20Power: Math.floor(avgTop20),
+          avgLevel: Math.floor(avgLevel),
+        },
+        suggested: {
+          boss: suggestedBoss,
+          rewards: suggestedRewards,
+          shield: suggestedShield,
+          mobs: suggestedMobs,
+        },
       });
     }
 
@@ -969,6 +1066,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, purchase, message: "Compra rejeitada." });
     }
 
+    // ---- Excluir compra (fake) ----
+    if (action === "delete_purchase") {
+      const { purchaseId } = body;
+      if (!purchaseId) return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
+      const deleted = await jsonDb.deletePurchase(String(purchaseId));
+      return deleted
+        ? NextResponse.json({ success: true, message: "Compra excluída permanentemente." })
+        : NextResponse.json({ error: "Compra não encontrada" }, { status: 404 });
+    }
+
+    // ---- Excluir registro do livro-razão ----
+    if (action === "delete_ledger_entry") {
+      const { entryId } = body;
+      if (!entryId) return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
+      const deleted = await jsonDb.deletePurchaseLedgerEntry(String(entryId));
+      return deleted
+        ? NextResponse.json({ success: true, message: "Registro excluído do livro-razão." })
+        : NextResponse.json({ error: "Registro não encontrado" }, { status: 404 });
+    }
+
     // ---- Reset do jogo (começar do zero) ----
 
     if (action === "reset_game") {
@@ -977,6 +1094,55 @@ export async function POST(req: NextRequest) {
         success: true,
         message: "♻️ Jogo resetado! Todos os jogadores, personagens, guildas, inventário e correio foram apagados. O catálogo de itens/missões foi mantido.",
       });
+    }
+
+    // ---- Reset de personagens (mantém contas) ----
+    if (action === "reset_characters") {
+      await jsonDb.resetCharacterData();
+      return NextResponse.json({
+        success: true,
+        message: "♻️ Personagens resetados! Todos voltaram ao nível 1 com stats padrão da classe. Contas foram mantidas intactas.",
+      });
+    }
+
+    // ---- Excluir Guilda ----
+    if (action === "delete_guild") {
+      const guildId = body.id as string;
+      if (!guildId) return NextResponse.json({ error: "ID da guilda obrigatório" }, { status: 400 });
+      const guild = await jsonDb.findGuildById(guildId);
+      if (!guild) return NextResponse.json({ error: "Guilda não encontrada" }, { status: 404 });
+      const members = Array.isArray(guild.members) ? guild.members : [];
+      for (const m of members) {
+        const charId = (m as any).characterId || (m as any).id;
+        if (charId) {
+          try { await jsonDb.updateCharacter(String(charId), { guildId: null, guildRank: null, guildBuffs: {} }); } catch { /* ignora */ }
+        }
+      }
+      await jsonDb.deleteGuild(guildId);
+      return NextResponse.json({ success: true, message: `🗑️ Guilda "${guild.name}" excluída com sucesso.` });
+    }
+
+    // ---- Expulsar membro da guilda ----
+    if (action === "kick_guild_member") {
+      const { guildId, characterId } = body;
+      if (!guildId || !characterId) return NextResponse.json({ error: "guildId e characterId obrigatórios" }, { status: 400 });
+      const guild = await jsonDb.findGuildById(String(guildId));
+      if (!guild) return NextResponse.json({ error: "Guilda não encontrada" }, { status: 404 });
+      const members = Array.isArray(guild.members) ? guild.members : [];
+      const member = members.find((m: any) => (m.characterId || m.id) === String(characterId));
+      if (!member) return NextResponse.json({ error: "Membro não encontrado na guilda" }, { status: 404 });
+      const updatedMembers = members.filter((m: any) => (m.characterId || m.id) !== String(characterId));
+      await jsonDb.updateGuild(String(guildId), { members: updatedMembers });
+      try { await jsonDb.updateCharacter(String(characterId), { guildId: null, guildRank: null }); } catch { /* ignora */ }
+      return NextResponse.json({ success: true, message: `👢 Membro expulso da guilda "${guild.name}".` });
+    }
+
+    // ---- Chat da guilda (admin pode ler/limpar) ----
+    if (action === "guild_chat") {
+      const guildId = body.id as string;
+      if (!guildId) return NextResponse.json({ error: "ID da guilda obrigatório" }, { status: 400 });
+      const messages = await jsonDb.getGuildChatMessages(String(guildId), 50);
+      return NextResponse.json({ guildId, messages });
     }
 
     // ---- Logs administrativos: limpar (todos ou por tipo) ----
@@ -1044,9 +1210,33 @@ export async function POST(req: NextRequest) {
       if (body.maxLevel !== undefined) {
         patch.maxLevel = Math.max(0, Math.floor(Number(body.maxLevel) || 0));
       }
-      // Multiplicador de XP ganho na torre (0.01–2; ex.: 0.3 = só 30% do XP).
+      // Multiplicador de XP ganho na torre (0.01–5; ex.: 0.3 = só 30% do XP).
       if (body.towerXpMult !== undefined) {
-        patch.towerXpMult = Math.min(2, Math.max(0.01, Number(body.towerXpMult) || 1));
+        patch.towerXpMult = Math.min(5, Math.max(0.01, Number(body.towerXpMult) || 1));
+      }
+      // Multiplicador de XP em regiões
+      if (body.regionXpMult !== undefined) {
+        patch.regionXpMult = Math.min(10, Math.max(0.01, Number(body.regionXpMult) || 1));
+      }
+      // Multiplicador de ouro global
+      if (body.goldMult !== undefined) {
+        patch.goldMult = Math.min(10, Math.max(0.01, Number(body.goldMult) || 1));
+      }
+      // Tempo de regeneração de energia (minutos)
+      if (body.energyRegenMinutes !== undefined) {
+        patch.energyRegenMinutes = Math.max(1, Math.floor(Number(body.energyRegenMinutes) || 5));
+      }
+      // Multiplicador de ouro em missões
+      if (body.missionGoldMult !== undefined) {
+        patch.missionGoldMult = Math.min(10, Math.max(0.01, Number(body.missionGoldMult) || 1));
+      }
+      // Taxa de crítico global (%)
+      if (body.critRate !== undefined) {
+        patch.critRate = Math.min(100, Math.max(0, Number(body.critRate) || 10));
+      }
+      // Taxa de esquiva global (%)
+      if (body.dodgeRate !== undefined) {
+        patch.dodgeRate = Math.min(100, Math.max(0, Number(body.dodgeRate) || 5));
       }
       // Loja Fantasma (moedas da torre): configuração completa (horários, duração, itens).
       if (body.ghostShop !== undefined) {
@@ -1106,18 +1296,18 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "create_code") {
-      const { code, xpHours, energyHours, label, maxUses, expiresDays } = body;
+      const { code, xpHours, energyHours, label, maxUses, expiresDays, items } = body;
       const xpH = Math.max(0, Math.floor(Number(xpHours) || 0));
       const energyH = Math.max(0, Math.floor(Number(energyHours) || 0));
-      // Recompensas novas: VIP por dias + recursos diretos (presente do ADM).
       const vipTierId = String(body.vipTier || "").trim().toLowerCase();
       const vipDays = Math.max(0, Math.floor(Number(body.vipDays) || 0));
       const goldReward = Math.max(0, Math.floor(Number(body.gold) || 0));
       const diamondsReward = Math.max(0, Math.floor(Number(body.diamonds) || 0));
       const crystalsReward = Math.max(0, Math.floor(Number(body.crystals) || 0));
+      const codeItems = Array.isArray(items) ? items.filter((i: any) => i && i.templateId) : [];
       const hasVip = vipTierId !== "" && vipDays > 0 && !!vipTierById(vipTierId);
-      if (xpH <= 0 && energyH <= 0 && !hasVip && goldReward <= 0 && diamondsReward <= 0 && crystalsReward <= 0) {
-        return NextResponse.json({ error: "Informe ao menos uma recompensa: boost XP, boost Energia, VIP, ouro, diamantes ou cristais." }, { status: 400 });
+      if (xpH <= 0 && energyH <= 0 && !hasVip && goldReward <= 0 && diamondsReward <= 0 && crystalsReward <= 0 && codeItems.length === 0) {
+        return NextResponse.json({ error: "Informe ao menos uma recompensa: boost XP, boost Energia, VIP, ouro, diamantes, cristais ou itens." }, { status: 400 });
       }
       const codeValue = String(code || "").trim().toUpperCase() || genCode();
       if (String(codeValue).length < 4) {
@@ -1137,6 +1327,7 @@ export async function POST(req: NextRequest) {
         gold: goldReward,
         diamonds: diamondsReward,
         crystals: crystalsReward,
+        items: codeItems,
         label: String(label || "").trim() || "Presente do ADM",
         maxUses: Math.max(0, Math.floor(Number(maxUses) || 0)),
         expiresAt: expiresDaysNum > 0
@@ -1152,6 +1343,7 @@ export async function POST(req: NextRequest) {
       if (goldReward > 0) parts.push(`${goldReward.toLocaleString()} de ouro`);
       if (diamondsReward > 0) parts.push(`${diamondsReward} diamantes`);
       if (crystalsReward > 0) parts.push(`${crystalsReward} cristais`);
+      if (codeItems.length > 0) parts.push(`${codeItems.length} item(ns)`);
       return NextResponse.json({ success: true, code: rec, message: `Código gerado: ${codeValue} (${parts.join(" + ")})` });
     }
 
@@ -1238,6 +1430,56 @@ export async function POST(req: NextRequest) {
         lastActivity: new Date().toISOString(),
       });
       return NextResponse.json({ success: true, character: updated, message: `🌟 ${char.name} evoluiu para ${def.nameKey}!` });
+    }
+
+    // ---- Trocar classe base (cobra ouro) ----
+    if (action === "change_class") {
+      const { characterId, newClassType } = body;
+      if (!characterId) return NextResponse.json({ error: "ID necessário" }, { status: 400 });
+      if (!newClassType) return NextResponse.json({ error: "Nova classe obrigatória" }, { status: 400 });
+      const char = await jsonDb.findCharacterById(String(characterId));
+      if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
+      const validClasses = ["warrior","paladin","berserker","mage","necromancer","assassin","hunter","monk","samurai","knight","summoner","templar","archer"];
+      if (!validClasses.includes(String(newClassType))) {
+        return NextResponse.json({ error: "Classe inválida" }, { status: 400 });
+      }
+      if (char.classType === newClassType) {
+        return NextResponse.json({ error: "O personagem já é dessa classe!" }, { status: 400 });
+      }
+      // Custo: 5000 + (nível × 100) de ouro
+      const level = Math.max(1, Number(char.level) || 1);
+      const cost = 5000 + level * 100;
+      const currentGold = Number(char.gold) || 0;
+      if (currentGold < cost) {
+        return NextResponse.json({ error: `Ouro insuficiente! Necessário: ${cost.toLocaleString()} 💰 (tem ${currentGold.toLocaleString()})` }, { status: 400 });
+      }
+      // Stats base da nova classe
+      const base = CLASS_BASE_STATS[(newClassType as ClassName)] ?? CLASS_BASE_STATS.warrior;
+      const newPower = powerCalc({ attack: base.attack, defense: base.defense, hp: base.hp, speed: base.speed, critical: base.critical, level });
+      await jsonDb.updateCharacter(String(characterId), {
+        classType: newClassType,
+        gold: currentGold - cost,
+        // Stats base da nova classe (mantém level e XP)
+        hp: base.hp,
+        maxHp: base.hp,
+        attack: base.attack,
+        defense: base.defense,
+        speed: base.speed,
+        critical: base.critical,
+        mana: base.mana,
+        maxMana: base.mana,
+        power: newPower,
+        // Remove classe avançada (não é da nova classe)
+        advancedClass: null,
+        // Reseta atributos investidos (pontos devolvidos = nível × 3)
+        unspentStatPoints: level * 3,
+        lastActivity: new Date().toISOString(),
+      });
+      return NextResponse.json({
+        success: true,
+        message: `🔄 ${char.name} trocou de ${char.classType} para ${newClassType}! Custo: ${cost.toLocaleString()} 💰`,
+        cost,
+      });
     }
 
     // ---- Ascensão: setar patamar direto ----

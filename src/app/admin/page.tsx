@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { RARITY_COLORS, CLASS_ICONS, REGIONS, TOWER_BOSS_KINDS, MAX_LEVEL, towerMonsterImage, TOWER_MONSTER_NAMES, TOWER_MONSTER_IMAGES } from "@/game/constants";
+import { RARITY_COLORS, CLASS_ICONS, CLASS_LIST, REGIONS, TOWER_BOSS_KINDS, MAX_LEVEL, towerMonsterImage, TOWER_MONSTER_NAMES, TOWER_MONSTER_IMAGES, classImage } from "@/game/constants";
 import type { ClassName } from "@/game/constants";
 import { SKIN_CATALOG } from "@/game/skins";
 import { VIP_TIERS, currentVipTier } from "@/game/vip";
@@ -13,6 +13,12 @@ const VIP_LABELS: Record<string, string> = {
   bronze: "Bronze", silver: "Prata", gold: "Ouro", platinum: "Platina",
   diamond: "Diamante", master: "Mestre", legend: "Lenda", emperor: "Imperador",
 };
+
+const CLASS_COLORS: Record<string, string> = {
+  warrior: "#ff6b6b", mage: "#7c5cfc", archer: "#22c55e", assassin: "#a855f7",
+  cleric: "#ffd700", paladin: "#f59e0b", necromancer: "#6366f1", berserker: "#ef4444",
+  monk: "#14b8a6", bard: "#ec4899", ranger: "#10b981", warlock: "#8b5cf6",
+};
 import { t } from "@/i18n";
 
 // A chave NÃO fica mais no cliente: o /api/admin/login valida no servidor e
@@ -24,6 +30,11 @@ const ADMIN_KEY_STORAGE_LEGACY = "realm_admin_key";
 
 const RARITY_ORDER = ["common", "uncommon", "rare", "epic", "legendary", "mythic", "divine", "ancestral", "supreme"];
 const SLOTS = ["weapon", "shield", "helmet", "armor", "gloves", "boots", "ring", "amulet", "relic", "artifact"];
+const SLOT_ICONS: Record<string, string> = {
+  weapon: "⚔️", shield: "🛡️", helmet: "⛑️", armor: "🦺",
+  gloves: "🧤", boots: "👢", ring: "💍", amulet: "📿",
+  relic: "🏺", artifact: "🔮",
+};
 
 /** ISO → valor do input datetime-local (horário local, formato YYYY-MM-DDTHH:mm). */
 function isoToLocalInput(iso: string): string {
@@ -52,7 +63,7 @@ function serverTimeToLocal(hhmm: string, serverOffsetMin: number): string {
   return `${pad(Math.floor(total / 60))}:${pad(total % 60)}`;
 }
 
-type Tab = "dash" | "users" | "characters" | "guilds" | "send" | "excluded" | "music" | "server" | "codes" | "logs" | "donate" | "pix" | "ledger" | "ghost" | "worldboss" | "test" | "inventory";
+type Tab = "dash" | "users" | "characters" | "guilds" | "send" | "excluded" | "music" | "server" | "codes" | "logs" | "donate" | "pix" | "ledger" | "ghost" | "worldboss" | "test" | "inventory" | "balance";
 type SkinChar = { id: string; name: string; level: number; classType: string; skins: string[] };
 
 /** Recursos que o ADM pode presentear pelo correio. */
@@ -92,12 +103,17 @@ export default function AdminPage() {
   const [authenticated, setAuthenticated] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [showKey, setShowKey] = useState(false);
-  // "Lembrar de mim" agora só controla a validade do cookie httpOnly no
-  // servidor (30 dias vs. sessão do navegador) — a chave não fica no localStorage.
   const [rememberMe, setRememberMe] = useState(false);
-  // Chave digitada, usada apenas para o login (não é persistida).
   const [adminKey, setAdminKey] = useState<string>("");
   const keyRef = useRef<HTMLInputElement>(null);
+
+  // Auto-login: verificar cookie httpOnly ao montar
+  useEffect(() => {
+    fetch("/api/admin?action=dashboard", { headers: { "Content-Type": "application/json" } })
+      .then((r) => { if (r.ok) { setAuthenticated(true); return r.json(); } return null; })
+      .then((d) => { if (d) setData(d); })
+      .catch(() => {});
+  }, []);
   const [tab, setTab] = useState<Tab>("dash");
   const [data, setData] = useState<Record<string, unknown>>({});
   const [loading, setLoading] = useState(false);
@@ -132,6 +148,9 @@ export default function AdminPage() {
   const [codeGold, setCodeGold] = useState("0");
   const [codeDiamonds, setCodeDiamonds] = useState("0");
   const [codeCrystals, setCodeCrystals] = useState("0");
+  const [codeItems, setCodeItems] = useState<Array<{ templateId: number; quantity: number }>>([]);
+  const [codeItemSearch, setCodeItemSearch] = useState("");
+  const [codeItemSlot, setCodeItemSlot] = useState("");
   // Loja Fantasma (moedas da torre)
   const [ghostEnabled, setGhostEnabled] = useState(false);
   const [ghostSchedule, setGhostSchedule] = useState<string[]>(["12:00", "18:00", "21:00"]);
@@ -139,6 +158,7 @@ export default function AdminPage() {
   const [ghostDuration, setGhostDuration] = useState("60");
   const [ghostItems, setGhostItems] = useState<Array<{ templateId: number; price: string; quantity: string }>>([]);
   const [ghostItemSearch, setGhostItemSearch] = useState("");
+  const [ghostSlotFilter, setGhostSlotFilter] = useState("");
   const [ghostLoaded, setGhostLoaded] = useState(false);
   // Offsets (min, leste de UTC positivo) do servidor e do navegador, para
   // mostrar cada horário agendado também convertido pro fuso local do admin.
@@ -176,7 +196,9 @@ export default function AdminPage() {
   const [wbMobsXp, setWbMobsXp] = useState("15000");
   // Foto customizada do boss (upload/remoção)
   const [wbBossImage, setWbBossImage] = useState("");
+  const [wbBossImages, setWbBossImages] = useState<string[]>([]);
   const wbBossImageRef = useRef<HTMLInputElement>(null);
+  const [wbAutoStats, setWbAutoStats] = useState<Record<string, unknown> | null>(null);
   const [wbLoaded, setWbLoaded] = useState(false);
   // Relatório do Boss Mundial (ranking + logs) no painel
   const [wbReport, setWbReport] = useState<Record<string, unknown> | null>(null);
@@ -210,6 +232,12 @@ export default function AdminPage() {
   const [limitMaxTowerFloor, setLimitMaxTowerFloor] = useState("0");
   const [limitMaxLevel, setLimitMaxLevel] = useState("0");
   const [limitTowerXpMult, setLimitTowerXpMult] = useState("1");
+  const [limitRegionXpMult, setLimitRegionXpMult] = useState("1");
+  const [limitGoldMult, setLimitGoldMult] = useState("1");
+  const [limitEnergyRegenMin, setLimitEnergyRegenMin] = useState("5");
+  const [limitMissionGoldMult, setLimitMissionGoldMult] = useState("1");
+  const [limitCritRate, setLimitCritRate] = useState("10");
+  const [limitDodgeRate, setLimitDodgeRate] = useState("5");
   const [resetConfirm, setResetConfirm] = useState("");
   const [serverLoaded, setServerLoaded] = useState(false);
   // Modo teste — ignora a manutenção para o admin testar o jogo
@@ -361,6 +389,7 @@ export default function AdminPage() {
       gold: codeGold,
       diamonds: codeDiamonds,
       crystals: codeCrystals,
+      items: codeItems,
       label: codeLabel,
       maxUses: codeMaxUses,
       expiresDays: codeExpiresDays,
@@ -368,6 +397,7 @@ export default function AdminPage() {
     setMessage(d.success ? `✅ ${d.message}` : `❌ ${d.error || "Erro"}`);
     if (d.success) {
       setCodeValue("");
+      setCodeItems([]);
       await loadCodes();
     }
     setBusy(null);
@@ -896,6 +926,9 @@ export default function AdminPage() {
           ? s.worldBossImage
           : "/images/worldboss_boss.png"
       );
+      // Fotos do carrossel
+      const wbi = (wb.bossImages || s.worldBossImages || []) as string[];
+      setWbBossImages(Array.isArray(wbi) ? wbi.filter((u) => typeof u === "string" && u) : []);
     } catch { /* ignora */ }
     setWbLoaded(true);
     setLoading(false);
@@ -957,6 +990,7 @@ export default function AdminPage() {
           critical: Math.min(100, Math.max(0, Math.floor(Number(wbCritical) || 12))),
         },
         bossImage: wbBossImage || "",
+        bossImages: wbBossImages.length > 0 ? wbBossImages : undefined,
         rewards: {
           gold: Math.max(0, Math.floor(Number(wbGold) || 0)),
           xp: Math.max(0, Math.floor(Number(wbXp) || 0)),
@@ -1163,6 +1197,74 @@ export default function AdminPage() {
     setWbMobsKinds((prev) => prev.includes(kind) ? prev.filter((k) => k !== kind) : [...prev, kind]);
   };
 
+  /** IA de balanceamento: calcula stats do boss automaticamente baseado nos jogadores. */
+  const autoBalanceWorldBoss = async () => {
+    setBusy("wb_auto");
+    setMessage("🤖 Calculando balanceamento baseado nos jogadores...");
+    const d = await callAdmin({ action: "auto_balance_worldboss" });
+    if (d.success && d.suggested) {
+      setWbAutoStats(d);
+      // Aplicar stats sugeridos
+      const b = d.suggested.boss;
+      setWbMaxHp(String(b.maxHp));
+      setWbAttack(String(b.attack));
+      setWbDefense(String(b.defense));
+      setWbSpeed(String(b.speed));
+      setWbCritical(String(b.critical));
+      // Recompensas
+      const r = d.suggested.rewards;
+      setWbGold(String(r.gold));
+      setWbXp(String(r.xp));
+      setWbCoins(String(r.towerCoins));
+      // Shield
+      const s = d.suggested.shield;
+      setWbShieldEnabled(s.enabled);
+      setWbShieldThresholds(s.thresholds.join(","));
+      setWbShieldDuration(String(s.durationSec));
+      setWbShieldCostCurrency(s.breakCost.currency);
+      setWbShieldCostAmount(String(s.breakCost.amount));
+      // Mobs
+      const m = d.suggested.mobs;
+      setWbMobsEnabled(m.enabled);
+      setWbMobsHp(String(m.hp));
+      setWbMobsCount(String(m.count));
+      setWbMobsGold(String(m.reward.gold));
+      setWbMobsXp(String(m.reward.xp));
+      setWbMobsKinds(m.kinds);
+      setMessage(`✅ Balanceamento automático aplicado! Baseado em ${d.stats.totalCharacters} personagens (poder médio: ${d.stats.avgPower.toLocaleString()}). Revise e clique em SALVAR.`);
+    } else {
+      setMessage(`❌ ${d.error || "Falha ao calcular"}`);
+    }
+    setBusy(null);
+  };
+
+  /** Upload de múltiplas imagens do boss (carrossel). */
+  const uploadWorldBossImageMulti = async (files: FileList) => {
+    if (!files || files.length === 0) return;
+    setBusy("wb_image_multi");
+    const newUrls: string[] = [];
+    for (const file of Array.from(files)) {
+      try {
+        const fd = new FormData();
+        fd.append("action", "upload_world_boss_image");
+        fd.append("file", file);
+        const res = await fetch("/api/admin", { method: "POST", headers: audioHeaders, body: fd });
+        const d = await res.json();
+        if (d.success && d.url) newUrls.push(d.url);
+      } catch { /* skip */ }
+    }
+    if (newUrls.length > 0) {
+      const all = [...wbBossImages, ...newUrls];
+      setWbBossImages(all);
+      // Salvar a primeira como imagem principal
+      setWbBossImage(newUrls[0]);
+      setMessage(`✅ ${newUrls.length} foto(s) enviada(s)! Total: ${all.length} fotos no carrossel.`);
+    } else {
+      setMessage("❌ Nenhuma foto pôde ser enviada");
+    }
+    setBusy(null);
+  };
+
   // ---- Mensagem global / manutenção ----
   const loadServerSettings = async () => {
     try {
@@ -1178,6 +1280,12 @@ export default function AdminPage() {
       setLimitMaxTowerFloor(typeof s.maxTowerFloor === "number" ? String(s.maxTowerFloor) : "0");
       setLimitMaxLevel(typeof s.maxLevel === "number" ? String(s.maxLevel) : "0");
       setLimitTowerXpMult(typeof s.towerXpMult === "number" ? String(s.towerXpMult) : "1");
+      setLimitRegionXpMult(typeof s.regionXpMult === "number" ? String(s.regionXpMult) : "1");
+      setLimitGoldMult(typeof s.goldMult === "number" ? String(s.goldMult) : "1");
+      setLimitEnergyRegenMin(typeof s.energyRegenMinutes === "number" ? String(s.energyRegenMinutes) : "5");
+      setLimitMissionGoldMult(typeof s.missionGoldMult === "number" ? String(s.missionGoldMult) : "1");
+      setLimitCritRate(typeof s.critRate === "number" ? String(s.critRate) : "10");
+      setLimitDodgeRate(typeof s.dodgeRate === "number" ? String(s.dodgeRate) : "5");
       setDonatePixKey(typeof s.donatePixKey === "string" ? s.donatePixKey : "");
       setDonateQrCode(typeof s.donateQrCode === "string" ? s.donateQrCode : "");
       setServerLoaded(true);
@@ -1263,6 +1371,26 @@ export default function AdminPage() {
     setBusy(null);
   };
 
+  /** Excluir compra permanentemente (compras fake). */
+  const deletePurchase = async (purchaseId: string) => {
+    if (!window.confirm("⚠️ Excluir esta compra permanentemente? Esta ação não pode ser desfeita.")) return;
+    setBusy(`pix_del_${purchaseId}`);
+    const d = await callAdmin({ action: "delete_purchase", purchaseId });
+    setMessage(d.success ? `✅ ${d.message}` : `❌ ${d.error || "Falha"}`);
+    await loadPurchases();
+    setBusy(null);
+  };
+
+  /** Excluir registro do livro-razão. */
+  const deleteLedgerEntry = async (entryId: string) => {
+    if (!window.confirm("⚠️ Excluir este registro do livro-razão? Esta ação não pode ser desfeita.")) return;
+    setBusy(`ledger_del_${entryId}`);
+    const d = await callAdmin({ action: "delete_ledger_entry", entryId });
+    setMessage(d.success ? `✅ ${d.message}` : `❌ ${d.error || "Falha"}`);
+    await loadLedger();
+    setBusy(null);
+  };
+
   /** Salva quantos diamantes valem R$ 1 na loja PIX. */
   const saveDiamondsPerReal = async () => {
     const v = Math.max(1, Math.floor(Number(diamondsPerReal) || 1000));
@@ -1301,6 +1429,7 @@ export default function AdminPage() {
         ? "✅ Mensagem enviada! Os jogadores já podem ver (popup aparece uma única vez)."
         : `❌ ${d.error || "Erro"}`
     );
+    if (d.success) setServerAnnouncement("");
     setBusy(null);
   };
 
@@ -1311,11 +1440,17 @@ export default function AdminPage() {
       action: "update_server_settings",
       maxTowerFloor: Math.max(0, Math.floor(Number(limitMaxTowerFloor) || 0)),
       maxLevel: Math.max(0, Math.floor(Number(limitMaxLevel) || 0)),
-      towerXpMult: Math.min(2, Math.max(0.01, Number(limitTowerXpMult) || 1)),
+      towerXpMult: Math.min(5, Math.max(0.01, Number(limitTowerXpMult) || 1)),
+      regionXpMult: Math.min(10, Math.max(0.01, Number(limitRegionXpMult) || 1)),
+      goldMult: Math.min(10, Math.max(0.01, Number(limitGoldMult) || 1)),
+      energyRegenMinutes: Math.max(1, Math.floor(Number(limitEnergyRegenMin) || 5)),
+      missionGoldMult: Math.min(10, Math.max(0.01, Number(limitMissionGoldMult) || 1)),
+      critRate: Math.min(100, Math.max(0, Number(limitCritRate) || 10)),
+      dodgeRate: Math.min(100, Math.max(0, Number(limitDodgeRate) || 5)),
     });
     setMessage(
       d.success
-        ? "✅ Limites e balanceamento salvos! (0 = sem limite próprio — usa o padrão do jogo)"
+        ? "✅ Limites e balanceamento salvos!"
         : `❌ ${d.error || "Erro"}`
     );
     setBusy(null);
@@ -1391,12 +1526,21 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (tab === "server" && !serverLoaded) loadServerSettings();
+    if (tab === "balance" && !serverLoaded) loadServerSettings();
     if (tab === "donate" && !donateLoaded) loadDonateSettings();
     if (tab === "pix" && !pixLoaded) loadPurchases();
     if (tab === "ledger" && !ledgerLoaded) loadLedger();
     if (tab === "ghost" && !ghostLoaded) loadGhostShop();
     if (tab === "worldboss" && !wbLoaded) loadWorldBoss();
   }, [tab, serverLoaded, donateLoaded, pixLoaded, ghostLoaded, wbLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Trocar aba: limpa dados e mensagens para evitar erros React
+  const switchTab = (newTab: Tab) => {
+    setTab(newTab);
+    setData({});
+    setMessage("");
+    setLoading(false);
+  };
 
   const audioList = (Array.isArray(data.audio) ? data.audio : []) as Array<Record<string, unknown>>;
   const audioByRegion = Object.fromEntries(audioList.map((a) => [String(a.regionId), a]));
@@ -1486,6 +1630,7 @@ export default function AdminPage() {
     { id: "excluded", label: "Excluídos", icon: "🚫" },
     { id: "music", label: "Músicas das Ilhas", icon: "🎵" },
     { id: "server", label: "Mensagem Global", icon: "📢" },
+    { id: "balance", label: "Limites & Balance", icon: "⚙️" },
     { id: "codes", label: "Códigos", icon: "🎟️" },
     { id: "logs", label: "Logs", icon: "📜" },
     { id: "donate", label: "Donate (PIX)", icon: "💖" },
@@ -1551,38 +1696,117 @@ export default function AdminPage() {
           {tabDefs.map((td) => (
             <button
               key={td.id}
-              onClick={() => setTab(td.id)}
+              onClick={() => switchTab(td.id)}
               className={`px-4 py-2 rounded-xl text-sm font-bold transition-all flex items-center gap-2 ${tab === td.id ? "bg-gradient-to-r from-[#ff6b6b] to-[#c73050] text-white shadow-lg shadow-[#ff6b6b]/25 scale-[1.02]" : "text-gray-400 hover:text-white hover:bg-white/5"}`}
             >
               <span>{td.icon}</span> {td.label}
             </button>
           ))}
-        </div>            {tab === "dash" && (
-              <div>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[
-                  { label: "Usuários", value: dash.users ?? 0, icon: "👤", color: "#4ecdc4" },
-                  { label: "Personagens", value: dash.characters ?? 0, icon: "🗡️", color: "#ffd700" },
-                  { label: "Guildas", value: dash.guilds ?? 0, icon: "🏰", color: "#3b82f6" },
-                  { label: "Excluídos", value: dash.excluded ?? 0, icon: "🚫", color: "#ef4444" },
-                ].map((s) => (
-                  <div
-                    key={s.label}
-                    className="relative overflow-hidden rounded-2xl p-5 border border-white/10 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30"
-                    style={{ background: `linear-gradient(135deg, ${s.color}22, #1a1a2e 70%)`, borderColor: `${s.color}44` }}
-                  >
-                    <div className="absolute -top-6 -right-6 w-20 h-20 rounded-full blur-2xl" style={{ backgroundColor: `${s.color}33` }} />
-                    <div className="relative">
-                      <div className="text-3xl mb-2 drop-shadow-[0_0_10px_rgba(255,255,255,0.15)]">{s.icon}</div>
-                      <div className="text-3xl font-black text-white" style={{ textShadow: `0 0 20px ${s.color}66` }}>{s.value}</div>
-                      <div className="text-xs text-gray-400 mt-0.5">{s.label}</div>
+        </div>
+
+        {tab === "dash" && (
+          <div className="space-y-6">
+            {/* 🎯 Estatísticas Principais */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: "Usuários", value: dash.users ?? 0, icon: "👤", color: "#4ecdc4", sub: "contas registradas" },
+                { label: "Personagens", value: dash.characters ?? 0, icon: "🗡️", color: "#ffd700", sub: "personagens ativos" },
+                { label: "Guildas", value: dash.guilds ?? 0, icon: "🏰", color: "#3b82f6", sub: "guildas formadas" },
+                { label: "Excluídos", value: dash.excluded ?? 0, icon: "🚫", color: "#ef4444", sub: "contas removidas" },
+              ].map((s) => (
+                <div
+                  key={s.label}
+                  className="group relative overflow-hidden rounded-2xl p-5 border transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/30"
+                  style={{ background: `linear-gradient(135deg, ${s.color}15, #1a1a2e 70%)`, borderColor: `${s.color}44` }}
+                >
+                  <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full blur-3xl opacity-30 group-hover:opacity-60 transition-opacity" style={{ backgroundColor: s.color }} />
+                  <div className="relative">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style={{ background: `${s.color}22`, border: `1px solid ${s.color}44` }}>{s.icon}</div>
+                    </div>
+                    <div className="text-3xl font-black text-white mb-1" style={{ textShadow: `0 0 20px ${s.color}66` }}>{Number(s.value).toLocaleString()}</div>
+                    <div className="text-xs font-bold text-gray-400 uppercase tracking-wider">{s.label}</div>
+                    <div className="text-[10px] text-gray-600 mt-0.5">{s.sub}</div>
+                    <div className="mt-3 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${Math.min(100, (Number(s.value) / Math.max(1, Number(dash.users ?? 1))) * 100)}%`, backgroundColor: s.color }} />
                     </div>
                   </div>
-                ))}
+                </div>
+              ))}
+            </div>
+
+            {/* 📊 Acesso Rápido + Status */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Acesso rápido */}
+              <div className="bg-[#1a1a2e] rounded-2xl border border-white/10 p-5">
+                <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-[#4ecdc4]/20 flex items-center justify-center text-xs">⚡</span>
+                  Acesso Rápido
+                </h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { tab: "users" as Tab, icon: "👤", label: "Usuários", color: "#4ecdc4" },
+                    { tab: "characters" as Tab, icon: "🗡️", label: "Personagens", color: "#ffd700" },
+                    { tab: "guilds" as Tab, icon: "🏰", label: "Guildas", color: "#3b82f6" },
+                    { tab: "logs" as Tab, icon: "📜", label: "Logs", color: "#a855f7" },
+                    { tab: "server" as Tab, icon: "📢", label: "Mensagem", color: "#ff6b6b" },
+                    { tab: "balance" as Tab, icon: "⚙️", label: "Balance", color: "#7c5cfc" },
+                    { tab: "codes" as Tab, icon: "🎟️", label: "Códigos", color: "#ffd700" },
+                  ]).map((a) => (
+                    <button key={a.tab} onClick={() => switchTab(a.tab)}
+                      className="flex items-center gap-2 bg-[#0a0a12] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-gray-300 hover:text-white hover:border-white/20 hover:bg-white/5 transition-all">
+                      <span className="text-base">{a.icon}</span>
+                      <span className="font-bold">{a.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* ♻️ Reset do jogo */}
-              <div className="mt-6 bg-[#1a1a2e] rounded-2xl p-5 border border-red-500/30">
+              {/* 🟢 Status do Servidor */}
+              <div className="bg-[#1a1a2e] rounded-2xl border border-white/10 p-5">
+                <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-[#22c55e]/20 flex items-center justify-center text-xs">🟢</span>
+                  Status do Servidor
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between bg-[#0a0a12] rounded-xl px-3 py-2 border border-white/5">
+                    <span className="text-xs text-gray-400">⚡ Energia Infinita</span>
+                    <span className={`text-xs font-bold ${infiniteEnergy ? "text-[#22c55e]" : "text-gray-600"}`}>{infiniteEnergy ? "ATIVADA" : "Desligada"}</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-[#0a0a12] rounded-xl px-3 py-2 border border-white/5">
+                    <span className="text-xs text-gray-400">🔧 Manutenção</span>
+                    <span className={`text-xs font-bold ${serverMaintenance ? "text-[#ff6b6b]" : "text-gray-600"}`}>{serverMaintenance ? "ATIVA" : "Normal"}</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-[#0a0a12] rounded-xl px-3 py-2 border border-white/5">
+                    <span className="text-xs text-gray-400">🧪 Modo Teste</span>
+                    <span className={`text-xs font-bold ${testMode ? "text-[#ffd700]" : "text-gray-600"}`}>{testMode ? "ATIVADO" : "Desligado"}</span>
+                  </div>
+                </div>
+              </div>
+n              {/* 📊 Resumo Rápido */}
+              <div className="bg-[#1a1a2e] rounded-2xl border border-white/10 p-5">
+                <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-lg bg-[#3b82f6]/20 flex items-center justify-center text-xs">📊</span>
+                  Resumo Rápido
+                </h3>
+                <div className="space-y-2">
+                  {([
+                    { icon: "🟢", label: "Online agora", value: dash.online ?? 0, color: "#22c55e" },
+                    { icon: "📜", label: "Missões ativas", value: dash.activeMissions ?? 0, color: "#a855f7" },
+                    { icon: "👻", label: "Loja Fantasma", value: dash.ghostItems ?? 0, color: "#8b5cf6" },
+                  ]).map((r) => (
+                    <div key={r.label} className="flex items-center justify-between bg-[#0a0a12] rounded-xl px-3 py-2 border border-white/5">
+                      <span className="text-xs text-gray-400">{r.icon} {r.label}</span>
+                      <span className="text-sm font-black" style={{ color: r.color }}>{Number(r.value).toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ♻️ Reset do jogo + Reset de personagens */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-red-500/30">
                 <h3 className="text-sm font-bold text-red-400 mb-1">♻️ Resetar o Jogo (começar do zero)</h3>
                 <p className="text-xs text-gray-400 mb-4">
                   Apaga <b className="text-red-300">TODOS os jogadores</b> (contas, personagens, guildas, inventário, correio e códigos usados). O catálogo de itens e missões é mantido.
@@ -1603,92 +1827,148 @@ export default function AdminPage() {
                   </button>
                 </div>
               </div>
+              <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-[#ff9500]/30">
+                <h3 className="text-sm font-bold text-[#ff9500] mb-1">♻️ Resetar Personagens (mantém contas)</h3>
+                <p className="text-xs text-gray-400 mb-4">
+                  Reseta todos os personagens para <b className="text-[#ff9500]">nível 1</b> com stats padrão. As <b className="text-green-400">contas NÃO são excluídas</b>.
+                </p>
+                <div className="flex gap-3 flex-wrap items-center">
+                  <button
+                    onClick={() => { if (window.confirm("Resetar TODOS os personagens para nível 1? As contas serão mantidas.")) { callAdmin({ action: "reset_characters" }).then((d) => setMessage(d.success ? "✅ Personagens resetados!" : `❌ ${d.error || "Erro"}`)); } }}
+                    disabled={busy === "reset_characters"}
+                    className="px-5 py-2 rounded-xl font-bold text-sm bg-[#ff9500] text-black hover:opacity-90 disabled:opacity-40"
+                  >
+                    {busy === "reset_characters" ? "Resetando..." : "♻️ Resetar personagens"}
+                  </button>
+                </div>
               </div>
-            )}
+            </div>
+          </div>
+        )}
 
             {tab === "users" && (
-              <div>
-                <div className="flex gap-3 mb-4">
-                  <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar usuário..."
-                    className="flex-1 bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2 text-white focus:border-[#ff6b6b] focus:outline-none"
-                    onKeyDown={(e) => e.key === "Enter" && loadUsers()} />
-                  <button onClick={loadUsers} className="bg-[#ff6b6b] text-white rounded-xl px-4 py-2 font-bold">🔍</button>
+              <div className="space-y-4">
+                <div className="flex gap-3 items-center">
+                  <div className="flex-1 relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">🔍</span>
+                    <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome, ID ou username..."
+                      className="w-full bg-[#0a0a12] border border-white/10 rounded-xl pl-9 pr-4 py-3 text-white focus:border-[#4ecdc4] focus:outline-none text-sm"
+                      onKeyDown={(e) => e.key === "Enter" && loadUsers()} />
+                  </div>
+                  <button onClick={loadUsers}
+                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#4ecdc4] to-[#3b82f6] text-white font-bold text-sm hover:opacity-90 transition-all">
+                    🔍 Buscar
+                  </button>
+                  <span className="text-xs text-gray-500 bg-[#0a0a12] px-3 py-2 rounded-xl border border-white/10">
+                    {Array.isArray((data as { users?: unknown[] }).users) ? (data as { users: unknown[] }).users.length : 0} resultado(s)
+                  </span>
                 </div>
 
-                {loading ? <div className="text-center py-10 text-gray-400">Carregando...</div> : (
-                  <div className="space-y-2">
+                {loading ? (
+                  <div className="text-center py-16">
+                    <div className="inline-block w-8 h-8 border-2 border-[#4ecdc4] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-gray-500 text-sm mt-3">Carregando usuários...</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {Array.isArray((data as { users?: unknown[] }).users) && ((data as { users: Record<string, unknown>[] }).users).map((u) => {
                       const chars = (Array.isArray(u.characters) ? u.characters : []) as Record<string, unknown>[];
                       const main = chars[0] || null;
                       const isBanned = !!u.banned;
                       const isDeleted = !!u.deleted;
-                      // Senha nunca é armazenada em texto puro — só o hash bcrypt.
-                      // O admin define uma nova senha pelo botão "🔑 Senha".
                       const lastLogin = u.lastLogin ? new Date(u.lastLogin as string).toLocaleString() : "—";
                       const lastActivity = main?.lastActivity ? new Date(main.lastActivity as string).toLocaleString() : "—";
+                      const created = u.createdAt ? new Date(u.createdAt as string).toLocaleDateString() : "—";
+                      const cardBorder = isDeleted ? "border-red-500/50" : isBanned ? "border-red-500/30" : "border-white/10";
+                      const topBar = isDeleted ? "bg-red-600" : isBanned ? "bg-red-500" : String(u.role) === "admin" ? "bg-gradient-to-r from-[#ffd700] to-[#ff9500]" : "bg-gradient-to-r from-[#4ecdc4] to-[#3b82f6]";
                       return (
-                        <div key={String(u.id)} className={`bg-[#1a1a2e] rounded-xl p-4 border ${isDeleted ? "border-red-500/50" : isBanned ? "border-red-500/30" : "border-white/10"}`}>
-                          <div className="flex flex-wrap items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 flex-wrap">
-                              <div className="w-10 h-10 rounded-full bg-[#0a0a12] border border-white/10 flex items-center justify-center text-lg font-black text-[#ffd700]">
-                                {String(u.username).charAt(0).toUpperCase()}
+                        <div key={String(u.id)} className={`group relative overflow-hidden rounded-2xl border ${cardBorder} bg-[#1a1a2e] hover:shadow-xl hover:shadow-black/30 transition-all hover:-translate-y-0.5`}>
+                          <div className={`h-1 ${topBar}`} />
+                          <div className="p-5">
+                            {/* Header: Avatar + Nome + Tags */}
+                            <div className="flex items-center gap-4 mb-4">
+                              <div className="relative">
+                                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#4ecdc4]/20 to-[#3b82f6]/20 border border-white/10 flex items-center justify-center text-2xl font-black text-[#ffd700]">
+                                  {String(u.username).charAt(0).toUpperCase()}
+                                </div>
+                                <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[#1a1a2e] ${isDeleted ? "bg-red-500" : isBanned ? "bg-red-400" : "bg-[#22c55e]"}`} />
                               </div>
-                              <div>
-                                <div className="font-bold text-white flex items-center gap-2 flex-wrap">
-                                  {String(u.username)}
-                                  {isDeleted && <span className="text-[10px] bg-red-600 px-2 py-0.5 rounded-full text-white">EXCLUÍDA</span>}
-                                  {isBanned && !isDeleted && <span className="text-[10px] bg-red-500/30 border border-red-500/40 px-2 py-0.5 rounded-full text-red-300">BANIDA</span>}
-                                  {String(u.role) === "admin" && <span className="text-[10px] bg-[#ffd700]/20 border border-[#ffd700]/40 px-2 py-0.5 rounded-full text-[#ffd700]">ADMIN</span>}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <h3 className="text-base font-black text-white truncate">{String(u.username)}</h3>
+                                  {isDeleted && <span className="text-[9px] bg-red-600 px-2 py-0.5 rounded-full text-white font-bold uppercase">Excluída</span>}
+                                  {isBanned && !isDeleted && <span className="text-[9px] bg-red-500/20 border border-red-500/40 px-2 py-0.5 rounded-full text-red-300 font-bold">Banida</span>}
+                                  {String(u.role) === "admin" && <span className="text-[9px] bg-[#ffd700]/20 border border-[#ffd700]/40 px-2 py-0.5 rounded-full text-[#ffd700] font-bold">ADMIN</span>}
                                 </div>
-                                <div className="text-xs text-gray-500">
-                                  {String(u.role)} • criada em {new Date(u.createdAt as string).toLocaleDateString()}
-                                </div>
+                                <p className="text-[11px] text-gray-500 mt-0.5">Conta criada em {created}</p>
                               </div>
                             </div>
-                            <div className="flex gap-2 items-center flex-wrap">
-                              {main ? (
-                                <div className="text-xs text-gray-400 bg-[#0a0a12] rounded-lg px-3 py-1.5 border border-white/10">
-                                  🗡️ <span className="text-[#ffd700] font-bold">{String(main.name)}</span> Lv.{String(main.level)} • {String(main.classType)}
+
+                            {/* Personagem principal */}
+                            {main ? (
+                              <div className="bg-[#0a0a12] rounded-xl border border-white/5 p-3 mb-3">
+                                <div className="flex items-center gap-3">
+                                  <span className="text-lg">{CLASS_ICONS[(main.classType as ClassName) || "warrior"]}</span>
+                                  <div className="flex-1">
+                                    <div className="text-sm font-bold text-white">{String(main.name)}</div>
+                                    <div className="text-[10px] text-gray-500">Lv.{String(main.level)} • {String(main.classType)} • 💰 {Number(main.gold || 0).toLocaleString()}</div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-[10px] text-gray-500">Poder</div>
+                                    <div className="text-xs font-black text-[#a855f7]">{Number(main.power || 0).toLocaleString()}</div>
+                                  </div>
                                 </div>
-                              ) : (
-                                <span className="text-[10px] text-gray-600">sem personagem</span>
-                              )}
-                              <span className="text-[10px] bg-gray-800 rounded-lg px-2 py-1 text-gray-500" title="Senhas são guardadas apenas como hash bcrypt. Use 'Redefinir senha' para definir uma nova.">
-                                🔒 hash (definir nova)
-                              </span>
+                              </div>
+                            ) : (
+                              <div className="bg-[#0a0a12] rounded-xl border border-white/5 p-3 mb-3 text-center text-[11px] text-gray-600">
+                                🚫 Nenhum personagem criado
+                              </div>
+                            )}
+n                            {/* Info de atividade */}
+                            <div className="grid grid-cols-2 gap-2 mb-4">
+                              <div className="bg-[#0a0a12] rounded-lg px-3 py-2 border border-white/5">
+                                <div className="text-[9px] text-gray-600 uppercase tracking-wider">Último Login</div>
+                                <div className="text-[11px] text-gray-300 font-bold truncate">{lastLogin}</div>
+                              </div>
+                              <div className="bg-[#0a0a12] rounded-lg px-3 py-2 border border-white/5">
+                                <div className="text-[9px] text-gray-600 uppercase tracking-wider">Última Atividade</div>
+                                <div className="text-[11px] text-gray-300 font-bold truncate">{lastActivity}</div>
+                              </div>
                             </div>
-                          </div>
-                          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-white/5 pt-3">
-                            <div className="flex gap-4 text-[11px] text-gray-500 flex-wrap">
-                              <span>Login: <b className="text-gray-300">{lastLogin}</b></span>
-                              <span>Atividade: <b className="text-gray-300">{lastActivity}</b></span>
-                              {isBanned && u.banReason ? <span>Motivo: <b className="text-red-400">{String(u.banReason)}</b></span> : null}
-                            </div>
-                            <div className="flex gap-2 flex-wrap">
-                              {!isDeleted && (
-                                <>
-                                  <button onClick={() => banUser(String(u.id), !isBanned)} disabled={busy === `ban_${u.id}`}
-                                    className={`text-xs px-3 py-1.5 rounded-lg font-bold text-white disabled:opacity-40 ${isBanned ? "bg-green-600 hover:bg-green-500" : "bg-red-600 hover:bg-red-500"}`}>
-                                    {busy === `ban_${u.id}` ? "..." : isBanned ? "Desbanir" : "Banir"}
-                                  </button>
-                                  <button onClick={() => resetPassword(String(u.id), String(u.username))} disabled={busy === `pw_${u.id}`}
-                                    className="text-xs px-3 py-1.5 rounded-lg font-bold bg-[#ffd700] text-black disabled:opacity-40 hover:opacity-90">
-                                    {busy === `pw_${u.id}` ? "..." : "🔑 Senha"}
-                                  </button>
-                                  <button onClick={() => deleteUser(String(u.id), String(u.username))} disabled={busy === `del_${u.id}`}
-                                    className="text-xs px-3 py-1.5 rounded-lg font-bold bg-red-700 hover:bg-red-600 text-white disabled:opacity-40">
-                                    {busy === `del_${u.id}` ? "..." : "🗑️ Excluir"}
-                                  </button>
-                                </>
-                              )}
-                            </div>
+                            {isBanned && u.banReason ? (
+                              <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 mb-3">
+                                <div className="text-[9px] text-red-400 uppercase tracking-wider">Motivo do Ban</div>
+                                <div className="text-[11px] text-red-300">{String(u.banReason)}</div>
+                              </div>
+                            ) : null}
+n                            {/* Botões de ação */}
+                            {!isDeleted && (
+                              <div className="flex gap-2">
+                                <button onClick={() => banUser(String(u.id), !isBanned)} disabled={busy === `ban_${u.id}`}
+                                  className={`flex-1 text-xs px-3 py-2.5 rounded-xl font-bold text-white disabled:opacity-40 transition-all ${isBanned ? "bg-[#22c55e] hover:bg-[#16a34a]" : "bg-[#ff6b6b] hover:bg-[#ff5252]"}`}>
+                                  {busy === `ban_${u.id}` ? "..." : isBanned ? "✅ Desbanir" : "⛔ Banir"}
+                                </button>
+                                <button onClick={() => resetPassword(String(u.id), String(u.username))} disabled={busy === `pw_${u.id}`}
+                                  className="flex-1 text-xs px-3 py-2.5 rounded-xl font-bold bg-[#ffd700] text-black disabled:opacity-40 hover:opacity-90 transition-all">
+                                  {busy === `pw_${u.id}` ? "..." : "🔑 Senha"}
+                                </button>
+                                <button onClick={() => deleteUser(String(u.id), String(u.username))} disabled={busy === `del_${u.id}`}
+                                  className="text-xs px-3 py-2.5 rounded-xl font-bold bg-red-700 hover:bg-red-600 text-white disabled:opacity-40 transition-all">
+                                  {busy === `del_${u.id}` ? "..." : "🗑️"}
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </div>
                       );
                     })}
-                    {Array.isArray((data as { users?: unknown[] }).users) && (data as { users: unknown[] }).users.length === 0 && (
-                      <div className="text-center py-10 text-gray-500">Nenhum usuário encontrado.</div>
-                    )}
+                  </div>
+                )}
+                {Array.isArray((data as { users?: unknown[] }).users) && (data as { users: unknown[] }).users.length === 0 && !loading && (
+                  <div className="text-center py-16">
+                    <div className="text-5xl mb-3">👤</div>
+                    <p className="text-gray-500 text-sm">Nenhum usuário encontrado.</p>
+                    <p className="text-gray-600 text-xs mt-1">Clique em 🔍 para carregar os dados</p>
                   </div>
                 )}
               </div>
@@ -1804,83 +2084,127 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Edit Form */}
-                <div className="bg-[#1a1a2e] rounded-xl p-4 border border-[#ffd700]/30 mb-4">
-                  <h3 className="text-sm font-bold text-[#ffd700] mb-3">⚡ Editar Personagem (use o ID da lista abaixo)</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
-                    <input value={editCharId} onChange={(e) => setEditCharId(e.target.value)} placeholder="ID do personagem" className="bg-[#0a0a12] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#ff6b6b] focus:outline-none" />
-                    {["gold", "diamonds", "towerCoins", "energy", "maxEnergy", "level", "xp", "towerFloor", "attack", "defense", "speed", "critical", "maxHp", "unspentStatPoints", "skillPoints", "power", "vipLevel"].map((f) => (
-                      <input key={f} value={editFields[f] || ""} onChange={(e) => setEditFields({ ...editFields, [f]: e.target.value })} placeholder={f}
-                        type="number" className="bg-[#0a0a12] border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-[#ff6b6b] focus:outline-none" />
-                    ))}
+                {loading ? (
+                  <div className="text-center py-16">
+                    <div className="inline-block w-8 h-8 border-2 border-[#ffd700] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-gray-500 text-sm mt-3">Carregando personagens...</p>
                   </div>
-                  <button onClick={editCharacter} className="bg-[#ffd700] text-black rounded-xl px-4 py-2 font-bold text-sm">💾 Salvar Alterações</button>
-                </div>
-
-                {loading ? <div className="text-center py-10 text-gray-400">Carregando...</div> : (
+                ) : (
                   <div className="space-y-2">
-                    {Array.isArray((data as { characters?: unknown[] }).characters) && ((data as { characters: Record<string, unknown>[] }).characters).map((c) => (
-                      <div key={String(c.id)} className={`bg-[#1a1a2e] rounded-xl p-3 border ${sel[String(c.id)] ? "border-[#4ecdc4]/70 ring-1 ring-[#4ecdc4]/40" : "border-white/10"}`}>
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                          <div className="flex items-center gap-3 flex-wrap">
-                          <input
-                            type="checkbox"
-                            checked={!!sel[String(c.id)]}
-                            onChange={() => toggleSel(String(c.id))}
-                            title="Marcar para ações em massa"
-                            className="accent-[#4ecdc4] w-5 h-5 cursor-pointer shrink-0"
-                          />
-                          <span className="text-xl">{CLASS_ICONS[(c.classType as ClassName) || "warrior"]}</span>
-                          <div>
-                            <div className="font-bold text-white">{String(c.name)}</div>
-                            <div className="text-[11px] text-gray-500 font-mono">{String(c.id)}</div>
+                    {Array.isArray((data as { characters?: unknown[] }).characters) && ((data as { characters: Record<string, unknown>[] }).characters).map((c) => {
+                      const charClass = (c.classType as ClassName) || "warrior";
+                      const isSelected = !!sel[String(c.id)];
+                      const charColor = CLASS_COLORS[charClass] || "#4ecdc4";
+                      return (
+                      <div key={String(c.id)} className={`group rounded-2xl border overflow-hidden transition-all hover:shadow-lg hover:shadow-black/30 ${
+                        isSelected ? "border-[#4ecdc4]/70 ring-1 ring-[#4ecdc4]/40" : "border-white/10 hover:border-white/20"
+                      } bg-[#1a1a2e]`}>
+                        <div className="h-1" style={{ background: `linear-gradient(90deg, ${charColor}, ${charColor}88)` }} />
+                        <div className="p-4">
+                          <div className="flex items-start gap-4 mb-3">
+                            {/* Checkbox + Foto do personagem */}
+                            <div className="relative shrink-0">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleSel(String(c.id))}
+                                title="Marcar para ações em massa"
+                                className="absolute -top-1 -left-1 accent-[#4ecdc4] w-4 h-4 cursor-pointer z-10"
+                              />
+                              <div className="w-14 h-14 rounded-xl overflow-hidden border border-white/10 bg-[#0a0a12]">
+                                <img
+                                  src={classImage(charClass, String(c.sex || "male"))}
+                                  alt={String(c.name)}
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                />
+                              </div>
+                              <div className="absolute -bottom-1 -right-1 text-[10px] font-black bg-black/80 text-white rounded-md px-1 border border-white/20">
+                                {Number(c.level) || 1}
+                              </div>
+                            </div>
+                            {/* Info principal */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-lg">{CLASS_ICONS[charClass]}</span>
+                                <h3 className="text-base font-black text-white truncate">{String(c.name)}</h3>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 text-[10px] text-gray-500">
+                                <span className="font-mono">{String(c.id).slice(0, 12)}…</span>
+                                <span>•</span>
+                                <span className="text-[#ffd700] font-bold">💰 {Number(c.gold || 0).toLocaleString()}</span>
+                                <span>•</span>
+                                <span className="text-[#4ecdc4] font-bold">💎 {Number(c.diamonds || 0)}</span>
+                                <span>•</span>
+                                <span className="text-purple-300 font-bold">🗼 {Number(c.towerCoins || 0).toLocaleString()}</span>
+                                <span>•</span>
+                                <span className="text-gray-400">🏯 Andar {Number(c.towerFloor || 1)}</span>
+                              </div>
+                            </div>
+                            {/* Power + botões rápidos */}
+                            <div className="flex flex-col items-end gap-2 shrink-0">
+                              <div className="text-right">
+                                <div className="text-[10px] text-gray-500 uppercase tracking-wider">Poder</div>
+                                <div className="text-lg font-black text-[#a855f7]" style={{ textShadow: "0 0 10px #a855f755" }}>{Number(c.power || 0).toLocaleString()}</div>
+                              </div>
+                              <div className="flex gap-1.5">
+                                <button
+                                  onClick={() => resetAttributes(c)}
+                                  disabled={busy === `stats_reset_${String(c.id)}`}
+                                  title="Resetar atributos"
+                                  className="w-7 h-7 rounded-lg flex items-center justify-center text-xs bg-[#ff6b6b]/15 border border-[#ff6b6b]/30 text-[#ff6b6b] hover:bg-[#ff6b6b]/25 transition-all disabled:opacity-40">
+                                  🔄
+                                </button>
+                                <button
+                                  onClick={() => grantStatPoints(c)}
+                                  disabled={busy === `stats_grant_${String(c.id)}`}
+                                  title="Dar pontos de status"
+                                  className="w-7 h-7 rounded-lg flex items-center justify-center text-xs bg-[#4ecdc4]/15 border border-[#4ecdc4]/30 text-[#4ecdc4] hover:bg-[#4ecdc4]/25 transition-all disabled:opacity-40">
+                                  ➕
+                                </button>
+                                <button
+                                  onClick={() => recalcEquipment(c)}
+                                  disabled={busy === `recalc_${String(c.id)}`}
+                                  title="Recalcular equipamentos"
+                                  className="w-7 h-7 rounded-lg flex items-center justify-center text-xs bg-[#7c5cfc]/15 border border-[#7c5cfc]/30 text-[#7c5cfc] hover:bg-[#7c5cfc]/25 transition-all disabled:opacity-40">
+                                  ⚙️
+                                </button>
+                              </div>
+                            </div>
                           </div>
-                          <div className="text-xs text-[#ffd700] font-bold">Lv.{String(c.level)}</div>
-                          <div className="text-xs text-gray-400">💰 {Number(c.gold || 0).toLocaleString()} • 💎 {Number(c.diamonds || 0)} • 🗼 {Number(c.towerCoins || 0).toLocaleString()} • 🏯 Andar {Number(c.towerFloor || 1)}</div>
+                          {/* Chips de status */}
+                          <div className="flex flex-wrap gap-1.5 mb-3">
+                            <span className="text-[10px] bg-[#ff6b6b]/10 border border-[#ff6b6b]/30 text-[#ff6b6b] rounded-full px-2 py-0.5 font-bold">⚔️ {Number(c.attack || 0).toLocaleString()}</span>
+                            <span className="text-[10px] bg-[#3b82f6]/10 border border-[#3b82f6]/30 text-blue-300 rounded-full px-2 py-0.5 font-bold">🛡️ {Number(c.defense || 0).toLocaleString()}</span>
+                            <span className="text-[10px] bg-[#22c55e]/10 border border-[#22c55e]/30 text-green-300 rounded-full px-2 py-0.5 font-bold">❤️ {Number(c.maxHp || 0).toLocaleString()}</span>
+                            <span className="text-[10px] bg-[#4ecdc4]/10 border border-[#4ecdc4]/30 text-teal-300 rounded-full px-2 py-0.5 font-bold">👟 {Number(c.speed || 0)}</span>
+                            <span className="text-[10px] bg-[#ffd700]/10 border border-[#ffd700]/30 text-yellow-300 rounded-full px-2 py-0.5 font-bold">💥 {Number(c.critical || 0)}%</span>
+                            {Number(c.unspentStatPoints || 0) > 0 && (
+                              <span className="text-[10px] bg-[#00ff88]/10 border border-[#00ff88]/30 text-green-300 rounded-full px-2 py-0.5 font-bold">🎯 {Number(c.unspentStatPoints || 0)} pts</span>
+                            )}
+                          </div>
+                          {/* Botões de ação */}
+                          <div className="flex flex-wrap gap-1.5">
+                            <button
+                              onClick={() => resetAttributes(c)}
+                              disabled={busy === `stats_reset_${String(c.id)}`}
+                              className="text-[10px] bg-[#ff6b6b]/15 border border-[#ff6b6b]/30 text-[#ff6b6b] rounded-lg px-2.5 py-1.5 font-bold hover:bg-[#ff6b6b]/25 disabled:opacity-40 transition-all">
+                              {busy === `stats_reset_${String(c.id)}` ? "..." : "🔄 Resetar"}
+                            </button>
+                            <button
+                              onClick={() => grantStatPoints(c)}
+                              disabled={busy === `stats_grant_${String(c.id)}`}
+                              className="text-[10px] bg-[#4ecdc4]/15 border border-[#4ecdc4]/30 text-[#4ecdc4] rounded-lg px-2.5 py-1.5 font-bold hover:bg-[#4ecdc4]/25 disabled:opacity-40 transition-all">
+                              {busy === `stats_grant_${String(c.id)}` ? "..." : `➕ ${Math.max(1, Number(c.level) || 1) * 3} pts`}
+                            </button>
+                            <button
+                              onClick={() => recalcEquipment(c)}
+                              disabled={busy === `recalc_${String(c.id)}`}
+                              className="text-[10px] bg-[#7c5cfc]/15 border border-[#7c5cfc]/30 text-[#7c5cfc] rounded-lg px-2.5 py-1.5 font-bold hover:bg-[#7c5cfc]/25 disabled:opacity-40 transition-all">
+                              {busy === `recalc_${String(c.id)}` ? "..." : "⚙️ Recalc"}
+                            </button>
+                          </div>
                         </div>
-                        {/* Chips de status */}
-                        <div className="flex flex-wrap gap-1.5 mt-1.5">
-                          <span className="text-[10px] bg-[#ff6b6b]/10 border border-[#ff6b6b]/30 text-[#ff6b6b] rounded-full px-2 py-0.5 font-bold">⚔️ {Number(c.attack || 0).toLocaleString()}</span>
-                          <span className="text-[10px] bg-[#3b82f6]/10 border border-[#3b82f6]/30 text-blue-300 rounded-full px-2 py-0.5 font-bold">🛡️ {Number(c.defense || 0).toLocaleString()}</span>
-                          <span className="text-[10px] bg-[#22c55e]/10 border border-[#22c55e]/30 text-green-300 rounded-full px-2 py-0.5 font-bold">❤️ {Number(c.maxHp || 0).toLocaleString()}</span>
-                          <span className="text-[10px] bg-[#4ecdc4]/10 border border-[#4ecdc4]/30 text-teal-300 rounded-full px-2 py-0.5 font-bold">👟 {Number(c.speed || 0)}</span>
-                          <span className="text-[10px] bg-[#ffd700]/10 border border-[#ffd700]/30 text-yellow-300 rounded-full px-2 py-0.5 font-bold">💥 {Number(c.critical || 0)}%</span>
-                          <span className="text-[10px] bg-[#a855f7]/10 border border-[#a855f7]/30 text-purple-300 rounded-full px-2 py-0.5 font-bold">⭐ {Number(c.power || 0).toLocaleString()}</span>
-                          {Number(c.unspentStatPoints || 0) > 0 && (
-                            <span className="text-[10px] bg-[#00ff88]/10 border border-[#00ff88]/30 text-green-300 rounded-full px-2 py-0.5 font-bold">🎯 {Number(c.unspentStatPoints || 0)} pts</span>
-                          )}
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => resetAttributes(c)}
-                            disabled={busy === `stats_reset_${String(c.id)}`}
-                            className="text-xs bg-[#ff6b6b] text-white rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
-                            {busy === `stats_reset_${String(c.id)}` ? "..." : "🔄 Resetar Atributos"}
-                          </button>
-                          <button
-                            onClick={() => grantStatPoints(c)}
-                            disabled={busy === `stats_grant_${String(c.id)}`}
-                            className="text-xs bg-[#4ecdc4] text-black rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
-                            {busy === `stats_grant_${String(c.id)}` ? "..." : `➕ ${Math.max(1, Number(c.level) || 1) * 3} pts (3×Lv)`}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditCharId(String(c.id));
-                              setEditFields({});
-                              setMessage(`Personagem ${String(c.name)} selecionado para edição.`);
-                              window.scrollTo({ top: 0, behavior: "smooth" });
-                            }}
-                            className="text-xs bg-[#ffd700] text-black rounded-lg px-3 py-1.5 font-bold hover:opacity-90">
-                            ✏️ Editar
-                          </button>
-                          <button
-                            onClick={() => recalcEquipment(c)}
-                            disabled={busy === `recalc_${String(c.id)}`}
-                            className="text-xs bg-[#7c5cfc] text-white rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
-                            {busy === `recalc_${String(c.id)}` ? "..." : "⚙️ Recalc. Equip."}
-                          </button>
-                        </div>
-                      </div>
                       {/* 👑 VIP — setar / remover */}
                       <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-white/5 pt-2">
                         <span className="text-[11px] text-gray-400">
@@ -2055,7 +2379,8 @@ export default function AdminPage() {
                         </span>
                       </div>
                     </div>
-                  ))}
+                  )}
+                  )}
                   </div>
                 )}
               </div>
@@ -2096,47 +2421,66 @@ export default function AdminPage() {
                   </div>
 
                   {sendKind === "resource" && (
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      <select value={sendResource} onChange={(e) => setSendResource(e.target.value)}
-                        className="bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#ff6b6b] focus:outline-none">
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                         {Object.entries(RESOURCE_META).map(([k, v]) => (
-                          <option key={k} value={k}>{v.icon} {v.label}</option>
+                          <button key={k} onClick={() => setSendResource(k)}
+                            className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
+                              sendResource === k ? "bg-[#ff6b6b]/15 border-[#ff6b6b] text-white" : "bg-[#0a0a12] border-white/10 text-gray-400 hover:border-white/20"
+                            }`}>
+                            <span className="text-2xl">{v.icon}</span>
+                            <span className="text-[10px] font-bold">{v.label}</span>
+                          </button>
                         ))}
-                      </select>
-                      <input type="number" min={1} value={sendQty} onChange={(e) => setSendQty(e.target.value)}
-                        placeholder="Quantidade" className="bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#ff6b6b] focus:outline-none" />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-gray-400">Quantidade:</span>
+                        <input type="number" min={1} value={sendQty} onChange={(e) => setSendQty(e.target.value)}
+                          className="w-40 bg-[#0a0a12] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-[#ff6b6b] focus:outline-none" />
+                      </div>
                     </div>
                   )}
 
                   {sendKind === "item" && (
                     <div className="space-y-3">
+                      {/* Sub-abas por slot */}
+                      <div className="flex gap-1.5 flex-wrap">
+                        <button onClick={() => setItemFilterSlot("")}
+                          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${!itemFilterSlot ? "bg-[#ff6b6b] text-white" : "bg-[#0a0a12] border border-white/10 text-gray-400 hover:text-white hover:border-white/20"}`}>
+                          📦 Todos
+                        </button>
+                        {SLOTS.map((s) => (
+                          <button key={s} onClick={() => setItemFilterSlot(s)}
+                            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${itemFilterSlot === s ? "bg-[#ff6b6b] text-white" : "bg-[#0a0a12] border border-white/10 text-gray-400 hover:text-white hover:border-white/20"}`}>
+                            {SLOT_ICONS[s]} {s}
+                          </button>
+                        ))}
+                      </div>
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-xs text-gray-400">
-                          🧪 {itemCatalog.length} itens disponíveis — clique para selecionar.
-                        </p>
+                        <div className="flex items-center gap-2 flex-1">
+                          <input value={itemFilter}
+                            onChange={(e) => setItemFilter(e.target.value)}
+                            placeholder="🔍 Buscar item..."
+                            className="flex-1 min-w-[180px] bg-[#0a0a12] border border-white/10 rounded-xl px-3 py-2 text-white text-xs focus:border-[#ff6b6b] focus:outline-none" />
+                          <select value={itemFilterRarity} onChange={(e) => setItemFilterRarity(e.target.value)}
+                            className="bg-[#0a0a12] border border-white/10 rounded-xl px-3 py-2 text-white text-xs focus:border-[#ff6b6b] focus:outline-none">
+                            <option value="">Todas raridades</option>
+                            {RARITY_ORDER.map((r) => <option key={r} value={r}>{r.toUpperCase()}</option>)}
+                          </select>
+                        </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-gray-500">Qtd:</span>
                           <input type="number" min={1} value={sendQty} onChange={(e) => setSendQty(e.target.value)}
-                            className="w-24 bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white focus:border-[#ff6b6b] focus:outline-none" />
+                            className="w-20 bg-[#0a0a12] border border-white/10 rounded-xl px-3 py-2 text-white text-xs focus:border-[#ff6b6b] focus:outline-none" />
                         </div>
                       </div>
-                      <div className="flex gap-2 flex-wrap items-center">
-                        <input value={itemFilter}
-                          onChange={(e) => setItemFilter(e.target.value)}
-                          placeholder="🔍 Buscar item..."
-                          className="flex-1 min-w-[180px] bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white text-xs focus:border-[#ff6b6b] focus:outline-none" />
-                        <select value={itemFilterRarity} onChange={(e) => setItemFilterRarity(e.target.value)}
-                          className="bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white text-xs focus:border-[#ff6b6b] focus:outline-none">
-                          <option value="">Todas raridades</option>
-                          {RARITY_ORDER.map((r) => <option key={r} value={r}>{r.toUpperCase()}</option>)}
-                        </select>
-                        <select value={itemFilterSlot} onChange={(e) => setItemFilterSlot(e.target.value)}
-                          className="bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white text-xs focus:border-[#ff6b6b] focus:outline-none">
-                          <option value="">Todos slots</option>
-                          {SLOTS.map((s) => <option key={s} value={s}>{s}</option>)}
-                        </select>
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-[420px] overflow-y-auto pr-1">
+                      <p className="text-[10px] text-gray-500">
+                        🧪 {itemCatalog.filter((it) => {
+                          if (itemFilterSlot && String(it.slot || "weapon") !== itemFilterSlot) return false;
+                          return true;
+                        }).length} itens nesta categoria — clique para selecionar.
+                      </p>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 max-h-[420px] overflow-y-auto pr-1">
                         {itemCatalog.filter((it) => {
                           if (itemFilterRarity && String(it.rarity || "common") !== itemFilterRarity) return false;
                           if (itemFilterSlot && String(it.slot || "weapon") !== itemFilterSlot) return false;
@@ -2151,26 +2495,29 @@ export default function AdminPage() {
                           const isSel = String(it.id) === sendItemId;
                           const rarity = String(it.rarity || "common");
                           const color = RARITY_COLORS[rarity] ?? "#9ca3af";
+                          const slot = String(it.slot || "weapon");
                           return (
                             <button
                               key={id}
                               onClick={() => setSendItemId(isSel ? "" : String(it.id))}
-                              className={`relative flex flex-col items-center gap-1 rounded-xl border bg-[#0a0a12] p-3 text-center transition-all ${
-                                isSel ? "ring-2 ring-[#ff6b6b] border-[#ff6b6b]" : "border-white/10 hover:border-white/30"
+                              className={`relative flex flex-col items-center gap-1 rounded-xl border bg-[#0a0a12] p-2.5 text-center transition-all hover:-translate-y-0.5 ${
+                                isSel ? "ring-2 ring-[#ff6b6b] border-[#ff6b6b] shadow-lg shadow-[#ff6b6b]/20" : "border-white/10 hover:border-white/30"
                               }`}
-                              style={!isSel ? { borderColor: color + "44" } : undefined}
+                              style={!isSel ? { borderColor: color + "33" } : undefined}
                             >
-                              {isSel && <span className="absolute top-1.5 right-1.5 text-[10px] font-black text-[#ff6b6b]">✓</span>}
+                              {isSel && <span className="absolute top-1 right-1 text-[9px] font-black bg-[#ff6b6b] text-white rounded-full w-4 h-4 flex items-center justify-center">✓</span>}
+                              <div className="text-[9px] text-gray-600 mb-0.5">{SLOT_ICONS[slot] || "📦"}</div>
                               {it.image ? (
-                                <img src={String(it.image)} alt="" loading="lazy" decoding="async" className="h-12 w-12 object-contain" />
+                                <img src={String(it.image)} alt="" loading="lazy" decoding="async" className="h-10 w-10 object-contain" />
                               ) : (
-                                <span className="text-2xl">{String(it.icon || "🗡️")}</span>
+                                <span className="text-xl">{String(it.icon || "🗡️")}</span>
                               )}
-                              <span className="w-full truncate text-[11px] font-bold text-white">{t(String(it.nameKey))}</span>
-                              <span className="text-[9px] font-bold uppercase" style={{ color }}>{rarity}</span>
-                              <span className="text-[9px] text-gray-500">
-                                {String(it.slot || "weapon")} • ⚔ {String(it.attack || 0)}
-                              </span>
+                              <span className="w-full truncate text-[10px] font-bold text-white leading-tight">{t(String(it.nameKey))}</span>
+                              <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full" style={{ backgroundColor: color + "22", color }}>{rarity}</span>
+                              <div className="flex gap-1 text-[8px] text-gray-500">
+                                {Number(it.attack || 0) > 0 && <span>⚔️{String(it.attack)}</span>}
+                                {Number(it.defense || 0) > 0 && <span>🛡️{String(it.defense)}</span>}
+                              </div>
                             </button>
                           );
                         })}
@@ -2191,41 +2538,20 @@ export default function AdminPage() {
                   )}
 
                   {sendKind === "skin" && (
-                    <div className="grid sm:grid-cols-2 gap-3">
-                      <div className="space-y-3">
-                        <select value={sendSkinId} onChange={(e) => setSendSkinId(e.target.value)}
-                          className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-3 text-white focus:border-[#ff6b6b] focus:outline-none">
-                          <option value="">— selecionar skin —</option>
-                          {SKIN_CATALOG.map((s) => (
-                            <option key={s.id} value={s.id}>{CLASS_ICONS[s.className]} {t(s.nameKey)}</option>
-                          ))}
-                        </select>
-                        <div className="bg-[#0a0a12] border border-white/10 rounded-xl px-4 py-3 text-xs text-gray-400 flex items-center">
-                          ⚠️ A skin vai ao correio como presente e aparecerá para o jogador resgatar.
-                        </div>
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 max-h-[300px] overflow-y-auto pr-1">
+                        {SKIN_CATALOG.map((s) => (
+                          <button key={s.id} onClick={() => setSendSkinId(sendSkinId === s.id ? "" : s.id)}
+                            className={`relative flex flex-col items-center gap-1 rounded-xl border p-2 text-center transition-all ${
+                              sendSkinId === s.id ? "ring-2 ring-[#ff6b6b] border-[#ff6b6b] bg-[#0a0a12]" : "border-white/10 bg-[#0a0a12] hover:border-white/30"
+                            }`}>
+                            {sendSkinId === s.id && <span className="absolute top-1 right-1 text-[8px] font-black bg-[#ff6b6b] text-white rounded-full w-3.5 h-3.5 flex items-center justify-center">✓</span>}
+                            <img src={s.image} alt="" className="w-10 h-10 object-cover rounded-lg" />
+                            <span className="text-[9px] font-bold text-white truncate w-full">{t(s.nameKey)}</span>
+                            <span className="text-[8px] font-bold uppercase px-1 py-0.5 rounded-full" style={{ background: RARITY_COLORS[s.rarity] + "33", color: RARITY_COLORS[s.rarity] }}>{s.rarity}</span>
+                          </button>
+                        ))}
                       </div>
-                      {(() => {
-                        const previewSkin = SKIN_CATALOG.find((s) => s.id === sendSkinId) || null;
-                        return previewSkin ? (
-                          <div className="bg-[#0a0a12] border border-white/10 rounded-xl overflow-hidden">
-                            <div className="relative">
-                              <img src={previewSkin.image} alt={t(previewSkin.nameKey)} className="w-full h-40 object-cover" />
-                              <span className="absolute top-2 left-2 text-[10px] font-black px-2 py-0.5 rounded-full text-black"
-                                style={{ background: RARITY_COLORS[previewSkin.rarity] }}>
-                                {previewSkin.rarity.toUpperCase()}
-                              </span>
-                            </div>
-                            <div className="p-3">
-                              <div className="font-bold text-white text-sm">{CLASS_ICONS[previewSkin.className]} {t(previewSkin.nameKey)}</div>
-                              <div className="text-[11px] text-gray-400">Classe: {t(`class.${previewSkin.className}`)}</div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="h-40 bg-[#0a0a12] border border-dashed border-white/15 rounded-xl flex items-center justify-center text-gray-600 text-sm px-4 text-center">
-                            👀 Selecione uma skin para ver a pré-visualização
-                          </div>
-                        );
-                      })()}
                     </div>
                   )}
 
@@ -2237,30 +2563,116 @@ export default function AdminPage() {
               </div>
             )}
             {tab === "guilds" && (
-              <div>
-                {loading ? <div className="text-center py-10 text-gray-400">Carregando...</div> : (
-                  <div className="space-y-2">
-                    {Array.isArray((data as { guilds?: unknown[] }).guilds) && ((data as { guilds: Record<string, unknown>[] }).guilds).map((g) => (
-                      <div key={String(g.id)} className="bg-[#1a1a2e] rounded-xl p-3 border border-white/10 flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-3">
-                          {g.logo ? (
-                            <img src={String(g.logo)} alt="" className="w-10 h-10 rounded-xl border border-white/10 object-cover" />
-                          ) : (
-                            <span className="text-2xl">{String(g.icon || "🏰")}</span>
-                          )}
-                          <div>
-                            <div className="font-bold text-white">{String(g.name)}</div>
-                            <div className="text-xs text-gray-400">
-                              Líder: {String(g.leaderId || "—")} • Membros: {Array.isArray(g.members) ? g.members.length : 0}
+              <div className="space-y-4">
+                {loading ? (
+                  <div className="text-center py-16">
+                    <div className="inline-block w-8 h-8 border-2 border-[#3b82f6] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-gray-500 text-sm mt-3">Carregando guildas...</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {Array.isArray((data as { guilds?: unknown[] }).guilds) && ((data as { guilds: Record<string, unknown>[] }).guilds).map((g) => {
+                      const members = (Array.isArray(g.members) ? g.members : []) as Record<string, unknown>[];
+                      const memberCount = members.length;
+                      const leader = members.find((m: any) => m.rank === "leader");
+                      const leaderName = leader ? String(leader.name || leader.characterId || "—") : String(g.leaderId || "—");
+                      return (
+                      <div key={String(g.id)} className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#1a1a2e] hover:shadow-xl hover:shadow-black/30 transition-all">
+                        <div className="h-1 bg-gradient-to-r from-[#3b82f6] to-[#60a5fa]" />
+                        <div className="p-5">
+                          {/* Header: Logo + Nome */}
+                          <div className="flex items-center gap-4 mb-4">
+                            {g.logo ? (
+                              <img src={String(g.logo)} alt="" className="w-14 h-14 rounded-xl border border-white/10 object-cover" />
+                            ) : (
+                              <div className="w-14 h-14 rounded-xl bg-[#3b82f6]/15 border border-[#3b82f6]/30 flex items-center justify-center text-3xl">
+                                {String(g.icon || "🏰")}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-base font-black text-white truncate">{String(g.name)}</h3>
+                              <div className="flex items-center gap-2 text-[11px] text-gray-500">
+                                <span className="font-mono">{String(g.id).slice(0, 16)}…</span>
+                              </div>
                             </div>
-                            <div className="text-[11px] text-gray-500 font-mono">{String(g.id)}</div>
+                          </div>
+
+                          {/* Info: Líder + Membros */}
+                          <div className="grid grid-cols-2 gap-2 mb-4">
+                            <div className="bg-[#0a0a12] rounded-xl px-3 py-2.5 border border-white/5">
+                              <div className="text-[9px] text-gray-600 uppercase tracking-wider mb-0.5">👑 Líder</div>
+                              <div className="text-xs text-white font-bold truncate">{leaderName}</div>
+                            </div>
+                            <div className="bg-[#0a0a12] rounded-xl px-3 py-2.5 border border-white/5">
+                              <div className="text-[9px] text-gray-600 uppercase tracking-wider mb-0.5">👥 Membros</div>
+                              <div className="text-xs font-black text-[#3b82f6]">{memberCount}</div>
+                            </div>
+                          </div>
+
+                          {/* Lista de membros */}
+                          {members.length > 0 && (
+                            <div className="mb-4">
+                              <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-2">Membros da Guilda</div>
+                              <div className="space-y-1 max-h-32 overflow-y-auto pr-1">
+                                {members.slice(0, 10).map((m: any, i: number) => (
+                                  <div key={i} className="flex items-center gap-2 bg-[#0a0a12] rounded-lg px-2.5 py-1.5 border border-white/5">
+                                    <span className="text-xs">{m.rank === "leader" ? "👑" : m.rank === "officer" ? "⭐" : "👤"}</span>
+                                    <span className="text-[11px] text-white font-bold truncate flex-1">{String(m.name || m.characterId || "?")}</span>
+                                    {m.level && <span className="text-[9px] text-gray-500">Lv.{String(m.level)}</span>}
+                                    {m.rank && m.rank !== "member" && (
+                                      <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-[#3b82f6]/15 border border-[#3b82f6]/30 text-[#60a5fa] font-bold uppercase">{String(m.rank)}</span>
+                                    )}
+                                  </div>
+                                ))}
+                                {members.length > 10 && (
+                                  <div className="text-[10px] text-gray-600 text-center">+{members.length - 10} membros mais...</div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Botões de ação */}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={async () => {
+                                if (!window.confirm(`Excluir a guilda "${String(g.name)}"? Todos os membros serão removidos da guilda.`)) return;
+                                setBusy(`guild_del_${String(g.id)}`);
+                                const d = await callAdmin({ action: "delete_guild", id: String(g.id) });
+                                setMessage(d.success ? d.message : `❌ ${d.error || "Erro"}`);
+                                setBusy(null);
+                                loadGuilds();
+                              }}
+                              disabled={busy === `guild_del_${String(g.id)}`}
+                              className="flex-1 text-xs px-3 py-2.5 rounded-xl font-bold bg-[#ff6b6b] hover:bg-[#ff5252] text-white disabled:opacity-40 transition-all">
+                              {busy === `guild_del_${String(g.id)}` ? "..." : "🗑️ Excluir Guilda"}
+                            </button>
+                            <button
+                              onClick={async () => {
+                                setBusy(`guild_chat_${String(g.id)}`);
+                                const d = await callAdmin({ action: "guild_chat", id: String(g.id) });
+                                if (d.messages && Array.isArray(d.messages)) {
+                                  const chatText = d.messages.map((m: any) => `${m.characterName || m.characterId || "?"}: ${m.text || ""}`).join("\n");
+                                  window.alert(`Chat da guilda "${String(g.name)}":\n\n${chatText || "(vazio)"}`);
+                                } else {
+                                  setMessage(`❌ ${d.error || "Erro ao carregar chat"}`);
+                                }
+                                setBusy(null);
+                              }}
+                              disabled={busy === `guild_chat_${String(g.id)}`}
+                              className="flex-1 text-xs px-3 py-2.5 rounded-xl font-bold bg-[#3b82f6] hover:bg-[#2563eb] text-white disabled:opacity-40 transition-all">
+                              {busy === `guild_chat_${String(g.id)}` ? "..." : "💬 Ver Chat"}
+                            </button>
                           </div>
                         </div>
                       </div>
-                    ))}
-                    {Array.isArray((data as { guilds?: unknown[] }).guilds) && (data as { guilds: unknown[] }).guilds.length === 0 && (
-                      <div className="text-center py-10 text-gray-500">Nenhuma guilda criada.</div>
-                    )}
+                      );
+                    })}
+                  </div>
+                )}
+                {Array.isArray((data as { guilds?: unknown[] }).guilds) && (data as { guilds: unknown[] }).guilds.length === 0 && !loading && (
+                  <div className="text-center py-16">
+                    <div className="text-5xl mb-3">🏰</div>
+                    <p className="text-gray-500 text-sm">Nenhuma guilda criada.</p>
                   </div>
                 )}
               </div>
@@ -2473,58 +2885,130 @@ export default function AdminPage() {
                   </div>
                 </div>
 
-                {/* Limites da torre & balanceamento */}
-                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10 md:col-span-2">
-                  <h3 className="text-sm font-bold text-[#7c5cfc] mb-1">🗼 Limites da Torre & Balanceamento</h3>
+              </div>
+            )}
+            {tab === "balance" && (
+              <div className="space-y-4">
+                {/* Header */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-[#7c5cfc]/30">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-[#7c5cfc]/20 flex items-center justify-center text-xl">⚙️</div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white">Limites & Balanceamento</h3>
+                      <p className="text-[11px] text-gray-400">Configure multiplicadores, limites e taxas do jogo</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Limites de Torre e Nível */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <h3 className="text-sm font-bold text-[#7c5cfc] mb-1">🗼 Limites da Torre & Nível</h3>
                   <p className="text-xs text-gray-400 mb-4">
                     Controle o progresso da torre e o ganho de nível. <b className="text-gray-300">0 = sem limite próprio</b> (usa o padrão do jogo).
                   </p>
                   <div className="grid sm:grid-cols-3 gap-3 mb-3">
                     <div>
                       <label className="block text-xs text-gray-500 mb-1">🏯 Limite de andar da torre</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={limitMaxTowerFloor}
-                        onChange={(e) => setLimitMaxTowerFloor(e.target.value)}
-                        placeholder="0 = sem limite"
-                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#7c5cfc] focus:outline-none"
-                      />
+                      <input type="number" min={0} value={limitMaxTowerFloor}
+                        onChange={(e) => setLimitMaxTowerFloor(e.target.value)} placeholder="0 = sem limite"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#7c5cfc] focus:outline-none" />
                       <p className="text-[10px] text-gray-500 mt-1">O jogador não passa deste andar.</p>
                     </div>
                     <div>
                       <label className="block text-xs text-gray-500 mb-1">⬆️ Limite de nível</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={limitMaxLevel}
-                        onChange={(e) => setLimitMaxLevel(e.target.value)}
-                        placeholder={`0 = ${MAX_LEVEL}`}
-                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#7c5cfc] focus:outline-none"
-                      />
+                      <input type="number" min={0} value={limitMaxLevel}
+                        onChange={(e) => setLimitMaxLevel(e.target.value)} placeholder={`0 = ${MAX_LEVEL}`}
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#7c5cfc] focus:outline-none" />
                       <p className="text-[10px] text-gray-500 mt-1">Nenhuma fonte de XP passa deste nível.</p>
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-500 mb-1">⚡ XP da torre (multiplicador)</label>
-                      <input
-                        type="number"
-                        min={0.01}
-                        max={2}
-                        step={0.05}
-                        value={limitTowerXpMult}
-                        onChange={(e) => setLimitTowerXpMult(e.target.value)}
-                        placeholder="1 = normal"
-                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#7c5cfc] focus:outline-none"
-                      />
-                      <p className="text-[10px] text-gray-500 mt-1">Ex.: 0.3 = só 30% do XP por andar (torre menos apelona).</p>
+                      <label className="block text-xs text-gray-500 mb-1">⚡ Energia infinita (toggle rápido)</label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <button onClick={toggleInfiniteEnergy} disabled={busy === "infinite_energy"}
+                          className={`relative w-14 h-7 rounded-full transition-colors shrink-0 ${infiniteEnergy ? "bg-[#ffd700]" : "bg-gray-700"} ${busy === "infinite_energy" ? "opacity-50" : ""}`}>
+                          <span className={`absolute top-1 left-1 w-5 h-5 rounded-full bg-white shadow transition-transform ${infiniteEnergy ? "translate-x-7" : ""}`} />
+                        </button>
+                        <span className={`text-xs font-bold ${infiniteEnergy ? "text-[#ffd700]" : "text-gray-600"}`}>{infiniteEnergy ? "ATIVADA" : "OFF"}</span>
+                      </div>
                     </div>
                   </div>
-                  <button
-                    onClick={saveBalanceLimits}
-                    disabled={busy === "balance_limits"}
-                    className="bg-[#7c5cfc] hover:bg-[#6b4fd8] text-white rounded-xl px-4 py-2.5 font-bold text-sm disabled:opacity-40"
-                  >
-                    {busy === "balance_limits" ? "Salvando..." : "💾 Salvar limites e balanceamento"}
+                </div>
+
+                {/* Multiplicadores */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <h3 className="text-sm font-bold text-[#ffd700] mb-1">📈 Multiplicadores</h3>
+                  <p className="text-xs text-gray-400 mb-4">
+                    Ajuste os multiplicadores de XP, ouro e recompensas. <b className="text-gray-300">1 = normal</b>.
+                  </p>
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">🗼 XP da Torre</label>
+                      <input type="number" min={0.01} max={5} step={0.05} value={limitTowerXpMult}
+                        onChange={(e) => setLimitTowerXpMult(e.target.value)} placeholder="1 = normal"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#ffd700] focus:outline-none" />
+                      <p className="text-[10px] text-gray-500 mt-1">0.3 = 30% XP na torre</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">🗺️ XP das Regiões</label>
+                      <input type="number" min={0.01} max={10} step={0.05} value={limitRegionXpMult}
+                        onChange={(e) => setLimitRegionXpMult(e.target.value)} placeholder="1 = normal"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#ffd700] focus:outline-none" />
+                      <p className="text-[10px] text-gray-500 mt-1">Multiplicador XP em batalhas</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">💰 Ouro Global</label>
+                      <input type="number" min={0.01} max={10} step={0.05} value={limitGoldMult}
+                        onChange={(e) => setLimitGoldMult(e.target.value)} placeholder="1 = normal"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#ffd700] focus:outline-none" />
+                      <p className="text-[10px] text-gray-500 mt-1">Multiplicador de ouro em todas as fontes</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">📜 Ouro em Missões</label>
+                      <input type="number" min={0.01} max={10} step={0.05} value={limitMissionGoldMult}
+                        onChange={(e) => setLimitMissionGoldMult(e.target.value)} placeholder="1 = normal"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#ffd700] focus:outline-none" />
+                      <p className="text-[10px] text-gray-500 mt-1">Multiplicador de ouro em missões</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Energia e Taxas */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <h3 className="text-sm font-bold text-[#22c55e] mb-1">⚡ Energia & Taxas de Combate</h3>
+                  <p className="text-xs text-gray-400 mb-4">
+                    Configure a regeneração de energia e taxas de combate.
+                  </p>
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">⏱️ Regeneração de energia (min)</label>
+                      <input type="number" min={1} max={60} value={limitEnergyRegenMin}
+                        onChange={(e) => setLimitEnergyRegenMin(e.target.value)} placeholder="5"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#22c55e] focus:outline-none" />
+                      <p className="text-[10px] text-gray-500 mt-1">Minutos para recuperar 1 energia</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">💥 Taxa de crítico (%)</label>
+                      <input type="number" min={0} max={100} value={limitCritRate}
+                        onChange={(e) => setLimitCritRate(e.target.value)} placeholder="10"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#22c55e] focus:outline-none" />
+                      <p className="text-[10px] text-gray-500 mt-1">Chance base de crítico</p>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">🌀 Taxa de esquiva (%)</label>
+                      <input type="number" min={0} max={100} value={limitDodgeRate}
+                        onChange={(e) => setLimitDodgeRate(e.target.value)} placeholder="5"
+                        className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:border-[#22c55e] focus:outline-none" />
+                      <p className="text-[10px] text-gray-500 mt-1">Chance base de esquiva</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Botão salvar */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-4 border border-white/10 flex items-center justify-between">
+                  <p className="text-xs text-gray-400">Todos os limites e multiplicadores são salvos juntos.</p>
+                  <button onClick={saveBalanceLimits} disabled={busy === "balance_limits"}
+                    className="bg-[#7c5cfc] hover:bg-[#6b4fd8] text-white rounded-xl px-6 py-2.5 font-bold text-sm disabled:opacity-40">
+                    {busy === "balance_limits" ? "Salvando..." : "💾 Salvar tudo"}
                   </button>
                 </div>
               </div>
@@ -2628,8 +3112,10 @@ export default function AdminPage() {
                         const tpl = itemCatalog.find((x) => Number(x.id) === it.templateId) as Record<string, unknown> | undefined;
                         const rarity = String(tpl?.rarity || "common");
                         const color = RARITY_COLORS[rarity] ?? "#9ca3af";
+                        const slot = String(tpl?.slot || "weapon");
                         return (
                           <div key={it.templateId} className="flex flex-wrap items-center gap-3 bg-[#0a0a12] rounded-xl border border-white/10 p-3">
+                            <span className="text-lg">{SLOT_ICONS[slot] || "📦"}</span>
                             {tpl?.image ? (
                               <img src={String(tpl.image)} alt="" className="w-10 h-10 object-contain" />
                             ) : (
@@ -2671,18 +3157,40 @@ export default function AdminPage() {
                     </div>
                   )}
 
-                  {/* Seletor de itens do catálogo */}
-                  <input
-                    value={ghostItemSearch}
-                    onChange={(e) => setGhostItemSearch(e.target.value)}
-                    placeholder="🔍 Buscar item no catálogo para adicionar..."
-                    className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:border-[#7c5cfc] focus:outline-none mb-3"
-                  />
+                  {/* Sub-abas por slot */}
+                  <div className="flex gap-1.5 flex-wrap mb-3">
+                    <button onClick={() => setGhostSlotFilter("")}
+                      className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${!ghostSlotFilter ? "bg-[#7c5cfc] text-white" : "bg-[#0a0a12] border border-white/10 text-gray-400 hover:text-white hover:border-white/20"}`}>
+                      📦 Todos
+                    </button>
+                    {SLOTS.map((s) => (
+                      <button key={s} onClick={() => setGhostSlotFilter(s)}
+                        className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${ghostSlotFilter === s ? "bg-[#7c5cfc] text-white" : "bg-[#0a0a12] border border-white/10 text-gray-400 hover:text-white hover:border-white/20"}`}>
+                        {SLOT_ICONS[s]} {s}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Busca + filtro */}
+                  <div className="flex gap-2 items-center mb-3">
+                    <input
+                      value={ghostItemSearch}
+                      onChange={(e) => setGhostItemSearch(e.target.value)}
+                      placeholder="🔍 Buscar item no catálogo para adicionar..."
+                      className="flex-1 bg-[#0a0a12] border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:border-[#7c5cfc] focus:outline-none"
+                    />
+                    <span className="text-[10px] text-gray-500 bg-[#0a0a12] px-3 py-2 rounded-xl border border-white/10">
+                      {itemCatalog.filter((it) => {
+                        if (ghostSlotFilter && String(it.slot || "weapon") !== ghostSlotFilter) return false;
+                        return true;
+                      }).length} itens
+                    </span>
+                  </div>
                   {loading && itemCatalog.length === 0 ? (
                     <div className="text-center text-gray-500 text-sm py-8">Carregando catálogo...</div>
                   ) : (
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 max-h-[360px] overflow-y-auto pr-1">
                       {itemCatalog.filter((it) => {
+                        if (ghostSlotFilter && String(it.slot || "weapon") !== ghostSlotFilter) return false;
                         if (ghostItemSearch.trim()) {
                           const q = ghostItemSearch.trim().toLowerCase();
                           const name = t(String(it.nameKey)).toLowerCase();
@@ -2694,25 +3202,27 @@ export default function AdminPage() {
                         const isSel = ghostItems.some((x) => x.templateId === id);
                         const rarity = String(it.rarity || "common");
                         const color = RARITY_COLORS[rarity] ?? "#9ca3af";
+                        const slot = String(it.slot || "weapon");
                         return (
                           <button
                             key={id}
                             onClick={() => addGhostItem(id)}
                             disabled={isSel}
-                            className={`relative flex flex-col items-center gap-1 rounded-xl border bg-[#0a0a12] p-2.5 text-center transition-all ${
+                            className={`relative flex flex-col items-center gap-1 rounded-xl border bg-[#0a0a12] p-2.5 text-center transition-all hover:-translate-y-0.5 ${
                               isSel ? "opacity-40 border-green-500/40" : "border-white/10 hover:border-[#7c5cfc]/60 hover:bg-[#7c5cfc]/5"
                             }`}
                             style={{ borderColor: isSel ? undefined : color + "33" }}
                             title={isSel ? "Já está na loja" : "Adicionar à loja"}
                           >
-                            {isSel && <span className="absolute top-1 right-1 text-[10px] font-black text-green-400">✓</span>}
+                            {isSel && <span className="absolute top-1 right-1 text-[9px] font-black bg-green-500 text-white rounded-full w-4 h-4 flex items-center justify-center">✓</span>}
+                            <div className="text-[9px] text-gray-600">{SLOT_ICONS[slot] || "📦"}</div>
                             {it.image ? (
-                              <img src={String(it.image)} alt="" loading="lazy" decoding="async" className="h-11 w-11 object-contain" />
+                              <img src={String(it.image)} alt="" loading="lazy" decoding="async" className="h-10 w-10 object-contain" />
                             ) : (
-                              <span className="text-2xl">{String(it.icon || "🗡️")}</span>
+                              <span className="text-xl">{String(it.icon || "🗡️")}</span>
                             )}
                             <span className="w-full truncate text-[10px] font-bold text-white">{t(String(it.nameKey))}</span>
-                            <span className="text-[9px] font-bold uppercase" style={{ color }}>{rarity}</span>
+                            <span className="text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full" style={{ backgroundColor: color + "22", color }}>{rarity}</span>
                           </button>
                         );
                       })}
@@ -2816,7 +3326,24 @@ export default function AdminPage() {
 
                 {/* Boss + recompensas */}
                 <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
-                  <h3 className="text-sm font-bold text-white mb-3">👹 O Boss</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm font-bold text-white">👹 O Boss</h3>
+                    <button onClick={autoBalanceWorldBoss} disabled={busy === "wb_auto"}
+                      className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white rounded-xl px-4 py-2 text-xs font-bold disabled:opacity-50 transition">
+                      {busy === "wb_auto" ? (<>🤖 Calculando...</>) : (<>🤖 Auto-balance IA</>)}
+                    </button>
+                  </div>
+                  {wbAutoStats && (
+                    <div className="mb-4 bg-gradient-to-r from-purple-900/30 to-blue-900/30 border border-purple-500/30 rounded-xl p-3">
+                      <div className="flex flex-wrap gap-3 text-[11px]">
+                        <span className="text-purple-300">📊 <b>{String((wbAutoStats as any).stats?.totalCharacters || 0)}</b> personagens</span>
+                        <span className="text-blue-300">⚡ Poder médio: <b>{Number((wbAutoStats as any).stats?.avgPower || 0).toLocaleString()}</b></span>
+                        <span className="text-yellow-300">👑 Top20: <b>{Number((wbAutoStats as any).stats?.avgTop20Power || 0).toLocaleString()}</b></span>
+                        <span className="text-red-300">🎯 Máx: <b>{Number((wbAutoStats as any).stats?.maxPower || 0).toLocaleString()}</b></span>
+                        <span className="text-green-300">📈 Média lvl: <b>{String((wbAutoStats as any).stats?.avgLevel || 0)}</b></span>
+                      </div>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                     <div className="md:col-span-2">
                       <label className="block text-xs text-gray-500 mb-1">Tipo do boss (visual da torre)</label>
@@ -2898,6 +3425,34 @@ export default function AdminPage() {
                           >
                             🗑️ Remover
                           </button>
+                        )}
+                      </div>
+                      {/* Upload múltiplas fotos (carrossel) */}
+                      <div className="mt-3 border-t border-gray-800 pt-3">
+                        <p className="text-[11px] text-gray-400 mb-2">🎠 <b>Fotos do carrossel</b> — múltiplas imagens que ficam aparecendo durante o evento:</p>
+                        <div className="flex flex-wrap gap-2 items-center">
+                          <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple className="hidden" id="wb-multi-upload"
+                            onChange={(e) => { if (e.target.files) uploadWorldBossImageMulti(e.target.files); e.target.value = ''; }} />
+                          <label htmlFor="wb-multi-upload"
+                            className="cursor-pointer bg-[#ef4444]/80 hover:bg-[#ef4444] text-white rounded-xl px-4 py-2 text-xs font-bold transition">
+                            📤 Enviar fotos (múltiplas)
+                          </label>
+                          <span className="text-[10px] text-gray-500">Selecionar várias imagens de uma vez</span>
+                        </div>
+                        {wbBossImages.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {wbBossImages.map((url, idx) => (
+                              <div key={idx} className="relative group">
+                                <img src={url} alt={`Boss ${idx + 1}`} className="w-16 h-16 rounded-lg object-cover border border-white/10" />
+                                <button onClick={() => {
+                                  const newUrls = wbBossImages.filter((_, i) => i !== idx);
+                                  setWbBossImages(newUrls);
+                                  if (wbBossImage === url && newUrls.length > 0) setWbBossImage(newUrls[0]);
+                                }} className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[8px] opacity-0 group-hover:opacity-100 transition">✕</button>
+                                {idx === 0 && <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-center text-white rounded-b-lg"> Principal</span>}
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -3363,6 +3918,59 @@ export default function AdminPage() {
                         className="w-full bg-[#0a0a12] border border-gray-700 rounded-xl px-3 py-2 text-white focus:border-[#a855f7] focus:outline-none" />
                     </div>
                   </div>
+                  {/* Itens no código */}
+                  <div className="mb-4">
+                    <label className="block text-xs text-gray-500 mb-2">🎁 Itens (opcional)</label>
+                    <div className="flex gap-1.5 flex-wrap mb-2">
+                      <button onClick={() => setCodeItemSlot("")} className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${!codeItemSlot ? "bg-[#a855f7] text-white" : "bg-[#0a0a12] border border-white/10 text-gray-400 hover:text-white"}`}>📦 Todos</button>
+                      {SLOTS.map((s) => (
+                        <button key={s} onClick={() => setCodeItemSlot(s)} className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${codeItemSlot === s ? "bg-[#a855f7] text-white" : "bg-[#0a0a12] border border-white/10 text-gray-400 hover:text-white"}`}>{SLOT_ICONS[s]} {s}</button>
+                      ))}
+                    </div>
+                    <input value={codeItemSearch} onChange={(e) => setCodeItemSearch(e.target.value)} placeholder="🔍 Buscar item..." className="w-full bg-[#0a0a12] border border-white/10 rounded-xl px-3 py-2 text-white text-xs focus:border-[#a855f7] focus:outline-none mb-2" />
+                    {codeItems.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-2">
+                        {codeItems.map((ci) => {
+                          const tpl = itemCatalog.find((x) => Number(x.id) === ci.templateId);
+                          return (
+                            <span key={ci.templateId} className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[#a855f7]/10 border border-[#a855f7]/30 text-[10px] text-purple-200">
+                              {t(String(tpl?.nameKey || `#${ci.templateId}`))} x{ci.quantity}
+                              <button onClick={() => setCodeItems((p) => p.filter((x) => x.templateId !== ci.templateId))} className="text-red-400 hover:text-red-300">✕</button>
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-1.5 max-h-[200px] overflow-y-auto pr-1">
+                      {itemCatalog.filter((it) => {
+                        if (codeItemSlot && String(it.slot || "weapon") !== codeItemSlot) return false;
+                        if (codeItemSearch.trim()) {
+                          const q = codeItemSearch.trim().toLowerCase();
+                          if (!t(String(it.nameKey)).toLowerCase().includes(q)) return false;
+                        }
+                        return true;
+                      }).slice(0, 30).map((it) => {
+                        const id = Number(it.id);
+                        const existing = codeItems.find((x) => x.templateId === id);
+                        const rarity = String(it.rarity || "common");
+                        const color = RARITY_COLORS[rarity] ?? "#9ca3af";
+                        return (
+                          <button key={id} onClick={() => {
+                            if (existing) {
+                              setCodeItems((p) => p.map((x) => x.templateId === id ? { ...x, quantity: x.quantity + 1 } : x));
+                            } else {
+                              setCodeItems((p) => [...p, { templateId: id, quantity: 1 }]);
+                            }
+                          }} className={`relative flex flex-col items-center gap-0.5 rounded-lg border p-1.5 text-center transition-all ${existing ? "ring-1 ring-[#a855f7] border-[#a855f7] bg-[#a855f7]/10" : "border-white/10 bg-[#0a0a12] hover:border-white/30"}`}
+                            style={!existing ? { borderColor: color + "33" } : undefined}>
+                            {existing && <span className="absolute top-0.5 right-0.5 text-[8px] font-black bg-[#a855f7] text-white rounded-full w-3.5 h-3.5 flex items-center justify-center">{existing.quantity}</span>}
+                            {it.image ? <img src={String(it.image)} alt="" className="h-7 w-7 object-contain" /> : <span className="text-sm">{String(it.icon || "🗡️")}</span>}
+                            <span className="w-full truncate text-[8px] font-bold text-white">{t(String(it.nameKey))}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <div className="mb-4">
                     <label className="block text-xs text-gray-500 mb-1">Rótulo / mensagem</label>
                     <input value={codeLabel} onChange={(e) => setCodeLabel(e.target.value)}
@@ -3400,6 +4008,7 @@ export default function AdminPage() {
                               {Number(c.gold) > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#ffd700]/10 border border-[#ffd700]/40 text-[#ffd700]">💰 {Number(c.gold).toLocaleString()}</span>}
                               {Number(c.diamonds) > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#a855f7]/10 border border-[#a855f7]/40 text-purple-300">💎 {Number(c.diamonds)}</span>}
                               {Number(c.crystals) > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#4ecdc4]/10 border border-[#4ecdc4]/40 text-[#4ecdc4]">🔮 {Number(c.crystals)}</span>}
+                              {Array.isArray(c.items) && c.items.length > 0 && <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#a855f7]/10 border border-[#a855f7]/40 text-purple-300">🎁 {c.items.length} item(ns)</span>}
                             </div>
                             <p className="text-[11px] text-gray-400 mb-1.5">💬 {String(c.label || "Boost 2x")}</p>
                             <p className="text-[11px] text-gray-500 mb-2">
@@ -3733,18 +4342,24 @@ export default function AdminPage() {
                               ) : (
                                 <span className="text-[10px] text-gray-600">sem screenshot</span>
                               )}
-                              {status === "pending" && (
-                                <div className="flex gap-2 ml-auto">
-                                  <button onClick={() => decidePurchase(p, true)} disabled={busy === `pix_${String(p.id)}`}
-                                    className="text-[11px] bg-green-600 hover:bg-green-500 text-white rounded-lg px-3 py-1.5 font-bold disabled:opacity-40">
-                                    {busy === `pix_${String(p.id)}` ? "..." : "✅ Aprovar"}
-                                  </button>
-                                  <button onClick={() => decidePurchase(p, false)} disabled={busy === `pix_${String(p.id)}`}
-                                    className="text-[11px] bg-red-600/80 hover:bg-red-600 text-white rounded-lg px-3 py-1.5 font-bold disabled:opacity-40">
-                                    ❌ Rejeitar
-                                  </button>
-                                </div>
-                              )}
+                              <div className="flex gap-2 ml-auto">
+                                {status === "pending" && (
+                                  <>
+                                    <button onClick={() => decidePurchase(p, true)} disabled={busy === `pix_${String(p.id)}`}
+                                      className="text-[11px] bg-green-600 hover:bg-green-500 text-white rounded-lg px-3 py-1.5 font-bold disabled:opacity-40">
+                                      {busy === `pix_${String(p.id)}` ? "..." : "✅ Aprovar"}
+                                    </button>
+                                    <button onClick={() => decidePurchase(p, false)} disabled={busy === `pix_${String(p.id)}`}
+                                      className="text-[11px] bg-red-600/80 hover:bg-red-600 text-white rounded-lg px-3 py-1.5 font-bold disabled:opacity-40">
+                                      ❌ Rejeitar
+                                    </button>
+                                  </>
+                                )}
+                                <button onClick={() => deletePurchase(String(p.id))} disabled={busy === `pix_del_${String(p.id)}`}
+                                  className="text-[11px] bg-red-900/60 hover:bg-red-800 text-red-300 border border-red-500/30 rounded-lg px-3 py-1.5 font-bold disabled:opacity-40">
+                                  🗑️ Excluir
+                                </button>
+                              </div>
                             </div>
                           </div>
                         );
@@ -3792,6 +4407,10 @@ export default function AdminPage() {
                                   ✅ Enviado {e.refundedAt ? new Date(String(e.refundedAt)).toLocaleDateString("pt-BR") : ""} {e.refundedToName ? `para ${String(e.refundedToName)}` : ""}
                                 </span>
                               )}
+                              <button onClick={() => deleteLedgerEntry(String(e.id))} disabled={busy === `ledger_del_${String(e.id)}`}
+                                className="text-[10px] bg-red-900/60 hover:bg-red-800 text-red-300 border border-red-500/30 rounded-full px-2 py-0.5 font-bold disabled:opacity-40 ml-1">
+                                🗑️ Excluir
+                              </button>
                             </div>
                             {!refunded && (
                               <div className="mt-2 flex flex-wrap items-center gap-2">

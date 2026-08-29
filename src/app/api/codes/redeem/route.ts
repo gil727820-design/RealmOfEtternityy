@@ -56,9 +56,10 @@ export async function POST(req: NextRequest) {
     const goldReward = Math.max(0, Math.floor(Number(data.gold) || 0));
     const diamondsReward = Math.max(0, Math.floor(Number(data.diamonds) || 0));
     const crystalsReward = Math.max(0, Math.floor(Number(data.crystals) || 0));
+    const codeItems = Array.isArray(data.items) ? data.items : [];
     const tierDef = vipTierById(vipTierId);
     const hasVip = !!tierDef && vipDays > 0;
-    if (xpHours <= 0 && energyHours <= 0 && !hasVip && goldReward <= 0 && diamondsReward <= 0 && crystalsReward <= 0) {
+    if (xpHours <= 0 && energyHours <= 0 && !hasVip && goldReward <= 0 && diamondsReward <= 0 && crystalsReward <= 0 && codeItems.length === 0) {
       return NextResponse.json({ error: "Este código não possui recompensas." }, { status: 400 });
     }
 
@@ -94,6 +95,23 @@ export async function POST(req: NextRequest) {
 
     const updated = await jsonDb.updateCharacter(String(characterId), { ...patch, boosts });
 
+    // Itens do código → insere no inventário do personagem.
+    const grantedItemNames: string[] = [];
+    for (const ci of codeItems) {
+      const qty = Math.max(1, Math.floor(Number(ci.quantity) || 1));
+      for (let i = 0; i < qty; i++) {
+        try {
+          await jsonDb.insertInventoryItem({
+            characterId: String(characterId),
+            templateId: ci.templateId,
+            level: 1,
+            equipped: false,
+          });
+        } catch { /* ignora item inválido */ }
+      }
+      grantedItemNames.push(`Item #${ci.templateId} x${qty}`);
+    }
+
     // Marca como resgatado por este jogador.
     await jsonDb.updateCode(rec.id, { redeemedBy: [...redeemedBy, String(characterId)] });
 
@@ -104,6 +122,7 @@ export async function POST(req: NextRequest) {
     if (goldReward > 0) granted.push(`${goldReward.toLocaleString()} de ouro`);
     if (diamondsReward > 0) granted.push(`${diamondsReward} diamantes`);
     if (crystalsReward > 0) granted.push(`${crystalsReward} cristais`);
+    if (grantedItemNames.length > 0) granted.push(grantedItemNames.join(", "));
 
     return NextResponse.json({
       success: true,

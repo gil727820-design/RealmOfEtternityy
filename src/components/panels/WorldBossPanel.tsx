@@ -47,6 +47,7 @@ interface WorldBossData {
   regenSec: number;
   respawnSec?: number;
   bossImage?: string;
+  bossImages?: string[];
   shieldConfig?: { enabled: boolean; thresholds: number[]; durationSec: number; breakCost: { currency: "gold" | "diamonds"; amount: number } };
   spawnMobs?: { enabled: boolean; kinds: string[]; hp: number; count: number; reward: { gold: number; xp: number } };
   event: {
@@ -150,10 +151,22 @@ export default function WorldBossPanel() {
     };
   }, []);
 
+  // Carrossel de fotos do boss
+  const [carouselIdx, setCarouselIdx] = useState(0);
+  const bossImages = Array.isArray(data?.bossImages) && data.bossImages.length > 0 ? data.bossImages : [];
+  const hasCarousel = bossImages.length > 1;
+  useEffect(() => {
+    if (!hasCarousel) return;
+    const interval = setInterval(() => {
+      setCarouselIdx((prev) => (prev + 1) % bossImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [hasCarousel, bossImages.length]);
+
   if (!character) return null;
 
   const bossKind = (data?.boss?.kind || "void_wyrm") as TowerBossKind;
-  const bossImage = data?.bossImage || towerMonsterImage(bossKind);
+  const bossImage = hasCarousel ? bossImages[carouselIdx] : (data?.bossImage || towerMonsterImage(bossKind));
   const open = !!data?.open;
   const event = data?.event ?? null;
   const bossAlive = event ? event.status === "open" && event.bossHp > 0 : true;
@@ -383,12 +396,22 @@ export default function WorldBossPanel() {
           <div className="game-card relative overflow-hidden border-red-800 bg-gradient-to-b from-gray-900/80 to-black/70 p-6">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(239,68,68,0.12),transparent_70%)]" />
             <div className="relative flex flex-col sm:flex-row items-center gap-6">
-              <img
-                src={bossImage}
-                alt={t(`monster.${bossKind}`, locale)}
-                className="w-36 h-36 rounded-2xl border-2 border-red-500/60 object-cover shadow-[0_0_35px_rgba(239,68,68,0.4)] animate-floatSlow"
-                onError={(e) => { (e.target as HTMLImageElement).src = towerMonsterImage(bossKind); }}
-              />
+              <div className="flex flex-col items-center">
+                <img
+                  src={bossImage}
+                  alt={t(`monster.${bossKind}`, locale)}
+                  className="w-36 h-36 rounded-2xl border-2 border-red-500/60 object-cover shadow-[0_0_35px_rgba(239,68,68,0.4)] animate-floatSlow"
+                  onError={(e) => { (e.target as HTMLImageElement).src = towerMonsterImage(bossKind); }}
+                />
+                {hasCarousel && (
+                  <div className="flex gap-1.5 mt-2">
+                    {bossImages.map((_: string, idx: number) => (
+                      <button key={idx} onClick={() => setCarouselIdx(idx)}
+                        className={`w-2 h-2 rounded-full transition-all ${idx === carouselIdx ? "bg-red-500 w-4" : "bg-gray-600 hover:bg-gray-400"}`} />
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="flex-1 w-full">
 <div className="flex items-center justify-between flex-wrap gap-2 mb-1">
                     <div>
