@@ -3,10 +3,12 @@ import { useState, useEffect, useCallback } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
 import { RARITY_COLORS } from "@/game/constants";
+import { ACHIEVEMENT_CATEGORIES } from "@/game/achievements";
 
 type AchItem = {
+  category: string;
   id: string; nameKey: string; descKey: string; icon: string; rarity: string;
-  reward: { gold?: number; crystals?: number; xp?: number };
+  reward: { gold?: number; crystals?: number; xp?: number; diamonds?: number };
   unlocked: boolean; claimed: boolean;
 };
 type TitleItem = {

@@ -23,10 +23,12 @@ export async function GET(req: NextRequest) {
       nameKey: a.nameKey,
       descKey: a.descKey,
       icon: a.icon,
+      category: a.category,
       rarity: a.rarity,
       reward: a.reward,
       unlocked: a.condition(char),
       claimed: claimed.includes(a.id),
+      progress: a.progress ? a.progress(char) : undefined,
     }));
 
     // Títulos: desbloquear gera a lista; owned mantém histórico
@@ -77,7 +79,7 @@ export async function POST(req: NextRequest) {
       }
       const gold = (char.gold || 0) + (def.reward.gold || 0);
       const crystals = (char.crystals || 0) + (def.reward.crystals || 0);
-      const diamonds = char.diamonds || 0;
+      const diamonds = (char.diamonds || 0) + (def.reward.diamonds || 0);
       await jsonDb.updateCharacter(char.id, {
         gold,
         crystals,
