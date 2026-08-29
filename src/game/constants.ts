@@ -15,19 +15,19 @@ export const CLASS_ICONS: Record<ClassName, string> = {
 };
 
 export const CLASS_IMAGES: Record<ClassName, { male: string; female: string }> = {
-  warrior:     { male: "/images/classes/classe_guerreiro.png",  female: "/images/classes/classe_guerreiro.png" },
-  paladin:     { male: "/images/classes/classe_paladino.png",   female: "/images/classes/classe_paladino.png" },
-  berserker:   { male: "/images/classes/classe_berserker.png",  female: "/images/classes/classe_berserker.png" },
-  mage:        { male: "/images/classes/classe_mago.png",       female: "/images/classes/classe_mago.png" },
-  necromancer: { male: "/images/classes/classe_necromante.png", female: "/images/classes/classe_necromante.png" },
-  assassin:    { male: "/images/classes/classe_assassino.png",  female: "/images/classes/classe_assassino.png" },
-  hunter:      { male: "/images/classes/classe_cacador.png",    female: "/images/classes/classe_cacador.png" },
-  monk:        { male: "/images/classes/classe_monge.png",      female: "/images/classes/classe_monge.png" },
-  samurai:     { male: "/images/classes/classe_samurai.png",    female: "/images/classes/classe_samurai.png" },
-  knight:      { male: "/images/classes/classe_cavaleiro.png",  female: "/images/classes/classe_cavaleiro.png" },
-  summoner:    { male: "/images/classes/classe_invocador.png",  female: "/images/classes/classe_invocador.png" },
-  templar:     { male: "/images/classes/classe_templario.png",  female: "/images/classes/classe_templario.png" },
-  archer:      { male: "/images/classes/classe_arqueiro.png",   female: "/images/classes/classe_arqueiro.png" },
+  warrior:     { male: "/classes/masculino/pixel_guerreiro.png",  female: "/classes/feminino/pixel_guerreira.png" },
+  paladin:     { male: "/classes/masculino/pixel_paladino.png",   female: "/classes/feminino/pixel_paladina.png" },
+  berserker:   { male: "/classes/masculino/pixel_berserker.png",  female: "/classes/feminino/pixel_berserker_fem.png" },
+  mage:        { male: "/classes/masculino/pixel_mago.png",       female: "/classes/feminino/pixel_maga.png" },
+  necromancer: { male: "/classes/masculino/pixel_necromante.png", female: "/classes/feminino/pixel_necromante_fem.png" },
+  assassin:    { male: "/classes/masculino/pixel_assassino.png",  female: "/classes/feminino/pixel_assassina.png" },
+  hunter:      { male: "/classes/masculino/pixel_cacador.png",    female: "/classes/feminino/pixel_cacadora.png" },
+  monk:        { male: "/classes/masculino/pixel_monge.png",      female: "/classes/feminino/pixel_monja.png" },
+  samurai:     { male: "/classes/masculino/pixel_samurai.png",    female: "/classes/feminino/pixel_samurai_fem.png" },
+  knight:      { male: "/classes/masculino/pixel_cavaleiro.png",  female: "/classes/feminino/pixel_cavaleira.png" },
+  summoner:    { male: "/classes/masculino/pixel_invocador.png",  female: "/classes/feminino/pixel_invocadora.png" },
+  templar:     { male: "/classes/masculino/pixel_templario.png",  female: "/classes/feminino/pixel_templaria.png" },
+  archer:      { male: "/classes/masculino/pixel_arqueiro.png",   female: "/classes/feminino/pixel_arqueira.png" },
 };
 
 export function classImage(classType: ClassName, sex: string): string {
