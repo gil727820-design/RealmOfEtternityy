@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
-import { CLASS_ICONS, type ClassName } from "@/game/constants";
+import { CLASS_ICONS, CLASS_REPRESENTATIVE, type ClassName } from "@/game/constants";
 import {
   skillTreeForClass,
   skillTreeTotalRanks,
@@ -58,7 +58,7 @@ export default function MasteryPanel() {
               </span>
             </h2>
             <p className="text-gray-500 text-sm mt-0.5">
-              {CLASS_ICONS[cls]} {t(`class.${cls}`, locale)} — {t("mastery.subtitle", locale)}
+              <img src={CLASS_REPRESENTATIVE[cls]} alt={t(`class.${cls}`, locale)} className="w-6 h-6 rounded object-cover inline-block" /> {t(`class.${cls}`, locale)} — {t("mastery.subtitle", locale)}
             </p>
           </div>
         </div>
@@ -102,7 +102,7 @@ export default function MasteryPanel() {
                 </p>
               </div>
               <div className="text-right text-[10px] text-[#ffd700]/60">
-                {CLASS_ICONS[cls]} {t(`class.${cls}`, locale)}
+                <img src={CLASS_REPRESENTATIVE[cls]} alt={t(`class.${cls}`, locale)} className="w-5 h-5 rounded object-cover inline-block" /> {t(`class.${cls}`, locale)}
               </div>
             </div>
           </div>
@@ -180,7 +180,7 @@ export default function MasteryPanel() {
                 }`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xl">{CLASS_ICONS[cName]}</span>
+                  <img src={CLASS_REPRESENTATIVE[cName]} alt={t(`class.${cName}`, locale)} className="w-10 h-10 rounded-lg object-cover border border-white/20" />
                   <span className={`font-bold text-sm ${cMastered ? "text-[#00ff88]" : isCurrent ? "text-[#a855f7]" : "text-white"}`}>
                     {t(`class.${cName}`, locale)}
                   </span>
@@ -209,7 +209,7 @@ export default function MasteryPanel() {
           return (
             <div className="game-card p-4 animate-fadeInUp">
               <h3 className="text-sm font-bold flex items-center gap-2 mb-3">
-                <span className="text-xl">{CLASS_ICONS[viewClass]}</span>
+                <img src={CLASS_REPRESENTATIVE[viewClass]} alt={t(`class.${viewClass}`, locale)} className="w-10 h-10 rounded-lg object-cover border border-white/20" />
                 {t(`class.${viewClass}`, locale)} — {vTitleLoc}
               </h3>
 

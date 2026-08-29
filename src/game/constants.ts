@@ -30,6 +30,23 @@ export const CLASS_IMAGES: Record<ClassName, { male: string; female: string }> =
   archer:      { male: "/classes/masculino/pixel_arqueiro.png",   female: "/classes/feminino/pixel_arqueira.png" },
 };
 
+/** Imagem representativa de cada classe (foto nova, usada na Maestria) */
+export const CLASS_REPRESENTATIVE: Record<ClassName, string> = {
+  warrior:     "/images/classes/classe_guerreiro.png",
+  paladin:     "/images/classes/classe_paladino.png",
+  berserker:   "/images/classes/classe_berserker.png",
+  mage:        "/images/classes/classe_mago.png",
+  necromancer: "/images/classes/classe_necromante.png",
+  assassin:    "/images/classes/classe_assassino.png",
+  hunter:      "/images/classes/classe_cacador.png",
+  monk:        "/images/classes/classe_monge.png",
+  samurai:     "/images/classes/classe_samurai.png",
+  knight:      "/images/classes/classe_cavaleiro.png",
+  summoner:    "/images/classes/classe_invocador.png",
+  templar:     "/images/classes/classe_templario.png",
+  archer:      "/images/classes/classe_arqueiro.png",
+};
+
 export function classImage(classType: ClassName, sex: string): string {
   return CLASS_IMAGES[classType]?.[sex === "female" ? "female" : "male"] ?? CLASS_IMAGES.warrior.male;
 }
