@@ -82,7 +82,7 @@ export default function RelicsPanel() {
           if (!active?.def) return <div className="text-gray-500 text-sm py-3">— {t("relic.none", locale)} —</div>;
           return (
             <div>
-              <div className="text-5xl mb-2 animate-float">{active.def.icon}</div>
+              <img src={active.def.image} alt="" className="w-20 h-20 mx-auto mb-2 rounded-xl object-cover border border-[#a855f7]/50" />
               <div className="font-black text-white">{t(active.def.nameKey, locale)}</div>
               <div className="text-[11px] text-gray-400 mt-1">{buffText(active.def)}</div>
             </div>
@@ -100,7 +100,7 @@ export default function RelicsPanel() {
             {owned.map((o) => o.def && (
               <div key={o.itemId} className={`flex items-center justify-between bg-[#0a0a12] rounded-xl px-4 py-3 border ${o.equipped ? "border-[#a855f7]/50" : "border-white/10"}`}>
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-3xl">{o.def.icon}</span>
+                  <img src={o.def.image} alt="" className="w-12 h-12 rounded-lg object-cover border border-white/20" />
                   <div className="min-w-0">
                     <div className="font-bold text-white text-sm">{t(o.def.nameKey, locale)}</div>
                     <div className="text-[11px] text-gray-500">{t(`rarity.${o.def.rarity}`, locale)}</div>
@@ -130,7 +130,7 @@ export default function RelicsPanel() {
             const has = ownedIds.has(r.id);
             return (
               <div key={r.id} className={`rounded-xl border p-3 text-center ${has ? "border-[#a855f7]/40 bg-[#a855f7]/5" : "border-white/10 bg-[#0a0a12] opacity-50 grayscale"}`}>
-                <div className="text-3xl mb-1">{r.icon}</div>
+                <img src={r.image} alt="" className="w-12 h-12 mx-auto mb-1 rounded-lg object-cover border border-white/20" />
                 <div className="text-[10px] font-bold text-white truncate">{t(r.nameKey, locale)}</div>
                 <div className="text-[9px] text-gray-500">{t(`rarity.${r.rarity}`, locale)}</div>
                 <div className="text-[9px] text-gray-400 mt-0.5">{buffText(r)}</div>
