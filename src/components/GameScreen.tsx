@@ -10,6 +10,7 @@ import MissionsPanel from "./panels/MissionsPanel";
 import InventoryPanel from "./panels/InventoryPanel";
 import CraftingPanel from "./panels/CraftingPanel";
 import TradePanel from "./panels/TradePanel";
+import ChallengePanel from "./panels/ChallengePanel";
 import MapPanel from "./panels/MapPanel";
 import TowerPanel from "./panels/TowerPanel";
 import PvPPanel from "./panels/PvPPanel";
@@ -188,6 +189,7 @@ export default function GameScreen() {
       case "inventory": return <InventoryPanel />;
       case "crafting": return <CraftingPanel />;
       case "trade": return <TradePanel />;
+      case "challenge": return <ChallengePanel />;
       case "map": return <MapPanel />;
       case "tower": return <TowerPanel />;
       case "pvp": return <PvPPanel />;
