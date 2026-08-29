@@ -13,7 +13,7 @@ export default function AscensionPanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/progression?action=ascension&characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/game?action=ascension&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       if (!d.error) setData(d);
     } catch { /* ignore */ }
@@ -29,7 +29,7 @@ export default function AscensionPanel() {
     if (!window.confirm(t("ascension.confirm", locale))) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/progression?action=ascension", {
+      const res = await fetch("/api/game?action=ascension", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId }),

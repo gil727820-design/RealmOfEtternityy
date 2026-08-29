@@ -22,6 +22,22 @@ export async function POST(req: NextRequest) {
       "health":            () => import("@/game/api-handlers/health"),
       "notifications":     () => import("@/game/api-handlers/notifications-check"),
       "craft-recipes":     () => import("@/game/api-handlers/craft-recipes"),
+      "daily":             () => import("@/game/api-handlers/missions-daily"),
+      "mission-claim":     () => import("@/game/api-handlers/missions-claim"),
+      "mission-start":     () => import("@/game/api-handlers/missions-start"),
+      "daily-events":      () => import("@/game/api-handlers/daily-events"),
+      "daily-login":       () => import("@/game/api-handlers/daily-login"),
+      "questlines":        () => import("@/game/api-handlers/questlines"),
+      "achievements":      () => import("@/game/api-handlers/achievements"),
+      "ascension":         () => import("@/game/api-handlers/ascension"),
+      "bestiary":          () => import("@/game/api-handlers/bestiary"),
+      "collection":        () => import("@/game/api-handlers/collection"),
+      "enchantments":      () => import("@/game/api-handlers/enchantments"),
+      "forge":             () => import("@/game/api-handlers/forge"),
+      "specialization":    () => import("@/game/api-handlers/specialization"),
+      "refinement":        () => import("@/game/api-handlers/refinement"),
+      "advanced-class":    () => import("@/game/api-handlers/advanced-class"),
+      "inheritance":       () => import("@/game/api-handlers/inheritance"),
     };
     if (!handlers[action]) {
       return NextResponse.json({ error: `Action inválida. Disponíveis: ${Object.keys(handlers).join(", ")}` }, { status: 400 });
@@ -45,6 +61,17 @@ export async function GET(req: NextRequest) {
       "notifications":   () => import("@/game/api-handlers/notifications-check"),
       "craft-recipes":   () => import("@/game/api-handlers/craft-recipes"),
       "presence":        () => import("@/game/api-handlers/presence"),
+      "daily":           () => import("@/game/api-handlers/missions-daily"),
+      "daily-events":    () => import("@/game/api-handlers/daily-events"),
+      "daily-login":     () => import("@/game/api-handlers/daily-login"),
+      "questlines":      () => import("@/game/api-handlers/questlines"),
+      "achievements":    () => import("@/game/api-handlers/achievements"),
+      "bestiary":        () => import("@/game/api-handlers/bestiary"),
+      "collection":      () => import("@/game/api-handlers/collection"),
+      "specialization":  () => import("@/game/api-handlers/specialization"),
+      "refinement":      () => import("@/game/api-handlers/refinement"),
+      "advanced-class":  () => import("@/game/api-handlers/advanced-class"),
+      "inheritance":     () => import("@/game/api-handlers/inheritance"),
     };
     if (!handlers[action]) {
       return NextResponse.json({ error: "GET action inválida" }, { status: 400 });

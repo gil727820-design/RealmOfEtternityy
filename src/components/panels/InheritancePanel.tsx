@@ -44,7 +44,7 @@ export default function InheritancePanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/progression?action=inheritance&characterId=${characterId}`);
+      const res = await fetch(`/api/game?action=inheritance&characterId=${characterId}`);
       const data = await res.json();
       setCharacters(data.characters ?? []);
       setItems(data.items ?? []);
@@ -82,7 +82,7 @@ export default function InheritancePanel() {
     if (!characterId || !targetId) return;
     setTransferring(true);
     try {
-      const res = await fetch("/api/progression?action=inheritance", {
+      const res = await fetch("/api/game?action=inheritance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, action: "transfer", itemId, targetCharacterId: targetId }),

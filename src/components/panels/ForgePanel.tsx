@@ -62,7 +62,7 @@ export default function ForgePanel() {
     }
     setBusy(true);
     try {
-      const res = await fetch("/api/progression?action=forge", {
+      const res = await fetch("/api/game?action=forge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, characterId, itemId: selectedId }),

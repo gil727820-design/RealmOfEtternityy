@@ -62,7 +62,7 @@ export default function QuestlinesPanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/missions?action=questlines&characterId=${characterId}`);
+      const res = await fetch(`/api/game?action=questlines&characterId=${characterId}`);
       const data = await res.json();
       setQuestlines(data.questlines ?? []);
     } catch { /* ignore */ }
@@ -75,7 +75,7 @@ export default function QuestlinesPanel() {
     if (!characterId) return;
     setClaiming(stepId);
     try {
-      const res = await fetch("/api/missions?action=questlines", {
+      const res = await fetch("/api/game?action=questlines", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, action: "claim_step", stepId }),

@@ -40,7 +40,7 @@ export default function EnchantmentsPanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/progression?action=enchantments&characterId=${characterId}`);
+      const res = await fetch(`/api/game?action=enchantments&characterId=${characterId}`);
       const data = await res.json();
       setEnchantments(data.enchantments ?? []);
     } catch { /* ignore */ }
@@ -54,7 +54,7 @@ export default function EnchantmentsPanel() {
     setEnchanting(enchantmentId);
     setShowResult(null);
     try {
-      const res = await fetch("/api/progression?action=enchantments", {
+      const res = await fetch("/api/game?action=enchantments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, enchantmentId, targetLevel }),

@@ -27,6 +27,8 @@ export async function POST(req: NextRequest) {
       "world-boss-invite":  () => import("@/game/api-handlers/world-boss-invite"),
       "world-boss-respond": () => import("@/game/api-handlers/world-boss-respond"),
       "survival-arena":  () => import("@/game/api-handlers/survival-arena"),
+      "dungeon-start":   () => import("@/game/api-handlers/dungeon-start"),
+      "dungeon-collect": () => import("@/game/api-handlers/dungeon-collect"),
     };
     if (!handlers[action]) {
       return NextResponse.json({ error: `Action inválida. Disponíveis: ${Object.keys(handlers).join(", ")}` }, { status: 400 });
@@ -47,7 +49,8 @@ export async function GET(req: NextRequest) {
       "pvp-ranking":   () => import("@/game/api-handlers/pvp-ranking"),
       "pvp-season":    () => import("@/game/api-handlers/pvp-season"),
       "region-audio":  () => import("@/game/api-handlers/region-audio"),
-      "world-boss":    () => import("@/game/api-handlers/world-boss"),
+      "world-boss":      () => import("@/game/api-handlers/world-boss"),
+      "dungeon-ranking": () => import("@/game/api-handlers/dungeon-ranking"),
     };
     if (!handlers[action]) {
       return NextResponse.json({ error: "GET action inválida" }, { status: 400 });

@@ -46,7 +46,7 @@ export default function MissionsPanel() {
   const loadDaily = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/missions?action=daily&characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/game?action=daily&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       setDaily(Array.isArray(d.daily) ? d.daily : []);
       setWeekly(Array.isArray(d.weekly) ? d.weekly : []);
@@ -60,7 +60,7 @@ export default function MissionsPanel() {
     if (!characterId || claimingDaily) return;
     setClaimingDaily(`${list}_${kind}`);
     try {
-      const res = await fetch("/api/missions?action=daily", {
+      const res = await fetch("/api/game?action=daily", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, kind, list }),
@@ -159,7 +159,7 @@ export default function MissionsPanel() {
   const startMission = async (missionId: number) => {
     setStartingMission(missionId);
     try {
-      const res = await fetch("/api/missions?action=start", {
+      const res = await fetch("/api/game?action=mission-start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, missionId }),
@@ -181,7 +181,7 @@ export default function MissionsPanel() {
   const claimMission = async (activeMissionId: string) => {
     setClaimingMission(activeMissionId);
     try {
-      const res = await fetch("/api/missions?action=claim", {
+      const res = await fetch("/api/game?action=mission-claim", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ activeMissionId }),

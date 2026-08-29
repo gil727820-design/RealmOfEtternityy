@@ -19,7 +19,7 @@ export default function DailyLoginPanel() {
   const load = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/missions?action=daily-login&characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/game?action=daily-login&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       if (d.status) setStatus(d.status);
     } catch { /* ignore */ }
@@ -31,7 +31,7 @@ export default function DailyLoginPanel() {
     if (!characterId || !status?.canClaim) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/missions?action=daily-login", {
+      const res = await fetch("/api/game?action=daily-login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId }),

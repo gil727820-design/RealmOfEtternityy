@@ -22,7 +22,7 @@ export default function CollectionPanel() {
   const load = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/progression?action=collection&characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/game?action=collection&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       setProgress(d.progress ?? null);
       setBonus(d.bonus ?? null);
@@ -35,7 +35,7 @@ export default function CollectionPanel() {
     if (!characterId) return;
     setBusy(category);
     try {
-      const res = await fetch("/api/progression?action=collection", {
+      const res = await fetch("/api/game?action=collection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, category }),
