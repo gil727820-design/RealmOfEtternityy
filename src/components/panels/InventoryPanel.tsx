@@ -16,8 +16,19 @@ import { RELICS } from "@/game/relics";
 function withRelicImage(template: any): any {
   if (!template) return template;
   if (template.image) return template;
-  const relic = RELICS.find((r) => r.id === String(template.relicId) || r.id === String(template.nameKey));
+  // Busca por relicId, nameKey ou pelo templateId (6000+idx)
+  const tid = Number(template.id) || 0;
+  const relic = RELICS.find((r) =>
+    r.id === String(template.relicId) ||
+    r.id === String(template.nameKey) ||
+    (tid >= 6000 && tid < 6000 + RELICS.length && RELICS[tid - 6000]?.id === r.id)
+  );
   if (relic?.image) return { ...template, image: relic.image };
+  // Fallback: se templateId >= 6000, pega direto pelo índice
+  if (tid >= 6000 && tid < 6000 + RELICS.length) {
+    const idx = tid - 6000;
+    if (RELICS[idx]?.image) return { ...template, image: RELICS[idx].image };
+  }
   return template;
 }
 
