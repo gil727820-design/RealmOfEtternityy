@@ -112,11 +112,11 @@ export async function POST(req: NextRequest) {
       boss: true,
       noScale: true,
       // Arranha pelo menos 3% da vida máxima por rodada (não some contra defesa).
-      chipPct: 3,
+      chipPct: 0.5,
       // RAGE MODE: o chefe parece fraco (o jogador domina no começo), mas ao
       // chegar a 30% de vida ele se enfurece e desfere um SUPER ATAQUE
-      // (~40% da vida máxima do jogador) — perigoso mas não hitkill.
-      rage: { at: 30, buffPct: 40, superMult: 2.0, superPctMaxHp: 40 },
+      // (~15% da vida máxima do jogador) — desafiador mas justo.
+      rage: { at: 30, buffPct: 30, superMult: 1.5, superPctMaxHp: 15, exhaustPct: 20 },
     };
 
     const action = String(body?.action || "");
@@ -212,7 +212,7 @@ function miniBossBattleMonster(char: any, mb: any) {
   const playerMaxHp = Math.max(200, Number(char?.maxHp) || 200);
   return {
     maxHp: Math.round(playerMaxHit * 3.5),
-    attack: Math.max(s.attack, Math.round(playerMaxHp * 0.03)),
+    attack: Math.min(Math.max(s.attack, Math.round(playerMaxHp * 0.02)), Math.round(playerMaxHp * 0.04)),
     defense: Math.max(1, Math.round(s.defense * 0.6)),
     speed: s.speed,
     critical: Math.max(5, Math.round(s.critical * 0.5)),

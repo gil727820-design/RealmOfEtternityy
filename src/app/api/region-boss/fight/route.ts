@@ -81,12 +81,12 @@ export async function POST(req: NextRequest) {
       boss: true,
       noScale: true,
       // Arranha pelo menos 3% da vida máxima por rodada (não some contra defesa).
-      chipPct: 1.5,
+      chipPct: 0.5,
       // RAGE: o chefe parece fraco (o jogador domina no começo), mas ao
       // chegar a 25% de vida ele se enfurece e desfere um SUPER ATAQUE
-      // (≈80% da vida máxima do jogador). Se sobreviver, ele se ESGOTA e
-      // você finaliza — se morrer, foi HUMILHADO. 🤡
-      rage: { at: 25, buffPct: 30, superMult: 1.8, superPctMaxHp: 20, exhaustPct: 10 },
+      // (≈12% da vida máxima do jogador). Se sobreviver, ele se ESGOTA e
+      // você finaliza — desafiador mas justo.
+      rage: { at: 25, buffPct: 25, superMult: 1.5, superPctMaxHp: 12, exhaustPct: 15 },
     };
 
     const action = String(body?.action || "");
