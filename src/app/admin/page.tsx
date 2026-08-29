@@ -1840,7 +1840,7 @@ export default function AdminPage() {
                   </div>
                 </div>
               </div>
-n              {/* 📊 Resumo Rápido */}
+              {/* 📊 Resumo Rápido */}
               <div className="bg-[#1a1a2e] rounded-2xl border border-white/10 p-5">
                 <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
                   <span className="w-6 h-6 rounded-lg bg-[#3b82f6]/20 flex items-center justify-center text-xs">📊</span>
@@ -1984,7 +1984,7 @@ export default function AdminPage() {
                                 🚫 Nenhum personagem criado
                               </div>
                             )}
-n                            {/* Info de atividade */}
+                            {/* Info de atividade */}
                             <div className="grid grid-cols-2 gap-2 mb-4">
                               <div className="bg-[#0a0a12] rounded-lg px-3 py-2 border border-white/5">
                                 <div className="text-[9px] text-gray-600 uppercase tracking-wider">Último Login</div>
@@ -2001,7 +2001,7 @@ export default function AdminPage() {
                                 <div className="text-[11px] text-red-300">{String(u.banReason)}</div>
                               </div>
                             ) : null}
-n                            {/* Botões de ação */}
+                            {/* Botões de ação */}
                             {!isDeleted && (
                               <div className="flex gap-2">
                                 <button onClick={() => banUser(String(u.id), !isBanned)} disabled={busy === `ban_${u.id}`}
