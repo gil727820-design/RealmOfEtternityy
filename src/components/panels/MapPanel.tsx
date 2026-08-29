@@ -52,7 +52,7 @@ export default function MapPanel() {
   const loadRegionMobs = async () => {
     if (!characterId) return;
     try {
-      const r = await fetch(`/api/combat?action=region-farm&characterId=${characterId}`);
+      const r = await fetch(`/api/game?action=region-farm&characterId=${characterId}`);
       const d = await r.json();
       if (r.ok) setRegionMobs(d.mobs || []);
     } catch {
@@ -63,7 +63,7 @@ export default function MapPanel() {
   const loadMiniBoss = async () => {
     if (!characterId) return;
     try {
-      const r = await fetch(`/api/combat?action=region-mini-boss&characterId=${characterId}`);
+      const r = await fetch(`/api/game?action=region-mini-boss&characterId=${characterId}`);
       const d = await r.json();
       if (r.ok) setMiniBossStatus(d);
     } catch {
@@ -76,7 +76,7 @@ export default function MapPanel() {
     setFarming(true);
     setFarmResult(null);
     try {
-      const r = await fetch("/api/combat?action=region-farm", {
+      const r = await fetch("/api/game?action=region-farm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId }),
@@ -103,7 +103,7 @@ export default function MapPanel() {
     setAutoFarming(true);
     setAutoFarmResult(null);
     try {
-      const r = await fetch("/api/combat?action=region-farm", {
+      const r = await fetch("/api/game?action=region-farm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, auto: true }),
@@ -129,7 +129,7 @@ export default function MapPanel() {
     setMiniBossFighting(true);
     setMiniBossResult(null);
     try {
-      const r = await fetch("/api/combat?action=region-mini-boss", {
+      const r = await fetch("/api/game?action=region-mini-boss", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId }),
@@ -156,7 +156,7 @@ export default function MapPanel() {
     setBossFighting(true);
     setBossResult(null);
     try {
-      const r = await fetch("/api/combat?action=region-boss-fight", {
+      const r = await fetch("/api/game?action=region-boss-fight", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId }),
@@ -182,7 +182,7 @@ export default function MapPanel() {
     setChanging(regionId);
     setRegionToConfirm(null);
     try {
-      const res = await fetch("/api/combat?action=region-change", {
+      const res = await fetch("/api/game?action=region-change", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, regionId }),
@@ -379,7 +379,7 @@ export default function MapPanel() {
       {/* 🐲 Mini-boss da região — respawn com cooldown */}
       {miniBossStatus?.miniBoss && (miniBossBattle ? (
         <BossBattle
-          apiUrl="/api/combat?action=region-mini-boss"
+          apiUrl="/api/game?action=region-mini-boss"
           monster={miniBossStatus.miniBoss}
           title={`🐲 ${t("map.miniBoss", locale)}`}
           fightLabel={`⚔️ ${t("map.challengeMiniBoss", locale)}`}
@@ -453,7 +453,7 @@ export default function MapPanel() {
       {/* 👹 Boss da Região — chefe permanente com cooldown diário */}
       {bossStatus?.boss && (regionBossBattle ? (
         <BossBattle
-          apiUrl="/api/combat?action=region-boss-fight"
+          apiUrl="/api/game?action=region-boss-fight"
           monster={bossStatus.boss}
           title={`👹 ${t("map.regionBoss", locale)}`}
           fightLabel={`⚔️ ${t("map.challengeBoss", locale)}`}

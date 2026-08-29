@@ -21,7 +21,7 @@ export default function AuthScreen() {
     } catch { /* ignora */ }
     (async () => {
       try {
-        const res = await fetch("/api/auth");
+        const res = await fetch("/api/character");
         if (!res.ok) return;
         const data = await res.json();
         setUser(data.userId, data.locale);
@@ -46,7 +46,7 @@ export default function AuthScreen() {
 
     try {
       if (!isLogin) {
-        const res = await fetch("/api/auth", {
+        const res = await fetch("/api/character", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "register", username, password }),
@@ -60,7 +60,7 @@ export default function AuthScreen() {
         setVolume(0.08);
       }
       
-      const res = await fetch("/api/auth", {
+      const res = await fetch("/api/character", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "login", username, password }),

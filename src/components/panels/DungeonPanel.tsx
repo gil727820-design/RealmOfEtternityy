@@ -46,7 +46,7 @@ export default function DungeonPanel() {
   
 
   useEffect(() => {
-    fetch("/api/combat?action=dungeon-ranking").then(r => r.json()).then(d => setRanking(d.ranking || [])).catch(() => {});
+    fetch("/api/game?action=dungeon-ranking").then(r => r.json()).then(d => setRanking(d.ranking || [])).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -90,7 +90,7 @@ export default function DungeonPanel() {
     if (!characterId) return;
     setStarting(true);
     try {
-      const res = await fetch("/api/combat?action=dungeon-start", {
+      const res = await fetch("/api/game?action=dungeon-start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, durationSec: selectedSec, attemptFloor: attempt, difficulty }),
@@ -111,7 +111,7 @@ export default function DungeonPanel() {
     if (!characterId) return;
     setCollecting(true);
     try {
-      const res = await fetch("/api/combat?action=dungeon-collect", {
+      const res = await fetch("/api/game?action=dungeon-collect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId }),

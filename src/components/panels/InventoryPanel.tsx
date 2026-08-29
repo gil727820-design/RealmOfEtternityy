@@ -100,7 +100,7 @@ function SkinsTab() {
     if (!characterId || busy) return;
     setBusy(skinId ?? "unequip");
     try {
-      const res = await fetch("/api/inventory?action=skin", {
+      const res = await fetch("/api/character?action=skin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, skinId, unequip: skinId == null }),
@@ -234,7 +234,7 @@ function BoostSection() {
     if (!characterId) return;
     setBusy(id);
     try {
-      const res = await fetch("/api/inventory?action=use", {
+      const res = await fetch("/api/character?action=use", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ inventoryItemId: id, characterId }),
@@ -684,7 +684,7 @@ const selected = items.find((it) => it.inv.id === selectedId) ?? null;
     const id = it.inv.id;
     setBusy(id);
     try {
-      const res: any = await run("/api/inventory?action=equip", { inventoryItemId: id, unequip });
+      const res: any = await run("/api/character?action=equip", { inventoryItemId: id, unequip });
       if (res.failed) {
         notify(res.error ?? t("general.error", locale), "error");
         return;
@@ -704,7 +704,7 @@ const selected = items.find((it) => it.inv.id === selectedId) ?? null;
     if (busy) return;
     setBusy("auto_equip");
     try {
-      const res: any = await run("/api/inventory?action=auto-equip", {});
+      const res: any = await run("/api/character?action=auto-equip", {});
       if (res.failed) {
         notify(res.error ?? t("general.error", locale), "error");
         return;
@@ -723,7 +723,7 @@ const selected = items.find((it) => it.inv.id === selectedId) ?? null;
     const id = it.inv.id;
     setBusy(id);
     try {
-      const res: any = await run("/api/inventory?action=use", { inventoryItemId: id });
+      const res: any = await run("/api/character?action=use", { inventoryItemId: id });
       if (res.failed) {
         notify(res.error ?? t("general.error", locale), "error");
         return;
@@ -745,7 +745,7 @@ const selected = items.find((it) => it.inv.id === selectedId) ?? null;
   const doSell = async (id: string, qty: number) => {
     setBusy(id);
     try {
-      const res: any = await run("/api/inventory?action=sell", { inventoryItemId: id, quantity: qty });
+      const res: any = await run("/api/character?action=sell", { inventoryItemId: id, quantity: qty });
       if (res.failed) {
         notify(res.error ?? t("general.error", locale), "error");
         return;
@@ -778,7 +778,7 @@ const selected = items.find((it) => it.inv.id === selectedId) ?? null;
     }
     setBulkPending(true);
     try {
-      const res: any = await run("/api/inventory?action=sell", { items: list });
+      const res: any = await run("/api/character?action=sell", { items: list });
       if (res.failed) {
         notify(res.error ?? t("general.error", locale), "error");
         return;
@@ -799,7 +799,7 @@ const selected = items.find((it) => it.inv.id === selectedId) ?? null;
   const doRemove = async (id: string, qty: number) => {
     setBusy(id);
     try {
-      const res: any = await run("/api/inventory?action=remove", { inventoryItemId: id, quantity: qty });
+      const res: any = await run("/api/character?action=remove", { inventoryItemId: id, quantity: qty });
       if (res.failed) {
         notify(res.error ?? t("general.error", locale), "error");
         return;

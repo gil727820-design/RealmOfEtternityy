@@ -25,7 +25,7 @@ export default function MusicController() {
   useEffect(() => {
     let active = true;
     const load = () => {
-      fetch("/api/combat?action=region-audio")
+      fetch("/api/game?action=region-audio")
         .then((r) => r.json())
         .then((d) => {
           if (active && d?.files) setFiles(d.files as Record<string, string>);

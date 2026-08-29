@@ -14,7 +14,7 @@ export default function ChallengePanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/combat?action=tower-challenge&characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/game?action=tower-challenge&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       if (!d.error) setData(d);
     } catch { /* ignore */ }
@@ -27,7 +27,7 @@ export default function ChallengePanel() {
     if (!characterId || busy) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/combat?action=tower-challenge", {
+      const res = await fetch("/api/game?action=tower-challenge", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, action: "start", floor }),

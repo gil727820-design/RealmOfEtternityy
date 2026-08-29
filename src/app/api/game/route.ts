@@ -38,7 +38,32 @@ export async function POST(req: NextRequest) {
       "refinement":        () => import("@/game/api-handlers/refinement"),
       "advanced-class":    () => import("@/game/api-handlers/advanced-class"),
       "inheritance":       () => import("@/game/api-handlers/inheritance"),
+      "tower":             () => import("@/game/api-handlers/tower-fight"),
+      "tower-challenge":   () => import("@/game/api-handlers/tower-challenge"),
+      "pvp-battle":        () => import("@/game/api-handlers/pvp-battle"),
+      "pvp-fight":         () => import("@/game/api-handlers/pvp-fight"),
+      "region-farm":       () => import("@/game/api-handlers/region-farm"),
+      "region-mini-boss":  () => import("@/game/api-handlers/region-mini-boss"),
+      "region-boss-fight": () => import("@/game/api-handlers/region-boss-fight"),
+      "region-boss":       () => import("@/game/api-handlers/region-boss"),
+      "region-audio":      () => import("@/game/api-handlers/region-audio"),
+      "region-change":     () => import("@/game/api-handlers/region-change"),
+      "world-boss-attack":      () => import("@/game/api-handlers/world-boss-attack"),
+      "world-boss-enter":       () => import("@/game/api-handlers/world-boss-enter"),
+      "world-boss-leave":       () => import("@/game/api-handlers/world-boss-leave"),
+      "world-boss-break-shield":() => import("@/game/api-handlers/world-boss-break-shield"),
+      "world-boss-invite":      () => import("@/game/api-handlers/world-boss-invite"),
+      "world-boss-respond":     () => import("@/game/api-handlers/world-boss-respond"),
+      "survival-arena":    () => import("@/game/api-handlers/survival-arena"),
+      "dungeon-start":     () => import("@/game/api-handlers/dungeon-start"),
+      "dungeon-collect":   () => import("@/game/api-handlers/dungeon-collect"),
     };
+    // Guild actions — forward to guild-all handler
+    const guildActions = ["upload_logo","create","donate","upgrade","leave","kick","transfer","invite","accept","decline","my_accept","my_decline","chat","shop","buy_upgrade","buy_bonus","skills","invest_skill","reset_skills","guild_boss","boss_attack","boss_enter","boss_leave","guild_war","war_attack","war_join","war_leave","war_history"];
+    if (guildActions.includes(action)) {
+      const mod = await import("@/game/api-handlers/guild-all");
+      return mod.POST(req);
+    }
     if (!handlers[action]) {
       return NextResponse.json({ error: `Action inválida. Disponíveis: ${Object.keys(handlers).join(", ")}` }, { status: 400 });
     }
@@ -72,7 +97,19 @@ export async function GET(req: NextRequest) {
       "refinement":      () => import("@/game/api-handlers/refinement"),
       "advanced-class":  () => import("@/game/api-handlers/advanced-class"),
       "inheritance":     () => import("@/game/api-handlers/inheritance"),
+      "pvp-history":     () => import("@/game/api-handlers/pvp-history"),
+      "pvp-ranking":     () => import("@/game/api-handlers/pvp-ranking"),
+      "pvp-season":      () => import("@/game/api-handlers/pvp-season"),
+      "region-audio":    () => import("@/game/api-handlers/region-audio"),
+      "world-boss":      () => import("@/game/api-handlers/world-boss"),
+      "dungeon-ranking": () => import("@/game/api-handlers/dungeon-ranking"),
     };
+    // Guild GET — forward to guild-all handler
+    const guildGetActions = ["guild", "guilds"];
+    if (guildGetActions.includes(action) || (!action && new URL(req.url).searchParams.has("characterId"))) {
+      const mod = await import("@/game/api-handlers/guild-all");
+      return mod.GET(req);
+    }
     if (!handlers[action]) {
       return NextResponse.json({ error: "GET action inválida" }, { status: 400 });
     }

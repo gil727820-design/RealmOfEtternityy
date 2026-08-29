@@ -73,7 +73,7 @@ export default function TowerPanel() {
   ];
 
   const sendAction = async (action: string, state: any, auto?: any) => {
-    const res = await fetch("/api/combat?action=tower", {
+    const res = await fetch("/api/game?action=tower", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ characterId, action, state, auto }),

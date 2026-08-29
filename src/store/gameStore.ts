@@ -128,7 +128,7 @@ export const useGameStore = create<GameState>()(
       }),
       logout: () => {
         // Limpa a sessão no servidor (cookie httpOnly) e o estado local.
-        fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) }).catch(() => {});
+        fetch("/api/character", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) }).catch(() => {});
         set({ ...initialState });
       },
     }),

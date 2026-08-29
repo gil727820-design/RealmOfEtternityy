@@ -1,16 +1,39 @@
 import { NextRequest, NextResponse } from "next/server";
+import bcrypt from "bcryptjs";
 import jsonDb from "@/db/repo";
-import { requireCharacterAuth, getSession } from "@/game/auth";
+import { requireCharacterAuth, getSession, setSessionCookie, clearSessionCookie } from "@/game/auth";
+import { isValidUsername } from "@/game/profanityFilter";
 import { xpForLevel, powerCalc, resolveMaxLevel, CLASS_BASE_STATS } from "@/game/constants";
 import { computeEnergyRegen } from "@/game/energy";
 import { energyMultiplier, xpMultiplier, goldMultiplier } from "@/game/boosts";
 
-/** GET — Buscar personagem por ID */
+/** GET — Buscar personagem por ID ou verificar sessão (auth/me) */
 export async function GET(req: NextRequest) {
   try {
     const url = new URL(req.url);
     const id = url.searchParams.get("id") || url.searchParams.get("characterId");
-    if (!id) return NextResponse.json({ error: "ID obrigatório" }, { status: 400 });
+    const action = url.searchParams.get("action");
+
+    // ── AUTH/ME: verificar sessão ──
+    if (!id || action === "me") {
+      const session = getSession(req);
+      if (!session) return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+      const user = await jsonDb.findUserById(session.sub);
+      if (!user) return NextResponse.json({ error: "Usuário não encontrado" }, { status: 401 });
+      if (user.banned) return NextResponse.json({ error: `Conta banida: ${user.banReason || "Violação dos termos"}` }, { status: 403 });
+      if (user.deleted) return NextResponse.json({ error: "Conta excluída." }, { status: 403 });
+      const chars = (await jsonDb.getCharactersByUserId(user.id)).sort((a: any, b: any) => (a.createdAt || "").localeCompare(b.createdAt || ""));
+      const main = chars[0] ?? null;
+      const mailboxCount = main ? await jsonDb.countUnclaimedMails(main.id) : 0;
+      return NextResponse.json({
+        userId: user.id, username: user.username, role: user.role, locale: user.locale,
+        hasCharacter: chars.length > 0, character: main,
+        characters: chars.map((c: any) => ({ id: c.id, name: c.name, level: c.level, classType: c.classType, sex: c.sex, power: c.power, currentRegion: c.currentRegion })),
+        mailboxCount,
+      });
+    }
+
+    // ── Buscar personagem por ID ──
     const char = await jsonDb.findCharacterById(id);
     if (!char) return NextResponse.json({ error: "Personagem não encontrado" }, { status: 404 });
     return NextResponse.json(char);
@@ -182,6 +205,84 @@ export async function POST(req: NextRequest) {
         lastActivity: new Date().toISOString(),
       });
       return NextResponse.json({ success: true, character: updated });
+    }
+
+    // ── AUTH: logout ──
+    if (action === "logout") {
+      const res = NextResponse.json({ ok: true });
+      clearSessionCookie(res);
+      return res;
+    }
+    // ── AUTH: register ──
+    if (action === "register") {
+      const { username, password } = body;
+      const validation = isValidUsername(username);
+      if (!validation.valid) return NextResponse.json({ error: validation.reason }, { status: 400 });
+      if (!password || password.length < 4) return NextResponse.json({ error: "Senha deve ter mínimo 4 caracteres" }, { status: 400 });
+      if (password.length > 50) return NextResponse.json({ error: "Senha muito longa" }, { status: 400 });
+      const uname = username.trim().toLowerCase();
+      const existing = await jsonDb.findUserByUsername(uname);
+      if (existing) return NextResponse.json({ error: "Nome de usuário já está em uso" }, { status: 409 });
+      const hashed = await bcrypt.hash(password, 10);
+      const user = await jsonDb.insertUser({ username: uname, password: hashed, role: "player", locale: "pt-BR", banned: false, deleted: false });
+      const r = NextResponse.json({ userId: user.id, username: user.username });
+      setSessionCookie(r, user.id);
+      return r;
+    }
+    // ── AUTH: login (padrão) ──
+    if (action === "login" || (!action && body.username && body.password)) {
+      const { username, password } = body;
+      if (!username || !password) return NextResponse.json({ error: "Usuário e senha obrigatórios" }, { status: 400 });
+      const uname = username.trim().toLowerCase();
+      const user = await jsonDb.findUserByUsername(uname);
+      if (!user) return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
+      if (user.banned) return NextResponse.json({ error: `Conta banida: ${user.banReason || "Violação dos termos"}` }, { status: 403 });
+      if (user.deleted) return NextResponse.json({ error: "Conta excluída." }, { status: 403 });
+      const valid = await bcrypt.compare(password, user.password);
+      if (!valid) return NextResponse.json({ error: "Senha incorreta" }, { status: 401 });
+      await jsonDb.updateUser(user.id, { lastLogin: new Date().toISOString() });
+      const chars = (await jsonDb.getCharactersByUserId(user.id)).sort((a: any, b: any) => (a.createdAt || "").localeCompare(b.createdAt || ""));
+      const main = chars[0] ?? null;
+      const mailboxCount = main ? await jsonDb.countUnclaimedMails(main.id) : 0;
+      const r = NextResponse.json({
+        userId: user.id, username: user.username, role: user.role, locale: user.locale,
+        hasCharacter: chars.length > 0, character: main,
+        characters: chars.map((c: any) => ({ id: c.id, name: c.name, level: c.level, classType: c.classType, sex: c.sex, power: c.power, currentRegion: c.currentRegion })),
+        mailboxCount,
+      });
+      setSessionCookie(r, user.id);
+      return r;
+    }
+
+    // ── INVENTORY: equip ──
+    if (action === "equip") {
+      const mod = await import("@/game/api-handlers/inventory-equip");
+      return mod.POST(req);
+    }
+    // ── INVENTORY: sell ──
+    if (action === "sell") {
+      const mod = await import("@/game/api-handlers/inventory-sell");
+      return mod.POST(req);
+    }
+    // ── INVENTORY: use ──
+    if (action === "use") {
+      const mod = await import("@/game/api-handlers/inventory-use");
+      return mod.POST(req);
+    }
+    // ── INVENTORY: auto-equip ──
+    if (action === "auto-equip") {
+      const mod = await import("@/game/api-handlers/inventory-auto-equip");
+      return mod.POST(req);
+    }
+    // ── INVENTORY: skin ──
+    if (action === "skin") {
+      const mod = await import("@/game/api-handlers/inventory-skin");
+      return mod.POST(req);
+    }
+    // ── INVENTORY: remove ──
+    if (action === "remove") {
+      const mod = await import("@/game/api-handlers/inventory-remove");
+      return mod.POST(req);
     }
 
     return NextResponse.json({ error: "Action inválida" }, { status: 400 });

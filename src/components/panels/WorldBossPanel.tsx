@@ -194,7 +194,7 @@ export default function WorldBossPanel() {
     if (busy) return;
     setBusy(true);
     try {
-      const res = await fetch(`/api/combat?action=${path}`, {
+      const res = await fetch(`/api/game?action=${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId: character.id, ...body }),
@@ -233,7 +233,7 @@ export default function WorldBossPanel() {
     if (cooldownMs > 0 || busy) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/combat?action=world-boss-attack", {
+      const res = await fetch("/api/game?action=world-boss-attack", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId: character.id }),
@@ -271,7 +271,7 @@ export default function WorldBossPanel() {
     if (busy) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/combat?action=world-boss-break-shield", {
+      const res = await fetch("/api/game?action=world-boss-break-shield", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId: character.id }),
@@ -295,7 +295,7 @@ export default function WorldBossPanel() {
     if (cooldownMs > 0 || busy) return;
     setBusy(true);
     try {
-      const res = await fetch("/api/combat?action=world-boss-attack", {
+      const res = await fetch("/api/game?action=world-boss-attack", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId: character.id, mobId }),
