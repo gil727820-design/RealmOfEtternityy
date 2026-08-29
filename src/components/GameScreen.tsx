@@ -12,8 +12,6 @@ import ChallengePanel from "./panels/ChallengePanel";
 import DailyEventsPanel from "./panels/DailyEventsPanel";
 import SurvivalArenaPanel from "./panels/SurvivalArenaPanel";
 import InheritancePanel from "./panels/InheritancePanel";
-import WorldExplorationPanel from "./panels/WorldExplorationPanel";
-import RefinementPanel from "./panels/RefinementPanel";
 import EnchantmentsPanel from "./panels/EnchantmentsPanel";
 import QuestlinesPanel from "./panels/QuestlinesPanel";
 import SkinShopPanel from "./panels/SkinShopPanel";
@@ -198,8 +196,6 @@ export default function GameScreen() {
       case "skinshop": return <SkinShopPanel />;
       case "questlines": return <QuestlinesPanel />;
       case "enchantments": return <EnchantmentsPanel />;
-      case "refinement": return <RefinementPanel />;
-      case "worldexplore": return <WorldExplorationPanel />;
       case "inheritance": return <InheritancePanel />;
       case "survivalarena": return <SurvivalArenaPanel />;
       case "map": return <MapPanel />;
