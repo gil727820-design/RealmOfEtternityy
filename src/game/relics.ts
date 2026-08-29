@@ -48,7 +48,6 @@ export const RELICS: RelicDef[] = [
   { id: "relic_void", nameKey: "relic.void", icon: "🌑", image: "/images/relics/reliquia_fragmento_vazio.png", rarity: "legendary", attackPct: 6, critical: 5 },
   { id: "relic_guardian", nameKey: "relic.guardian", icon: "🛡️", image: "/images/relics/reliquia_guardiao_ancestral.png", rarity: "legendary", defensePct: 10, maxHpPct: 6 },
   { id: "relic_titan", nameKey: "relic.titan", icon: "🏔️", image: "/images/relics/reliquia_brasa_carmesim.png", rarity: "mythic", maxHpPct: 15, defensePct: 8, attackPct: 4 },
-  { id: "relic_phoenix", nameKey: "relic.phoenix", icon: "🔥", image: "/images/relics/reliquia_escama_dragao.png", rarity: "mythic", attackPct: 12, speed: 4, xpMult: 1.05 },
   { id: "relic_eternal", nameKey: "relic.eternal", icon: "⏳", image: "/images/relics/reliquia_guardiao_ancestral.png", rarity: "divine", attackPct: 10, defensePct: 10, maxHpPct: 10, critical: 5, speed: 3, xpMult: 1.1, goldMult: 1.1 },
 ];
 

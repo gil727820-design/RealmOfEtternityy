@@ -10,6 +10,16 @@ import { boostSummary, formatBoostMs } from "@/game/boosts";
 import { enchantById, enchantName, isBossEnchant } from "@/game/forge";
 import { setStatuses } from "@/game/sets";
 import ItemIcon from "@/components/ui/ItemIcon";
+import { RELICS } from "@/game/relics";
+
+/** Enriquece o template com a imagem da relíquia (se aplicável) */
+function withRelicImage(template: any): any {
+  if (!template) return template;
+  if (template.image) return template;
+  const relic = RELICS.find((r) => r.id === String(template.relicId) || r.id === String(template.nameKey));
+  if (relic?.image) return { ...template, image: relic.image };
+  return template;
+}
 
 // ---------------------------------------------------------------- utilidades
 function chipCls(active: boolean) {
@@ -995,7 +1005,7 @@ const categories = [
                     } ${selected?.template?.slot === slot ? "ring-2 ring-[#e94560]/60" : ""}`}
                   >
                     {entry ? (
-                      <ItemIcon template={entry.template} emojiClass="text-2xl" alt="" />
+                      <ItemIcon template={withRelicImage(entry.template)} emojiClass="text-2xl" alt="" />
                     ) : (
                       <span className="text-xl opacity-40">{SLOT_ICON[slot]}</span>
                     )}
@@ -1197,7 +1207,7 @@ const categories = [
                           ✓
                         </span>
                       )}
-                      <ItemIcon template={tpl} className="h-12 w-12 object-contain" emojiClass="text-3xl" alt="" />
+                      <ItemIcon template={withRelicImage(tpl)} className="h-12 w-12 object-contain" emojiClass="text-3xl" alt="" />
                       {/* ✦ item ENCANTADO — selo roxo com brilho (🔥 vermelho se for de CHEFE) */}
                       {ench && (
                         <span
@@ -1249,7 +1259,7 @@ const categories = [
                   className="grid h-16 w-16 flex-shrink-0 place-items-center rounded-xl border bg-bg-card"
                   style={{ borderColor: RARITY_COLORS[selected.template?.rarity] ?? "#ffffff33" }}
                 >
-                  <ItemIcon template={selected.template} className="h-12 w-12 object-contain" emojiClass="text-4xl" alt="" />
+                  <ItemIcon template={withRelicImage(selected.template)} className="h-12 w-12 object-contain" emojiClass="text-4xl" alt="" />
                 </div>
                 <div className="min-w-0">
                   <h3 className="truncate text-base font-black text-gray-100">
