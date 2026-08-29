@@ -159,6 +159,7 @@ const es: Record<string, string> = {
   "nav.skinShop": "Tienda de Skins",
   "nav.questlines": "Misiones Epicas",
   "nav.enchantments": "Encantamientos",
+  "nav.refinement": "Refinamiento",
   "nav.bestiary": "Bestiario",
   "nav.relics": "Reliquias",
   "nav.specialization": "Especialización",

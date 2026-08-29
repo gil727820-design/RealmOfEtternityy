@@ -146,6 +146,7 @@ const ptBR: Record<string, string> = {
   "nav.skinShop": "Loja de Skins",
   "nav.questlines": "Questlines Epicas",
   "nav.enchantments": "Encantamentos",
+  "nav.refinement": "Refinamento",
   "nav.bestiary": "Bestiário",
   "nav.relics": "Relíquias",
   "nav.specialization": "Especialização",
