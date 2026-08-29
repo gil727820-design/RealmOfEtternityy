@@ -141,8 +141,8 @@ export default function PetsPanel() {
                   boxShadow: `0 0 25px ${RARITY_COLORS[activePet.rarity]}22`,
                 }}
               >
-                <div className="w-20 h-20 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center text-5xl animate-float shadow-[0_0_20px_rgba(34,211,238,0.3)]">
-                  {activePet.icon}
+                <div className="w-20 h-20 rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center animate-float shadow-[0_0_20px_rgba(34,211,238,0.3)] overflow-hidden">
+                  <img src={activePet.image} alt="" className="w-full h-full object-cover" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -216,8 +216,8 @@ export default function PetsPanel() {
                       style={{ borderColor: isActive ? `${color}88` : "rgba(255,255,255,0.1)" }}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-14 h-14 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center text-3xl">
-                          {p.icon}
+                        <div className="w-14 h-14 rounded-xl bg-black/40 border border-white/10 flex items-center justify-center overflow-hidden">
+                          <img src={p.image} alt="" className="w-full h-full object-cover" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-bold truncate">{t(p.nameKey, locale)}</div>
@@ -271,7 +271,9 @@ export default function PetsPanel() {
                   const color = RARITY_COLORS[c.rarity] || "#9ca3af";
                   return (
                     <div key={c.id} className="p-3 rounded-xl border border-white/10 bg-black/30 opacity-60 text-center">
-                      <div className="text-3xl mb-1 grayscale">{c.icon}</div>
+                      <div className="w-12 h-12 mx-auto mb-1 rounded-lg overflow-hidden grayscale">
+                        <img src={c.image} alt="" className="w-full h-full object-cover" />
+                      </div>
                       <div className="text-xs font-bold truncate">{t(c.nameKey, locale)}</div>
                       <div className="text-[9px] font-black uppercase tracking-wider" style={{ color }}>
                         {t(`pet.rarity.${c.rarity}`, locale)}
