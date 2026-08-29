@@ -10,7 +10,6 @@ type SkinItem = {
   nameKey: string;
   rarity: string;
   image: string;
-  goldPrice: number;
   diamondPrice: number;
   classDiscount: boolean;
   owned: boolean;
@@ -65,14 +64,14 @@ export default function SkinShopPanel() {
 
   useEffect(() => { load(); }, [load]);
 
-  const buySkin = async (skinId: string, paymentType: "gold" | "diamonds") => {
+  const buySkin = async (skinId: string) => {
     if (!characterId) return;
     setBuying(skinId);
     try {
       const res = await fetch("/api/skin-shop", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ characterId, skinId, paymentType }),
+        body: JSON.stringify({ characterId, skinId }),
       });
       const data = await res.json();
       if (data.success) {
@@ -226,26 +225,16 @@ export default function SkinShopPanel() {
                       ✓ Na sua colecao
                     </div>
                   ) : (
-                    <div className="mt-2 flex gap-1.5">
+                    <div className="mt-2">
                       <button
-                        onClick={() => buySkin(item.id, "gold")}
-                        disabled={buying === item.id || gold < item.goldPrice}
-                        className={`flex-1 text-[10px] py-1.5 rounded-lg font-bold border transition ${
-                          gold >= item.goldPrice
-                            ? "border-[#ffd700]/40 text-[#ffd700] bg-[#ffd700]/10 hover:bg-[#ffd700]/20"
-                            : "border-white/5 text-gray-600 cursor-not-allowed"
-                        }`}>
-                        💰 {item.goldPrice.toLocaleString()}
-                      </button>
-                      <button
-                        onClick={() => buySkin(item.id, "diamonds")}
+                        onClick={() => buySkin(item.id)}
                         disabled={buying === item.id || diamonds < item.diamondPrice}
-                        className={`flex-1 text-[10px] py-1.5 rounded-lg font-bold border transition ${
+                        className={`w-full text-[11px] py-2 rounded-lg font-bold border transition ${
                           diamonds >= item.diamondPrice
                             ? "border-[#06b6d4]/40 text-[#06b6d4] bg-[#06b6d4]/10 hover:bg-[#06b6d4]/20"
                             : "border-white/5 text-gray-600 cursor-not-allowed"
                         }`}>
-                        💎 {item.diamondPrice}
+                        💎 Comprar {item.diamondPrice} diamantes
                       </button>
                     </div>
                   )}

@@ -26,7 +26,6 @@ export async function GET(req: NextRequest) {
       nameKey: item.skin.nameKey,
       rarity: item.skin.rarity,
       image: item.skin.image,
-      goldPrice: item.goldPrice,
       diamondPrice: item.diamondPrice,
       classDiscount: item.classDiscount,
       owned: ownedSkins.includes(item.skin.id),
@@ -61,19 +60,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Skin nao encontrada" }, { status: 404 });
     }
 
-    const payType = paymentType === "diamonds" ? "diamonds" : "gold";
-    const check = canBuySkin(item, char.gold || 0, char.diamonds || 0, ownedSkins, payType);
+    const check = canBuySkin(item, char.diamonds || 0, ownedSkins);
 
     if (!check.ok) {
       return NextResponse.json({ error: check.error }, { status: 400 });
     }
 
-    const patch: any = { skins: [...ownedSkins, skinId] };
-    if (payType === "gold") {
-      patch.gold = (char.gold || 0) - item.goldPrice;
-    } else {
-      patch.diamonds = (char.diamonds || 0) - item.diamondPrice;
-    }
+    const patch: any = { skins: [...ownedSkins, skinId], diamonds: (char.diamonds || 0) - item.diamondPrice };
 
     await jsonDb.updateCharacter(characterId, patch);
     const updated = await jsonDb.findCharacterById(characterId);
@@ -81,8 +74,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       skin: item.skin,
-      paid: payType === "gold" ? item.goldPrice : item.diamondPrice,
-      paymentType: payType,
+      paid: item.diamondPrice,
+      paymentType: "diamonds",
       character: updated,
     });
   } catch (e: unknown) {
