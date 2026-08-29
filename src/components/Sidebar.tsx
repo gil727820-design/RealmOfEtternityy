@@ -74,7 +74,6 @@ const NAV_SECTIONS: NavSection[] = [
       { tab: "questlines", icon: "📜", image: "/images/sidebar/menu_como_jogar.png", labelKey: "nav.questlines", color: "#f59e0b" },
       { tab: "enchantments", icon: "✨", image: "/images/sidebar/menu_maestria.png", labelKey: "nav.enchantments", color: "#a855f7" },
       { tab: "inheritance", icon: "🔄", image: "/images/sidebar/menu_colecao.png", labelKey: "nav.inheritance", color: "#3b82f6" },
-      { tab: "survivalarena", icon: "⚔️", image: "/images/sidebar/menu_bestiario.png", labelKey: "nav.survivalArena", color: "#e94560" },
     ],
   },
   {

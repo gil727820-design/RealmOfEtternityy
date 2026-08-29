@@ -10,7 +10,6 @@ import MissionsPanel from "./panels/MissionsPanel";
 import InventoryPanel from "./panels/InventoryPanel";
 import ChallengePanel from "./panels/ChallengePanel";
 import DailyEventsPanel from "./panels/DailyEventsPanel";
-import SurvivalArenaPanel from "./panels/SurvivalArenaPanel";
 import InheritancePanel from "./panels/InheritancePanel";
 import EnchantmentsPanel from "./panels/EnchantmentsPanel";
 import QuestlinesPanel from "./panels/QuestlinesPanel";
@@ -197,7 +196,6 @@ export default function GameScreen() {
       case "questlines": return <QuestlinesPanel />;
       case "enchantments": return <EnchantmentsPanel />;
       case "inheritance": return <InheritancePanel />;
-      case "survivalarena": return <SurvivalArenaPanel />;
       case "map": return <MapPanel />;
       case "tower": return <TowerPanel />;
       case "pvp": return <PvPPanel />;
