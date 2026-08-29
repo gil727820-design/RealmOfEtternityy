@@ -1,5 +1,5 @@
 /**
- * Backup automático do banco (Postgres/Supabase).
+ * Backup automático do banco SQLite.
  *
  * Dump completo de todas as tabelas para um arquivo JSON com timestamp,
  * mantendo apenas os últimos `KEEP` backups (padrão: 14 = 2 semanas).
@@ -16,16 +16,10 @@
 import "dotenv/config";
 import fs from "fs";
 import path from "path";
-import pg from "pg";
+import Database from "better-sqlite3";
 
-const { Pool } = pg;
-const url = process.env.DATABASE_URL;
-if (!url) {
-  console.error("DATABASE_URL não encontrada. Verifique o .env");
-  process.exit(1);
-}
-
-const pool = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
+const DB_DIR = process.env.DATABASE_DIR || path.join(process.cwd(), "data");
+const DB_PATH = process.env.DATABASE_PATH || path.join(DB_DIR, "game.db");
 const BACKUP_DIR = path.join(process.cwd(), "backups");
 const KEEP = Math.max(1, Number(process.env.KEEP) || 14);
 
@@ -38,19 +32,25 @@ function stamp(d = new Date()) {
 try {
   if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR, { recursive: true });
 
-  const tablesRes = await pool.query(
-    "SELECT tablename FROM pg_tables WHERE schemaname = 'public' ORDER BY tablename"
-  );
-  const tables = tablesRes.rows.map((r) => r.tablename);
+  const sqlite = new Database(DB_PATH, { readonly: true });
+
+  const tables = sqlite
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
+    .all()
+    .map((r) => r.name);
 
   const dump = {
     exportedAt: new Date().toISOString(),
+    engine: "sqlite",
     tables: {},
   };
+
   for (const table of tables) {
-    const res = await pool.query(`SELECT * FROM ${JSON.stringify(table).replace(/"/g, '"')}`);
-    dump.tables[table] = res.rows;
+    const rows = sqlite.prepare(`SELECT * FROM "${table}"`).all();
+    dump.tables[table] = rows;
   }
+
+  sqlite.close();
 
   const fileName = `backup_${stamp()}.json`;
   const filePath = path.join(BACKUP_DIR, fileName);
@@ -75,6 +75,4 @@ try {
 } catch (err) {
   console.error("❌ Falha no backup:", err.message);
   process.exitCode = 1;
-} finally {
-  await pool.end();
 }

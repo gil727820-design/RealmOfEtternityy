@@ -1,8 +1,8 @@
 /*
- * Migração para o Supabase (Postgres) — roda na MÁQUINA DO USUÁRIO (com internet).
+ * Migração para SQLite local — roda na MÁQUINA DO USUÁRIO.
  *
  * O que faz:
- *  1. Cria as 14 tabelas (padrão `id`/colunas de consulta + `data jsonb`).
+ *  1. Cria as 18 tabelas (padrão `id`/colunas de consulta + `data text` JSON).
  *  2. Migra APENAS dados de suporte/template:
  *       - itemTemplates.json  -> item_templates
  *       - missionTemplates.json -> mission_templates
@@ -15,43 +15,39 @@
  * Uso:  node scripts/migrate.mjs
  */
 import "dotenv/config";
-import { readFileSync, readdirSync, unlinkSync } from "fs";
+import { readFileSync, readdirSync, unlinkSync, mkdirSync, existsSync } from "fs";
 import path from "path";
-import pg from "pg";
+import Database from "better-sqlite3";
 
-const { Pool } = pg;
-const url = process.env.DATABASE_URL;
-if (!url) {
-  console.error("DATABASE_URL não encontrada. Verifique o .env");
-  process.exit(1);
-}
+const DB_DIR = process.env.DATABASE_DIR || path.join(process.cwd(), "data");
+const DB_PATH = process.env.DATABASE_PATH || path.join(DB_DIR, "game.db");
 
-const pool = new Pool({
-  connectionString: url,
-  ssl: { rejectUnauthorized: false },
-  connectionTimeoutMillis: 30000,
-  ...(process.env.PG_FORCE_IPV4 === "1" ? { family: 4 } : {}),
-});
+// Garante diretório
+if (!existsSync(DB_DIR)) mkdirSync(DB_DIR, { recursive: true });
+
+const db = new Database(DB_PATH);
+db.pragma("journal_mode = WAL");
+db.pragma("synchronous = NORMAL");
 
 const DDL = `
-CREATE TABLE IF NOT EXISTS users (id uuid PRIMARY KEY, username text, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS characters (id uuid PRIMARY KEY, user_id uuid, name text, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS item_templates (id integer PRIMARY KEY, name_key text, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS inventory_items (id uuid PRIMARY KEY, character_id uuid, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS mission_templates (id integer PRIMARY KEY, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS active_missions (id uuid PRIMARY KEY, character_id uuid, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS afk_rewards (id uuid PRIMARY KEY, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS battles (id uuid PRIMARY KEY, character_id uuid, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS guilds (id text PRIMARY KEY, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS guild_invites (id uuid PRIMARY KEY, target_character_id uuid, guild_id text, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS guild_chats (id uuid PRIMARY KEY, guild_id text, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS mailbox (id uuid PRIMARY KEY, character_id uuid, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS excluded_users (user_id text PRIMARY KEY, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS region_audio (region_id text PRIMARY KEY, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS server_settings (key text PRIMARY KEY, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS codes (id uuid PRIMARY KEY, code text, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS marketplace (id uuid PRIMARY KEY, character_id uuid, kind text, data jsonb NOT NULL);
-CREATE TABLE IF NOT EXISTS admin_logs (id uuid PRIMARY KEY, kind text, data jsonb NOT NULL);
+CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS characters (id TEXT PRIMARY KEY, user_id TEXT, name TEXT, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS item_templates (id INTEGER PRIMARY KEY, name_key TEXT, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS inventory_items (id TEXT PRIMARY KEY, character_id TEXT, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS mission_templates (id INTEGER PRIMARY KEY, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS active_missions (id TEXT PRIMARY KEY, character_id TEXT, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS afk_rewards (id TEXT PRIMARY KEY, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS battles (id TEXT PRIMARY KEY, character_id TEXT, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS guilds (id TEXT PRIMARY KEY, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS guild_invites (id TEXT PRIMARY KEY, target_character_id TEXT, guild_id TEXT, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS guild_chats (id TEXT PRIMARY KEY, guild_id TEXT, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS mailbox (id TEXT PRIMARY KEY, character_id TEXT, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS excluded_users (user_id TEXT PRIMARY KEY, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS region_audio (region_id TEXT PRIMARY KEY, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS server_settings (key TEXT PRIMARY KEY, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS codes (id TEXT PRIMARY KEY, code TEXT, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS marketplace (id TEXT PRIMARY KEY, character_id TEXT, kind TEXT, data TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS admin_logs (id TEXT PRIMARY KEY, kind TEXT, data TEXT NOT NULL);
 `;
 
 function readJson(name) {
@@ -62,42 +58,23 @@ function readJson(name) {
   }
 }
 
-async function main() {
-  console.log("→ Testando conexão com o Supabase...");
-  try {
-    const probe = await pool.connect();
-    probe.release();
-    console.log("  ✓ Conexão OK. Agora criando tabelas...");
-  } catch (err) {
-    console.error("\n✖ NÃO foi possível conectar ao Supabase.");
-    console.error("  Detalhe técnico:", err.message);
-    console.error("");
-    console.error("  Possíveis causas e soluções:");
-    console.error("  1) CONEXÃO DIRETA bloqueada (porta 5432): use o POOLER Session do painel.");
-    console.error("     String do Pooler (Session):");
-    console.error("     postgresql://postgres.kumjawdkufzwpsaeevmj:SENHA@aws-0-<REGIAO>.pooler.supabase.com:5432/postgres");
-    console.error("     -> cole essa string (substituindo SENHA e <REGIAO>) no .env");
-    console.error("  2) IPv6: rode com a variável  PG_FORCE_IPV4=1  (já suportada pelo script).");
-    console.error("  3) Senha incorreta ou com caractere especial: verifique o .env.");
-    console.error("  4) Firewall que bloqueia saida TCP para a porta 5432.");
-    console.error("");
-    process.exitCode = 1;
-    return;
-  }
-
-  console.log("→ Criando tabelas...");
-  await pool.query(DDL);
+function main() {
+  console.log("→ Criando tabelas no SQLite...");
+  db.exec(DDL);
   console.log("  OK: tabelas criadas/verificadas.");
 
-  // Templates de itens (preserva os ids originais)
+  // Templates de itens
   const items = readJson("itemTemplates.json");
   if (Array.isArray(items) && items.length) {
-    for (const row of items) {
-      await pool.query(
-        "INSERT INTO item_templates (id, name_key, data) VALUES ($1,$2,$3) ON CONFLICT (id) DO NOTHING",
-        [row.id ?? 0, row.nameKey ?? null, JSON.stringify(row)]
-      );
-    }
+    const insert = db.prepare(
+      "INSERT OR IGNORE INTO item_templates (id, name_key, data) VALUES (?, ?, ?)"
+    );
+    const tx = db.transaction((rows) => {
+      for (const row of rows) {
+        insert.run(row.id ?? 0, row.nameKey ?? null, JSON.stringify(row));
+      }
+    });
+    tx(items);
     console.log(`→ itemTemplates.json migrado: ${items.length} itens.`);
   } else {
     console.log("→ itemTemplates.json vazio/inexistente — nada a migrar (o seed criará).");
@@ -106,12 +83,15 @@ async function main() {
   // Templates de missões
   const missions = readJson("missionTemplates.json");
   if (Array.isArray(missions) && missions.length) {
-    for (const row of missions) {
-      await pool.query(
-        "INSERT INTO mission_templates (id, data) VALUES ($1,$2) ON CONFLICT (id) DO NOTHING",
-        [row.id ?? 0, JSON.stringify(row)]
-      );
-    }
+    const insert = db.prepare(
+      "INSERT OR IGNORE INTO mission_templates (id, data) VALUES (?, ?)"
+    );
+    const tx = db.transaction((rows) => {
+      for (const row of rows) {
+        insert.run(row.id ?? 0, JSON.stringify(row));
+      }
+    });
+    tx(missions);
     console.log(`→ missionTemplates.json migrado: ${missions.length} missões.`);
   } else {
     console.log("→ missionTemplates.json vazio/inexistente — nada a migrar (o seed criará).");
@@ -120,14 +100,17 @@ async function main() {
   // Música por ilha
   const audio = readJson("regionAudio.json");
   if (Array.isArray(audio) && audio.length) {
-    for (const row of audio) {
-      const rid = row.regionId ?? row.region_id ?? "";
-      if (!rid) continue;
-      await pool.query(
-        "INSERT INTO region_audio (region_id, data) VALUES ($1,$2) ON CONFLICT (region_id) DO NOTHING",
-        [rid, JSON.stringify(row)]
-      );
-    }
+    const insert = db.prepare(
+      "INSERT OR IGNORE INTO region_audio (region_id, data) VALUES (?, ?)"
+    );
+    const tx = db.transaction((rows) => {
+      for (const row of rows) {
+        const rid = row.regionId ?? row.region_id ?? "";
+        if (!rid) continue;
+        insert.run(rid, JSON.stringify(row));
+      }
+    });
+    tx(audio);
     console.log(`→ regionAudio.json migrado: ${audio.length} regiões.`);
   } else {
     console.log("→ regionAudio.json vazio/inexistente — nada a migrar.");
@@ -142,18 +125,19 @@ async function main() {
         console.log("→ removido data/" + f);
       }
     }
-  } catch (e) {
+  } catch {
     console.log("→ data/ não localizado para limpeza.");
   }
 
-  console.log("\n✔ Migração concluída. Comece também o servidor e acione o seed (loja") ;
-  console.log("  / painel admin) se algum template não estiver presente.");
+  db.close();
+  console.log("\n✔ Migração SQLite concluída. Banco: " + DB_PATH);
+  console.log("  Comece o servidor e acione o seed se algum template não estiver presente.");
 }
 
-main()
-  .then(() => pool.end())
-  .catch((e) => {
-    console.error("✖ Falha na migração:", e.message);
-    process.exitCode = 1;
-    pool.end();
-  });
+try {
+  main();
+} catch (e) {
+  console.error("✖ Falha na migração:", e.message);
+  process.exitCode = 1;
+  db.close();
+}

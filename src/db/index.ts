@@ -1,47 +1,44 @@
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import Database from "better-sqlite3";
+import path from "path";
+import fs from "fs";
+import * as schema from "./schema";
 
 /*
- * Persistência 100% no Supabase (Postgres).
- * NÃO existe mais fallback para JSON/local storage: se a DATABASE_URL não
- * estiver configurada, o servidor falha rápido com uma mensagem clara em vez
- * de rodar silenciosamente com um banco vazio (`db = {}`).
+ * Persistência 100% local com SQLite (better-sqlite3).
+ * Zero custo, zero servidor externo — arquivo .db na pasta do projeto.
+ * Ideal para comunidades de até ~50 jogadores simultâneos.
  */
-const databaseUrl = process.env.DATABASE_URL;
 
-if (!databaseUrl) {
-  throw new Error(
-    "FALTA DATABASE_URL no .env. Todo os dados agora são persistidos no Supabase (Postgres). " +
-      "Cole a connection string (preferencialmente o Pooler Session do painel) no .env " +
-      "e rode `node scripts/migrate.mjs` para criar as tabelas."
-  );
+const DB_DIR = process.env.DATABASE_DIR || path.join(process.cwd(), "data");
+const DB_PATH = process.env.DATABASE_PATH || path.join(DB_DIR, "game.db");
+
+// Garante que o diretório existe
+if (!fs.existsSync(DB_DIR)) {
+  fs.mkdirSync(DB_DIR, { recursive: true });
 }
 
 const globalForDb = globalThis as typeof globalThis & {
-  __arenaNextJsPostgresqlPool?: Pool;
+  __sqliteDb?: Database.Database;
 };
 
-const pool =
-  globalForDb.__arenaNextJsPostgresqlPool ??
-  new Pool({
-    connectionString: databaseUrl,
-    ssl: { rejectUnauthorized: false },
-    /*
-     * Pool enxuto: o pooler do Supabase em modo session limita a ~15 clientes
-     * (EMAXCONNSESSION). Usar max baixo + idle curto evita saturar o pooler
-     * com o polling do jogo (boss mundial, presença, mercado...).
-     * Idealmente use o TRANSACTION pooler (porta 6543) na DATABASE_URL — ele
-     * aceita centenas de clientes concorrentes sem esse teto.
-     */
-    max: 5,
-    idleTimeoutMillis: 5_000,
-    connectionTimeoutMillis: 8_000,
+const sqlite =
+  globalForDb.__sqliteDb ??
+  new Database(DB_PATH, {
+    // WAL mode = leitura concorrente + performance
+    verbose: process.env.NODE_ENV !== "production" ? console.log : undefined,
   });
 
 if (process.env.NODE_ENV !== "production") {
-  globalForDb.__arenaNextJsPostgresqlPool = pool;
+  globalForDb.__sqliteDb = sqlite;
 }
 
-const db = drizzle(pool);
+// Ativa WAL mode para melhor performance e WALCheckpoint periódico
+sqlite.pragma("journal_mode = WAL");
+sqlite.pragma("synchronous = NORMAL");
+sqlite.pragma("cache_size = -64000"); // 64MB cache
+sqlite.pragma("busy_timeout = 5000");
 
-export { pool, db };
+const db = drizzle(sqlite, { schema });
+
+export { sqlite, db };

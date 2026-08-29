@@ -1,28 +1,17 @@
 /*
- * Semeia o catálogo de ESPADAS (ícones "32 Free Weapon Icons") no banco.
+ * Semeia o catálogo de ESPADAS no banco SQLite local.
  *
- * O /api/seed só roda no login do jogo; este script insere as espadas
- * imediatamente para o painel admin (aba "Dar itens") já exibir os cartões.
- * Idempotente: usa ON CONFLICT (id) DO NOTHING — rodar de novo não duplica.
+ * Idempotente: usa INSERT OR IGNORE — rodar de novo não duplica.
  *
  * Uso:  node scripts/seed-swords.mjs
  */
 import "dotenv/config";
-import pg from "pg";
+import Database from "better-sqlite3";
 
-const { Pool } = pg;
-const url = process.env.DATABASE_URL;
-if (!url) {
-  console.error("DATABASE_URL não encontrada. Verifique o .env");
-  process.exit(1);
-}
+const DB_DIR = process.env.DATABASE_DIR || require("path").join(process.cwd(), "data");
+const DB_PATH = process.env.DATABASE_PATH || require("path").join(DB_DIR, "game.db");
 
-const pool = new Pool({
-  connectionString: url,
-  ssl: { rejectUnauthorized: false },
-  connectionTimeoutMillis: 30000,
-  ...(process.env.PG_FORCE_IPV4 === "1" ? { family: 4 } : {}),
-});
+const db = new Database(DB_PATH);
 
 const SWORD_SPRITES = {
   rusty: "/sprites/guerreiro/base/espada_v1_ferro.png",
@@ -54,27 +43,33 @@ const SWORDS = [
   { id: 49, nameKey: "item.sw_supreme", slot: "weapon", rarity: "supreme", minLevel: 80, attack: 185, defense: 10, hp: 50, speed: 10, critical: 20, icon: "⚡", image: "/images/items/swords/Iicon_32_34.png", sheet: SWORD_SPRITES.shadow, sellPrice: 4500 },
 ];
 
-async function main() {
-  const existing = await pool.query("SELECT id FROM item_templates WHERE id BETWEEN 30 AND 49");
-  const known = new Set(existing.rows.map((r) => r.id));
+function main() {
+  const existing = db.prepare("SELECT id FROM item_templates WHERE id BETWEEN 30 AND 49").all();
+  const known = new Set(existing.map((r) => r.id));
+
+  const insert = db.prepare(
+    "INSERT OR IGNORE INTO item_templates (id, name_key, data) VALUES (?, ?, ?)"
+  );
+
   let inserted = 0;
-  for (const s of SWORDS) {
-    if (known.has(s.id)) continue;
-    await pool.query(
-      "INSERT INTO item_templates (id, name_key, data) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING",
-      [s.id, s.nameKey, JSON.stringify(s)]
-    );
-    inserted++;
-  }
-  const total = await pool.query("SELECT count(*)::int AS c FROM item_templates");
-  console.log(`✔ ${inserted} espadas inseridas. Total de templates de item: ${total.rows[0].c}.`);
-  console.log("Recarregue o painel admin — a aba 'Dar itens' já vai mostrar os cartões das espadas.");
+  const tx = db.transaction(() => {
+    for (const s of SWORDS) {
+      if (known.has(s.id)) continue;
+      insert.run(s.id, s.nameKey, JSON.stringify(s));
+      inserted++;
+    }
+  });
+  tx();
+
+  const total = db.prepare("SELECT count(*) as c FROM item_templates").get();
+  console.log(`✔ ${inserted} espadas inseridas. Total de templates: ${total.c}.`);
+  db.close();
 }
 
-main()
-  .then(() => pool.end())
-  .catch((e) => {
-    console.error("✖ Falha ao semear espadas:", e.message);
-    process.exitCode = 1;
-    pool.end();
-  });
+try {
+  main();
+} catch (e) {
+  console.error("✖ Falha ao semear espadas:", e.message);
+  process.exitCode = 1;
+  db.close();
+}

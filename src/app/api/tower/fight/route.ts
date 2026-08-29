@@ -78,33 +78,28 @@ function floorMonster(char: any, floor: number, kind: TowerMonsterKind | TowerBo
   const lv = Number(char.level) || 1;
   const floorBoost = Math.min(120, f);
   // Dificuldade FIXA por andar (NÃO espelha o poder/inventário do jogador):
-  // os monstros ficam mais fortes gradualmente a cada andar. Assim um jogador
-  // de nível baixo não consegue quebrar o ranking global só por ser fraco —
-  // ele bate no teto dele e quem sobe é quem realmente é forte.
+  // Progressão SUAVE: os monstros ficam mais fortes gradualmente.
+  // Curva leve que permite subir dezenas de andares por sessão no início,
+  // ficando desafiador apenas nos andares altos (100+).
   //
-  // BALANCEAMENTO (anti "andar 5000 de graça"): o crescimento agora é
-  // SUPERLINEAR — HP ≈ f^1.9, ataque ≈ f^1.55, defesa ≈ f^1.45. Andares
-  // baixos continuam acessíveis, mas a cada centena o bicho fica MUITO mais
-  // forte: quem subia até o andar 5000 empurrando o mob com um golpe agora
-  // bate num muro real (a dificuldade não cresce mais em linha reta — ela
-  // dispara).
-  const bossMult = boss ? 1.4 : 1;
+  // BALANCEAMENTO: crescimento QUASE LINEAR com leve aceleração.
+  // HP ~ f*12, ataque ~ f*1.8, defesa ~ f*1.1 — progressão justa.
+  const bossMult = boss ? 1.5 : 1;
   return {
     kind,
     image: towerMonsterImage(kind),
     nameKey: TOWER_MONSTER_NAMES[kind],
-    maxHp: Math.max(50, Math.round((25 + f * 8 + Math.pow(f, 1.9) * 0.5) * bossMult)),
-    attack: Math.max(4, Math.round((5 + f * 1.2 + Math.pow(f, 1.55) * 0.3) * bossMult)),
-    defense: Math.max(1, Math.round((1 + f * 0.9 + Math.pow(f, 1.45) * 0.2) * bossMult)),
-    speed: Math.max(1, Math.round((1 + f * 0.05) * 100) / 100),
-    critical: Math.min(30, Math.round(1 + f * 0.2)),
-    dodge: Math.min(15, Math.round((0.5 + f * 0.1) * 10) / 10),
-    goldReward: boss ? 120 + f * 30 : 30 + f * 20,
-    // XP escala com a CURVA DE NÍVEL (mesmo conceito das missões): a recompensa
-    // acompanha o quanto você precisa para subir, então nunca vira "2k de XP
-    // pra quem precisa de 1M". Chefe paga o dobro de XP.
-    xpReward: Math.max(30, Math.floor(xpForLevel(lv) * (0.015 + floorBoost * 0.002)) * (boss ? 2 : 1)),
-    coinsReward: boss ? 30 + Math.floor(f / 10) : 4 + Math.floor(f / 12),
+    maxHp: Math.max(40, Math.round((20 + f * 12 + f * f * 0.02) * bossMult)),
+    attack: Math.max(3, Math.round((4 + f * 1.8 + f * f * 0.012) * bossMult)),
+    defense: Math.max(1, Math.round((1 + f * 1.1 + f * f * 0.008) * bossMult)),
+    speed: Math.max(1, Math.round((1 + f * 0.04) * 100) / 100),
+    critical: Math.min(30, Math.round(1 + f * 0.18)),
+    dodge: Math.min(15, Math.round((0.5 + f * 0.08) * 10) / 10),
+    goldReward: boss ? 150 + f * 35 : 40 + f * 25,
+    // XP escala com a CURVA DE NÍVEL — recompensa generosa para subir rápido.
+    // Chefe paga o triplo (desafio maior = recompensa maior).
+    xpReward: Math.max(30, Math.floor(xpForLevel(lv) * (0.02 + floorBoost * 0.003)) * (boss ? 3 : 1)),
+    coinsReward: boss ? 40 + Math.floor(f / 8) : 6 + Math.floor(f / 10),
     boss,
   };
 }
@@ -552,12 +547,17 @@ export async function POST(req: NextRequest) {
         let newStatPoints = char.unspentStatPoints || 0;
         let newSkillPoints = char.skillPoints || 0;
         while (newLevel < maxLevel && newXp >= newXpToNext) {
-          newXp -= newXpToNext;
-          newLevel++;
-          newXpToNext = xpForLevel(newLevel);
-          newStatPoints += 3;
-          if (newLevel % 3 === 0) newSkillPoints += 1;
-        }
+                  newXp -= newXpToNext;
+                  newLevel++;
+                  newXpToNext = xpForLevel(newLevel);
+                  newStatPoints += 3;
+                  if (newLevel % 3 === 0) newSkillPoints += 1;
+                }
+                // Cap no nível máximo: não acumula XP além do necessário.
+                if (newLevel >= maxLevel) {
+                  newXp = 0;
+                  newXpToNext = 0;
+                }
         const newGold = (char.gold || 0) + Math.floor(mon.goldReward * goldMultiplier(char));
         const newCoins = (char.towerCoins || 0) + mon.coinsReward;
         // O PET equipado ganha XP junto com o herói (escala com o andar).

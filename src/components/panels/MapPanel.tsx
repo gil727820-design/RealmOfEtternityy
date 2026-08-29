@@ -207,18 +207,18 @@ export default function MapPanel() {
   };
 
   return (
-    <div className="p-6 space-y-8 animate-fadeIn">
-      <div className="flex items-center gap-4">
-        <img src="/images/sidebar/menu_mapa.png" alt={t("map.title", locale)} className="w-12 h-12 object-contain" />
+    <div className="p-3 sm:p-4 lg:p-6 space-y-6 sm:space-y-8 animate-fadeIn">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <img src="/images/sidebar/menu_mapa.png" alt={t("map.title", locale)} className="w-10 h-10 sm:w-12 sm:h-12 object-contain" />
         <div>
-          <h2 className="text-3xl font-black text-white">{t("map.title", locale)}</h2>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white">{t("map.title", locale)}</h2>
           <p className="text-gray-400">{t("map.subtitle", locale)}</p>
         </div>
       </div>
 
       {currentRegion && (
         <div
-          className="relative overflow-hidden rounded-2xl p-6 flex items-center gap-6 border"
+          className="relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 flex items-center gap-4 sm:gap-6 border"
           style={{
             borderColor: regionWithAlpha(currentRegion.accent, 0.45),
             boxShadow: `0 0 26px ${regionWithAlpha(currentRegion.accent, 0.12)}`,
@@ -239,27 +239,27 @@ export default function MapPanel() {
           <img
             src={currentRegion.image}
             alt={currentRegion.id}
-            className="relative w-24 h-24 rounded-2xl border object-cover shadow-lg island-float"
+            className="relative w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 rounded-xl sm:rounded-2xl border object-cover shadow-lg island-float"
             style={{ borderColor: regionWithAlpha(currentRegion.accent, 0.6), boxShadow: `0 0 20px ${regionWithAlpha(currentRegion.accent, 0.3)}` }}
           />
           <div className="relative">
             <span className="text-xs font-bold uppercase tracking-wider" style={{ color: currentRegion.accent }}>
               {t("map.currentRegion", locale)}
             </span>
-            <h3 className="text-2xl font-bold text-white">{t("region." + currentRegion.id, locale)}</h3>
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-white">{t("region." + currentRegion.id, locale)}</h3>
             <p className="text-gray-300 text-sm">{t("region." + currentRegion.id + ".desc", locale)}</p>
           </div>
         </div>
       )}
 
       {/* ⚔️ Farm de Mobs da região — luta contra monstros por XP/ouro/drops */}
-      <div className="relative overflow-hidden rounded-2xl p-5 border bg-gradient-to-br from-emerald-950/40 to-black/60">
+      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-5 border bg-gradient-to-br from-emerald-950/40 to-black/60">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(34,197,94,0.1),transparent_70%)]" />
         <div className="relative flex flex-wrap items-center gap-4">
           <div className="text-4xl">⚔️</div>
           <div className="flex-1 min-w-0">
             <div className="text-[10px] font-black uppercase tracking-widest text-emerald-400">🗺️ {t("map.farmArea", locale)}</div>
-            <h3 className="text-xl font-black text-white">{t("map.farmTitle", locale)}</h3>
+            <h3 className="text-base sm:text-lg lg:text-xl font-black text-white">{t("map.farmTitle", locale)}</h3>
             <div className="text-xs text-gray-400 mt-0.5">{t("map.farmDesc", locale)}</div>
           </div>
           <div className="flex flex-col items-end gap-1.5">
@@ -396,17 +396,17 @@ export default function MapPanel() {
           }}
         />
       ) : (
-        <div className="relative overflow-hidden rounded-2xl p-5 border bg-gradient-to-br from-orange-950/40 to-black/60">
+        <div className="relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-5 border bg-gradient-to-br from-orange-950/40 to-black/60">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(249,115,22,0.12),transparent_70%)]" />
           <div className="relative flex flex-wrap items-center gap-4">
             <img
               src={miniBossStatus.miniBoss.image}
               alt={t(miniBossStatus.miniBoss.nameKey, locale)}
-              className="w-16 h-16 rounded-2xl border-2 border-orange-500/60 object-cover shadow-[0_0_20px_rgba(249,115,22,0.35)] animate-float"
+              className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl border-2 border-orange-500/60 object-cover shadow-[0_0_20px_rgba(249,115,22,0.35)] animate-float"
             />
             <div className="flex-1 min-w-0">
               <div className="text-[10px] font-black uppercase tracking-widest text-orange-400">🐲 {t("map.miniBoss", locale)}</div>
-              <h3 className="text-lg font-black text-white">{t(miniBossStatus.miniBoss.nameKey, locale)}</h3>
+              <h3 className="text-base sm:text-lg font-black text-white">{t(miniBossStatus.miniBoss.nameKey, locale)}</h3>
               <div className="text-xs text-gray-400 mt-0.5">{t("map.miniBossDesc", locale)}</div>
               {miniBossStatus.available ? (
                 <button

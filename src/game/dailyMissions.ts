@@ -10,23 +10,23 @@
  * `jsonDb.updateCharacter(charId, trackDailyProgress(char, "type"))`.
  */
 
-/** Recompensa base de uma missão diária (escala com o nível). */
+/** Recompensa base de uma missão diária (escala com o nível). Generoso! */
 export function dailyReward(level: number) {
   const lv = Math.max(1, Number(level) || 1);
   return {
-    gold: 250 + lv * 15,
-    crystals: 3 + Math.floor(lv / 10),
-    towerCoins: 20 + lv * 2,
+    gold: 400 + lv * 25,
+    crystals: 5 + Math.floor(lv / 8),
+    towerCoins: 35 + lv * 3,
   };
 }
 
-/** Recompensa base de uma missão semanal (escala com o nível). */
+/** Recompensa base de uma missão semanal (escala com o nível). Generoso! */
 export function weeklyReward(level: number) {
   const lv = Math.max(1, Number(level) || 1);
   return {
-    gold: 1500 + lv * 80,
-    crystals: 15 + Math.floor(lv / 8),
-    towerCoins: 100 + lv * 10,
+    gold: 2500 + lv * 120,
+    crystals: 25 + Math.floor(lv / 6),
+    towerCoins: 180 + lv * 15,
   };
 }
 

@@ -29,51 +29,56 @@ export default function TopBar({ onRefresh, refreshing }: { onRefresh?: () => vo
     classImage((character.classType as ClassName) || "warrior", (character.sex as string) || "male");
 
   return (
-    <div className="flex items-center justify-between w-full">
-      <div className="flex items-center gap-3 flex-wrap">
+    <div className="flex items-center justify-between w-full gap-2">
+      {/* Resources — compacto no mobile */}
+      <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 flex-wrap min-w-0">
         <ResourcePill
           icon="💰"
           img="/images/icons/icone_moeda.png"
           value={gold.toLocaleString()}
           color="gold"
           front
+          compact
         />
         <ResourcePill
           icon="💎"
           img="/images/icons/icone_diamante.png"
           value={diamonds.toLocaleString()}
           color="diamond"
+          compact
         />
         <ResourcePill
           icon="⚡"
           img="/images/icons/icone_raio.png"
           value={`${energy}/${maxEnergy}`}
           color="energy-yellow"
+          compact
         />
         <button
           onClick={() => setTab("mailbox")}
           title={t("nav.mailbox", locale)}
-          className="relative flex items-center gap-2 rounded-xl px-4 py-2 border border-white/10 hover:border-[#facc15]/50 transition-colors group cursor-pointer"
+          className="relative flex items-center gap-1.5 sm:gap-2 rounded-xl px-2.5 sm:px-4 py-1.5 sm:py-2 border border-white/10 hover:border-[#d4a843]/50 transition-colors group cursor-pointer touch-target"
         >
-          <span className="text-xl group-hover:animate-bounceIn">📬</span>
-          <span className="text-sm font-bold text-gray-300 group-hover:text-white hidden sm:inline">
+          <span className="text-lg sm:text-xl group-hover:animate-bounceIn">📬</span>
+          <span className="text-xs sm:text-sm font-bold text-gray-300 group-hover:text-white hidden sm:inline">
             {t("nav.mailbox", locale)}
           </span>
           {mailboxCount > 0 && (
-            <span className="absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-[#ffd700] text-black text-[10px] font-black flex items-center justify-center shadow-[0_0_10px_rgba(255,215,0,0.6)] animate-pulse">
+            <span className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 min-w-[18px] sm:min-w-5 h-[18px] sm:h-5 px-1 rounded-full bg-[#d4a843] text-black text-[9px] sm:text-[10px] font-black flex items-center justify-center shadow-[0_0_10px_rgba(212,168,67,0.6)] animate-pulse">
               {mailboxCount}
             </span>
           )}
         </button>
       </div>
       
-      <div className="flex items-center gap-3">
+      {/* Right side — compacto no mobile */}
+      <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3 flex-shrink-0">
         {character.activeTitle ? (
           (() => {
             const title = TITLES.find((x) => x.id === character.activeTitle);
             return title ? (
               <div
-                className="hidden md:flex items-center gap-2 bg-bg-surface rounded-xl px-3 py-1.5 border border-[#facc15]/30"
+                className="hidden lg:flex items-center gap-2 bg-bg-surface rounded-xl px-3 py-1.5 border border-[#facc15]/30"
                 title={t(title.nameKey, locale)}
               >
                 <span>{title.icon}</span>
@@ -82,17 +87,17 @@ export default function TopBar({ onRefresh, refreshing }: { onRefresh?: () => vo
             ) : null;
           })()
         ) : null}
-        <div className="hidden md:flex items-center gap-2 bg-bg-surface rounded-xl px-3 py-1.5 border border-white/5">
-          <span className="text-gold font-bold">Lv.{level}</span>
+        <div className="hidden sm:flex items-center gap-1.5 bg-bg-surface rounded-xl px-2.5 sm:px-3 py-1.5 border border-white/5">
+          <span className="text-gold font-bold text-xs sm:text-sm">Lv.{level}</span>
         </div>
-        <div className="flex items-center gap-2 bg-bg-surface rounded-xl px-3 py-1.5 border border-white/5 text-gray-400 text-sm">
+        <div className="hidden md:flex items-center gap-2 bg-bg-surface rounded-xl px-3 py-1.5 border border-white/5 text-gray-400 text-sm">
           <span>{t(`region.${region}`, locale)}</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           <img
             src={avatarSrc}
             alt={(character.name as string) || "Player"}
-            className="w-9 h-9 rounded-full border-2 border-[#ff6b6b]/40 object-cover shadow-[0_0_10px_rgba(255,107,107,0.2)]"
+            className="w-7 h-7 sm:w-8 sm:h-8 lg:w-9 lg:h-9 rounded-full border-2 border-[#d4a843]/45 object-cover shadow-[0_0_10px_rgba(212,168,67,0.25)]"
           />
           <span className="hidden lg:block text-sm font-bold text-white">{(character.name as string) || "Player"}</span>
         </div>
@@ -101,10 +106,10 @@ export default function TopBar({ onRefresh, refreshing }: { onRefresh?: () => vo
             onClick={onRefresh}
             disabled={refreshing}
             title={t("general.refresh", locale)}
-            className="flex items-center gap-2 rounded-xl px-4 py-2 border border-white/10 hover:border-[#ff6b6b]/50 transition-colors group cursor-pointer disabled:opacity-60 disabled:cursor-wait"
+            className="flex items-center gap-1.5 sm:gap-2 rounded-xl px-2.5 sm:px-4 py-1.5 sm:py-2 border border-white/10 hover:border-[#d4a843]/50 transition-colors group cursor-pointer disabled:opacity-60 disabled:cursor-wait touch-target"
           >
-            <span className={`text-xl ${refreshing ? "animate-spin" : "group-hover:animate-bounceIn"}`}>🔄</span>
-            <span className="text-sm font-bold text-gray-300 group-hover:text-white hidden sm:inline">
+            <span className={`text-lg sm:text-xl ${refreshing ? "animate-spin" : "group-hover:animate-bounceIn"}`}>🔄</span>
+            <span className="text-xs sm:text-sm font-bold text-gray-300 group-hover:text-white hidden sm:inline">
               {refreshing ? t("general.loading", locale) : t("general.refresh", locale)}
             </span>
           </button>
@@ -114,23 +119,23 @@ export default function TopBar({ onRefresh, refreshing }: { onRefresh?: () => vo
   );
 }
 
-const ResourcePill = ({ icon, value, color, img, front }: { icon: string, value: string | number, color: string, img?: string, front?: boolean }) => (
+const ResourcePill = ({ icon, value, color, img, front, compact }: { icon: string, value: string | number, color: string, img?: string, front?: boolean, compact?: boolean }) => (
   <div
     className={
-      "flex items-center gap-2 rounded-xl px-4 py-2 border border-white/10 hover:border-accent/40 transition-colors group stat-card " +
-      (front ? "z-20 -mr-1 ring-1 ring-[#ffd700]/40 bg-gradient-to-r from-[#3a2f0a]/90 to-[#1c1c2f] shadow-[0_0_12px_rgba(255,215,0,0.15)]" : "")
+      "flex items-center gap-1.5 sm:gap-2 rounded-xl px-2.5 sm:px-4 py-1.5 sm:py-2 border border-white/10 hover:border-[#d4a843]/50 transition-colors group stat-card " +
+      (front ? "z-20 -mr-1 ring-1 ring-[#d4a843]/40 bg-gradient-to-r from-[#2a2210]/90 to-[#1c1c2f] shadow-[0_0_12px_rgba(212,168,67,0.15)]" : "")
     }
   >
     {img ? (
       <img
         src={img}
         alt={icon}
-        className="w-6 h-6 object-contain group-hover:animate-bounceIn"
+        className={`${compact ? 'w-4 h-4 sm:w-5 sm:h-5' : 'w-5 h-5 sm:w-6 sm:h-6'} object-contain group-hover:animate-bounceIn`}
         draggable={false}
       />
     ) : (
-      <span className="text-xl group-hover:animate-bounceIn">{icon}</span>
+      <span className={`${compact ? 'text-base sm:text-lg' : 'text-lg sm:text-xl'} group-hover:animate-bounceIn`}>{icon}</span>
     )}
-    <span className="font-bold text-white whitespace-nowrap">{value}</span>
+    <span className={`font-bold text-white whitespace-nowrap ${compact ? 'text-xs sm:text-sm' : 'text-sm sm:text-base'}`}>{value}</span>
   </div>
 );

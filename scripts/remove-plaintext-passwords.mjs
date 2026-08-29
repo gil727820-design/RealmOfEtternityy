@@ -7,58 +7,66 @@
  * O que faz:
  *  - Remove o campo `passwordPlain` de TODOS os usuários (a senha de verdade
  *    nunca foi o problema — o hash bcrypt é mantido intacto).
- *  - Também remove `password` do retorno (defensivo), mas NUNCA apaga o hash,
- *    senão ninguém mais consegue logar.
  */
 import "dotenv/config";
-import pg from "pg";
+import fs from "fs";
+import path from "path";
+import Database from "better-sqlite3";
 
-const { Pool } = pg;
-const url = process.env.DATABASE_URL;
-if (!url) {
-  console.error("DATABASE_URL não encontrada. Verifique o .env");
+const DB_DIR = process.env.DATABASE_DIR || path.join(process.cwd(), "data");
+const DB_PATH = process.env.DATABASE_PATH || path.join(DB_DIR, "game.db");
+
+if (!fs.existsSync(DB_PATH)) {
+  console.error("✖ Banco não encontrado. Execute `node scripts/migrate.mjs` primeiro.");
   process.exit(1);
 }
 
-const pool = new Pool({
-  connectionString: url,
-  ssl: { rejectUnauthorized: false },
-  connectionTimeoutMillis: 30000,
-});
+const db = new Database(DB_PATH);
 
-async function main() {
-  const { rows } = await pool.query("SELECT id, data FROM users");
+function main() {
+  const rows = db.prepare("SELECT id, data FROM users").all();
   let cleaned = 0;
   let hadPassword = 0;
-  for (const row of rows) {
-    const data = row.data || {};
-    let changed = false;
-    if (typeof data.passwordPlain === "string" && data.passwordPlain !== "") {
-      delete data.passwordPlain;
-      changed = true;
-      cleaned++;
+
+  const update = db.prepare("UPDATE users SET data = ? WHERE id = ?");
+
+  const tx = db.transaction(() => {
+    for (const row of rows) {
+      const data = JSON.parse(row.data);
+      let changed = false;
+
+      if (typeof data.passwordPlain === "string" && data.passwordPlain !== "") {
+        delete data.passwordPlain;
+        changed = true;
+        cleaned++;
+      }
+
+      if (typeof data.passwordPlain === "string") {
+        delete data.passwordPlain;
+        changed = true;
+      }
+
+      if (changed) {
+        update.run(JSON.stringify(data), row.id);
+      }
+
+      if (typeof data.password === "string" && data.password.startsWith("$2")) {
+        hadPassword++;
+      }
     }
-    if (typeof data.passwordPlain === "string") {
-      delete data.passwordPlain;
-      changed = true;
-    }
-    // Só remove o campo se existir na raiz (defensivo — não toca no hash).
-    if (changed) {
-      await pool.query("UPDATE users SET data = $2 WHERE id = $1", [row.id, JSON.stringify(data)]);
-    }
-    if (typeof data.password === "string" && data.password.startsWith("$2")) {
-      hadPassword++;
-    }
-  }
+  });
+  tx();
+
   console.log(`✔ ${cleaned} usuário(s) tiveram o passwordPlain removido.`);
   console.log(`✔ ${hadPassword} usuário(s) com hash bcrypt mantido (login intacto).`);
   console.log("  Pronto. O painel admin agora só redefine senha via hash.");
+  db.close();
 }
 
-main()
-  .then(() => pool.end())
-  .catch((e) => {
-    console.error("✖ Falha na limpeza:", e.message);
-    process.exitCode = 1;
-    pool.end();
-  });
+try {
+  main();
+} catch (e) {
+  console.error("✖ Falha na limpeza:", e.message);
+  process.exitCode = 1;
+  db.close();
+}

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
 import { classImage, type ClassName } from "@/game/constants";
+import useSpriteAnim from "@/components/ui/useSpriteAnim";
 
 /**
  * Batalha de Chefe ⚔️ — interface de combate igual à TORRE, reutilizável
@@ -62,6 +63,7 @@ export default function BossBattle({
   const [mShake, setMShake] = useState(0);
   const [rageFx, setRageFx] = useState(false);
   const rageTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const spriteAnim = useSpriteAnim();
   const autoStop = useRef(false);
   const starting = useRef(false);
   const floatId = useRef(0);
@@ -95,6 +97,9 @@ export default function BossBattle({
     if (!data || !data.battle) return false;
     setBattle(data.battle);
     if (data.log?.length) setLog((prev) => [...prev, ...data.log]);
+
+    // Animações de sprite (investida, recuo, rage, morte...).
+    spriteAnim.processEvents(data.events, !!data.won, !!data.lost);
 
     (data.events || []).forEach((ev: any) => {
       if (ev.amount && (ev.type === "hit" || ev.type === "crit" || ev.type === "skill")) {
@@ -141,6 +146,7 @@ export default function BossBattle({
       setBattle(data.battle);
       setLog([]);
       setResult(null);
+      spriteAnim.triggerRunIn();
       autoStop.current = false;
       setStage("battle");
       setTimeout(() => autoLoop(data.battle), 900);
@@ -281,8 +287,14 @@ export default function BossBattle({
           <div className="flex items-start justify-between gap-2 relative">
             <div className="flex-1 text-center">
               <div className="relative inline-block">
-                <div key={pShake} className={pShake > 0 ? "animate-hit-shake" : ""}>
-                  <img src={playerImg} alt={playerName} className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl border-2 border-[#4ecdc4]/60 object-cover shadow-[0_0_25px_rgba(78,205,196,0.35)]" />
+                <div key={pShake}>
+                  <div className={`relative w-24 h-24 sm:w-32 sm:h-32 ${spriteAnim.playerAnim || (pShake > 0 ? "animate-hit-shake" : "")}`}>
+                    <img
+                      src={playerImg}
+                      alt={playerName}
+                      className={`w-full h-full rounded-2xl border-2 border-[#4ecdc4]/60 object-cover shadow-[0_0_25px_rgba(78,205,196,0.35)] ${!spriteAnim.playerAnim && !pShake ? "animate-float" : ""}`}
+                    />
+                  </div>
                 </div>
                 {floatEls("player")}
               </div>
@@ -302,19 +314,25 @@ export default function BossBattle({
 
             <div className="flex-1 text-center">
               <div className="relative inline-block">
-                <div key={mShake} className={`${mShake > 0 ? "animate-hit-shake" : ""} ${battle.monRaged ? "animate-rage-pulse" : ""}`}>
-                  <img
-                    src={battle.monImage || monster.image}
-                    alt={monsterName}
-                    className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl border-2 object-cover"
-                    style={{
-                      borderColor: battle.monRaged ? "#ef4444" : `${accent}aa`,
-                      boxShadow: battle.monRaged ? "0 0 30px rgba(239,68,68,0.75)" : `0 0 25px ${accent}55`,
-                    }}
-                  />
-                  {battle.monRaged && (
-                    <span className="absolute -top-2 -right-2 text-xl animate-pulse-soft" title="RAGE!">😡</span>
-                  )}
+                <div key={mShake}>
+                  <div className={`relative w-24 h-24 sm:w-32 sm:h-32 ${spriteAnim.monsterAnim || (mShake > 0 ? "animate-hit-shake" : "")} ${battle.monRaged ? "animate-rage-pulse" : ""}`}>
+                    <img
+                      src={battle.monImage || monster.image}
+                      alt={monsterName}
+                      className={`w-full h-full rounded-2xl border-2 object-cover ${!spriteAnim.monsterAnim && !mShake ? "animate-floatSlow" : ""}`}
+                      style={{
+                        borderColor: battle.monRaged ? "#ef4444" : `${accent}aa`,
+                        boxShadow: battle.monRaged ? "0 0 30px rgba(239,68,68,0.75)" : `0 0 25px ${accent}55`,
+                      }}
+                    />
+                    {/* Arco de corte no alvo */}
+                    {spriteAnim.showSlash && (
+                      <span className={`slash-trail ${spriteAnim.slashCrit ? "slash-trail-crit" : ""}`} />
+                    )}
+                    {battle.monRaged && (
+                      <span className="absolute -top-2 -right-2 text-xl animate-pulse-soft" title="RAGE!">😡</span>
+                    )}
+                  </div>
                 </div>
                 {floatEls("monster")}
               </div>

@@ -131,7 +131,12 @@ export async function POST(req: NextRequest) {
         newXpToNext = xpForLevel(newLevel);
         newStatPoints += 3;
         if (newLevel % 3 === 0) newSkillPoints += 1;
+      }      // Cap no nível máximo: não acumula XP além do necessário.
+      if (newLevel >= maxLevel) {
+        newXp = 0;
+        newXpToNext = 0;
       }
+
       const newGold = (char.gold || 0) + Math.floor(totalGold * goldMultiplier(char));
 
       // Material: rola UMA vez por sessão com chance reduzida.
@@ -229,7 +234,12 @@ export async function POST(req: NextRequest) {
       newXpToNext = xpForLevel(newLevel);
       newStatPoints += 3;
       if (newLevel % 3 === 0) newSkillPoints += 1;
+    }    // Cap no nível máximo: não acumula XP além do necessário.
+    if (newLevel >= maxLevel) {
+      newXp = 0;
+      newXpToNext = 0;
     }
+
 
     const newGold = (char.gold || 0) + Math.floor(result.rewards.gold * goldMultiplier(char));
 

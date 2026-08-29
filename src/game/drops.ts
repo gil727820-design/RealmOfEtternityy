@@ -48,21 +48,21 @@ export function rollMissionDrops(
   const equipment = allTemplates.filter((it: any) => {
     if (it.type === "consumable" || it.stackable === true) return false;
     if (!it.slot) return false;
-    return (Number(it.minLevel) || 1) <= lvl + 5;
+    return (Number(it.minLevel) || 1) <= lvl + 8;
   });
 
   // Pool de consumíveis (poções).
   const consumables = allTemplates.filter((it: any) => {
     if (it.type !== "consumable" && it.stackable !== true) return false;
-    return (Number(it.minLevel) || 1) <= lvl + 5;
+    return (Number(it.minLevel) || 1) <= lvl + 8;
   });
 
-  // 5% — equipamento
-  if (equipment.length > 0 && rng() < 0.05) {
-    // Teto de raridade: comum/uncomum/raro nas fases iniciais, melhora com o nível.
+  // 12% — equipamento (mais generoso para o jogador sempre ter algo novo)
+  if (equipment.length > 0 && rng() < 0.12) {
+    // Teto de raridade: progressão suave com o nível.
     const maxRarityIdx = Math.min(
       RARITY_ORDER.length - 1,
-      lvl < 10 ? 0 : lvl < 25 ? 1 : lvl < 45 ? 2 : lvl < 70 ? 3 : 4
+      lvl < 8 ? 0 : lvl < 20 ? 1 : lvl < 40 ? 2 : lvl < 65 ? 3 : lvl < 85 ? 4 : 5
     );
     const rarity = weightedRarity(maxRarityIdx, rng);
     const pool = equipment.filter((it: any) => String(it.rarity) === rarity);
@@ -80,8 +80,8 @@ export function rollMissionDrops(
     }
   }
 
-  // 12% — consumível (poção)
-  if (consumables.length > 0 && rng() < 0.12) {
+  // 18% — consumível (poção) — jogador sempre precisa de poções
+  if (consumables.length > 0 && rng() < 0.18) {
     const pick = consumables[Math.floor(rng() * consumables.length)];
     if (pick) {
       drops.push({
@@ -90,7 +90,7 @@ export function rollMissionDrops(
         icon: pick.icon,
         image: pick.image,
         rarity: String(pick.rarity || "common"),
-        quantity: 1,
+        quantity: Math.floor(rng() * 3) + 1,
         kind: "consumable",
       });
     }

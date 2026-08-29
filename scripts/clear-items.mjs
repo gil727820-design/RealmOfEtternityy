@@ -1,5 +1,5 @@
 /*
- * Apaga TODOS os itens do jogo (por enquanto):
+ * Apaga TODOS os itens do jogo:
  *   1. inventory_items  -> itens no inventário de todas as contas
  *   2. item_templates   -> definições de item (loja/forja/drops ficam vazios)
  *
@@ -9,40 +9,35 @@
  * Uso:  node scripts/clear-items.mjs
  */
 import "dotenv/config";
-import pg from "pg";
+import fs from "fs";
+import path from "path";
+import Database from "better-sqlite3";
 
-const { Pool } = pg;
-const url = process.env.DATABASE_URL;
-if (!url) {
-  console.error("DATABASE_URL não encontrada. Verifique o .env");
+const DB_DIR = process.env.DATABASE_DIR || path.join(process.cwd(), "data");
+const DB_PATH = process.env.DATABASE_PATH || path.join(DB_DIR, "game.db");
+
+if (!fs.existsSync(DB_PATH)) {
+  console.error("✖ Banco não encontrado. Execute `node scripts/migrate.mjs` primeiro.");
   process.exit(1);
 }
 
-const pool = new Pool({
-  connectionString: url,
-  ssl: { rejectUnauthorized: false },
-  connectionTimeoutMillis: 30000,
-  ...(process.env.PG_FORCE_IPV4 === "1" ? { family: 4 } : {}),
-});
+const db = new Database(DB_PATH);
 
-async function main() {
-  const inv = await pool.query("SELECT count(*)::int AS c FROM inventory_items");
-  const tpl = await pool.query("SELECT count(*)::int AS c FROM item_templates");
-  console.log(`Antes: ${inv.rows[0].c} itens no inventário, ${tpl.rows[0].c} templates.`);
+try {
+  const inv = db.prepare("SELECT count(*) as c FROM inventory_items").get();
+  const tpl = db.prepare("SELECT count(*) as c FROM item_templates").get();
+  console.log(`Antes: ${inv.c} itens no inventário, ${tpl.c} templates.`);
 
-  await pool.query("DELETE FROM inventory_items");
-  await pool.query("DELETE FROM item_templates");
+  db.prepare("DELETE FROM inventory_items").run();
+  db.prepare("DELETE FROM item_templates").run();
 
-  const invAfter = await pool.query("SELECT count(*)::int AS c FROM inventory_items");
-  const tplAfter = await pool.query("SELECT count(*)::int AS c FROM item_templates");
-  console.log(`Depois: ${invAfter.rows[0].c} itens no inventário, ${tplAfter.rows[0].c} templates.`);
+  const invAfter = db.prepare("SELECT count(*) as c FROM inventory_items").get();
+  const tplAfter = db.prepare("SELECT count(*) as c FROM item_templates").get();
+  console.log(`Depois: ${invAfter.c} itens no inventário, ${tplAfter.c} templates.`);
   console.log("✔ Todos os itens foram removidos.");
+} catch (e) {
+  console.error("✖ Falha ao limpar itens:", e.message);
+  process.exitCode = 1;
+} finally {
+  db.close();
 }
-
-main()
-  .then(() => pool.end())
-  .catch((e) => {
-    console.error("✖ Falha ao limpar itens:", e.message);
-    process.exitCode = 1;
-    pool.end();
-  });

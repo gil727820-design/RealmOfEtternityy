@@ -49,7 +49,12 @@ export async function POST(req: NextRequest) {
       newXpToNext = xpForLevel(newLevel);
       newStatPoints += 3;
       if (newLevel % 3 === 0) newSkillPoints += 1;
+    }    // Cap no nível máximo: não acumula XP além do necessário.
+    if (newLevel >= maxLevel) {
+      newXp = 0;
+      newXpToNext = 0;
     }
+
 
     const newGold = (char.gold || 0) + Math.floor((mission.goldReward || 0) * goldMultiplier(char));
     const power = powerCalc({ attack: char.attack, defense: char.defense, hp: char.maxHp, speed: char.speed, critical: char.critical, level: newLevel });

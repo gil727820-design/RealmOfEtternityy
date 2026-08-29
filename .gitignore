@@ -43,5 +43,10 @@ _typecheck.txt
 /public/uploads/proofs/
 /public/uploads/donate/
 
+# Banco de dados SQLite local
+/data/*.db
+/data/*.db-wal
+/data/*.db-shm
+
 # Backups automáticos do banco (scripts/backup-db.mjs)
 /backups/

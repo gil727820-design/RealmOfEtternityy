@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
@@ -12,13 +12,8 @@ export default function AuthScreen() {
   const [loading, setLoading] = useState(false);
   const { setUser, setCharacters, setShowCharacterSelect, setMailboxCount, resetSession, locale, setLocale, setVolume } = useGameStore();
 
-  // Restaura a sessão pelo cookie httpOnly (sem cache local). Se houver sessão
-  // válida, entra direto; senão, mostra o formulário de login.
   useEffect(() => {
     setMounted(true);
-    // Limpa o cache antigo do jogo (localStorage da storage `...-v1`) que
-    // guardava personagem/inventário/missões. A partir da v2 nada de jogo é
-    // persistido — esta chave só sobra como lixo no navegador.
     try {
       if (typeof window !== "undefined") {
         localStorage.removeItem("realm-of-eternity-storage");
@@ -59,10 +54,9 @@ export default function AuthScreen() {
         const data = await res.json();
         if (!res.ok) { 
           setError(data.error || t("general.error", locale)); 
-          setLoading(false); 
+          setLoading(false);
           return; 
         }
-        // Conta nova: começa com o volume baixo (8%) — padrão agradável.
         setVolume(0.08);
       }
       
@@ -74,18 +68,14 @@ export default function AuthScreen() {
       const data = await res.json();
       if (!res.ok) { 
         setError(data.error || t("general.error", locale)); 
-        setLoading(false); 
+        setLoading(false);
         return; 
       }
 
       setUser(data.userId, data.locale);
-      // Autenticação: com múltiplos personagens por conta, mostra a tela de
-      // seleção para o jogador escolher com quem entrar (ou criar outro).
-      // Contas sem personagem seguem direto para a criação.
       const charList = Array.isArray(data.characters) ? data.characters : data.character ? [data.character] : [];
       if (charList.length > 0) {
         setCharacters(charList);
-        // Mostra a tela de seleção para o jogador escolher com quem entrar.
         setShowCharacterSelect(true);
         setMailboxCount(Number(data.mailboxCount) || 0);
       } else {
@@ -101,131 +91,149 @@ export default function AuthScreen() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-[#060611]">
-      {/* Background Orbs */}
-      <div className="absolute top-[10%] left-[10%] w-[400px] h-[400px] bg-[#e94560] rounded-full blur-[120px] opacity-20 animate-pulse" />
-      <div className="absolute top-[40%] right-[10%] w-[300px] h-[300px] bg-[#00d4aa] rounded-full blur-[100px] opacity-20 animate-pulse" style={{ animationDelay: '2s' }} />
-      <div className="absolute bottom-[10%] left-[30%] w-[350px] h-[350px] bg-[#7c5cfc] rounded-full blur-[110px] opacity-20 animate-pulse" style={{ animationDelay: '4s' }} />
-
-      {/* Floating Particles */}
-      <div className="absolute inset-0 pointer-events-none">
-        {mounted && [...Array(25)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full bg-white/10"
-            style={{
-              width: Math.random() * 8 + 2 + 'px',
-              height: Math.random() * 8 + 2 + 'px',
-              left: Math.random() * 100 + '%',
-              top: Math.random() * 100 + '%',
-              animation: 'float ' + (Math.random() * 5 + 5) + 's linear infinite',
-              animationDelay: Math.random() * 5 + 's'
-            }}
-          />
-        ))}
+    <div className="min-h-[100dvh] min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden safe-bottom" style={{ background: '#060a14' }}>
+      {/* Background épico */}
+      <div className="absolute inset-0 z-0">
+        <img
+          src="/images/fundo_auth_new.png"
+          alt=""
+          className="w-full h-full object-cover"
+          style={{ opacity: 0.3, filter: 'brightness(0.55) saturate(0.85) sepia(0.25)' }}
+          draggable={false}
+        />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(180deg, #060a14 0%, rgba(6,10,20,0.55) 45%, #060a14 100%)' }} />
+        <div className="vignette absolute inset-0" />
+        {/* Brasas douradas */}
+        <div className="ember" style={{ left: '12%', bottom: '20%', animationDelay: '0s' }} />
+        <div className="ember" style={{ left: '22%', bottom: '45%', animationDelay: '2.5s' }} />
+        <div className="ember" style={{ left: '35%', bottom: '12%', animationDelay: '5s' }} />
+        <div className="ember" style={{ left: '63%', bottom: '38%', animationDelay: '1.5s' }} />
+        <div className="ember" style={{ left: '78%', bottom: '18%', animationDelay: '3.5s' }} />
+        <div className="ember" style={{ left: '88%', bottom: '55%', animationDelay: '6s' }} />
+        <div className="ember" style={{ left: '48%', bottom: '28%', animationDelay: '4.2s' }} />
       </div>
 
-      {/* Vinheta cinematográfica + brasas douradas */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 vignette" />
-        {mounted && [...Array(8)].map((_, i) => (
-          <div
-            key={'ember' + i}
-            className="ember"
-            style={{
-              left: 6 + i * 12 + '%',
-              bottom: -10,
-              animationDelay: (i * 0.7 + Math.random()) + 's',
-              animationDuration: (8 + (Math.random() * 8)) + 's'
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Language Selector */}
+      {/* Idioma */}
       <div className="absolute top-4 right-4 flex gap-2 z-20">
-        <button onClick={() => setLocale('en')} className="px-3 py-1 bg-black/40 border border-white/10 rounded-lg text-xs hover:bg-white/10 text-white">EN</button>
-        <button onClick={() => setLocale('pt-BR')} className="px-3 py-1 bg-black/40 border border-white/10 rounded-lg text-xs hover:bg-white/10 text-white">PT-BR</button>
+        <button 
+          onClick={() => setLocale('en')} 
+          className={`px-3 py-1.5 rounded text-[11px] font-bold tracking-widest transition-all ${locale === 'en' ? 'bg-[#d4a843]/15 text-[#f0c86a] border border-[#d4a843]/40 shadow-[0_0_12px_rgba(212,168,67,0.15)]' : 'text-gray-500 hover:text-gray-300'}`}
+        >EN</button>
+        <button 
+          onClick={() => setLocale('pt-BR')} 
+          className={`px-3 py-1.5 rounded text-[11px] font-bold tracking-widest transition-all ${locale === 'pt-BR' ? 'bg-[#d4a843]/15 text-[#f0c86a] border border-[#d4a843]/40 shadow-[0_0_12px_rgba(212,168,67,0.15)]' : 'text-gray-500 hover:text-gray-300'}`}
+        >PT-BR</button>
       </div>
 
-      <div className="w-full max-w-md relative z-10">
-        {/* Logo and Title */}
-        <div className="text-center mb-8 animate-fadeInDown">
-          <div className="inline-block relative mb-3 animate-float">
-            <span className="text-7xl glow-red-blink">⚔️</span>
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-black mb-3 gradient-text tracking-wide">
-            {t("app.title", locale)}
-          </h1>
-          <p className="text-gray-400 italic">{t("app.tagline", locale)}</p>
-          <div className="flex justify-center gap-2 mt-4">
-            <span className="badge badge-new">MMORPG</span>
-            <span className="badge badge-hot">IDLE</span>
-          </div>
+      {/* Conteúdo */}
+      <div className="w-full max-w-sm relative z-10 flex flex-col items-center">
+        
+        {/* Logo */}
+        <div className="text-center mb-6 animate-fadeInDown">
+          <img
+            src="/images/logo_auth_new.png"
+            alt="Realm of Eternity"
+            className="w-48 sm:w-60 h-auto mx-auto drop-shadow-[0_0_25px_rgba(212,168,67,0.35)]"
+            draggable={false}
+          />
         </div>
 
-        {/* Auth Form */}
-        <div className="game-card card-royal p-8 animate-fadeInUp">
-          <h2 className="text-2xl font-bold mb-6 text-center text-white">
+        {/* Régua ornamental */}
+        <div className="ornate-rule w-56 sm:w-64 mb-7 animate-fadeInDown" style={{ animationDelay: '0.1s' }} />
+
+        {/* Card Login — moldura real */}
+        <div className="w-full rounded-2xl p-6 sm:p-8 card-royal animate-fadeInUp" style={{ animationDelay: '0.15s', background: 'linear-gradient(165deg, rgba(16,21,38,0.92) 0%, rgba(9,13,26,0.94) 100%)', border: '1px solid rgba(212,168,67,0.14)', boxShadow: '0 24px 60px rgba(0,0,0,0.55), inset 0 1px 0 rgba(240,200,106,0.08)' }}>
+          
+          <h2 className="font-display text-xl sm:text-2xl font-bold text-white text-center mb-1 tracking-wide">
             {isLogin ? t("auth.login", locale) : t("auth.register", locale)}
           </h2>
+          <p className="text-gray-500 text-xs text-center mb-6 tracking-wide">
+            {isLogin 
+              ? (locale === 'en' ? 'Welcome back, hero' : 'Bem-vindo de volta, herói')
+              : (locale === 'en' ? 'Forge your legend' : 'Forje sua lenda')
+            }
+          </p>
 
-          {error && <div className="animate-shake bg-red-500/20 text-red-300 p-3 rounded-lg mb-4 text-center">{error}</div>}
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/25 text-red-300 p-3 rounded-lg mb-4 text-center text-sm animate-shake">
+              {error}
+            </div>
+          )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="flex flex-col gap-1.5 text-left">
-              <label htmlFor="auth-username" className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <form onSubmit={handleSubmit} className="space-y-3.5">
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-400 mb-1.5 tracking-wider uppercase">
                 {t("auth.username", locale)}
               </label>
               <input
-                id="auth-username"
                 type="text"
                 autoComplete="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ""))}
-                className="game-input animate-fadeIn stagger-1"
-                placeholder=""
+                className="w-full px-3.5 py-2.5 rounded-lg text-white text-sm outline-none transition-all game-input"
+                placeholder={locale === 'en' ? 'Username' : 'Nome de usuário'}
                 required
               />
             </div>
-            <div className="flex flex-col gap-1.5 text-left">
-              <label htmlFor="auth-password" className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <div>
+              <label className="block text-[11px] font-semibold text-gray-400 mb-1.5 tracking-wider uppercase">
                 {t("auth.password", locale)}
               </label>
               <input
-                id="auth-password"
                 type="password"
-                autoComplete="current-password"
+                autoComplete={isLogin ? "current-password" : "new-password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="game-input game-input-accent animate-fadeIn stagger-2"
-                placeholder=""
+                className="w-full px-3.5 py-2.5 rounded-lg text-white text-sm outline-none transition-all game-input"
+                placeholder={locale === 'en' ? '••••••••' : '••••••••'}
                 required
               />
             </div>
+
             <button
               type="submit"
               disabled={loading}
-              className="game-btn w-full animate-fadeIn stagger-3"
+              className="w-full py-3 rounded-lg text-sm font-bold text-white mt-3 transition-all disabled:opacity-50 font-display tracking-widest uppercase game-btn"
+              style={{
+                background: 'linear-gradient(135deg, #d4a843 0%, #a8812a 50%, #8a6a1f 100%)',
+                border: '1px solid rgba(240,200,106,0.45)',
+                boxShadow: '0 4px 20px rgba(212,168,67,0.3), inset 0 1px 0 rgba(255,255,255,0.15)',
+              }}
             >
-              {loading ? t("general.loading", locale) : (isLogin ? t("auth.login", locale) : t("auth.createAccount", locale))}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="spinner w-4 h-4 border-2 !border-t-[#f0c86a]" />
+                  {t("general.loading", locale)}
+                </span>
+              ) : (
+                isLogin ? t("auth.login", locale) : t("auth.createAccount", locale)
+              )}
             </button>
           </form>
 
-          <button 
-            onClick={() => setIsLogin(!isLogin)} 
-            className="w-full mt-4 text-sm text-gray-500 hover:text-white animate-fadeIn stagger-4"
-          >
-            {isLogin ? t("auth.dontHave", locale) : t("auth.alreadyHave", locale)}
-          </button>
+          <div className="mt-5 text-center">
+            <button 
+              onClick={() => { setIsLogin(!isLogin); setError(""); }} 
+              className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              {isLogin ? (
+                <>
+                  {locale === 'en' ? "Don't have an account? " : "Não tem conta? "}
+                  <span className="text-[#f0c86a] font-semibold">{locale === 'en' ? "Sign up" : "Criar conta"}</span>
+                </>
+              ) : (
+                <>
+                  {locale === 'en' ? "Already have an account? " : "Já tem conta? "}
+                  <span className="text-[#f0c86a] font-semibold">{locale === 'en' ? "Log in" : "Entrar"}</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-8 text-gray-600 animate-fadeIn stagger-5">
-          <p className="text-xs">v1.0.0 | © 2026 {t("app.title", locale)}</p>
-          <div className="flex justify-center gap-4 mt-2">
-            <span>🎮</span><span>⚔️</span><span>🏰</span>
-          </div>
+        <div className="text-center mt-7 text-gray-600/50">
+          <p className="text-[10px] tracking-widest">v1.0.0 · © 2026 {t("app.title", locale)}</p>
         </div>
       </div>
     </div>

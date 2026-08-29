@@ -5,16 +5,15 @@
 
 export const AFK_MAX_DURATION_SEC = 43200; // 12h
 
-// Taxas por minuto (REBALANCEADAS: AFK era a maior fonte de up fácil e quebrava
-// a economia — antes ~3 min já valiam ouro/XP demais). Agora o ganho de ~3 min
-// demora ~1h (≈20x menos). Ainda escala com nível/poder e o máximo acumulado é
-// 12h, então deixar 1 semana de AFK rende no máximo 12h.
+// Taxas por minuto (generosas para AFK ser rewarding).
+// O jogador sente progresso ao voltar — AFK é uma recompensa por deixar o jogo aberto.
+// Máximo acumulado: 12h. Deixar 1 semana rende no máximo 12h.
 export function afkRatesPerMinute(char: any) {
   const level = Number(char.level) || 1;
   const power = Number(char.power) || 0;
   return {
-    goldPerMin: Math.floor(level * 0.25 + power * 0.008),
-    xpPerMin: Math.floor(level * 0.55 + power * 0.015),
+    goldPerMin: Math.floor(level * 0.45 + power * 0.012),
+    xpPerMin: Math.floor(level * 0.85 + power * 0.022),
   };
 }
 

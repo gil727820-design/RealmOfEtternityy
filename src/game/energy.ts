@@ -8,8 +8,8 @@
  * o personagem para "carimbar" a nova energia.
  */
 
-/** Minutos para gerar 1 ponto de energia. */
-export const ENERGY_REGEN_MINUTES = 3;
+/** Minutos para gerar 1 ponto de energia. Regeneração mais rápida para melhor UX. */
+export const ENERGY_REGEN_MINUTES = 2;
 /** Milissegundos para gerar 1 ponto de energia. */
 export const ENERGY_REGEN_MS = ENERGY_REGEN_MINUTES * 60 * 1000;
 

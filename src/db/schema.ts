@@ -1,128 +1,127 @@
 import {
-  pgTable, text, integer, jsonb, uuid, varchar
-} from "drizzle-orm/pg-core";
+  sqliteTable, text, integer,
+} from "drizzle-orm/sqlite-core";
 
 /*
- * Persistência no Supabase (Postgres).
+ * Schema SQLite — substitui o Postgres (Supabase).
  * Cada "coleção" que o antigo jsonDb guardava em arquivos JSON virou uma tabela:
  *   - coluna de identidade / consulta (`id`, `userId`, `name`, `characterId`...),
- *   - uma coluna `data jsonb` com o documento completo.
+ *   - uma coluna `data text` com o documento JSON completo.
  * Isso preserva 100% do formato (campos dinâmicos como talents, skins,
  * achievements, missionBatch, afkSince etc.) e mantém as rotas funcionando
- * com as mesmas assinaturas do antigo jsonDb — só que agora no Supabase.
+ * com as mesmas assinaturas do antigo jsonDb — só que agora em SQLite local.
  */
 
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey(),
-  username: varchar("username", { length: 40 }),
-  data: jsonb("data").notNull(),
+export const users = sqliteTable("users", {
+  id: text("id").primaryKey(),
+  username: text("username"),
+  data: text("data").notNull(),
 });
 
-export const characters = pgTable("characters", {
-  id: uuid("id").primaryKey(),
-  userId: uuid("user_id"),
-  name: varchar("name", { length: 30 }),
-  data: jsonb("data").notNull(),
+export const characters = sqliteTable("characters", {
+  id: text("id").primaryKey(),
+  userId: text("user_id"),
+  name: text("name"),
+  data: text("data").notNull(),
 });
 
-export const itemTemplates = pgTable("item_templates", {
+export const itemTemplates = sqliteTable("item_templates", {
   id: integer("id").primaryKey(),
-  nameKey: varchar("name_key", { length: 100 }),
-  data: jsonb("data").notNull(),
+  nameKey: text("name_key"),
+  data: text("data").notNull(),
 });
 
-export const inventoryItems = pgTable("inventory_items", {
-  id: uuid("id").primaryKey(),
-  characterId: uuid("character_id"),
-  data: jsonb("data").notNull(),
+export const inventoryItems = sqliteTable("inventory_items", {
+  id: text("id").primaryKey(),
+  characterId: text("character_id"),
+  data: text("data").notNull(),
 });
 
-export const missionTemplates = pgTable("mission_templates", {
+export const missionTemplates = sqliteTable("mission_templates", {
   id: integer("id").primaryKey(),
-  data: jsonb("data").notNull(),
+  data: text("data").notNull(),
 });
 
-export const activeMissions = pgTable("active_missions", {
-  id: uuid("id").primaryKey(),
-  characterId: uuid("character_id"),
-  data: jsonb("data").notNull(),
+export const activeMissions = sqliteTable("active_missions", {
+  id: text("id").primaryKey(),
+  characterId: text("character_id"),
+  data: text("data").notNull(),
 });
 
-export const afkRewards = pgTable("afk_rewards", {
-  id: uuid("id").primaryKey(),
-  data: jsonb("data").notNull(),
+export const afkRewards = sqliteTable("afk_rewards", {
+  id: text("id").primaryKey(),
+  data: text("data").notNull(),
 });
 
-export const battles = pgTable("battles", {
-  id: uuid("id").primaryKey(),
-  characterId: uuid("character_id"),
-  data: jsonb("data").notNull(),
+export const battles = sqliteTable("battles", {
+  id: text("id").primaryKey(),
+  characterId: text("character_id"),
+  data: text("data").notNull(),
 });
 
 // id de guilda tem formato `${Date.now()}_${rand}` (não é uuid válido)
-export const guilds = pgTable("guilds", {
+export const guilds = sqliteTable("guilds", {
   id: text("id").primaryKey(),
-  data: jsonb("data").notNull(),
+  data: text("data").notNull(),
 });
 
-export const guildInvites = pgTable("guild_invites", {
-  id: uuid("id").primaryKey(),
-  targetCharacterId: uuid("target_character_id"),
+export const guildInvites = sqliteTable("guild_invites", {
+  id: text("id").primaryKey(),
+  targetCharacterId: text("target_character_id"),
   guildId: text("guild_id"),
-  data: jsonb("data").notNull(),
+  data: text("data").notNull(),
 });
 
-export const guildChats = pgTable("guild_chats", {
-  id: uuid("id").primaryKey(),
+export const guildChats = sqliteTable("guild_chats", {
+  id: text("id").primaryKey(),
   guildId: text("guild_id"),
-  data: jsonb("data").notNull(),
+  data: text("data").notNull(),
 });
 
-export const mailbox = pgTable("mailbox", {
-  id: uuid("id").primaryKey(),
-  characterId: uuid("character_id"),
-  data: jsonb("data").notNull(),
+export const mailbox = sqliteTable("mailbox", {
+  id: text("id").primaryKey(),
+  characterId: text("character_id"),
+  data: text("data").notNull(),
 });
 
 // A coleção excludedUsers é chaveada por `userId` (sem campo `id` próprio)
-export const excludedUsers = pgTable("excluded_users", {
+export const excludedUsers = sqliteTable("excluded_users", {
   userId: text("user_id").primaryKey(),
-  data: jsonb("data").notNull(),
+  data: text("data").notNull(),
 });
 
 // A coleção regionAudio é chaveada por `regionId`
-export const regionAudio = pgTable("region_audio", {
+export const regionAudio = sqliteTable("region_audio", {
   regionId: text("region_id").primaryKey(),
-  data: jsonb("data").notNull(),
+  data: text("data").notNull(),
 });
 
 // Configurações globais do servidor (anúncio + manutenção) — 1 linha chaveada por `key`
-export const serverSettings = pgTable("server_settings", {
+export const serverSettings = sqliteTable("server_settings", {
   key: text("key").primaryKey(),
-  data: jsonb("data").notNull(),
+  data: text("data").notNull(),
 });
 
 // Códigos de resgate gerados pelo admin (boost 2x XP / 2x Energia)
-export const codes = pgTable("codes", {
-  id: uuid("id").primaryKey(),
+export const codes = sqliteTable("codes", {
+  id: text("id").primaryKey(),
   code: text("code"),
-  data: jsonb("data").notNull(),
+  data: text("data").notNull(),
 });
-
 
 // Mercado entre jogadores: anúncios de venda (`kind = "listing"`) e propostas
 // de troca (`kind = "trade"`). A coluna `kind` discrimina os dois fluxos.
-export const marketplace = pgTable("marketplace", {
-  id: uuid("id").primaryKey(),
-  characterId: uuid("character_id"),
+export const marketplace = sqliteTable("marketplace", {
+  id: text("id").primaryKey(),
+  characterId: text("character_id"),
   kind: text("kind"),
-  data: jsonb("data").notNull(),
+  data: text("data").notNull(),
 });
 
 // Logs administrativos do servidor (ex.: avisos de hitkill na torre / boss
 // mundial). A coluna `kind` permite filtrar por tipo de evento.
-export const adminLogs = pgTable("admin_logs", {
-  id: uuid("id").primaryKey(),
+export const adminLogs = sqliteTable("admin_logs", {
+  id: text("id").primaryKey(),
   kind: text("kind"),
-  data: jsonb("data").notNull(),
+  data: text("data").notNull(),
 });

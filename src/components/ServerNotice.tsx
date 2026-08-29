@@ -112,40 +112,40 @@ export default function ServerNotice() {
   if (settings?.maintenance) {
     const remainingMs = maintenanceUntilMs ? maintenanceUntilMs - now : 0;
     return (
-      <div className="fixed inset-0 z-[999] flex items-center justify-center bg-[#0a0a12]/95 backdrop-blur-xl p-6">
-        <div className="relative max-w-md w-full text-center rounded-3xl border-2 border-[#ff6b8a]/40 bg-gradient-to-b from-[#1a1030]/95 to-[#0f0a1c]/95 p-10 shadow-[0_0_70px_rgba(233,69,96,0.35)] animate-scaleIn overflow-hidden">
+      <div className="fixed inset-0 z-[999] flex items-center justify-center bg-[#060a14]/95 backdrop-blur-xl p-6">
+        <div className="relative max-w-md w-full text-center rounded-3xl border-2 border-[#d4a843]/40 bg-gradient-to-b from-[#1a1620]/95 to-[#0f0a1c]/95 p-10 shadow-[0_0_70px_rgba(212,168,67,0.25)] animate-scaleIn overflow-hidden">
           <div
-            className="animate-gradient absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#ff6b8a] to-transparent"
+            className="animate-gradient absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#d4a843] to-transparent"
             style={{ backgroundSize: "200% 100%" }}
           />
           <div className="text-7xl mb-5 animate-heartbeat">🛠️</div>
-          <div className="text-[10px] uppercase tracking-[0.35em] text-[#ff6b8a]/80 mb-3">Realm of Eternity</div>
-          <h2 className="text-2xl font-black text-white mb-3">Servidor em manutenção</h2>
+          <div className="text-[10px] uppercase tracking-[0.35em] text-[#d4a843]/70 mb-3">Realm of Eternity</div>
+          <h2 className="font-display text-2xl font-bold text-white mb-3 tracking-wide">Servidor em manutenção</h2>
           <p className="text-gray-300 text-sm leading-relaxed">
             {settings.maintenanceMessage || "Estamos realizando melhorias. Volte em breve!"}
           </p>
           {hasCountdown ? (
             remainingMs > 0 ? (
               <div className="mt-6">
-                <p className="text-[10px] uppercase tracking-[0.3em] text-[#ff6b8a]/70 mb-2">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-[#d4a843]/70 mb-2">
                   ⏳ Volta em
                 </p>
-                <div className="text-4xl font-black text-white tabular-nums tracking-widest" style={{ textShadow: "0 0 20px rgba(255,107,138,0.5)" }}>
+                <div className="text-4xl font-black text-white tabular-nums tracking-widest" style={{ textShadow: "0 0 20px rgba(212,168,67,0.45)" }}>
                   {formatCountdown(remainingMs)}
                 </div>
                 <p className="mt-2 text-xs text-gray-400">
-                  Entre em <b className="text-[#ffd700]">{new Date(maintenanceUntilMs).toLocaleString("pt-BR")}</b>
+                  Entre em <b className="text-[#f0c86a]">{new Date(maintenanceUntilMs).toLocaleString("pt-BR")}</b>
                 </p>
               </div>
             ) : (
-              <div className="mt-6 flex items-center justify-center gap-2 text-[#ff6b8a]/80 text-xs">
-                <span className="w-2 h-2 rounded-full bg-[#ff6b8a] animate-pulse-soft" />
+              <div className="mt-6 flex items-center justify-center gap-2 text-[#d4a843]/80 text-xs">
+                <span className="w-2 h-2 rounded-full bg-[#d4a843] animate-pulse-soft" />
                 O horário programado já passou — o servidor deve voltar em instantes
               </div>
             )
           ) : (
-            <div className="mt-6 flex items-center justify-center gap-2 text-[#ff6b8a]/70 text-xs">
-              <span className="w-2 h-2 rounded-full bg-[#ff6b8a] animate-pulse-soft" />
+            <div className="mt-6 flex items-center justify-center gap-2 text-[#d4a843]/70 text-xs">
+              <span className="w-2 h-2 rounded-full bg-[#d4a843] animate-pulse-soft" />
               Tente novamente em instantes
             </div>
           )}

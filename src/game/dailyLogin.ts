@@ -28,15 +28,15 @@ export interface DailyReward {
   itemIcon?: string;
 }
 
-/** Ciclo de 7 dias de recompensas (dia 7 = bônus). */
+/** Ciclo de 7 dias de recompensas (dia 7 = bônus grande). Generoso! */
 export const DAILY_REWARDS: DailyReward[] = [
-  { day: 1, icon: "🪙", gold: 500 },
-  { day: 2, icon: "⚡", energy: 30 },
-  { day: 3, icon: "🪙", gold: 1000 },
-  { day: 4, icon: "🔮", crystals: 5 },
-  { day: 5, icon: "🪙", gold: 2000 },
-  { day: 6, icon: "💎", diamonds: 5 },
-  { day: 7, icon: "🎁", gold: 5000, diamonds: 10, crystals: 10, energy: 50 },
+  { day: 1, icon: "🪙", gold: 800 },
+  { day: 2, icon: "⚡", energy: 40 },
+  { day: 3, icon: "🪙", gold: 1500 },
+  { day: 4, icon: "🔮", crystals: 8 },
+  { day: 5, icon: "🪙", gold: 3000 },
+  { day: 6, icon: "💎", diamonds: 8 },
+  { day: 7, icon: "🎁", gold: 8000, diamonds: 15, crystals: 15, energy: 60 },
 ];
 
 /** Chave de "dia" local (YYYY-MM-DD) — o resgate só vale 1x por dia. */

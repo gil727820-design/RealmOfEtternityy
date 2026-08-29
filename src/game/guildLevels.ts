@@ -123,6 +123,10 @@ export function grantGuildXp(guild: any, kind: "mission" | "tower" | "pvp" | "du
     xp -= guildXpForLevel(newLevel);
     newLevel++;
   }
+  // Cap no nível máximo: não acumula XP além do necessário.
+  if (newLevel >= GUILD_MAX_LEVEL) {
+    xp = 0;
+  }
   const leveledUp = newLevel > level;
   return {
     patch: {
