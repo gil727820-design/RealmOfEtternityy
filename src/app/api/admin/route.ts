@@ -388,7 +388,7 @@ export async function POST(req: NextRequest) {
     } else {
       body = await req.json();
     }
-    const { action } = body;
+    const action = String(body.action || new URL(req.url).searchParams.get("action") || "");
 
     // Login NÃO exige auth prévia — é justamente ele que cria a sessão.
     if (action === "login") {
