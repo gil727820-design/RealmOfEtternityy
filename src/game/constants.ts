@@ -85,19 +85,19 @@ export interface ClassSkillEffect {
 }
 
 export const CLASS_SKILL_EFFECTS: Record<ClassName, ClassSkillEffect> = {
-  warrior:     { dmgMult: 1.7,  critBonus: 5 },
-  paladin:     { dmgMult: 1.5,  critBonus: 5,  receivedMult: 0.8, healOnUse: 0.06 },
-  berserker:   { dmgMult: 2.1,  critBonus: 8,  receivedMult: 1.25 },
-  mage:        { dmgMult: 1.6,  critBonus: 10, pierce: 0.3 },
-  necromancer: { dmgMult: 1.5,  critBonus: 5,  bleedChance: 55 },
-  assassin:    { dmgMult: 1.45, critBonus: 18, doubleStrikeChance: 40 },
-  hunter:      { dmgMult: 1.5,  critBonus: 15, pierce: 0.3 },
-  monk:        { dmgMult: 1.75, critBonus: 8,  receivedMult: 0.85 },
-  samurai:     { dmgMult: 1.9,  critBonus: 12 },
-  knight:      { dmgMult: 1.55, critBonus: 5,  receivedMult: 0.75 },
-  summoner:    { dmgMult: 1.55, critBonus: 7,  bleedChance: 45 },
-  templar:     { dmgMult: 1.5,  critBonus: 6,  receivedMult: 0.82, healOnUse: 0.05 },
-  archer:      { dmgMult: 1.4,  critBonus: 15, pierce: 0.4 },
+  warrior:     { dmgMult: 1.65, critBonus: 5,  receivedMult: 0.9 },
+  paladin:     { dmgMult: 1.45, critBonus: 5,  receivedMult: 0.75, healOnUse: 0.08 },
+  berserker:   { dmgMult: 1.85, critBonus: 8,  receivedMult: 1.2 },
+  mage:        { dmgMult: 1.55, critBonus: 10, pierce: 0.3 },
+  necromancer: { dmgMult: 1.5,  critBonus: 5,  bleedChance: 50 },
+  assassin:    { dmgMult: 1.4,  critBonus: 15, doubleStrikeChance: 35 },
+  hunter:      { dmgMult: 1.5,  critBonus: 12, pierce: 0.3 },
+  monk:        { dmgMult: 1.6,  critBonus: 7,  receivedMult: 0.8, healOnUse: 0.04 },
+  samurai:     { dmgMult: 1.7,  critBonus: 10, receivedMult: 0.95 },
+  knight:      { dmgMult: 1.5,  critBonus: 5,  receivedMult: 0.7 },
+  summoner:    { dmgMult: 1.5,  critBonus: 7,  bleedChance: 40 },
+  templar:     { dmgMult: 1.5,  critBonus: 6,  receivedMult: 0.78, healOnUse: 0.06 },
+  archer:      { dmgMult: 1.4,  critBonus: 12, pierce: 0.35 },
 };
 
 export function classSkillEffect(classType: ClassName): ClassSkillEffect {
@@ -266,19 +266,19 @@ export function towerMonsterImage(kind: TowerMonsterKind | TowerBossKind): strin
 }
 
 export const CLASS_BASE_STATS: Record<ClassName, {hp:number;attack:number;defense:number;speed:number;mana:number;critical:number}> = {
-  warrior:     { hp: 120, attack: 12, defense: 10, speed: 4, mana: 30, critical: 3 },
-  paladin:     { hp: 130, attack: 10, defense: 12, speed: 3, mana: 60, critical: 2 },
-  berserker:   { hp: 100, attack: 18, defense: 5,  speed: 6, mana: 20, critical: 8 },
-  mage:        { hp: 70,  attack: 16, defense: 4,  speed: 5, mana: 100, critical: 5 },
-  necromancer: { hp: 80,  attack: 14, defense: 5,  speed: 4, mana: 90, critical: 4 },
-  assassin:    { hp: 75,  attack: 15, defense: 3,  speed: 10, mana: 40, critical: 15 },
-  hunter:      { hp: 85,  attack: 14, defense: 5,  speed: 8, mana: 35, critical: 10 },
-  monk:        { hp: 95,  attack: 11, defense: 8,  speed: 9, mana: 50, critical: 6 },
-  samurai:     { hp: 90,  attack: 16, defense: 7,  speed: 7, mana: 35, critical: 12 },
-  knight:      { hp: 140, attack: 8,  defense: 15, speed: 2, mana: 25, critical: 2 },
-  summoner:    { hp: 75,  attack: 13, defense: 4,  speed: 5, mana: 95, critical: 4 },
-  templar:     { hp: 110, attack: 12, defense: 11, speed: 4, mana: 55, critical: 3 },
-  archer:      { hp: 80,  attack: 15, defense: 4,  speed: 8, mana: 30, critical: 12 },
+  warrior:     { hp: 130, attack: 11, defense: 12, speed: 4, mana: 30, critical: 3 },
+  paladin:     { hp: 150, attack: 9,  defense: 14, speed: 3, mana: 60, critical: 2 },
+  berserker:   { hp: 90,  attack: 15, defense: 5,  speed: 6, mana: 20, critical: 7 },
+  mage:        { hp: 75,  attack: 14, defense: 5,  speed: 5, mana: 100, critical: 5 },
+  necromancer: { hp: 85,  attack: 13, defense: 6,  speed: 4, mana: 90, critical: 4 },
+  assassin:    { hp: 70,  attack: 13, defense: 3,  speed: 10, mana: 40, critical: 12 },
+  hunter:      { hp: 85,  attack: 13, defense: 6,  speed: 8, mana: 35, critical: 9 },
+  monk:        { hp: 100, attack: 11, defense: 9,  speed: 9, mana: 50, critical: 5 },
+  samurai:     { hp: 95,  attack: 14, defense: 8,  speed: 7, mana: 35, critical: 10 },
+  knight:      { hp: 160, attack: 7,  defense: 18, speed: 2, mana: 25, critical: 2 },
+  summoner:    { hp: 80,  attack: 12, defense: 5,  speed: 5, mana: 95, critical: 4 },
+  templar:     { hp: 120, attack: 11, defense: 13, speed: 4, mana: 55, critical: 3 },
+  archer:      { hp: 80,  attack: 14, defense: 5,  speed: 8, mana: 30, critical: 11 },
 };
 
 /**
