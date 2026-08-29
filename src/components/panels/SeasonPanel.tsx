@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useGameStore } from "@/store/gameStore";
 import { t } from "@/i18n";
 import { classImage, type ClassName } from "@/game/constants";
+import { BATTLE_PASS_TIERS, battlePassTier } from "@/game/season";
 
 type RankEntry = {
   id: string;
@@ -81,7 +82,39 @@ export default function SeasonPanel() {
             </div>
           </div>
 
-          {/* Marcos de recompensa */}
+          {/* Battle Pass */}
+          <div className="game-card p-5">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-sm text-[#ffd700]">🎯 Battle Pass</h3>
+              <span className="text-[10px] text-gray-500">Tier {battlePassTier(me?.seasonPoints || 0)}/30</span>
+            </div>
+            <div className="h-3 bg-black/40 rounded-full overflow-hidden mb-4">
+              <div className="h-full bg-gradient-to-r from-[#ffd700] to-[#f59e0b] rounded-full transition-all" style={{ width: `${Math.min(100, ((me?.seasonPoints || 0) / 5560) * 100)}%` }} />
+            </div>
+            <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+              {BATTLE_PASS_TIERS.map((tier) => {
+                const pts = me?.seasonPoints || 0;
+                const unlocked = pts >= tier.pointsNeeded;
+                const isCurrent = unlocked && (tier.tier === 30 || pts < BATTLE_PASS_TIERS[tier.tier]?.pointsNeeded);
+                return (
+                  <div key={tier.tier} className={`relative flex flex-col items-center gap-0.5 p-1.5 rounded-lg border text-center transition-all ${
+                    unlocked ? "bg-[#ffd700]/10 border-[#ffd700]/40" : "bg-black/30 border-white/5 opacity-50"
+                  } ${isCurrent ? "ring-2 ring-[#ffd700]/60" : ""}`}>
+                    <span className={`text-[9px] font-black ${unlocked ? "text-[#ffd700]" : "text-gray-600"}`}>{tier.tier}</span>
+                    <span className="text-sm">{tier.reward.icon}</span>
+                    <span className="text-[8px] text-gray-500 truncate w-full">{tier.reward.amount.toLocaleString()}</span>
+                    {tier.premium && (
+                      <span className="absolute -top-1 -right-1 text-[8px] bg-purple-500/30 border border-purple-500/50 rounded px-0.5 text-purple-300">👑</span>
+                    )}
+                    {unlocked && <span className="absolute -bottom-0.5 text-[8px]">✅</span>}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-[10px] text-gray-500 mt-2 text-center">Complete atividades para ganhar pontos e subir de tier!</p>
+          </div>
+
+          {/* Marcos de recompensa (milestones) */}
           <div className="game-card p-5">
             <h3 className="font-bold text-sm text-gray-300 mb-3">🎁 {t("season.milestones", locale)}</h3>
             <div className="space-y-2">

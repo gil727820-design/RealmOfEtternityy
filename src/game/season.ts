@@ -100,6 +100,57 @@ export function nextSeasonMilestone(char: any, seasonId: number) {
   return null;
 }
 
+/** Battle Pass: 30 tiers com recompensas progressivas. */
+export interface BattlePassTier {
+  tier: number;
+  pointsNeeded: number;
+  reward: { type: string; amount: number; icon: string; label: string };
+  premium?: { type: string; amount: number; icon: string; label: string };
+}
+
+export const BATTLE_PASS_TIERS: BattlePassTier[] = [
+  { tier: 1, pointsNeeded: 50, reward: { type: "gold", amount: 5000, icon: "💰", label: "5.000 Gold" } },
+  { tier: 2, pointsNeeded: 100, reward: { type: "crystals", amount: 10, icon: "🔮", label: "10 Cristais" } },
+  { tier: 3, pointsNeeded: 160, reward: { type: "gold", amount: 8000, icon: "💰", label: "8.000 Gold" } },
+  { tier: 4, pointsNeeded: 230, reward: { type: "towerCoins", amount: 200, icon: "🗼", label: "200 Moedas Torre" } },
+  { tier: 5, pointsNeeded: 310, reward: { type: "gold", amount: 12000, icon: "💰", label: "12.000 Gold" }, premium: { type: "diamonds", amount: 5, icon: "💎", label: "5 Diamantes" } },
+  { tier: 6, pointsNeeded: 400, reward: { type: "crystals", amount: 20, icon: "🔮", label: "20 Cristais" } },
+  { tier: 7, pointsNeeded: 500, reward: { type: "gold", amount: 15000, icon: "💰", label: "15.000 Gold" } },
+  { tier: 8, pointsNeeded: 610, reward: { type: "towerCoins", amount: 350, icon: "🗼", label: "350 Moedas Torre" } },
+  { tier: 9, pointsNeeded: 730, reward: { type: "gold", amount: 20000, icon: "💰", label: "20.000 Gold" } },
+  { tier: 10, pointsNeeded: 860, reward: { type: "crystals", amount: 50, icon: "🔮", label: "50 Cristais" }, premium: { type: "diamonds", amount: 10, icon: "💎", label: "10 Diamantes" } },
+  { tier: 11, pointsNeeded: 1000, reward: { type: "gold", amount: 25000, icon: "💰", label: "25.000 Gold" } },
+  { tier: 12, pointsNeeded: 1150, reward: { type: "towerCoins", amount: 500, icon: "🗼", label: "500 Moedas Torre" } },
+  { tier: 13, pointsNeeded: 1310, reward: { type: "gold", amount: 30000, icon: "💰", label: "30.000 Gold" } },
+  { tier: 14, pointsNeeded: 1480, reward: { type: "crystals", amount: 80, icon: "🔮", label: "80 Cristais" } },
+  { tier: 15, pointsNeeded: 1660, reward: { type: "gold", amount: 40000, icon: "💰", label: "40.000 Gold" }, premium: { type: "diamonds", amount: 15, icon: "💎", label: "15 Diamantes" } },
+  { tier: 16, pointsNeeded: 1850, reward: { type: "towerCoins", amount: 700, icon: "🗼", label: "700 Moedas Torre" } },
+  { tier: 17, pointsNeeded: 2050, reward: { type: "gold", amount: 50000, icon: "💰", label: "50.000 Gold" } },
+  { tier: 18, pointsNeeded: 2260, reward: { type: "crystals", amount: 120, icon: "🔮", label: "120 Cristais" } },
+  { tier: 19, pointsNeeded: 2480, reward: { type: "gold", amount: 60000, icon: "💰", label: "60.000 Gold" } },
+  { tier: 20, pointsNeeded: 2710, reward: { type: "towerCoins", amount: 1000, icon: "🗼", label: "1.000 Moedas Torre" }, premium: { type: "diamonds", amount: 25, icon: "💎", label: "25 Diamantes" } },
+  { tier: 21, pointsNeeded: 2950, reward: { type: "gold", amount: 75000, icon: "💰", label: "75.000 Gold" } },
+  { tier: 22, pointsNeeded: 3200, reward: { type: "crystals", amount: 160, icon: "🔮", label: "160 Cristais" } },
+  { tier: 23, pointsNeeded: 3460, reward: { type: "gold", amount: 90000, icon: "💰", label: "90.000 Gold" } },
+  { tier: 24, pointsNeeded: 3730, reward: { type: "towerCoins", amount: 1500, icon: "🗼", label: "1.500 Moedas Torre" } },
+  { tier: 25, pointsNeeded: 4010, reward: { type: "gold", amount: 100000, icon: "💰", label: "100.000 Gold" }, premium: { type: "diamonds", amount: 30, icon: "💎", label: "30 Diamantes" } },
+  { tier: 26, pointsNeeded: 4300, reward: { type: "crystals", amount: 200, icon: "🔮", label: "200 Cristais" } },
+  { tier: 27, pointsNeeded: 4600, reward: { type: "gold", amount: 120000, icon: "💰", label: "120.000 Gold" } },
+  { tier: 28, pointsNeeded: 4910, reward: { type: "towerCoins", amount: 2000, icon: "🗼", label: "2.000 Moedas Torre" } },
+  { tier: 29, pointsNeeded: 5230, reward: { type: "gold", amount: 150000, icon: "💰", label: "150.000 Gold" } },
+  { tier: 30, pointsNeeded: 5560, reward: { type: "gold", amount: 200000, icon: "💰", label: "200.000 Gold" }, premium: { type: "diamonds", amount: 50, icon: "💎", label: "50 Diamantes" } },
+];
+
+/** Retorna o tier atual do battle pass baseado nos pontos. */
+export function battlePassTier(points: number): number {
+  let tier = 0;
+  for (const t of BATTLE_PASS_TIERS) {
+    if (points >= t.pointsNeeded) tier = t.tier;
+    else break;
+  }
+  return tier;
+}
+
 /** Recompensas de fim de temporada por posição no ranking. */
 export function seasonRankReward(position: number): { gold: number; crystals: number; titleKey: string | null } {
   if (position === 1) return { gold: 500_000, crystals: 1_000, titleKey: "season.title1" };
