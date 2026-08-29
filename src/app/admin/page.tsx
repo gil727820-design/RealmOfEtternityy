@@ -64,7 +64,7 @@ function serverTimeToLocal(hhmm: string, serverOffsetMin: number): string {
   return `${pad(Math.floor(total / 60))}:${pad(total % 60)}`;
 }
 
-type Tab = "dash" | "users" | "characters" | "guilds" | "send" | "excluded" | "music" | "server" | "codes" | "logs" | "donate" | "pix" | "ledger" | "ghost" | "worldboss" | "test" | "inventory" | "balance";
+type Tab = "dash" | "users" | "characters" | "guilds" | "send" | "excluded" | "music" | "server" | "codes" | "logs" | "donate" | "pix" | "ledger" | "ghost" | "worldboss" | "test" | "inventory" | "balance" | "prices";
 type SkinChar = { id: string; name: string; level: number; classType: string; skins: string[] };
 
 /** Recursos que o ADM pode presentear pelo correio. */
@@ -161,6 +161,15 @@ export default function AdminPage() {
   const [ghostItemSearch, setGhostItemSearch] = useState("");
   const [ghostSlotFilter, setGhostSlotFilter] = useState("");
   const [ghostLoaded, setGhostLoaded] = useState(false);
+  // Configuração de preços (Skins + Baús)
+  const [skinPriceEpic, setSkinPriceEpic] = useState("5");
+  const [skinPriceLegendary, setSkinPriceLegendary] = useState("10");
+  const [skinPriceMythic, setSkinPriceMythic] = useState("25");
+  const [chestPriceCommon, setChestPriceCommon] = useState("100");
+  const [chestPriceRare, setChestPriceRare] = useState("500");
+  const [chestPriceEpic, setChestPriceEpic] = useState("2000");
+  const [chestPriceLegendary, setChestPriceLegendary] = useState("10000");
+  const [pricesLoaded, setPricesLoaded] = useState(false);
   // Offsets (min, leste de UTC positivo) do servidor e do navegador, para
   // mostrar cada horário agendado também convertido pro fuso local do admin.
   const [serverOffsetMin, setServerOffsetMin] = useState(0);
@@ -451,6 +460,7 @@ export default function AdminPage() {
       characters: loadCharacters,
       guilds: loadGuilds,
       send: async () => { await loadCharacters(); await loadItems(); },
+      prices: loadPrices,
       ghost: loadGhostShop,
       worldboss: async () => { await loadWorldBoss(); await loadWorldBossReport(); },
       excluded: loadExcluded,
@@ -806,6 +816,50 @@ export default function AdminPage() {
     } catch { /* ignora */ }
     await loadItems();
     setGhostLoaded(true);
+    setLoading(false);
+  };
+
+  // ---- Configuração de Preços (Skins + Baús) ----
+  const loadPrices = async () => {
+    try {
+      const res = await fetch("/api/admin?action=dashboard", { headers: { "Content-Type": "application/json" } });
+      const s = await res.json();
+      const sp = (s.skinPrices || {}) as Record<string, number>;
+      const cp = (s.chestPrices || {}) as Record<string, number>;
+      if (sp.epic != null) setSkinPriceEpic(String(sp.epic));
+      if (sp.legendary != null) setSkinPriceLegendary(String(sp.legendary));
+      if (sp.mythic != null) setSkinPriceMythic(String(sp.mythic));
+      if (cp.common != null) setChestPriceCommon(String(cp.common));
+      if (cp.rare != null) setChestPriceRare(String(cp.rare));
+      if (cp.epic != null) setChestPriceEpic(String(cp.epic));
+      if (cp.legendary != null) setChestPriceLegendary(String(cp.legendary));
+    } catch { /* ignora */ }
+    setPricesLoaded(true);
+  };
+
+  const savePrices = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin?action=update_prices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          skinPrices: {
+            epic: Math.max(1, Number(skinPriceEpic) || 5),
+            legendary: Math.max(1, Number(skinPriceLegendary) || 10),
+            mythic: Math.max(1, Number(skinPriceMythic) || 25),
+          },
+          chestPrices: {
+            common: Math.max(1, Number(chestPriceCommon) || 100),
+            rare: Math.max(1, Number(chestPriceRare) || 500),
+            epic: Math.max(1, Number(chestPriceEpic) || 2000),
+            legendary: Math.max(1, Number(chestPriceLegendary) || 10000),
+          },
+        }),
+      });
+      const d = await res.json();
+      setMessage(d.success ? "✅ Preços salvos com sucesso!" : `❌ ${d.error || "Erro"}`);
+    } catch { setMessage("❌ Erro ao salvar preços"); }
     setLoading(false);
   };
 
@@ -1531,9 +1585,10 @@ export default function AdminPage() {
     if (tab === "donate" && !donateLoaded) loadDonateSettings();
     if (tab === "pix" && !pixLoaded) loadPurchases();
     if (tab === "ledger" && !ledgerLoaded) loadLedger();
+    if (tab === "prices" && !pricesLoaded) loadPrices();
     if (tab === "ghost" && !ghostLoaded) loadGhostShop();
     if (tab === "worldboss" && !wbLoaded) loadWorldBoss();
-  }, [tab, serverLoaded, donateLoaded, pixLoaded, ghostLoaded, wbLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [tab, serverLoaded, donateLoaded, pixLoaded, pricesLoaded, ghostLoaded, wbLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Trocar aba: limpa dados e mensagens para evitar erros React
   const switchTab = (newTab: Tab) => {
@@ -1637,6 +1692,7 @@ export default function AdminPage() {
     { id: "donate", label: "Donate (PIX)", icon: "💖" },
     { id: "pix", label: "Compras PIX", icon: "💎" },
     { id: "ledger", label: "Já Compraram", icon: "📒" },
+    { id: "prices", label: "💰 Preços", icon: "💰" },
     { id: "ghost", label: "Loja Fantasma", icon: "👻" },
     { id: "worldboss", label: "Evento Global", icon: "🌍" },
     { id: "inventory", label: "Inventário", icon: "🎒" },
@@ -3013,6 +3069,79 @@ export default function AdminPage() {
                   <button onClick={saveBalanceLimits} disabled={busy === "balance_limits"}
                     className="bg-[#7c5cfc] hover:bg-[#6b4fd8] text-white rounded-xl px-6 py-2.5 font-bold text-sm disabled:opacity-40">
                     {busy === "balance_limits" ? "Salvando..." : "💾 Salvar tudo"}
+                  </button>
+                </div>
+              </div>
+            )}
+            {tab === "prices" && (
+              <div className="space-y-4">
+                {/* Header */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-[#ffd700]/30">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-xl bg-[#ffd700]/20 flex items-center justify-center text-xl">💰</div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white">Configuração de Preços</h3>
+                      <p className="text-[11px] text-gray-400">Alterar preços de diamantes nas Skins e preços de Baús</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preços de Skins */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <h3 className="text-sm font-bold text-[#ec4898] mb-1">🎨 Preços de Skins (💎 Diamantes)</h3>
+                  <p className="text-xs text-gray-400 mb-4">Preço base por raridade. Desconto de 20% para a classe do jogador.</p>
+                  <div className="grid sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="text-[10px] text-gray-500 mb-1 block">💜 Épico</label>
+                      <input type="number" value={skinPriceEpic} onChange={(e) => setSkinPriceEpic(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-gray-500 mb-1 block">💛 Lendário</label>
+                      <input type="number" value={skinPriceLegendary} onChange={(e) => setSkinPriceLegendary(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-gray-500 mb-1 block">❤️ Mítico</label>
+                      <input type="number" value={skinPriceMythic} onChange={(e) => setSkinPriceMythic(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Preços de Baús */}
+                <div className="bg-[#1a1a2e] rounded-2xl p-5 border border-white/10">
+                  <h3 className="text-sm font-bold text-[#ffd700] mb-1">📦 Preços de Baús (💰 Ouro)</h3>
+                  <p className="text-xs text-gray-400 mb-4">Preço para abrir baús na loja fantasma ou drops.</p>
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div>
+                      <label className="text-[10px] text-gray-500 mb-1 block">🩶 Comum</label>
+                      <input type="number" value={chestPriceCommon} onChange={(e) => setChestPriceCommon(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-gray-500 mb-1 block">💚 Raro</label>
+                      <input type="number" value={chestPriceRare} onChange={(e) => setChestPriceRare(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-gray-500 mb-1 block">💜 Épico</label>
+                      <input type="number" value={chestPriceEpic} onChange={(e) => setChestPriceEpic(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-gray-500 mb-1 block">💛 Lendário</label>
+                      <input type="number" value={chestPriceLegendary} onChange={(e) => setChestPriceLegendary(e.target.value)}
+                        className="w-full bg-[#0a0a12] border border-white/10 rounded-xl px-3 py-2 text-white text-sm" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Botão Salvar */}
+                <div className="flex justify-end">
+                  <button onClick={savePrices} disabled={loading}
+                    className="px-6 py-2.5 rounded-xl text-sm font-black bg-gradient-to-r from-[#ffd700] to-[#ff9500] text-black hover:brightness-110 transition-all disabled:opacity-50">
+                    💾 Salvar Preços
                   </button>
                 </div>
               </div>

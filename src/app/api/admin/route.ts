@@ -1252,6 +1252,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, settings: saved });
     }
 
+    // ---- Atualizar preços de Skins e Baús ----
+    if (action === "update_prices") {
+      const sp = body.skinPrices as Record<string, number> | undefined;
+      const cp = body.chestPrices as Record<string, number> | undefined;
+      const patch: Record<string, unknown> = { updatedAt: new Date().toISOString() };
+      if (sp && typeof sp === "object") {
+        patch.skinPrices = {
+          epic: Math.max(1, Math.floor(Number(sp.epic) || 5)),
+          legendary: Math.max(1, Math.floor(Number(sp.legendary) || 10)),
+          mythic: Math.max(1, Math.floor(Number(sp.mythic) || 25)),
+        };
+      }
+      if (cp && typeof cp === "object") {
+        patch.chestPrices = {
+          common: Math.max(1, Math.floor(Number(cp.common) || 100)),
+          rare: Math.max(1, Math.floor(Number(cp.rare) || 500)),
+          epic: Math.max(1, Math.floor(Number(cp.epic) || 2000)),
+          legendary: Math.max(1, Math.floor(Number(cp.legendary) || 10000)),
+        };
+      }
+      const saved = await jsonDb.updateServerSettings(patch);
+      return NextResponse.json({ success: true, settings: saved });
+    }
+
     // ---- Loja Fantasma / Evento Global: ligar/desligar na hora (1 clique) ----
     // Só inverte o "enabled" preservando toda a config já salva (horários, itens, boss...).
     if (action === "toggle_ghost_shop") {

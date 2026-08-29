@@ -19,7 +19,9 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const items = getSkinShopItems(playerClass as any);
+    const settings = await jsonDb.getServerSettings();
+    const skinPrices = (settings as any)?.skinPrices || {};
+    const items = getSkinShopItems(playerClass as any, skinPrices);
     const result = items.map((item) => ({
       id: item.skin.id,
       className: item.skin.className,

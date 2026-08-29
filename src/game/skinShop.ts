@@ -18,21 +18,23 @@ export interface SkinShopItem {
   classDiscount: boolean;
 }
 
-const BASE_PRICES: Record<string, number> = {
+export const DEFAULT_SKIN_PRICES: Record<string, number> = {
   epic:      5,
   legendary: 10,
   mythic:    25,
 };
 
-/** Retorna todas as skins da loja com preços calculados. */
-export function getSkinShopItems(playerClass?: ClassName): SkinShopItem[] {
+/** Retorna todas as skins da loja com preços calculados.
+ *  Se `customPrices` for fornecido (do admin), usa esses valores. */
+export function getSkinShopItems(playerClass?: ClassName, customPrices?: Record<string, number>): SkinShopItem[] {
+  const prices = { ...DEFAULT_SKIN_PRICES, ...customPrices };
   return SKIN_CATALOG.map((skin) => {
-    const base = BASE_PRICES[skin.rarity] ?? BASE_PRICES.epic;
+    const base = prices[skin.rarity] ?? prices.epic ?? DEFAULT_SKIN_PRICES.epic;
     const classDiscount = playerClass === skin.className;
     const discount = classDiscount ? 0.8 : 1;
     return {
       skin,
-      diamondPrice: Math.floor(base * discount),
+      diamondPrice: Math.max(1, Math.floor(base * discount)),
       classDiscount,
     };
   });
