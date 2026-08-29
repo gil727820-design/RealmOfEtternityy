@@ -71,6 +71,7 @@ const NAV_SECTIONS: NavSection[] = [
       { tab: "rankings", icon: "🏆", image: "/images/sidebar/menu_rankings.png", labelKey: "nav.rankings", color: "#f59e0b" },
       { tab: "season", icon: "🏅", image: "/images/sidebar/menu_temporada.png", labelKey: "nav.season", color: "#f59e0b" },
       { tab: "dailylogin", icon: "📅", image: "/images/sidebar/menu_login_diario.png", labelKey: "nav.dailyLogin", color: "#22c55e" },
+      { tab: "dailyevents", icon: "🎉", image: "/images/sidebar/menu_evento_global.png", labelKey: "nav.dailyEvents", color: "#e94560" },
     ],
   },
   {

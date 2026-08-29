@@ -155,6 +155,7 @@ const es: Record<string, string> = {
   "nav.dungeon": "Mazmorras",
   "nav.skills": "Habilidades",
   "nav.dailyLogin": "Inicio de Sesión Diario",
+  "nav.dailyEvents": "Eventos Diarios",
   "nav.bestiary": "Bestiario",
   "nav.relics": "Reliquias",
   "nav.specialization": "Especialización",

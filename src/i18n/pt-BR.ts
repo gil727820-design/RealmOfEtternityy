@@ -142,6 +142,7 @@ const ptBR: Record<string, string> = {
   "nav.dungeon": "Masmorras",
   "nav.skills": "Habilidades",
   "nav.dailyLogin": "Login Diário",
+  "nav.dailyEvents": "Eventos Diários",
   "nav.bestiary": "Bestiário",
   "nav.relics": "Relíquias",
   "nav.specialization": "Especialização",
