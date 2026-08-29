@@ -147,6 +147,7 @@ const ptBR: Record<string, string> = {
   "nav.questlines": "Questlines Epicas",
   "nav.enchantments": "Encantamentos",
   "nav.refinement": "Refinamento",
+  "nav.worldExplore": "Exploracao do Mundo",
   "nav.bestiary": "Bestiário",
   "nav.relics": "Relíquias",
   "nav.specialization": "Especialização",

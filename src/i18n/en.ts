@@ -156,6 +156,7 @@ const en: Record<string, string> = {
   "nav.questlines": "Epic Questlines",
   "nav.enchantments": "Enchantments",
   "nav.refinement": "Refinement",
+  "nav.worldExplore": "World Exploration",
   "nav.bestiary": "Bestiary",
   "nav.relics": "Relics",
   "nav.specialization": "Specialization",

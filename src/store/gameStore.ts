@@ -3,7 +3,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { DEFAULT_AUTO_BATTLE, type AutoBattleSettings } from "@/game/autoBattle";
 
-export type GameTab = "dashboard" | "character" | "missions" | "inventory" | "map" | "tower" | "pets" | "pvp" | "guild" | "shop" | "ghostshop" | "worldboss" | "market" | "rankings" | "forge" | "achievements" | "afk" | "dungeon" | "skills" | "mastery" | "mailbox" | "code" | "donate" | "settings" | "guide" | "dailylogin" | "bestiary" | "relics" | "specialization" | "collection" | "advancedclass" | "ascension" | "season" | "crafting" | "trade" | "challenge" | "dailyevents" | "skinshop" | "questlines" | "enchantments" | "refinement";
+export type GameTab = "dashboard" | "character" | "missions" | "inventory" | "map" | "tower" | "pets" | "pvp" | "guild" | "shop" | "ghostshop" | "worldboss" | "market" | "rankings" | "forge" | "achievements" | "afk" | "dungeon" | "skills" | "mastery" | "mailbox" | "code" | "donate" | "settings" | "guide" | "dailylogin" | "bestiary" | "relics" | "specialization" | "collection" | "advancedclass" | "ascension" | "season" | "crafting" | "trade" | "challenge" | "dailyevents" | "skinshop" | "questlines" | "enchantments" | "refinement" | "worldexplore";
 
 interface GameState {
   userId: string | null;

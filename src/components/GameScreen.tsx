@@ -12,6 +12,7 @@ import CraftingPanel from "./panels/CraftingPanel";
 import TradePanel from "./panels/TradePanel";
 import ChallengePanel from "./panels/ChallengePanel";
 import DailyEventsPanel from "./panels/DailyEventsPanel";
+import WorldExplorationPanel from "./panels/WorldExplorationPanel";
 import RefinementPanel from "./panels/RefinementPanel";
 import EnchantmentsPanel from "./panels/EnchantmentsPanel";
 import QuestlinesPanel from "./panels/QuestlinesPanel";
@@ -200,6 +201,7 @@ export default function GameScreen() {
       case "questlines": return <QuestlinesPanel />;
       case "enchantments": return <EnchantmentsPanel />;
       case "refinement": return <RefinementPanel />;
+      case "worldexplore": return <WorldExplorationPanel />;
       case "map": return <MapPanel />;
       case "tower": return <TowerPanel />;
       case "pvp": return <PvPPanel />;
