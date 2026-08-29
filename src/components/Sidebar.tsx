@@ -74,6 +74,7 @@ const NAV_SECTIONS: NavSection[] = [
       { tab: "dailyevents", icon: "🎉", image: "/images/sidebar/menu_evento_global.png", labelKey: "nav.dailyEvents", color: "#e94560" },
       { tab: "skinshop", icon: "🎨", image: "/images/sidebar/menu_colecao.png", labelKey: "nav.skinShop", color: "#ec4898" },
       { tab: "questlines", icon: "📜", image: "/images/sidebar/menu_como_jogar.png", labelKey: "nav.questlines", color: "#f59e0b" },
+      { tab: "enchantments", icon: "✨", image: "/images/sidebar/menu_maestria.png", labelKey: "nav.enchantments", color: "#a855f7" },
     ],
   },
   {
