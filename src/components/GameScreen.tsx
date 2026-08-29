@@ -8,8 +8,6 @@ import TopBar from "./TopBar";
 import DashboardPanel from "./panels/DashboardPanel";
 import MissionsPanel from "./panels/MissionsPanel";
 import InventoryPanel from "./panels/InventoryPanel";
-import CraftingPanel from "./panels/CraftingPanel";
-import TradePanel from "./panels/TradePanel";
 import ChallengePanel from "./panels/ChallengePanel";
 import DailyEventsPanel from "./panels/DailyEventsPanel";
 import SurvivalArenaPanel from "./panels/SurvivalArenaPanel";
@@ -195,8 +193,6 @@ export default function GameScreen() {
       case "dashboard": case "character": return <DashboardPanel />;
       case "missions": return <MissionsPanel />;
       case "inventory": return <InventoryPanel />;
-      case "crafting": return <CraftingPanel />;
-      case "trade": return <TradePanel />;
       case "challenge": return <ChallengePanel />;
       case "dailyevents": return <DailyEventsPanel />;
       case "skinshop": return <SkinShopPanel />;
