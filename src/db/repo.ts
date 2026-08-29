@@ -1285,7 +1285,7 @@ export async function resetCharacterData() {
   // 3. Reseta todos os personagens mantendo conta e nome
   const all = await rowsOf(characters);
   for (const c of all) {
-    const base = CLASS_BASE_STATS[(c.classType as any) ?? "warrior"] ?? CLASS_BASE_STATS.warrior;
+    const base = CLASS_BASE_STATS[(c.classType as keyof typeof CLASS_BASE_STATS) ?? "warrior"] ?? CLASS_BASE_STATS.warrior;
     await updateRec(characters, c.id, {
       level: 1,
       xp: 0,
