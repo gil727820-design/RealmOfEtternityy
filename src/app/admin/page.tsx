@@ -822,8 +822,8 @@ export default function AdminPage() {
   // ---- Configuração de Preços (Skins + Baús) ----
   const loadPrices = async () => {
     try {
-      const res = await fetch("/api/admin?action=dashboard", { headers: { "Content-Type": "application/json" } });
-      const s = await res.json();
+      const res = await fetch("/api/admin?action=settings", { headers });
+      const s = (await res.json())?.settings || {} as Record<string, unknown>;
       const sp = (s.skinPrices || {}) as Record<string, number>;
       const cp = (s.chestPrices || {}) as Record<string, number>;
       if (sp.epic != null) setSkinPriceEpic(String(sp.epic));
@@ -1894,7 +1894,7 @@ export default function AdminPage() {
                 </p>
                 <div className="flex gap-3 flex-wrap items-center">
                   <button
-                    onClick={() => { if (window.confirm("Resetar TODOS os personagens para nível 1? As contas serão mantidas.")) { callAdmin({ action: "reset_characters" }).then((d) => setMessage(d.success ? "✅ Personagens resetados!" : `❌ ${d.error || "Erro"}`)); } }}
+                    onClick={() => { if (window.confirm("Resetar TODOS os personagens para nível 1? As contas serão mantidas.")) { setBusy("reset_characters"); callAdmin({ action: "reset_characters" }).then((d) => { setMessage(d.success ? "✅ Personagens resetados!" : `❌ ${d.error || "Erro"}`); setBusy(null); loadDashboard(); }); } }}
                     disabled={busy === "reset_characters"}
                     className="px-5 py-2 rounded-xl font-bold text-sm bg-[#ff9500] text-black hover:opacity-90 disabled:opacity-40"
                   >

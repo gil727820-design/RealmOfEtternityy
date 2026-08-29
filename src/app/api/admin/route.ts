@@ -236,98 +236,6 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // ---- Auto-balance Boss Mundial baseado no poder médio dos jogadores ----
-    if (action === "auto_balance_worldboss") {
-      const allChars = await jsonDb.listCharacters("", 999999);
-      if (allChars.length === 0) {
-        return NextResponse.json({ error: "Nenhum personagem encontrado" }, { status: 400 });
-      }
-      const powers = allChars.map((c: any) => powerCalc({
-        attack: Number(c.attack) || 0,
-        defense: Number(c.defense) || 0,
-        hp: Number(c.maxHp) || 0,
-        speed: Number(c.speed) || 0,
-        critical: Number(c.critical) || 0,
-        level: Number(c.level) || 1,
-      }));
-      const avgPower = powers.reduce((s: number, p: number) => s + p, 0) / powers.length;
-      const maxPower = Math.max(...powers);
-      const medianPower = powers.sort((a: number, b: number) => a - b)[Math.floor(powers.length / 2)];
-      const top20Powers = powers.sort((a: number, b: number) => b - a).slice(0, Math.ceil(powers.length * 0.2));
-      const avgTop20 = top20Powers.length > 0 ? top20Powers.reduce((s: number, p: number) => s + p, 0) / top20Powers.length : avgPower;
-      
-      // Boss baseado nos top 20% (para ser um desafio para os mais fortes)
-      const bossMultiplier = 15; // Boss deve ter ~15x o poder médio dos top20
-      const avgMaxHp = allChars.reduce((s: number, c: any) => s + (Number(c.maxHp) || 0), 0) / allChars.length;
-      const avgAttack = allChars.reduce((s: number, c: any) => s + (Number(c.attack) || 0), 0) / allChars.length;
-      const avgDefense = allChars.reduce((s: number, c: any) => s + (Number(c.defense) || 0), 0) / allChars.length;
-      const avgSpeed = allChars.reduce((s: number, c: any) => s + (Number(c.speed) || 0), 0) / allChars.length;
-      const avgCritical = allChars.reduce((s: number, c: any) => s + (Number(c.critical) || 0), 0) / allChars.length;
-      
-      // HP: precisa que ~20-30 jogadores consigam matar em 30-45 min
-      // Cada jogador dá ~avgAttack * 1.5 de dano por ataque, cooldown 5s
-      // Em 30 min = 360 ataques por jogador
-      // 20 jogadores * 360 * avgAttack * 1.5 = HP total estimado
-      const estimatedDpsPerPlayer = (avgAttack * 1.5) / 5; // dano por segundo
-      const targetKillTimeSec = 30 * 60; // 30 minutos
-      const estimatedParticipants = Math.max(5, Math.floor(allChars.length * 0.1));
-      const suggestedMaxHp = Math.floor(estimatedDpsPerPlayer * targetKillTimeSec * estimatedParticipants);
-      
-      const suggestedBoss = {
-        kind: "void_wyrm",
-        maxHp: Math.max(1_000_000, suggestedMaxHp),
-        attack: Math.floor(avgAttack * 3),
-        defense: Math.floor(avgDefense * 2.5),
-        speed: Math.min(15, Math.floor(avgSpeed * 1.5)),
-        critical: Math.min(30, Math.floor(avgCritical * 1.5)),
-      };
-      
-      // Recompensas baseadas no poder
-      const goldPerPower = 0.5; // 0.5 ouro por ponto de poder
-      const xpPerPower = 0.1;
-      const suggestedRewards = {
-        gold: Math.floor(avgTop20 * goldPerPower * 10),
-        xp: Math.floor(avgTop20 * xpPerPower * 10),
-        towerCoins: Math.floor(500 + avgTop20 * 0.05),
-      };
-      
-      // Escudo: thresholds baseados na complexidade
-      const suggestedShield = {
-        enabled: allChars.length > 10,
-        thresholds: allChars.length > 20 ? [75, 50, 25] : allChars.length > 10 ? [50, 25] : [25],
-        durationSec: 120,
-        breakCost: { currency: "diamonds" as const, amount: Math.floor(10 + avgTop20 * 0.001) },
-      };
-      
-      // Mobs baseados no nível médio
-      const avgLevel = allChars.reduce((s: number, c: any) => s + (Number(c.level) || 1), 0) / allChars.length;
-      const suggestedMobs = {
-        enabled: allChars.length > 5,
-        kinds: avgLevel > 30 ? ["lich_trono", "invocador_almas", "cavaleiro_corrompido"] : avgLevel > 15 ? ["beholder_vigilancia", "mago_caos", "gargula_ferro"] : ["monstro_esqueleto", "monstro_lobo"],
-        hp: Math.floor(avgMaxHp * 0.3),
-        count: Math.min(6, Math.max(2, Math.floor(allChars.length / 10))),
-        reward: { gold: Math.floor(avgTop20 * 0.1), xp: Math.floor(avgTop20 * 0.02) },
-      };
-      
-      return NextResponse.json({
-        success: true,
-        stats: {
-          totalCharacters: allChars.length,
-          avgPower: Math.floor(avgPower),
-          maxPower: Math.floor(maxPower),
-          medianPower: Math.floor(medianPower),
-          avgTop20Power: Math.floor(avgTop20),
-          avgLevel: Math.floor(avgLevel),
-        },
-        suggested: {
-          boss: suggestedBoss,
-          rewards: suggestedRewards,
-          shield: suggestedShield,
-          mobs: suggestedMobs,
-        },
-      });
-    }
-
     if (action === "purchases") {
       const purchases = await jsonDb.listPurchases();
       return NextResponse.json({ purchases });
@@ -376,6 +284,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const url = new URL(req.url);
     const contentType = req.headers.get("content-type") || "";
     let body: Record<string, unknown> = {};
     let files: FormData | null = null;
@@ -386,9 +295,9 @@ export async function POST(req: NextRequest) {
         if (typeof v === "string") body[k] = v;
       }
     } else {
-      body = await req.json();
+      try { body = await req.json(); } catch { body = {}; }
     }
-    const action = String(body.action || new URL(req.url).searchParams.get("action") || "");
+    const action = String(body.action || url.searchParams.get("action") || "");
 
     // Login NÃO exige auth prévia — é justamente ele que cria a sessão.
     if (action === "login") {
@@ -1637,6 +1546,84 @@ export async function POST(req: NextRequest) {
       }
       if (!processed) return NextResponse.json({ error: "Nenhum personagem válido encontrado" }, { status: 404 });
       return NextResponse.json({ success: true, processed, message: `⚡ Ação aplicada em ${processed} personagem(ns)!` });
+    }
+
+    // ---- Auto-balance Boss Mundial (chamado via POST pelo frontend) ----
+    if (action === "auto_balance_worldboss") {
+      const allChars = await jsonDb.listCharacters("", 999999);
+      if (allChars.length === 0) {
+        return NextResponse.json({ error: "Nenhum personagem encontrado" }, { status: 400 });
+      }
+      const powers = allChars.map((c: any) => powerCalc({
+        attack: Number(c.attack) || 0,
+        defense: Number(c.defense) || 0,
+        hp: Number(c.maxHp) || 0,
+        speed: Number(c.speed) || 0,
+        critical: Number(c.critical) || 0,
+        level: Number(c.level) || 1,
+      }));
+      const avgPower = powers.reduce((s: number, p: number) => s + p, 0) / powers.length;
+      const maxPower = Math.max(...powers);
+      const sortedPowers = [...powers].sort((a: number, b: number) => a - b);
+      const medianPower = sortedPowers[Math.floor(sortedPowers.length / 2)];
+      const sortedDesc = [...powers].sort((a: number, b: number) => b - a);
+      const top20Powers = sortedDesc.slice(0, Math.ceil(sortedDesc.length * 0.2));
+      const avgTop20 = top20Powers.length > 0 ? top20Powers.reduce((s: number, p: number) => s + p, 0) / top20Powers.length : avgPower;
+      const avgMaxHp = allChars.reduce((s: number, c: any) => s + (Number(c.maxHp) || 0), 0) / allChars.length;
+      const avgAttack = allChars.reduce((s: number, c: any) => s + (Number(c.attack) || 0), 0) / allChars.length;
+      const avgDefense = allChars.reduce((s: number, c: any) => s + (Number(c.defense) || 0), 0) / allChars.length;
+      const avgSpeed = allChars.reduce((s: number, c: any) => s + (Number(c.speed) || 0), 0) / allChars.length;
+      const avgCritical = allChars.reduce((s: number, c: any) => s + (Number(c.critical) || 0), 0) / allChars.length;
+      const estimatedDpsPerPlayer = (avgAttack * 1.5) / 5;
+      const targetKillTimeSec = 30 * 60;
+      const estimatedParticipants = Math.max(5, Math.floor(allChars.length * 0.1));
+      const suggestedMaxHp = Math.floor(estimatedDpsPerPlayer * targetKillTimeSec * estimatedParticipants);
+      const suggestedBoss = {
+        kind: "void_wyrm",
+        maxHp: Math.max(1_000_000, suggestedMaxHp),
+        attack: Math.floor(avgAttack * 3),
+        defense: Math.floor(avgDefense * 2.5),
+        speed: Math.min(15, Math.floor(avgSpeed * 1.5)),
+        critical: Math.min(30, Math.floor(avgCritical * 1.5)),
+      };
+      const goldPerPower = 0.5;
+      const xpPerPower = 0.1;
+      const suggestedRewards = {
+        gold: Math.floor(avgTop20 * goldPerPower * 10),
+        xp: Math.floor(avgTop20 * xpPerPower * 10),
+        towerCoins: Math.floor(500 + avgTop20 * 0.05),
+      };
+      const suggestedShield = {
+        enabled: allChars.length > 10,
+        thresholds: allChars.length > 20 ? [75, 50, 25] : allChars.length > 10 ? [50, 25] : [25],
+        durationSec: 120,
+        breakCost: { currency: "diamonds" as const, amount: Math.floor(10 + avgTop20 * 0.001) },
+      };
+      const avgLevel = allChars.reduce((s: number, c: any) => s + (Number(c.level) || 1), 0) / allChars.length;
+      const suggestedMobs = {
+        enabled: allChars.length > 5,
+        kinds: avgLevel > 30 ? ["lich_trono", "invocador_almas", "cavaleiro_corrompido"] : avgLevel > 15 ? ["beholder_vigilancia", "mago_caos", "gargula_ferro"] : ["monstro_esqueleto", "monstro_lobo"],
+        hp: Math.floor(avgMaxHp * 0.3),
+        count: Math.min(6, Math.max(2, Math.floor(allChars.length / 10))),
+        reward: { gold: Math.floor(avgTop20 * 0.1), xp: Math.floor(avgTop20 * 0.02) },
+      };
+      return NextResponse.json({
+        success: true,
+        stats: {
+          totalCharacters: allChars.length,
+          avgPower: Math.floor(avgPower),
+          maxPower: Math.floor(maxPower),
+          medianPower: Math.floor(medianPower),
+          avgTop20Power: Math.floor(avgTop20),
+          avgLevel: Math.floor(avgLevel),
+        },
+        suggested: {
+          boss: suggestedBoss,
+          rewards: suggestedRewards,
+          shield: suggestedShield,
+          mobs: suggestedMobs,
+        },
+      });
     }
 
     return NextResponse.json({ error: "Ação inválida" }, { status: 400 });

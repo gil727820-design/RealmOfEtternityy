@@ -8,6 +8,7 @@ import {
   marketplace, adminLogs,
 } from "./schema";
 import { skinById } from "@/game/skins";
+import { CLASS_BASE_STATS } from "@/game/constants";
 
 /*
  * Repositório Postgres (Supabase) — substituiu o antigo jsonDb.
@@ -1284,17 +1285,20 @@ export async function resetCharacterData() {
   // 3. Reseta todos os personagens mantendo conta e nome
   const all = await rowsOf(characters);
   for (const c of all) {
+    const base = CLASS_BASE_STATS[(c.classType as any) ?? "warrior"] ?? CLASS_BASE_STATS.warrior;
     await updateRec(characters, c.id, {
       level: 1,
       xp: 0,
       xpToNext: 120,
       prestige: 0,
+      skillPoints: 0,
       unspentStatPoints: 0,
       talentPoints: 0,
       talents: {},
-      advancedClassId: null,
-      ascensionLevel: 0,
+      advancedClass: null,
+      ascension: 0,
       seasonPoints: 0,
+      seasonId: 0,
       // Moedas
       gold: 500,
       diamonds: 0,
@@ -1314,19 +1318,30 @@ export async function resetCharacterData() {
       // Pet inicial
       pets: { lobo_sombrio: { id: "lobo_sombrio", level: 1, equipped: true } },
       activePetId: "lobo_sombrio",
-      // Status serão recalculados pelo admin se necessário
-      hp: 100,
-      maxHp: 100,
-      attack: 10,
-      defense: 10,
-      speed: 10,
-      critical: 5,
+      // Stats base da classe
+      hp: base.hp,
+      maxHp: base.hp,
+      attack: base.attack,
+      defense: base.defense,
+      speed: base.speed,
+      critical: base.critical,
       precision: 5,
       dodge: 5,
       resistance: 5,
-      mana: 50,
-      maxMana: 50,
+      mana: base.mana,
+      maxMana: base.mana,
       power: 0,
+      baseStats: {
+        attack: base.attack,
+        defense: base.defense,
+        maxHp: base.hp,
+        speed: base.speed,
+        critical: base.critical,
+      },
+      // VIP resetado
+      vipTier: null,
+      vipUntil: null,
+      vipLevel: 0,
       // Timestamps
       afkSince: new Date().toISOString(),
       lastActivity: new Date().toISOString(),
