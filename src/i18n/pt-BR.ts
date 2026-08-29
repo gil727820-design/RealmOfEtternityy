@@ -149,6 +149,7 @@ const ptBR: Record<string, string> = {
   "nav.refinement": "Refinamento",
   "nav.worldExplore": "Exploracao do Mundo",
   "nav.inheritance": "Heranca de Itens",
+  "nav.survivalArena": "Arena de Sobrevivencia",
   "nav.bestiary": "Bestiário",
   "nav.relics": "Relíquias",
   "nav.specialization": "Especialização",

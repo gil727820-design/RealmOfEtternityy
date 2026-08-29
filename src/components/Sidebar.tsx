@@ -78,6 +78,7 @@ const NAV_SECTIONS: NavSection[] = [
       { tab: "refinement", icon: "⚒️", image: "/images/sidebar/menu_maestria.png", labelKey: "nav.refinement", color: "#f59e0b" },
       { tab: "worldexplore", icon: "🗺️", image: "/images/sidebar/menu_evento_global.png", labelKey: "nav.worldExplore", color: "#22c55e" },
       { tab: "inheritance", icon: "🔄", image: "/images/sidebar/menu_colecao.png", labelKey: "nav.inheritance", color: "#3b82f6" },
+      { tab: "survivalarena", icon: "⚔️", image: "/images/sidebar/menu_bestiario.png", labelKey: "nav.survivalArena", color: "#e94560" },
     ],
   },
   {

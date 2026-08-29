@@ -158,6 +158,7 @@ const en: Record<string, string> = {
   "nav.refinement": "Refinement",
   "nav.worldExplore": "World Exploration",
   "nav.inheritance": "Item Inheritance",
+  "nav.survivalArena": "Survival Arena",
   "nav.bestiary": "Bestiary",
   "nav.relics": "Relics",
   "nav.specialization": "Specialization",

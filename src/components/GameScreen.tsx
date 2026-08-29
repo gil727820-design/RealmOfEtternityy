@@ -12,6 +12,7 @@ import CraftingPanel from "./panels/CraftingPanel";
 import TradePanel from "./panels/TradePanel";
 import ChallengePanel from "./panels/ChallengePanel";
 import DailyEventsPanel from "./panels/DailyEventsPanel";
+import SurvivalArenaPanel from "./panels/SurvivalArenaPanel";
 import InheritancePanel from "./panels/InheritancePanel";
 import WorldExplorationPanel from "./panels/WorldExplorationPanel";
 import RefinementPanel from "./panels/RefinementPanel";
@@ -204,6 +205,7 @@ export default function GameScreen() {
       case "refinement": return <RefinementPanel />;
       case "worldexplore": return <WorldExplorationPanel />;
       case "inheritance": return <InheritancePanel />;
+      case "survivalarena": return <SurvivalArenaPanel />;
       case "map": return <MapPanel />;
       case "tower": return <TowerPanel />;
       case "pvp": return <PvPPanel />;

@@ -162,6 +162,7 @@ const es: Record<string, string> = {
   "nav.refinement": "Refinamiento",
   "nav.worldExplore": "Exploracion del Mundo",
   "nav.inheritance": "Herencia de Objetos",
+  "nav.survivalArena": "Arena de Supervivencia",
   "nav.bestiary": "Bestiario",
   "nav.relics": "Reliquias",
   "nav.specialization": "Especialización",
