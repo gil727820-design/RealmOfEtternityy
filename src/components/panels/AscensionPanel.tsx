@@ -62,7 +62,7 @@ export default function AscensionPanel() {
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="animate-fadeInDown flex items-center gap-4">
-        <img src="/images/ascension/cristal_ascensao.png" alt="Cristal" className="w-16 h-16 object-contain drop-shadow-[0_0_15px_rgba(192,132,252,0.5)]" />
+        <img src="/images/sidebar/menu_ascensao.png" alt="Ascensão" className="w-16 h-16 object-contain drop-shadow-[0_0_15px_rgba(192,132,252,0.5)]" />
         <div>
           <h2 className="text-3xl font-black flex items-center gap-3">
             <span className="bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">{t("ascension.title", locale)}</span>
@@ -139,10 +139,10 @@ export default function AscensionPanel() {
               {cost && (
                 <div className="flex flex-wrap gap-3 items-center">
                   <div className={`text-sm ${gold >= cost.gold ? "text-[#00ff88]" : "text-red-400"}`}>
-                    {gold >= cost.gold ? "✅" : "❌"} 🪙 {cost.gold.toLocaleString()}
+                    {gold >= cost.gold ? "✅" : "❌"} <img src="/images/icons/icone_moeda.png" alt="Moeda" className="w-4 h-4 inline-block" /> {cost.gold.toLocaleString()}
                   </div>
                   <div className={`text-sm ${crystals >= cost.crystals ? "text-[#00ff88]" : "text-red-400"}`}>
-                    {crystals >= cost.crystals ? "✅" : "❌"} 🔷 {cost.crystals} {t("currency.crystals", locale)}
+                    {crystals >= cost.crystals ? "✅" : "❌"} <img src="/images/ascension/cristal_ascensao.png" alt="Cristal" className="w-4 h-4 inline-block" /> {cost.crystals} {t("currency.crystals", locale)}
                   </div>
                   <button onClick={ascend} disabled={busy || !canAscend}
                     className="game-btn ml-auto disabled:opacity-40">
