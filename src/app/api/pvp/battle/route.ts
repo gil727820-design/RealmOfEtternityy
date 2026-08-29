@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jsonDb from "@/db/repo";
-import { leagueForRating, powerCalc, xpForLevel, resolveMaxLevel, classSkillEffect, type ClassName } from "@/game/constants";
+import { leagueForRating, PVP_LEAGUES, powerCalc, xpForLevel, resolveMaxLevel, classSkillEffect, type ClassName } from "@/game/constants";
 import { getSkinClassBuff, skinRarityMult } from "@/game/skinBuffs";
 import { xpMultiplier, goldMultiplier } from "@/game/boosts";
 import { computePvpDaily, PVP_DAILY_MAX, pvpDateKey } from "@/game/pvp";
@@ -423,10 +423,11 @@ export async function POST(req: NextRequest) {
       const newUsed = Math.min(PVP_DAILY_MAX, computePvpDaily(char).used + 1);
       ratingChange = won ? 5 : -3;
       const newAtkRating = Math.max(0, (char.pvpRating || 0) + ratingChange);
+      const leagueIndex = PVP_LEAGUES.findIndex((l) => l.id === leagueForRating(newAtkRating));
 
-      // Recompensa: dinheiro (ouro) + XP (ampliada por boost 2x / VIP)
-      goldEarned = Math.floor((won ? 8 : 2) * goldMultiplier(char));
-      xpEarned = Math.floor((won ? 30 : 8) * xpMultiplier(char));
+      // Recompensa: dinheiro (ouro) + XP (ampliada por boost 2x / VIP) — generoso!
+      goldEarned = Math.floor((won ? 25 : 8) * goldMultiplier(char));
+      xpEarned = Math.floor((won ? 60 : 20) * xpMultiplier(char));
 
       let newXp = (char.xp || 0) + xpEarned;
       let newLevel = char.level || 1;
@@ -443,6 +444,11 @@ export async function POST(req: NextRequest) {
         newXpToNext = xpForLevel(newLevel);
         newStatPoints += 3;
         if (newLevel % 3 === 0) newSkillPoints += 1;
+      }
+      // Cap no nível máximo: não acumula XP além do necessário.
+      if (newLevel >= pvpMaxLevel) {
+        newXp = 0;
+        newXpToNext = 0;
       }
       const newGold = (char.gold || 0) + goldEarned;
       const power = powerCalc({
@@ -463,7 +469,7 @@ export async function POST(req: NextRequest) {
       await jsonDb.updateCharacter(char.id, {
         pvpRating: newAtkRating,
         pvpLeague: leagueForRating(newAtkRating),
-        pvpCoins: (char.pvpCoins || 0) + (won ? 12 : 3),
+        pvpCoins: (char.pvpCoins || 0) + (won ? Math.floor(18 * (1 + leagueIndex * 0.3)) : Math.floor(5 * (1 + leagueIndex * 0.2))),
         pvpDailyDate: today,
         pvpDailyCount: newUsed,
         xp: newXp,

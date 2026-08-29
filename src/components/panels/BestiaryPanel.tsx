@@ -27,6 +27,13 @@ interface BestiaryProgress {
 }
 
 const TIER_ICONS: Record<number, string> = { 1: "▪️", 2: "⭐", 3: "💀", 4: "👑" };
+const TIER_HINTS: Record<number, string> = {
+  1: "Lute contra monstros comuns na região para descobrir",
+  2: "Encontre e derrote monstros ELITE na região (5% chance)",
+  3: "Enfrente o MINI-BOSS da região (cooldown 30 min)",
+  4: "Derrote o BOSS REGIONAL da região (1x por dia)",
+};
+const TIER_COLORS: Record<number, string> = { 1: "text-gray-400", 2: "text-green-400", 3: "text-purple-400", 4: "text-amber-400" };
 
 export default function BestiaryPanel() {
   const { characterId, locale, notify, setCharacter } = useGameStore();
@@ -117,16 +124,21 @@ export default function BestiaryPanel() {
             <div key={cat.category} className="game-card p-4">
               <button
                 onClick={() => setExpanded(isOpen ? null : cat.category)}
-                className="w-full flex items-center justify-between gap-2 text-left"
+                className="w-full flex items-center justify-between gap-3 text-left"
               >
-                <div className="min-w-0">
-                  <div className="font-black text-white">{t("region." + cat.category, locale)}</div>
-                  <div className="text-[11px] text-gray-500">
-                    {t("bestiary.defeated", locale)}: {cat.defeated}/{cat.total}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-white">{t("region." + cat.category, locale)}</span>
+                    {cat.complete && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-300 font-bold">✅ Completo</span>}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden max-w-[120px]">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: cat.complete ? "linear-gradient(90deg, #22c55e, #84cc16)" : "linear-gradient(90deg, #6366f1, #a855f7)" }} />
+                    </div>
+                    <span className="text-[10px] font-bold text-gray-400">{cat.defeated}/{cat.total} ({pct}%)</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[10px] font-bold text-gray-400">{pct}%</span>
                   {cat.complete && !cat.claimed && (
                     <button
                       onClick={(e) => { e.stopPropagation(); claim(cat.category); }}
@@ -137,9 +149,9 @@ export default function BestiaryPanel() {
                     </button>
                   )}
                   {cat.claimed && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/40 text-green-300 font-bold">✓</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/40 text-green-300 font-bold">✓ Coletado</span>
                   )}
-                  <span className={`transition-transform ${isOpen ? "rotate-180" : ""}`}>▼</span>
+                  <span className={`text-gray-500 transition-transform ${isOpen ? "rotate-180" : ""}`}>▼</span>
                 </div>
               </button>
 
@@ -148,15 +160,19 @@ export default function BestiaryPanel() {
                   {cat.entries.map((e) => (
                     <div
                       key={e.id}
-                      className={`rounded-xl border p-2 text-center ${e.defeated ? "border-[#22c55e]/40 bg-[#22c55e]/5" : "border-white/10 bg-[#0a0a12] opacity-50 grayscale"}`}
-                      title={t(e.nameKey, locale)}
+                      className={`rounded-xl border p-2.5 text-center transition-all ${e.defeated ? "border-[#22c55e]/40 bg-[#22c55e]/8 shadow-[0_0_10px_rgba(34,197,94,0.1)]" : "border-white/10 bg-[#0a0a12] opacity-60"}`}
+                      title={e.defeated ? t(e.nameKey, locale) : TIER_HINTS[e.tier] || "Derrote para descobrir"}
                     >
                       <div className="text-2xl mb-1">{e.defeated ? e.icon : "❓"}</div>
-                      <div className="text-[9px] text-gray-400 font-bold truncate">
+                      <div className={`text-[9px] font-bold truncate ${e.defeated ? "text-gray-200" : "text-gray-500"}`}>
                         {e.defeated ? t(e.nameKey, locale) : "???"}
                       </div>
-                      <div className="text-[8px] text-gray-600">
-                        {TIER_ICONS[e.tier] || ""} {e.defeated ? `${t("bestiary.kills", locale)}: ${e.kills}` : ""}
+                      <div className="text-[8px] mt-0.5">
+                        {e.defeated ? (
+                          <span className="text-gray-500">{TIER_ICONS[e.tier]} {t("bestiary.kills", locale)}: {e.kills}</span>
+                        ) : (
+                          <span className={`italic ${TIER_COLORS[e.tier] || "text-gray-600"}`}>{TIER_HINTS[e.tier]?.slice(0, 30)}...</span>
+                        )}
                       </div>
                     </div>
                   ))}

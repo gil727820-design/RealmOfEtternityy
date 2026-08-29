@@ -10,13 +10,15 @@ import {
 } from "@/game/constants";
 import { computePvpDaily, PVP_DAILY_MAX } from "@/game/pvp";
 import useBattleFx, { BattleFxLayer } from "@/components/ui/BattleFx";
+import useSpriteAnim from "@/components/ui/useSpriteAnim";
 import Confetti from "@/components/ui/Confetti";
 
 export default function PvPPanel() {
   const { characterId, character, locale, notify, setCharacter } = useGameStore();
   const [bots, setBots] = useState<Array<any>>([]);
   const [players, setPlayers] = useState<Array<any>>([]);
-  const [tab, setTab] = useState<"bots" | "players">("bots");
+  const [tab, setTab] = useState<"bots" | "players" | "ranking">("bots");
+  const [ranking, setRanking] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const [phase, setPhase] = useState<"league" | "battle" | "result">("league");
@@ -33,6 +35,7 @@ export default function PvPPanel() {
   const [flash, setFlash] = useState(0);
   const [history, setHistory] = useState<Array<any>>([]);
   const fx = useBattleFx();
+  const spriteAnim = useSpriteAnim();
   const autoStop = useRef(false);
   const floatId = useRef(0);
 
@@ -69,10 +72,23 @@ export default function PvPPanel() {
     }
   }, [characterId]);
 
+  const loadRanking = useCallback(async () => {
+    if (!characterId) return;
+    try {
+      const res = await fetch(`/api/pvp/ranking?characterId=${characterId}`);
+      const data = await res.json();
+      setRanking(data);
+    } catch { /* ignore */ }
+  }, [characterId]);
+
   useEffect(() => {
     loadOpponents();
     loadHistory();
   }, [loadOpponents, loadHistory]);
+
+  useEffect(() => {
+    if (tab === "ranking") loadRanking();
+  }, [tab, loadRanking]);
 
   if (!character) return null;
 
@@ -140,6 +156,9 @@ export default function PvPPanel() {
     // Efeitos visuais: partículas, anel de impacto, debuffs e curas.
     fx.applyRound(data, { player: "player", enemy: "enemy" });
 
+    // Animações de sprite (investida, recuo, esquiva, morte...).
+    spriteAnim.processEvents(data.events, !!data.won, !!data.lost);
+
     (data.events || []).forEach((ev: any) => {
       if (ev.amount && (ev.type === "hit" || ev.type === "crit" || ev.type === "skill")) {
         const id = ++floatId.current;
@@ -171,6 +190,7 @@ export default function PvPPanel() {
     setLog([]);
     setFloats([]);
     fx.clear();
+    spriteAnim.triggerRunIn();
     setResult(null);
     setMode(m);
     setPhase("battle");
@@ -320,18 +340,18 @@ export default function PvPPanel() {
   );
 
   return (
-    <div className="space-y-6 p-4">
-      <header className="flex items-center gap-3 justify-between flex-wrap">
-        <div className="flex items-center gap-3">
-          <img src="/images/sidebar/menu_arena.png" alt={t("pvp.title", locale)} className="w-10 h-10 object-contain" />
-          <h2 className="text-3xl font-black">{t("pvp.title", locale)}</h2>
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4">
+      <header className="flex items-center gap-2 sm:gap-3 justify-between flex-wrap">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <img src="/images/sidebar/menu_arena.png" alt={t("pvp.title", locale)} className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-black">{t("pvp.title", locale)}</h2>
         </div>
-        <span className="text-sm bg-amber-900/40 px-3 py-1 rounded-full border border-amber-500/50 font-bold text-amber-300">
-          <img src={league.image} alt={league.id} className="w-5 h-5 object-contain inline-block align-[-2px] mr-1" />
-          <img src="/images/icons/icone_rating.png" alt="rating" className="w-4 h-4 object-contain inline-block align-[-1px] mr-1" />
+        <span className="text-[11px] sm:text-sm bg-amber-900/40 px-2.5 sm:px-3 py-1 sm:py-1 rounded-full border border-amber-500/50 font-bold text-amber-300">
+          <img src={league.image} alt={league.id} className="w-4 h-4 sm:w-5 sm:h-5 object-contain inline-block align-[-2px] mr-1" />
+          <img src="/images/icons/icone_rating.png" alt="rating" className="w-3 h-3 sm:w-4 sm:h-4 object-contain inline-block align-[-1px] mr-1" />
           {currentRating} {t("pvp.rating", locale)} · 🪙 {Number(character.pvpCoins) || 0}
         </span>
-      <span className="text-sm bg-purple-900/40 px-3 py-1 rounded-full border border-purple-500/50 font-bold text-purple-300">
+      <span className="text-[11px] sm:text-sm bg-purple-900/40 px-2.5 sm:px-3 py-1 rounded-full border border-purple-500/50 font-bold text-purple-300">
           ⚔️ {pvpDaily.used}/{PVP_DAILY_MAX} ·{" "}
           <span className={pvpDaily.dailyLeft > 0 ? "text-[#00ff88]" : "text-red-400"}>{pvpDaily.dailyLeft}</span>{" "}
           {t("pvp.remaining", locale)}
@@ -341,11 +361,11 @@ export default function PvPPanel() {
       {phase === "league" && (
         <>
           {/* Card da Liga */}
-          <div className="game-card game-card-accent p-6 flex flex-col items-center gap-2 relative overflow-hidden">
+          <div className="game-card game-card-accent p-4 sm:p-5 lg:p-6 flex flex-col items-center gap-2 relative overflow-hidden">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-amber-500/12 via-transparent to-transparent pointer-events-none" />
-            <img src={league.image} alt={league.id} className="w-28 h-28 object-contain drop-shadow-[0_0_12px_rgba(251,191,36,0.35)]" />
-            <h3 className="text-2xl font-bold z-10">{t(`league.${league.id}`, locale)}</h3>
-            <div className="text-4xl font-black text-amber-400 glow-text z-10">{currentRating}</div>
+            <img src={league.image} alt={league.id} className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 object-contain drop-shadow-[0_0_12px_rgba(251,191,36,0.35)]" />
+            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold z-10">{t(`league.${league.id}`, locale)}</h3>
+            <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-amber-400 glow-text z-10">{currentRating}</div>
             <div className="w-full bg-white/10 h-2 rounded-full mt-2 z-10 overflow-hidden">
               <div className="bg-amber-400 h-full rounded-full" style={{ width: "50%" }}></div>
             </div>
@@ -354,12 +374,12 @@ export default function PvPPanel() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Oponentes */}
             {/* Oponentes — abas: Bots | Players */}
             <section>
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="text-xl font-bold">🎯 {t("pvp.opponents", locale)}</h3>
+              <div className="flex justify-between items-center mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-lg lg:text-xl font-bold">🎯 {t("pvp.opponents", locale)}</h3>
                 <button
                   onClick={() => {
                     setTab("bots");
@@ -386,11 +406,69 @@ export default function PvPPanel() {
                 >
                   👥 {t("pvp.players", locale)} <span className="text-[10px] text-gray-400">({players.length})</span>
                 </button>
+                <button
+                  onClick={() => setTab("ranking")}
+                  className={`${ghostBtn} flex-1 px-3 py-1.5 text-sm ${tab === "ranking" ? "border-purple-400 text-purple-300 bg-purple-500/10" : ""}`}
+                >
+                  🏆 Ranking
+                </button>
               </div>
 
               <div className="space-y-3">
                 {loading ? (
                   <div className="text-gray-500 animate-pulse-soft">{t("pvp.noOpponents", locale)}</div>
+                ) : tab === "ranking" ? (
+                  !ranking ? (
+                    <div className="text-gray-500 animate-pulse-soft">Carregando ranking...</div>
+                  ) : (
+                    <div className="space-y-3">
+                      {/* Posição do jogador */}
+                      <div className="game-card p-4 border border-amber-500/30 bg-amber-500/5">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl font-black text-amber-400">#{ranking.playerRank}</span>
+                            <div>
+                              <div className="text-sm font-bold text-white">{playerName}</div>
+                              <div className="text-[11px] text-gray-400">{currentRating} rating · {PVP_LEAGUES.find((l) => l.id === ranking.playerLeague)?.icon} {ranking.playerLeague}</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-[10px] text-gray-500">Recompensas da liga:</div>
+                            <div className="text-[11px] text-amber-300">🪙 +{ranking.leagueRewards?.dailyTokens || 0} tokens/dia · 💰 +{ranking.leagueRewards?.bonusGold || 0} gold</div>
+                          </div>
+                        </div>
+                      </div>
+                      {/* Top 10 */}
+                      <div className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">🏆 Top {Math.min(10, ranking.ranking?.length || 0)}</div>
+                      {(ranking.ranking || []).slice(0, 10).map((r: any, i: number) => {
+                        const medals = ["🥇", "🥈", "🥉"];
+                        const isMe = r.characterId === characterId;
+                        return (
+                          <div key={r.characterId} className={`game-card p-3 flex items-center gap-3 ${isMe ? "border-amber-500/40 bg-amber-500/5" : ""}`}>
+                            <span className="text-lg font-black w-8 text-center" style={{ color: i < 3 ? ["#ffd700", "#c0c0c0", "#cd7f32"][i] : "#6b7280" }}>
+                              {medals[i] || `#${i + 1}`}
+                            </span>
+                            <img src={classImage(r.classType, "male")} alt="" className="w-8 h-8 rounded-full object-cover border border-white/10" />
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-bold text-white truncate">{r.name} {isMe && <span className="text-[9px] text-amber-400">(você)</span>}</div>
+                              <div className="text-[10px] text-gray-500">Lv.{r.level} · {PVP_LEAGUES.find((l) => l.id === r.pvpLeague)?.icon} {r.pvpLeague}</div>
+                            </div>
+                            <span className="text-sm font-black text-amber-400">{r.pvpRating}</span>
+                          </div>
+                        );
+                      })}
+                      {/* Ligas e recompensas */}
+                      <div className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1 mt-4">🎯 Ligas e Recompensas</div>
+                      {(ranking.leagues || []).reverse().map((l: any) => (
+                        <div key={l.id} className={`flex items-center gap-3 p-2 rounded-lg ${ranking.playerLeague === l.id ? "bg-purple-500/10 border border-purple-500/30" : "bg-white/5"}`}>
+                          <img src={l.image} alt={l.id} className="w-6 h-6 object-contain" />
+                          <span className="text-xs font-bold text-gray-300 capitalize flex-1">{l.id}</span>
+                          <span className="text-[10px] text-gray-500">≥{l.minRating}</span>
+                          <span className="text-[10px] text-amber-300">🪙{l.reward.dailyTokens}/dia</span>
+                        </div>
+                      ))}
+                    </div>
+                  )
                 ) : tab === "bots" ? (
                   bots.length === 0 ? (
                     <div className="game-card p-3 text-sm text-gray-500">{t("pvp.noOpponents", locale)}</div>
@@ -407,7 +485,7 @@ export default function PvPPanel() {
 
             {/* Histórico */}
             <section>
-              <h3 className="text-xl font-bold mb-4">📜 {t("pvp.history", locale)}</h3>
+              <h3 className="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4">📜 {t("pvp.history", locale)}</h3>
               <div className="space-y-2">
                 {history.length === 0 ? (
                   <div className="game-card p-3 text-sm text-gray-500">{t("pvp.noHistory", locale)}</div>
@@ -478,12 +556,14 @@ export default function PvPPanel() {
             <div className="flex items-start justify-between gap-2 relative">
               <div className="flex-1 text-center">
                 <div className="relative inline-block">
-                  <div key={pShake} className={pShake > 0 ? "animate-hit-shake" : ""}>
-                    <img
-                      src={playerImg}
-                      alt={playerName}
-                      className={`w-28 h-28 sm:w-36 sm:h-36 rounded-2xl border-2 border-[#4ecdc4]/60 object-cover shadow-[0_0_25px_rgba(78,205,196,0.35)] ${pShake > 0 ? "" : "animate-float"}`}
-                    />
+                  <div key={pShake}>
+                    <div className={`relative w-28 h-28 sm:w-36 sm:h-36 ${spriteAnim.playerAnim || (pShake > 0 ? "animate-hit-shake" : "")}`}>
+                      <img
+                        src={playerImg}
+                        alt={playerName}
+                        className={`w-full h-full rounded-2xl border-2 border-[#4ecdc4]/60 object-cover shadow-[0_0_25px_rgba(78,205,196,0.35)] ${!spriteAnim.playerAnim && !pShake ? "animate-float" : ""}`}
+                      />
+                    </div>
                   </div>
                   {floatEls("player")}
                   <BattleFxLayer fx={fx} target="player" />
@@ -505,12 +585,18 @@ export default function PvPPanel() {
 
               <div className="flex-1 text-center">
                 <div className="relative inline-block">
-                  <div key={eShake} className={eShake > 0 ? "animate-hit-shake" : ""}>
-                    <img
-                      src={enemyImg}
-                      alt={enemyName}
-                      className={`w-28 h-28 sm:w-36 sm:h-36 rounded-2xl border-2 border-red-500/50 object-cover shadow-[0_0_25px_rgba(239,68,68,0.3)] ${eShake > 0 ? "" : "animate-floatSlow"}`}
-                    />
+                  <div key={eShake}>
+                    <div className={`relative w-28 h-28 sm:w-36 sm:h-36 ${spriteAnim.monsterAnim || (eShake > 0 ? "animate-hit-shake" : "")}`}>
+                      <img
+                        src={enemyImg}
+                        alt={enemyName}
+                        className={`w-full h-full rounded-2xl border-2 border-red-500/50 object-cover shadow-[0_0_25px_rgba(239,68,68,0.3)] ${!spriteAnim.monsterAnim && !eShake ? "animate-floatSlow" : ""}`}
+                      />
+                      {/* Arco de corte no alvo */}
+                      {spriteAnim.showSlash && (
+                        <span className={`slash-trail ${spriteAnim.slashCrit ? "slash-trail-crit" : ""}`} />
+                      )}
+                    </div>
                   </div>
                   {floatEls("enemy")}
                   <BattleFxLayer fx={fx} target="enemy" />
@@ -607,12 +693,12 @@ export default function PvPPanel() {
       )}
 
       {phase === "result" && result && (
-        <div className="game-card p-8 text-center relative overflow-hidden border-teal-800 bg-gradient-to-b from-gray-900/80 to-black/70">
+        <div className="game-card p-5 sm:p-6 lg:p-8 text-center relative overflow-hidden border-teal-800 bg-gradient-to-b from-gray-900/80 to-black/70">
           {result.won && <Confetti />}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-teal-500/10 via-transparent to-transparent" />
           <div className="relative">
-            <div className="text-6xl mb-3">{result.won ? "🏆" : "💀"}</div>
-            <h2 className={`text-4xl font-black mb-1 ${result.won ? "text-green-400" : "text-red-400"}`}>
+            <div className="text-4xl sm:text-5xl lg:text-6xl mb-3">{result.won ? "🏆" : "💀"}</div>
+            <h2 className={`text-2xl sm:text-3xl lg:text-4xl font-black mb-1 ${result.won ? "text-green-400" : "text-red-400"}`}>
               {result.won ? t("pvp.youWin", locale) : t("pvp.youLose", locale)}
             </h2>
             <p className="text-gray-400 mb-4">

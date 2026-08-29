@@ -9,7 +9,7 @@
  */
 
 /** Limite de batalhas na Arena por dia. */
-export const PVP_DAILY_MAX = 10;
+export const PVP_DAILY_MAX = 50;
 
 /** Chave de data local (YYYY-MM-DD) usada para o limite diário do PvP. */
 export function pvpDateKey(date: Date = new Date()): string {
