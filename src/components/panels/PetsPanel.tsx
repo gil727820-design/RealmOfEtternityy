@@ -97,6 +97,13 @@ export default function PetsPanel() {
     return parts;
   };
 
+  // Habilidade do pet (desbloqueada no nivel 10+)
+  const petSkillForLevel = (pet: any) => {
+    if (!pet?.skill) return null;
+    if ((pet.level || 1) < 10) return null;
+    return pet.skill;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
@@ -168,6 +175,18 @@ export default function PetsPanel() {
                       </span>
                     ))}
                   </div>
+                  {activePet.skill && (
+                    <div className={`mt-2 px-3 py-2 rounded-xl border text-xs ${activePet.level >= 10 ? "bg-[#a855f7]/10 border-[#a855f7]/40" : "bg-white/5 border-white/10 opacity-50"}`}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{activePet.skill.icon}</span>
+                        <div className="flex-1">
+                          <div className="font-bold text-[#a855f7]">{activePet.skill.nameKey} {activePet.level < 10 && <span className="text-[9px] text-gray-500">(Lv.10+)</span>}</div>
+                          <div className="text-[10px] text-gray-400">{activePet.skill.description}</div>
+                          <div className="text-[9px] text-gray-500 mt-0.5">Chance: {activePet.skill.triggerChance}% por ataque</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <span className="px-3 py-1 rounded-full text-[10px] font-black bg-[#22d3ee]/15 border border-[#22d3ee]/50 text-[#22d3ee]">
                   ✅ {t("pets.equipped", locale)}
@@ -217,6 +236,12 @@ export default function PetsPanel() {
                           </span>
                         ))}
                       </div>
+                      {p.skill && (
+                        <div className={`mt-1.5 px-2 py-1 rounded-lg border text-[9px] ${p.level >= 10 ? "bg-[#a855f7]/10 border-[#a855f7]/30" : "bg-white/5 border-white/10 opacity-40"}`}>
+                          <span className="text-[#a855f7] font-bold">{p.skill.icon} {p.skill.nameKey}</span>
+                          {p.level < 10 && <span className="text-gray-600 ml-1">(Lv.10+)</span>}
+                        </div>
+                      )}
                       <button
                         onClick={() => equip(p.id)}
                         disabled={busyId === p.id || isActive}

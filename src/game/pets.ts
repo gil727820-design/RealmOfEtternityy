@@ -18,6 +18,19 @@
 
 export type PetRarity = "common" | "uncommon" | "rare" | "epic" | "legendary" | "mythic" | "divine";
 
+export interface PetSkill {
+  id: string;
+  nameKey: string;
+  icon: string;
+  description: string;
+  /** Chance de ativar por ataque (%). */
+  triggerChance: number;
+  /** Efeito da habilidade. */
+  effect: "damage" | "heal" | "shield" | "critBuff" | "lifesteal";
+  /** Valor do efeito (% ou valor fixo). */
+  value: number;
+}
+
 export interface PetDef {
   id: string;
   nameKey: string;
@@ -34,6 +47,8 @@ export interface PetDef {
   critPct?: number; // +% crítico
   /** Revive 1x por batalha (Fênix). */
   revive?: boolean;
+  /** Habilidade ativa do pet (desbloqueada no nível 10+). */
+  skill?: PetSkill;
 }
 
 /** Ordem de raridades (para cores/ordenação). */
@@ -53,6 +68,7 @@ export const PET_DEFS: PetDef[] = [
     rarity: "common",
     desc: "pet.lobo_sombrio.desc",
     damagePct: 0.5,
+    skill: { id: "wolf_bite", nameKey: "pet.skill.wolf_bite", icon: "🦷", description: "Mordida sombria causa dano extra", triggerChance: 15, effect: "damage", value: 25 },
   },
   {
     id: "fada_lunar",
@@ -62,6 +78,7 @@ export const PET_DEFS: PetDef[] = [
     rarity: "uncommon",
     desc: "pet.fada_lunar.desc",
     xpPct: 0.8,
+    skill: { id: "fairy_heal", nameKey: "pet.skill.fairy_heal", icon: "💚", description: "Cura o jogdor em 15% do HP max", triggerChance: 20, effect: "heal", value: 15 },
   },
   {
     id: "golem",
@@ -72,6 +89,7 @@ export const PET_DEFS: PetDef[] = [
     desc: "pet.golem.desc",
     defensePct: 1.0,
     maxHpPct: 0.8,
+    skill: { id: "golem_shield", nameKey: "pet.skill.golem_shield", icon: "🛡️", description: "Cria escudo bloqueando proximo dano", triggerChance: 12, effect: "shield", value: 30 },
   },
   {
     id: "dragao_bebe",
@@ -81,6 +99,7 @@ export const PET_DEFS: PetDef[] = [
     rarity: "rare",
     desc: "pet.dragao_bebe.desc",
     goldPct: 0.5,
+    skill: { id: "dragon_breath", nameKey: "pet.skill.dragon_breath", icon: "🔥", description: "Sopro de fogo causa dano em area", triggerChance: 18, effect: "damage", value: 35 },
   },
   {
     id: "fenix",
@@ -91,6 +110,7 @@ export const PET_DEFS: PetDef[] = [
     desc: "pet.fenix.desc",
     revive: true,
     maxHpPct: 0.5,
+    skill: { id: "phoenix_flame", nameKey: "pet.skill.phoenix_flame", icon: "🔥", description: "Chamas purificadoras curam 20% HP", triggerChance: 15, effect: "heal", value: 20 },
   },
   {
     id: "tigre_espiritual",
@@ -101,6 +121,7 @@ export const PET_DEFS: PetDef[] = [
     desc: "pet.tigre_espiritual.desc",
     damagePct: 1.2,
     critPct: 0.5,
+    skill: { id: "tiger_claw", nameKey: "pet.skill.tiger_claw", icon: "🐾", description: "Garras espirituais causam critico garantido", triggerChance: 12, effect: "critBuff", value: 100 },
   },
   {
     id: "unicornio_sagrado",
@@ -111,6 +132,7 @@ export const PET_DEFS: PetDef[] = [
     desc: "pet.unicornio_sagrado.desc",
     xpPct: 1.5,
     goldPct: 1.0,
+    skill: { id: "unicorn_blessing", nameKey: "pet.skill.unicorn_blessing", icon: "✨", description: "Bênção cura 25% HP e remove debuffs", triggerChance: 18, effect: "heal", value: 25 },
   },
   {
     id: "dragao_anciao",
@@ -122,6 +144,7 @@ export const PET_DEFS: PetDef[] = [
     damagePct: 2.0,
     defensePct: 1.5,
     maxHpPct: 1.2,
+    skill: { id: "dragon_wrath", nameKey: "pet.skill.dragon_wrath", icon: "🐉", description: "Furia do dragao causa 50% dano extra", triggerChance: 15, effect: "damage", value: 50 },
   },
   {
     id: "fenix_divina",
@@ -135,6 +158,7 @@ export const PET_DEFS: PetDef[] = [
     xpPct: 1.0,
     goldPct: 1.5,
     critPct: 1.0,
+    skill: { id: "divine_rebirth", nameKey: "pet.skill.divine_rebirth", icon: "🌟", description: "Renascimento divino: rouba 30% dano como vida", triggerChance: 20, effect: "lifesteal", value: 30 },
   },
 ];
 
