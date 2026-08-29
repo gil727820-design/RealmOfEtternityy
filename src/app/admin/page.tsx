@@ -7,6 +7,7 @@ import { VIP_TIERS, currentVipTier } from "@/game/vip";
 import { PET_DEFS } from "@/game/pets";
 import { ADVANCED_CLASSES } from "@/game/advancedClasses";
 import { ASCENSION_MAX } from "@/game/ascension";
+import GameRewardReport from "@/components/admin/GameRewardReport";
 
 /** Nomes bonitos dos tiers VIP exibidos no painel. */
 const VIP_LABELS: Record<string, string> = {
@@ -1803,6 +1804,9 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
+
+            {/* 📊 Relatório de Recompensas do Jogo */}
+            <GameRewardReport />
 
             {/* ♻️ Reset do jogo + Reset de personagens */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
