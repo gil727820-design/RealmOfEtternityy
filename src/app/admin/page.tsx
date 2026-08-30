@@ -459,6 +459,7 @@ export default function AdminPage() {
       users: loadUsers,
       characters: loadCharacters,
       guilds: loadGuilds,
+      inventory: async () => { await loadCharacters(); },
       send: async () => { await loadCharacters(); await loadItems(); },
       prices: loadPrices,
       ghost: loadGhostShop,
@@ -2438,6 +2439,40 @@ export default function AdminPage() {
                           atual: {Number(c.seasonPoints || 0).toLocaleString()} pts (temp {String(c.seasonId || "-")})
                         </span>
                       </div>
+
+                      {/* 🎨 Skins — dar/remover skins */}
+                      <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-white/5 pt-2">
+                        <span className="text-[11px] text-gray-400 font-bold">🎨 Skins:</span>
+                        <span className="text-[11px] text-gray-500">
+                          {(() => {
+                            const skins = Array.isArray(c.skins) ? c.skins : [];
+                            return skins.length > 0 ? `${skins.length} skin(s)` : "sem skins";
+                          })()}
+                        </span>
+                        <button
+                          onClick={async () => {
+                            if (busy) return;
+                            const name = String(c.name);
+                            if (!window.confirm(`🎨 Dar TODAS as skins para "${name}"?`)) return;
+                            setBusy(`skins_all_${String(c.id)}`);
+                            const d = await callAdmin({ action: "give_all_skins", characterId: c.id });
+                            setMessage(d.success ? `✅ ${d.count || 0} skins adicionadas a "${name}"!` : `❌ ${d.error || "Falha"}`);
+                            await loadCharacters();
+                            setBusy(null);
+                          }}
+                          disabled={busy === `skins_all_${String(c.id)}`}
+                          className="text-xs bg-[#ec4899] text-white rounded-lg px-3 py-1.5 font-bold hover:opacity-90 disabled:opacity-40">
+                          {busy === `skins_all_${String(c.id)}` ? "..." : "🎨 Todas as Skins"}
+                        </button>
+                      </div>
+
+                      {/* 🔄 Trocar Classe — custa ouro */}
+                      <div className="mt-2 flex flex-wrap items-center gap-2 border-t border-white/5 pt-2">
+                        <span className="text-[11px] text-gray-400 font-bold">🔄 Classe:</span>
+                        <span className="text-[11px] text-gray-300 font-bold">
+                          {String(c.classType)} {c.advancedClass ? `→ ${String((c.advancedClass as any)?.id || "")}` : ""}
+                        </span>
+                      </div>
                     </div>
                   )}
                   )}
@@ -2681,6 +2716,23 @@ export default function AdminPage() {
                                     {m.level && <span className="text-[9px] text-gray-500">Lv.{String(m.level)}</span>}
                                     {m.rank && m.rank !== "member" && (
                                       <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-[#3b82f6]/15 border border-[#3b82f6]/30 text-[#60a5fa] font-bold uppercase">{String(m.rank)}</span>
+                                    )}
+                                    {m.characterId && m.rank !== "leader" && (
+                                      <button
+                                        onClick={async () => {
+                                          if (!window.confirm(`Expulsar "${String(m.name || m.characterId)}" da guilda "${String(g.name)}"?`)) return;
+                                          setBusy(`kick_${String(m.characterId)}`);
+                                          const d = await callAdmin({ action: "kick_guild_member", guildId: String(g.id), characterId: String(m.characterId) });
+                                          setMessage(d.success ? d.message : `❌ ${d.error || "Erro"}`);
+                                          setBusy(null);
+                                          loadGuilds();
+                                        }}
+                                        disabled={busy === `kick_${String(m.characterId)}`}
+                                        className="text-[9px] text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500 rounded px-1.5 py-0.5 font-bold disabled:opacity-40"
+                                        title="Expulsar membro"
+                                      >
+                                        {busy === `kick_${String(m.characterId)}` ? "..." : "👢"}
+                                      </button>
                                     )}
                                   </div>
                                 ))}
