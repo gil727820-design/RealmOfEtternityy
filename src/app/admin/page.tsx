@@ -110,7 +110,7 @@ export default function AdminPage() {
 
   // Auto-login: verificar cookie httpOnly ao montar
   useEffect(() => {
-    fetch("/api/admin?action=dashboard", { headers: { "Content-Type": "application/json" } })
+    fetch("/api/admin?action=dashboard", { headers: { "Content-Type": "application/json" }, credentials: "same-origin" })
       .then((r) => { if (r.ok) { setAuthenticated(true); return r.json(); } return null; })
       .then((d) => { if (d) setData(d); })
       .catch(() => {});
@@ -295,6 +295,7 @@ export default function AdminPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ key: typed, rememberMe }),
+        credentials: "same-origin",
       });
       const d = await res.json();
       if (!res.ok) {
@@ -317,7 +318,7 @@ export default function AdminPage() {
   const loadDashboard = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin?action=dashboard`, { headers });
+      const res = await fetch(`/api/admin?action=dashboard`, { headers, credentials: "same-origin" });
       setData(await res.json());
     } catch { /* ignore */ }
     setLoading(false);
@@ -326,7 +327,7 @@ export default function AdminPage() {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin?action=users&search=${encodeURIComponent(search)}`, { headers });
+      const res = await fetch(`/api/admin?action=users&search=${encodeURIComponent(search)}`, { headers, credentials: "same-origin" });
       setData(await res.json());
     } catch { /* ignore */ }
     setLoading(false);
@@ -335,7 +336,7 @@ export default function AdminPage() {
   const loadExcluded = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin?action=excluded`, { headers });
+      const res = await fetch(`/api/admin?action=excluded`, { headers, credentials: "same-origin" });
       setData(await res.json());
     } catch { /* ignore */ }
     setLoading(false);
@@ -344,7 +345,7 @@ export default function AdminPage() {
   const loadCharacters = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin?action=characters&search=${encodeURIComponent(search)}`, { headers });
+      const res = await fetch(`/api/admin?action=characters&search=${encodeURIComponent(search)}`, { headers, credentials: "same-origin" });
       setData(await res.json());
     } catch { /* ignore */ }
     setLoading(false);
@@ -353,7 +354,7 @@ export default function AdminPage() {
   const loadGuilds = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin?action=guilds`, { headers });
+      const res = await fetch(`/api/admin?action=guilds`, { headers, credentials: "same-origin" });
       setData(await res.json());
     } catch { /* ignore */ }
     setLoading(false);
@@ -362,7 +363,7 @@ export default function AdminPage() {
   const loadMusic = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin?action=audio`, { headers });
+      const res = await fetch(`/api/admin?action=audio`, { headers, credentials: "same-origin" });
       setData(await res.json());
     } catch { /* ignore */ }
     setLoading(false);
@@ -370,7 +371,7 @@ export default function AdminPage() {
 
   const loadItems = async () => {
     try {
-      const res = await fetch(`/api/admin?action=items`, { headers });
+      const res = await fetch(`/api/admin?action=items`, { headers, credentials: "same-origin" });
       const d = await res.json();
       setItemCatalog(Array.isArray(d.items) ? (d.items as Record<string, unknown>[]) : []);
     } catch { /* ignore */ }
@@ -380,7 +381,7 @@ export default function AdminPage() {
   const loadCodes = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin?action=codes`, { headers });
+      const res = await fetch(`/api/admin?action=codes`, { headers, credentials: "same-origin" });
       const d = await res.json();
       setCodesList(Array.isArray(d.codes) ? (d.codes as Record<string, unknown>[]) : []);
     } catch { /* ignore */ }
@@ -431,7 +432,7 @@ export default function AdminPage() {
     try {
       const kind = logKindParam();
       const source = logSourceParam();
-      const res = await fetch(`/api/admin?action=logs&kind=${encodeURIComponent(kind)}&source=${encodeURIComponent(source)}&limit=200`, { headers });
+      const res = await fetch(`/api/admin?action=logs&kind=${encodeURIComponent(kind)}&source=${encodeURIComponent(source)}&limit=200`, { headers, credentials: "same-origin" });
       const d = await res.json();
       setLogsList(Array.isArray(d.logs) ? (d.logs as Record<string, unknown>[]) : []);
     } catch { /* ignore */ }
@@ -487,6 +488,7 @@ export default function AdminPage() {
     const res = await fetch("/api/admin", {
       method: "POST", headers,
       body: JSON.stringify({ action: "edit_character", characterId: editCharId, updates }),
+      credentials: "same-origin",
     });
     const d = await res.json();
     setMessage(d.success ? "✅ Personagem atualizado!" : `❌ ${d.error || "Falha"}`);
@@ -732,9 +734,14 @@ export default function AdminPage() {
 
   const callAdmin = async (body: Record<string, unknown>) => {
     try {
-      const res = await fetch("/api/admin", { method: "POST", headers, body: JSON.stringify(body) });
+      const res = await fetch("/api/admin", { method: "POST", headers, body: JSON.stringify(body), credentials: "same-origin" });
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        return { error: errBody.error || `Erro HTTP ${res.status}` };
+      }
       return await res.json();
-    } catch {
+    } catch (e) {
+      console.error("[admin] callAdmin error:", e);
       return { error: "Erro de conexão" };
     }
   };
@@ -797,7 +804,7 @@ export default function AdminPage() {
   const loadGhostShop = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin?action=settings`, { headers });
+      const res = await fetch(`/api/admin?action=settings`, { headers, credentials: "same-origin" });
       const d = await res.json();
       const s = (d.settings || {}) as Record<string, unknown>;
       if (typeof d.serverOffsetMinutes === "number") setServerOffsetMin(d.serverOffsetMinutes);
@@ -823,7 +830,7 @@ export default function AdminPage() {
   // ---- Configuração de Preços (Skins + Baús) ----
   const loadPrices = async () => {
     try {
-      const res = await fetch("/api/admin?action=settings", { headers });
+      const res = await fetch("/api/admin?action=settings", { headers, credentials: "same-origin" });
       const s = (await res.json())?.settings || {} as Record<string, unknown>;
       const sp = (s.skinPrices || {}) as Record<string, number>;
       const cp = (s.chestPrices || {}) as Record<string, number>;
@@ -844,6 +851,7 @@ export default function AdminPage() {
       const res = await fetch("/api/admin?action=update_prices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({
           skinPrices: {
             epic: Math.max(1, Number(skinPriceEpic) || 5),
@@ -932,7 +940,7 @@ export default function AdminPage() {
   const loadWorldBoss = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin?action=settings`, { headers });
+      const res = await fetch(`/api/admin?action=settings`, { headers, credentials: "same-origin" });
       const d = await res.json();
       const s = (d.settings || {}) as Record<string, unknown>;
       if (typeof d.serverOffsetMinutes === "number") setServerOffsetMin(d.serverOffsetMinutes);
@@ -994,7 +1002,7 @@ export default function AdminPage() {
   const loadWorldBossReport = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin?action=world_boss_report`, { headers });
+      const res = await fetch(`/api/admin?action=world_boss_report`, { headers, credentials: "same-origin" });
       const d = await res.json();
       if (d.report) setWbReport(d.report);
       setWbKillLogs(Array.isArray(d.hitkillLogs) ? (d.hitkillLogs as Record<string, unknown>[]) : []);
@@ -1151,7 +1159,7 @@ export default function AdminPage() {
     if (!characterId) return setInvItems([]);
     setBusy(`inv_${characterId}`);
     try {
-      const res = await fetch(`/api/admin?action=inventory&characterId=${encodeURIComponent(characterId)}`, { headers });
+      const res = await fetch(`/api/admin?action=inventory&characterId=${encodeURIComponent(characterId)}`, { headers, credentials: "same-origin" });
       const d = await res.json();
       if (d.inventory) {
         setInvCharacter(d.character || null);
@@ -1193,7 +1201,7 @@ export default function AdminPage() {
       fd.append("action", "upload_region_music");
       fd.append("regionId", regionId);
       fd.append("file", file);
-      const res = await fetch("/api/admin", { method: "POST", headers: audioHeaders, body: fd });
+      const res = await fetch("/api/admin", { method: "POST", headers: audioHeaders, body: fd, credentials: "same-origin" });
       const d = await res.json();
       setMessage(d.success ? `✅ Música enviada para a ilha!` : `❌ ${d.error || "Falha no upload"}`);
     } catch {
@@ -1220,7 +1228,7 @@ export default function AdminPage() {
       const fd = new FormData();
       fd.append("action", "upload_world_boss_image");
       fd.append("file", file);
-      const res = await fetch("/api/admin", { method: "POST", headers: audioHeaders, body: fd });
+      const res = await fetch("/api/admin", { method: "POST", headers: audioHeaders, body: fd, credentials: "same-origin" });
       const d = await res.json();
       if (d.success) {
         setWbBossImage(d.url);
@@ -1304,7 +1312,7 @@ export default function AdminPage() {
         const fd = new FormData();
         fd.append("action", "upload_world_boss_image");
         fd.append("file", file);
-        const res = await fetch("/api/admin", { method: "POST", headers: audioHeaders, body: fd });
+        const res = await fetch("/api/admin", { method: "POST", headers: audioHeaders, body: fd, credentials: "same-origin" });
         const d = await res.json();
         if (d.success && d.url) newUrls.push(d.url);
       } catch { /* skip */ }
@@ -1324,7 +1332,7 @@ export default function AdminPage() {
   // ---- Mensagem global / manutenção ----
   const loadServerSettings = async () => {
     try {
-      const res = await fetch(`/api/admin?action=settings`, { headers });
+      const res = await fetch(`/api/admin?action=settings`, { headers, credentials: "same-origin" });
       const d = await res.json();
       const s = (d.settings || {}) as Record<string, unknown>;
       setServerAnnouncement(typeof s.announcement === "string" ? s.announcement : "");
@@ -1355,7 +1363,7 @@ export default function AdminPage() {
   /** Carrega só as configurações de donate (chave PIX + QR Code). */
   const loadDonateSettings = async () => {
     try {
-      const res = await fetch(`/api/admin?action=settings`, { headers });
+      const res = await fetch(`/api/admin?action=settings`, { headers, credentials: "same-origin" });
       const d = await res.json();
       const s = (d.settings || {}) as Record<string, unknown>;
       setDonatePixKey(typeof s.donatePixKey === "string" ? s.donatePixKey : "");
@@ -1368,10 +1376,10 @@ export default function AdminPage() {
   const loadPurchases = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin?action=purchases`, { headers });
+      const res = await fetch(`/api/admin?action=purchases`, { headers, credentials: "same-origin" });
       const d = await res.json();
       setPurchases(Array.isArray(d.purchases) ? (d.purchases as Record<string, unknown>[]) : []);
-      const sres = await fetch(`/api/admin?action=settings`, { headers });
+      const sres = await fetch(`/api/admin?action=settings`, { headers, credentials: "same-origin" });
       const sd = await sres.json();
       const s = (sd.settings || {}) as Record<string, unknown>;
       setDiamondsPerReal(String(Number(s.diamondsPerReal) > 0 ? Number(s.diamondsPerReal) : 1000));
@@ -1384,7 +1392,7 @@ export default function AdminPage() {
   const loadLedger = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin?action=purchase_ledger`, { headers });
+      const res = await fetch(`/api/admin?action=purchase_ledger`, { headers, credentials: "same-origin" });
       const d = await res.json();
       setLedgerList(Array.isArray(d.ledger) ? (d.ledger as Record<string, unknown>[]) : []);
       setLedgerChars(Array.isArray(d.characters) ? (d.characters as Record<string, unknown>[]) : []);
@@ -1570,7 +1578,7 @@ export default function AdminPage() {
       const fd = new FormData();
       fd.append("action", "upload_donate_qr");
       fd.append("file", file);
-      const res = await fetch("/api/admin", { method: "POST", headers: audioHeaders, body: fd });
+      const res = await fetch("/api/admin", { method: "POST", headers: audioHeaders, body: fd, credentials: "same-origin" });
       const d = await res.json();
       setMessage(d.success ? `✅ ${d.message || "QR Code atualizado!"}` : `❌ ${d.error || "Falha no upload"}`);
       if (d.donateQrCode) setDonateQrCode(String(d.donateQrCode));
@@ -1728,7 +1736,7 @@ export default function AdminPage() {
             <button
               onClick={() => {
                 // Limpa o cookie httpOnly do admin no servidor antes de sair.
-                fetch("/api/admin?action=logout", { method: "POST" }).catch(() => {});
+                fetch("/api/admin?action=logout", { method: "POST", credentials: "same-origin" }).catch(() => {});
                 setAuthenticated(false);
                 setAdminKey("");
                 setMessage("");
@@ -4643,7 +4651,7 @@ function ServerClock({ headers }: { headers: Record<string, string> }) {
 
   useEffect(() => {
     let stopped = false;
-    fetch("/api/admin?action=settings", { headers })
+    fetch("/api/admin?action=settings", { headers, credentials: "same-origin" })
       .then((r) => r.json())
       .then((d) => {
         if (stopped || !d.serverTime) return;
