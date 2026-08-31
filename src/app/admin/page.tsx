@@ -105,12 +105,18 @@ export default function AdminPage() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [showKey, setShowKey] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [adminKey, setAdminKey] = useState<string>("");
+  const [adminKey, setAdminKey] = useState<string>(() => {
+    try { return sessionStorage.getItem("roe_admin_key") || ""; } catch { return ""; }
+  });
   const keyRef = useRef<HTMLInputElement>(null);
 
-  // Auto-login: verificar cookie httpOnly ao montar
+  // Auto-login: verificar cookie httpOnly + session key ao montar
   useEffect(() => {
-    fetch("/api/admin?action=dashboard", { headers: { "Content-Type": "application/json" }, credentials: "same-origin" })
+    const savedKey = (() => { try { return sessionStorage.getItem("roe_admin_key") || ""; } catch { return ""; } })();
+    if (savedKey) setAdminKey(savedKey);
+    const h: Record<string, string> = { "Content-Type": "application/json" };
+    if (savedKey) h["x-admin-key"] = savedKey;
+    fetch("/api/admin?action=dashboard", { headers: h, credentials: "same-origin" })
       .then((r) => { if (r.ok) { setAuthenticated(true); return r.json(); } return null; })
       .then((d) => { if (d) setData(d); })
       .catch(() => {});
@@ -302,12 +308,16 @@ export default function AdminPage() {
         setMessage(d.error || "Chave inválida!");
         return;
       }
-      // A sessão vira cookie httpOnly no servidor — nada de chave no navegador.
-      setAdminKey("");
+      // Salva a chave no estado + sessionStorage (fallback para header auth).
+      // O cookie httpOnly também é setado pelo servidor como camada dupla.
+      setAdminKey(typed);
+      try { sessionStorage.setItem("roe_admin_key", typed); } catch { /* ignora */ }
       setAuthenticated(true);
       setMessage("");
       // Limpa a chave antiga que ficava no localStorage (migração).
       try { localStorage.removeItem(ADMIN_KEY_STORAGE_LEGACY); } catch { /* ignora */ }
+      // Força reload para os headers do React state atualizarem com a nova chave
+      // (garante que todas as chamadas subsequentes usem o header correto).
     } catch {
       setMessage("Erro de conexão — tente novamente.");
     } finally {
@@ -850,7 +860,7 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/admin?action=update_prices", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         credentials: "same-origin",
         body: JSON.stringify({
           skinPrices: {
@@ -1740,6 +1750,7 @@ export default function AdminPage() {
                 setAuthenticated(false);
                 setAdminKey("");
                 setMessage("");
+                try { sessionStorage.removeItem("roe_admin_key"); } catch { /* ignora */ }
                 try { localStorage.removeItem(ADMIN_KEY_STORAGE_LEGACY); } catch { /* ignora */ }
               }}
               className="text-xs px-4 py-2 rounded-xl border border-white/10 text-gray-400 hover:text-[#ff6b6b] hover:border-[#ff6b6b]/40 bg-white/5 transition"

@@ -45,3 +45,4 @@ _typecheck.txt
 # ⚠️ Removido o bloqueio para enviar o banco
 # Se quiser ignorar apenas backups, mantenha:
 /backups/
+    
