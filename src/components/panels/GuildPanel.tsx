@@ -119,7 +119,7 @@ export default function GuildPanel() {
   const loadWar = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/game?characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/game?action=guild_war&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       if (!d.error) setWarData(d);
     } catch { /* ignore */ }
@@ -128,7 +128,7 @@ export default function GuildPanel() {
   const loadGuildBoss = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/game?characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/game?action=guild_boss&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       if (!d.error) setGuildBoss(d);
     } catch { /* ignore */ }
@@ -346,7 +346,7 @@ export default function GuildPanel() {
 
   const warCall = async (body: Record<string, unknown>) => {
     try {
-      const res = await fetch("/api/game?action=guild-war", {
+      const res = await fetch("/api/game?action=guild_war", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -371,7 +371,7 @@ export default function GuildPanel() {
     if (!characterId) return;
     setBusy(extra ? "gb_extra" : "gb_free");
     try {
-      const res = await fetch("/api/game?action=guild-boss", {
+      const res = await fetch("/api/game?action=guild_boss", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ characterId, extra }),
@@ -744,7 +744,7 @@ export default function GuildPanel() {
                     <div className="text-center text-[#00ff88] font-bold text-sm py-2">🏆 {t("gb.defeated", locale)}!</div>
                   ) : guildBossBattle ? (
                     <BossBattle
-                      apiUrl="/api/game?action=guild-boss"
+                      apiUrl="/api/game?action=guild_boss"
                       monster={gbMonster}
                       title={`🐲 ${t("gb.title", locale)}`}
                       fightLabel={`⚔️ ${t("gb.attack", locale)}`}

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { withBody } from "@/game/requestBody";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = (await req.json().catch(() => ({}))) as Record<string, any>;
+    const reqWithBody = withBody(req, body);
     const url = new URL(req.url);
     const action = String(url.searchParams.get("action") || body?.action || "");
     const handlers: Record<string, () => Promise<any>> = {
@@ -19,7 +21,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Action inválida. Disponíveis: ${Object.keys(handlers).join(", ")}` }, { status: 400 });
     }
     const mod = await handlers[action]();
-    return (mod.POST || mod.GET)(req);
+    return (mod.POST || mod.GET)(reqWithBody);
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Erro interno" }, { status: 500 });
   }

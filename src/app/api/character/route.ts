@@ -6,6 +6,7 @@ import { isValidUsername } from "@/game/profanityFilter";
 import { xpForLevel, powerCalc, resolveMaxLevel, CLASS_BASE_STATS } from "@/game/constants";
 import { computeEnergyRegen } from "@/game/energy";
 import { energyMultiplier, xpMultiplier, goldMultiplier } from "@/game/boosts";
+import { withBody } from "@/game/requestBody";
 
 /** GET — Buscar personagem por ID ou verificar sessão (auth/me) */
 export async function GET(req: NextRequest) {
@@ -46,6 +47,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+    const reqWithBody = withBody(req, body);
     const url = new URL(req.url);
     // Aceita action tanto na URL quanto no corpo (o frontend usa ?action=...);
     // a URL tem precedência para nunca colidir com sub-comandos no body.
@@ -260,32 +262,32 @@ export async function POST(req: NextRequest) {
     // ── INVENTORY: equip ──
     if (action === "equip") {
       const mod = await import("@/game/api-handlers/inventory-equip");
-      return mod.POST(req);
+      return mod.POST(reqWithBody);
     }
     // ── INVENTORY: sell ──
     if (action === "sell") {
       const mod = await import("@/game/api-handlers/inventory-sell");
-      return mod.POST(req);
+      return mod.POST(reqWithBody);
     }
     // ── INVENTORY: use ──
     if (action === "use") {
       const mod = await import("@/game/api-handlers/inventory-use");
-      return mod.POST(req);
+      return mod.POST(reqWithBody);
     }
     // ── INVENTORY: auto-equip ──
     if (action === "auto-equip") {
       const mod = await import("@/game/api-handlers/inventory-auto-equip");
-      return mod.POST(req);
+      return mod.POST(reqWithBody);
     }
     // ── INVENTORY: skin ──
     if (action === "skin") {
       const mod = await import("@/game/api-handlers/inventory-skin");
-      return mod.POST(req);
+      return mod.POST(reqWithBody);
     }
     // ── INVENTORY: remove ──
     if (action === "remove") {
       const mod = await import("@/game/api-handlers/inventory-remove");
-      return mod.POST(req);
+      return mod.POST(reqWithBody);
     }
 
     return NextResponse.json({ error: "Action inválida" }, { status: 400 });

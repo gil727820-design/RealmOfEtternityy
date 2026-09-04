@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { withBody } from "@/game/requestBody";
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json();
+    const body = (await req.json().catch(() => ({}))) as Record<string, any>;
+    const reqWithBody = withBody(req, body);
     const url = new URL(req.url);
     // A action da URL tem precedência; o body pode trazer action somente
     // quando a URL não define (compat) — evita que sub-comandos dos painéis
@@ -65,13 +67,13 @@ export async function POST(req: NextRequest) {
     const guildActions = ["upload_logo","create","donate","upgrade","leave","kick","transfer","invite","accept","decline","my_accept","my_decline","chat","shop","buy_upgrade","buy_bonus","skills","invest_skill","reset_skills","guild_boss","boss_attack","boss_enter","boss_leave","guild_war","war_attack","war_join","war_leave","war_history"];
     if (guildActions.includes(action)) {
       const mod = await import("@/game/api-handlers/guild-all");
-      return mod.POST(req);
+      return mod.POST(reqWithBody);
     }
     if (!handlers[action]) {
       return NextResponse.json({ error: `Action inválida. Disponíveis: ${Object.keys(handlers).join(", ")}` }, { status: 400 });
     }
     const mod = await handlers[action]();
-    return (mod.POST || mod.GET)(req);
+    return (mod.POST || mod.GET)(reqWithBody);
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Erro interno" }, { status: 500 });
   }

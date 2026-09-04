@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
   }
 }
 
-/** POST: iniciar战斗 no modo desafio (a partir de um andar específico). */
+/** POST: iniciar a batalha no modo desafio (a partir de um andar específico). */
 export async function POST(req: NextRequest) {
   try {
     const { characterId, action, floor } = await req.json();
