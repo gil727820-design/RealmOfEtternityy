@@ -25,10 +25,8 @@ export default function MapPanel() {
   const [miniBossBattle, setMiniBossBattle] = useState(false);
   const [regionBossBattle, setRegionBossBattle] = useState(false);
 
-  if (!character) return null;
-
-  const currentLevel = character.level as number;
-  const currentRegionId = character.currentRegion as string;
+  const currentLevel = character ? ((character.level as number) ?? 1) : 0;
+  const currentRegionId = (character?.currentRegion as string) || "eldoria";
   const currentRegion = REGIONS.find((r) => r.id === currentRegionId);
 
   const loadBoss = async () => {
@@ -41,13 +39,6 @@ export default function MapPanel() {
       /* ignora */
     }
   };
-
-  useEffect(() => {
-    loadBoss();
-    loadRegionMobs();
-    loadMiniBoss();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [characterId, character?.currentRegion]);
 
   const loadRegionMobs = async () => {
     if (!characterId) return;
@@ -70,6 +61,15 @@ export default function MapPanel() {
       /* ignora */
     }
   };
+
+  useEffect(() => {
+    loadBoss();
+    loadRegionMobs();
+    loadMiniBoss();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [characterId, character?.currentRegion]);
+
+  if (!character) return null;
 
   const farmMob = async () => {
     if (!characterId || farming) return;

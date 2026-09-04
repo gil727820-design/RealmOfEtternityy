@@ -230,7 +230,7 @@ function BoostSection() {
     } catch {}
   };
 
-  const usePotion = async (id: string) => {
+  const activatePotion = async (id: string) => {
     if (!characterId) return;
     setBusy(id);
     try {
@@ -314,7 +314,7 @@ function BoostSection() {
                 </div>
               </div>
               <button
-                onClick={() => usePotion(it.inv.id)}
+                onClick={() => activatePotion(it.inv.id)}
                 disabled={busy === it.inv.id}
                 className="shrink-0 rounded-lg bg-gradient-to-r from-[#e94560] to-[#ff7b81] px-3 py-1 text-xs font-black text-white transition-all hover:brightness-110 disabled:opacity-50"
               >
