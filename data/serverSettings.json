@@ -113,7 +113,7 @@
       "durationMinutes": 60,
       "attackCooldownSec": 5
     },
-    "maintenance": true,
+    "maintenance": false,
     "towerXpMult": 0.1,
     "announcement": "Atualizacao Feita Atualizem Pagina!!!",
     "donatePixKey": "ffgilvan559@gmail.com",
