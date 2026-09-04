@@ -1,0 +1,46 @@
+[
+  {
+    "id": "f7f859eb-ae7f-4695-87ca-35ef0a819249",
+    "status": "accepted",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T03:14:59.089Z",
+    "guildName": "Overgeared",
+    "resolvedAt": "2026-08-17T03:15:00.976Z",
+    "targetName": "Heathcliff",
+    "leaderCharacterId": "49577826-4946-4da0-b3b0-036eb8fea11f",
+    "targetCharacterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "409b94f3-83cf-4946-8834-694409acbbd3",
+    "status": "accepted",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:14:00.883Z",
+    "guildName": "Overgeared",
+    "resolvedAt": "2026-08-16T23:14:03.998Z",
+    "targetName": "IMMORTAL",
+    "leaderCharacterId": "49577826-4946-4da0-b3b0-036eb8fea11f",
+    "targetCharacterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "3006dd11-660f-4411-a784-a3b706f55e08",
+    "status": "accepted",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:14:48.304Z",
+    "guildName": "Overgeared",
+    "resolvedAt": "2026-08-16T23:14:56.823Z",
+    "targetName": "Spreas",
+    "leaderCharacterId": "49577826-4946-4da0-b3b0-036eb8fea11f",
+    "targetCharacterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "175add2f-cd42-45a9-b700-c1eecf731cf8",
+    "status": "accepted",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:44:00.539Z",
+    "guildName": "Overgeared",
+    "resolvedAt": "2026-08-17T01:31:07.677Z",
+    "targetName": "Lyiu",
+    "leaderCharacterId": "49577826-4946-4da0-b3b0-036eb8fea11f",
+    "targetCharacterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  }
+]

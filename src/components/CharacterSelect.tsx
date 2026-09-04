@@ -19,8 +19,9 @@ export default function CharacterSelect() {
         notify(data.error || "Erro ao entrar no personagem", "error");
         return;
       }
-      if (data.character) {
-        setCharacter(data.character);
+      // A GET /api/character?id= retorna o personagem diretamente (sem wrapper)
+      if (data && data.id) {
+        setCharacter(data);
       } else {
         notify("Personagem não encontrado", "error");
       }

@@ -1,0 +1,2967 @@
+[
+  {
+    "id": "21fcb668-2da8-4607-adbc-31606dc78e78",
+    "endsAt": "2026-08-16T21:14:44.481Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 20,
+    "startedAt": "2026-08-16T21:13:54.481Z",
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "82d3d99f-ae83-42a5-8d0a-803e84da8def",
+    "endsAt": "2026-08-16T21:24:53.350Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 17,
+    "startedAt": "2026-08-16T21:24:13.350Z",
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "a78394bb-befb-4c30-92fe-f5c3b9eec463",
+    "endsAt": "2026-08-16T21:26:33.084Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 20,
+    "startedAt": "2026-08-16T21:25:43.084Z",
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "4493f551-b819-4649-87ac-d5373d47bdae",
+    "endsAt": "2026-08-16T21:21:53.333Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 20,
+    "startedAt": "2026-08-16T21:21:03.333Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "e2e3ff8d-4b7f-42d2-bd2b-c5f5412304a6",
+    "endsAt": "2026-08-16T21:44:40.631Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 17,
+    "startedAt": "2026-08-16T21:44:00.631Z",
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "28f2601c-c79f-411e-ad5e-dc326179080d",
+    "endsAt": "2026-08-16T21:45:32.891Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 1,
+    "startedAt": "2026-08-16T21:45:02.891Z",
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "171d5565-ab53-421f-8e5c-83bed4365346",
+    "endsAt": "2026-08-16T21:46:04.822Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 19,
+    "startedAt": "2026-08-16T21:45:39.822Z",
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "fb55cfce-8c38-407c-964e-a6ca228600b9",
+    "endsAt": "2026-08-16T21:47:40.085Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 22,
+    "startedAt": "2026-08-16T21:46:30.085Z",
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "c294afe1-ff30-4d12-80a7-cfed91d525d6",
+    "endsAt": "2026-08-16T21:49:53.239Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 17,
+    "startedAt": "2026-08-16T21:49:13.239Z",
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "0b736a12-ff75-4df2-850c-246d965918e4",
+    "endsAt": "2026-08-16T21:51:01.346Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 2,
+    "startedAt": "2026-08-16T21:50:16.346Z",
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "af12118a-ac28-4c94-b4de-ccbb32033a82",
+    "endsAt": "2026-08-16T21:59:15.077Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 1,
+    "startedAt": "2026-08-16T21:58:45.077Z",
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "1545acaf-e66a-4013-b3d4-351bc98de333",
+    "endsAt": "2026-08-16T22:00:21.420Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 3,
+    "startedAt": "2026-08-16T21:59:21.420Z",
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "565ff5be-49d8-4d5e-aaa7-f4523d416d56",
+    "endsAt": "2026-08-16T22:02:09.961Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 22,
+    "startedAt": "2026-08-16T22:00:59.961Z",
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "c5b386d6-8f90-4e3f-a49c-a6eca12d83e5",
+    "endsAt": "2026-08-16T22:03:48.421Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 4,
+    "startedAt": "2026-08-16T22:02:18.421Z",
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "5113cc93-9022-439e-92cb-ad4d906fa477",
+    "endsAt": "2026-08-16T22:06:19.705Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 24,
+    "startedAt": "2026-08-16T22:04:44.705Z",
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "32db633d-6d14-4928-a4db-788d0de10932",
+    "endsAt": "2026-08-16T21:56:46.802Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 16,
+    "startedAt": "2026-08-16T21:56:11.802Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "1a245de7-c0c4-4b77-b2be-fabc21ff2ed9",
+    "endsAt": "2026-08-16T22:09:10.545Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 20,
+    "startedAt": "2026-08-16T22:08:20.545Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "1f801dea-6253-4e75-a6b9-84925d408e60",
+    "endsAt": "2026-08-16T22:07:53.933Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 2,
+    "startedAt": "2026-08-16T22:07:08.933Z",
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "d8bce863-69fd-4e4a-bac5-ee086b542b2d",
+    "endsAt": "2026-08-16T22:10:24.495Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 17,
+    "startedAt": "2026-08-16T22:09:44.495Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "0e8f791d-0c88-4a1a-a256-d2ac50a30d7c",
+    "endsAt": "2026-08-16T22:13:01.484Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 21,
+    "startedAt": "2026-08-16T22:12:06.484Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "f59fa9f0-b0e8-4337-b5b2-9861c7580487",
+    "endsAt": "2026-08-16T22:18:03.639Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 2,
+    "startedAt": "2026-08-16T22:17:18.639Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "efff7bfd-554f-456f-8c47-8c12c917aa77",
+    "endsAt": "2026-08-16T22:19:21.926Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 22,
+    "startedAt": "2026-08-16T22:18:11.926Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "fc3559cb-5be0-4c09-99fb-999aae4942cf",
+    "endsAt": "2026-08-16T22:24:21.975Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 23,
+    "startedAt": "2026-08-16T22:22:56.975Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "445fa847-4a89-4ae0-9d22-f26c629264f7",
+    "endsAt": "2026-08-16T21:43:55.498Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 14,
+    "startedAt": "2026-08-16T21:42:35.498Z",
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "21a7dd64-aa67-4ca2-bedb-84dc1bd48161",
+    "endsAt": "2026-08-16T22:12:09.117Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 4,
+    "startedAt": "2026-08-16T22:10:39.117Z",
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "04abd89c-c00b-42d6-b54a-56d3cd624a6d",
+    "endsAt": "2026-08-16T22:26:22.363Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 25,
+    "startedAt": "2026-08-16T22:24:32.363Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "6b3a8cc1-db1f-47d6-bc1d-7c78aac75a05",
+    "endsAt": "2026-08-16T22:27:49.018Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 20,
+    "startedAt": "2026-08-16T22:26:59.018Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "add3be54-c94d-4ef7-9474-8b5e04fda74c",
+    "endsAt": "2026-08-16T22:28:40.771Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 2,
+    "startedAt": "2026-08-16T22:27:55.771Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "ea2a6f60-fb1c-4120-a6d1-7d0a2a3fe4e4",
+    "endsAt": "2026-08-16T22:27:29.778Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 2,
+    "startedAt": "2026-08-16T22:26:44.778Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "7e49097b-b79c-492e-89f7-836417359b91",
+    "endsAt": "2026-08-16T22:30:13.782Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 20,
+    "startedAt": "2026-08-16T22:29:23.782Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "0ade998b-1f3b-49b2-97f6-e40034bdfd56",
+    "endsAt": "2026-08-16T22:30:26.114Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 3,
+    "startedAt": "2026-08-16T22:29:26.114Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "12943071-1249-4a47-b6fd-8d2ab347fd4c",
+    "endsAt": "2026-08-16T22:31:01.096Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 5,
+    "startedAt": "2026-08-16T22:30:41.096Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "4b8196ac-a15f-4738-98fb-781cafa20ae4",
+    "endsAt": "2026-08-16T22:31:40.905Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 3,
+    "startedAt": "2026-08-16T22:30:40.905Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "792ada6f-7024-4032-82b3-bd27217637d4",
+    "endsAt": "2026-08-16T22:32:59.917Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 22,
+    "startedAt": "2026-08-16T22:31:49.917Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "ed612b99-24ed-40c4-9bd3-a1ec5910d526",
+    "endsAt": "2026-08-16T22:31:58.118Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 19,
+    "startedAt": "2026-08-16T22:31:33.118Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "6711b3ed-bf62-4ec5-a1d9-921248242861",
+    "endsAt": "2026-08-16T22:36:08.032Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 18,
+    "startedAt": "2026-08-16T22:35:38.032Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "bceafc5a-0a3c-4ef5-9ddf-7e5338a5e0bb",
+    "endsAt": "2026-08-16T22:38:18.148Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 24,
+    "startedAt": "2026-08-16T22:36:43.148Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "07c2aeda-6209-42d6-8d0d-1b1aea18e4bc",
+    "endsAt": "2026-08-16T22:41:11.119Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 24,
+    "startedAt": "2026-08-16T22:39:36.119Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "7bda07aa-1b52-45da-84bc-5f90eca81e63",
+    "endsAt": "2026-08-16T22:43:56.365Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 23,
+    "startedAt": "2026-08-16T22:42:31.365Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "c61f6dbc-0496-4560-aa26-2d2187d9dec3",
+    "endsAt": "2026-08-16T22:34:00.132Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 2,
+    "startedAt": "2026-08-16T22:33:15.132Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "df320073-c3ef-4b66-b04c-c370815f6229",
+    "endsAt": "2026-08-16T22:45:57.464Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 18,
+    "startedAt": "2026-08-16T22:45:27.464Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "3f10ef87-ba2f-4bfb-b13b-061093928657",
+    "endsAt": "2026-08-16T22:48:00.508Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 22,
+    "startedAt": "2026-08-16T22:46:50.508Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "a643d7e5-ef2a-4377-836c-f45213e51eea",
+    "endsAt": "2026-08-16T22:52:07.767Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 25,
+    "startedAt": "2026-08-16T22:50:17.767Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "d54b8cb7-6f85-4d6c-9d7f-8a5acb278030",
+    "endsAt": "2026-08-16T22:47:12.339Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 14,
+    "startedAt": "2026-08-16T22:45:52.339Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "80c2156e-2160-4763-8765-569bab004e0e",
+    "endsAt": "2026-08-16T22:54:56.558Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 24,
+    "startedAt": "2026-08-16T22:53:21.558Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "fc2f37f6-c446-487b-bbe3-944e1ed30dd0",
+    "endsAt": "2026-08-16T22:55:53.565Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 2,
+    "startedAt": "2026-08-16T22:55:08.565Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "7f2ca34d-ae70-4347-949a-598a94d2f45b",
+    "endsAt": "2026-08-16T23:04:00.757Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 2,
+    "startedAt": "2026-08-16T23:03:15.757Z",
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "eb19ec8b-e0b9-4bda-b731-550c9570e556",
+    "endsAt": "2026-08-16T23:10:09.701Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 23,
+    "startedAt": "2026-08-16T23:08:44.701Z",
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "eb14c7ad-0c31-440e-8588-930e52d669b3",
+    "endsAt": "2026-08-16T23:07:08.912Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 21,
+    "startedAt": "2026-08-16T23:06:13.912Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "4ce560b4-c7ab-4b22-849c-ece2c1bc7855",
+    "endsAt": "2026-08-16T23:18:38.927Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 5,
+    "startedAt": "2026-08-16T23:18:18.927Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "864625dd-ed43-4019-9cf3-c11b0c67cb27",
+    "endsAt": "2026-08-16T22:55:08.221Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 14,
+    "startedAt": "2026-08-16T22:53:48.221Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "a3d376cf-c270-4359-96a4-1fad37736e55",
+    "endsAt": "2026-08-16T23:13:24.269Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 22,
+    "startedAt": "2026-08-16T23:12:14.269Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "94726a2a-ee56-484a-9be4-34618f8fd296",
+    "endsAt": "2026-08-16T23:26:38.936Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 2,
+    "startedAt": "2026-08-16T23:25:53.936Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "e09bf93a-ddc3-4ae9-9c55-4f8a6170865e",
+    "endsAt": "2026-08-16T23:30:00.713Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 23,
+    "startedAt": "2026-08-16T23:28:35.713Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "1ca1c38c-2c33-4c24-952b-0fdb198add41",
+    "endsAt": "2026-08-16T23:32:39.454Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 4,
+    "startedAt": "2026-08-16T23:31:09.454Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "23380455-204d-44c6-b6a5-a6337131a750",
+    "endsAt": "2026-08-16T23:34:58.547Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 24,
+    "startedAt": "2026-08-16T23:33:23.547Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "115066ab-8a77-4e53-b340-17d15ff2058b",
+    "endsAt": "2026-08-16T23:40:11.380Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 9,
+    "startedAt": "2026-08-16T23:37:11.380Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "b64e1948-2dbc-45c3-aa54-64e8c1621825",
+    "endsAt": "2026-08-16T23:41:47.602Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 10,
+    "startedAt": "2026-08-16T23:40:17.602Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "ccdfd80b-da99-457a-88e7-785dc82a5658",
+    "endsAt": "2026-08-16T23:45:22.538Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 11,
+    "startedAt": "2026-08-16T23:42:52.538Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "0bd023b4-f680-4dcc-a8e7-9d00556f7853",
+    "endsAt": "2026-08-16T23:43:51.529Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 20,
+    "startedAt": "2026-08-16T23:43:01.529Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "47ecc1c9-359a-43b6-87f5-337154260a09",
+    "endsAt": "2026-08-16T23:48:29.654Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 20,
+    "startedAt": "2026-08-16T23:47:39.654Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6f642a9d-44f4-45bd-b925-711f2c903b4c",
+    "endsAt": "2026-08-16T23:50:04.707Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 4,
+    "startedAt": "2026-08-16T23:48:34.707Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2a0d7391-fbd4-42c2-8ec2-e001a56cf52c",
+    "endsAt": "2026-08-16T23:53:07.561Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 4,
+    "startedAt": "2026-08-16T23:51:37.561Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2ba542a9-eb14-48be-a175-aa7c8e58d39f",
+    "endsAt": "2026-08-16T23:54:19.909Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 26,
+    "startedAt": "2026-08-16T23:53:09.909Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "0f1dc99a-71b7-4d1c-b060-008d1bd43e43",
+    "endsAt": "2026-08-16T23:55:34.094Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 6,
+    "startedAt": "2026-08-16T23:54:34.094Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "cc82df99-240a-45c5-859e-dc7c63f2f42f",
+    "endsAt": "2026-08-16T23:56:55.841Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 26,
+    "startedAt": "2026-08-16T23:55:45.841Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "103a08bb-85d9-4a90-9ae2-8e1bf4186d8c",
+    "endsAt": "2026-08-16T23:56:23.444Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 13,
+    "startedAt": "2026-08-16T23:53:03.444Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "e534fc5b-e194-4867-84a9-b2bc56f9f790",
+    "endsAt": "2026-08-16T23:58:23.462Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 14,
+    "startedAt": "2026-08-16T23:57:03.462Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2463b0b6-2099-4e78-b945-0797b6b45042",
+    "endsAt": "2026-08-17T00:08:26.697Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 26,
+    "startedAt": "2026-08-17T00:07:16.697Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "c6863cd5-1b18-43dc-a644-6ffb9a96e8bb",
+    "endsAt": "2026-08-17T00:21:44.633Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 10,
+    "startedAt": "2026-08-17T00:20:14.633Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "89752bbd-89e7-4998-8976-873715af0561",
+    "endsAt": "2026-08-17T00:25:48.564Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 15,
+    "startedAt": "2026-08-17T00:21:48.564Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "c558ae5c-266c-49b6-8546-dd3ac1042025",
+    "endsAt": "2026-08-16T23:27:57.524Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 8,
+    "startedAt": "2026-08-16T23:25:57.524Z",
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "331e2824-8a77-4c13-942f-3a6dcebdc85f",
+    "endsAt": "2026-08-17T00:27:03.717Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T00:19:45.717Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "521e8b53-7982-45e4-9c7a-faad5f9f8246",
+    "endsAt": "2026-08-16T23:34:37.880Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 9,
+    "startedAt": "2026-08-16T23:31:37.880Z",
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "418d8a5f-671f-482c-a17b-712f404de21a",
+    "endsAt": "2026-08-17T00:29:37.535Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 5,
+    "startedAt": "2026-08-17T00:29:17.535Z",
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "442bbeba-a173-4a6f-a249-475ab204fe87",
+    "endsAt": "2026-08-17T00:31:29.697Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 15,
+    "startedAt": "2026-08-17T00:27:29.697Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "e7a59e25-76bf-4007-8f50-b22711fc49a5",
+    "endsAt": "2026-08-17T00:35:32.704Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 15,
+    "startedAt": "2026-08-17T00:31:32.704Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "342d62dc-a931-4627-bf02-688e736be26e",
+    "endsAt": "2026-08-17T00:54:57.233Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T00:47:43.233Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "bda9b8b9-27b7-49ae-a033-5337f842185f",
+    "endsAt": "2026-08-17T01:02:36.566Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T00:55:18.566Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "beb57267-0561-4c21-9148-45e7a0cc4b01",
+    "endsAt": "2026-08-17T00:40:15.535Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1335262784,
+    "startedAt": "2026-08-17T00:35:37.535Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1295331b-138b-4b3f-9375-cba2dcc10269",
+    "endsAt": "2026-08-17T00:47:37.740Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T00:40:19.740Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "79bb013f-fac9-4fc6-bafd-a97a23340378",
+    "endsAt": "2026-08-17T01:10:01.833Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T01:02:43.833Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "c742610a-5766-42f1-a2b7-d4e35705a5fc",
+    "endsAt": "2026-08-17T01:17:21.363Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T01:10:07.363Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "49c15251-3a96-4888-8307-05d7f0a41838",
+    "endsAt": "2026-08-17T01:24:41.381Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T01:17:27.381Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "948cbd84-34b1-4a14-ba16-bd9309bf9daa",
+    "endsAt": "2026-08-17T01:32:16.723Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T01:24:50.723Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "27205c55-23e1-4e98-bf94-9dc98ca4753b",
+    "endsAt": "2026-08-17T00:56:39.883Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T00:49:21.883Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "d88897a3-9048-4103-ab54-ddfc446beda2",
+    "endsAt": "2026-08-17T01:39:56.015Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T01:32:38.015Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "216bc4ab-27ae-4359-80d8-0e179a3c211f",
+    "endsAt": "2026-08-17T01:47:33.661Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T01:40:15.661Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "be7f52bf-e533-4065-8c79-1f3278287733",
+    "endsAt": "2026-08-17T01:57:17.761Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T01:50:03.761Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "e135a370-e456-4bf2-98bc-b0b0f384da6b",
+    "endsAt": "2026-08-17T01:57:18.729Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T01:50:00.729Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "34c4823f-2451-442e-aed3-ef2a8aeffbf0",
+    "endsAt": "2026-08-17T02:04:59.160Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T01:57:45.160Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "19034f64-cca8-4d7b-949d-b5b085ae4a05",
+    "endsAt": "2026-08-17T02:13:03.743Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T02:05:37.743Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "535c3379-1be3-42aa-b767-734aac359dc7",
+    "endsAt": "2026-08-17T02:20:50.305Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T02:13:32.305Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "24324d05-62b2-47d0-88c5-e11abeb8af6f",
+    "endsAt": "2026-08-17T02:24:13.696Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 13,
+    "startedAt": "2026-08-17T02:20:53.696Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "806e4cb9-704e-4e79-adcf-651267ab15f8",
+    "endsAt": "2026-08-17T02:46:15.569Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T02:38:57.569Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6e0372de-afa1-46aa-9e85-abc89aaa0740",
+    "endsAt": "2026-08-17T02:11:49.574Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T02:04:23.574Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "faf67df5-d083-49aa-bcc8-beb71504e6bb",
+    "endsAt": "2026-08-17T02:53:42.172Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T02:46:24.172Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "599b0d58-6c16-4ecf-892f-2848abf07574",
+    "endsAt": "2026-08-17T03:01:13.388Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T02:53:55.388Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ec8d5eb9-3855-42ec-a21c-7ab0d1275199",
+    "endsAt": "2026-08-17T03:10:00.572Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 17,
+    "startedAt": "2026-08-17T03:09:20.572Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "08882e79-34c7-495b-93bf-fb2d4e850980",
+    "endsAt": "2026-08-17T03:16:12.716Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 25,
+    "startedAt": "2026-08-17T03:14:22.716Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "33e4d1ed-2f34-44cc-8a6e-19e3258a6148",
+    "endsAt": "2026-08-17T03:22:08.620Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 25,
+    "startedAt": "2026-08-17T03:20:18.620Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "e4a64e58-ea19-4fc8-b378-b8145cd05344",
+    "endsAt": "2026-08-17T02:58:21.455Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T02:50:55.455Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "66bc770c-540b-452d-a7ae-aa4b7408126f",
+    "endsAt": "2026-08-17T03:08:34.763Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T03:01:20.763Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "576edb63-e004-4db4-9519-1a82955204f5",
+    "endsAt": "2026-08-17T03:24:40.357Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 24,
+    "startedAt": "2026-08-17T03:23:05.357Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "7e197288-1eea-4801-93f2-66bcc7f4eaed",
+    "endsAt": "2026-08-17T03:28:23.031Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 20,
+    "startedAt": "2026-08-17T03:27:33.031Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "155c8ecd-6ece-4a0c-b766-11f344f34582",
+    "endsAt": "2026-08-17T03:32:21.795Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 25,
+    "startedAt": "2026-08-17T03:30:31.795Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "d89a4372-f269-4088-9395-10dba005c7e8",
+    "endsAt": "2026-08-17T01:59:51.808Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1988664623,
+    "startedAt": "2026-08-17T01:56:33.808Z",
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "74629b07-d069-4377-a567-da744aafcb78",
+    "endsAt": "2026-08-17T03:39:45.957Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 4,
+    "startedAt": "2026-08-17T03:38:15.957Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "9a4a8a0b-5c9e-45e9-bbb5-21cafdf6af5c",
+    "endsAt": "2026-08-17T03:41:30.544Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 24,
+    "startedAt": "2026-08-17T03:39:55.544Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "344291da-dcbb-456e-a8a2-01a15bb958b6",
+    "endsAt": "2026-08-17T04:10:07.553Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1335262784,
+    "startedAt": "2026-08-17T04:05:29.553Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "be8826ff-0afd-4f5c-914e-6d4c8bcf41b4",
+    "endsAt": "2026-08-17T04:17:34.759Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T04:10:16.759Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1e6b296c-25cd-457b-871d-f219c74f09f2",
+    "endsAt": "2026-08-17T03:43:18.977Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 24,
+    "startedAt": "2026-08-17T03:41:43.977Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "6ed579b3-1e81-4d00-a5ef-f7a5cb748241",
+    "endsAt": "2026-08-17T04:24:59.912Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T04:17:45.912Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1cedea72-a4b0-44e0-8624-0b1b614fe1c0",
+    "endsAt": "2026-08-17T04:23:49.782Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 21,
+    "startedAt": "2026-08-17T04:22:54.782Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "73e5deed-6a45-4a4b-80de-99c5131f2d71",
+    "endsAt": "2026-08-17T04:27:10.934Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 19,
+    "startedAt": "2026-08-17T04:26:45.934Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "c83ab616-6c59-41be-912c-4e52fcc669c9",
+    "endsAt": "2026-08-17T04:32:28.547Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T04:25:10.547Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "f8c4e397-350a-4c49-9883-305143018a88",
+    "endsAt": "2026-08-17T04:33:19.260Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 25,
+    "startedAt": "2026-08-17T04:31:29.260Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "aa0e9f2e-1b42-4517-8f8a-1b482a32ff29",
+    "endsAt": "2026-08-17T04:35:27.480Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 22,
+    "startedAt": "2026-08-17T04:34:17.480Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "880f6ac4-5b3e-4e30-9b6c-ce73dd548eb9",
+    "endsAt": "2026-08-17T04:39:44.532Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T04:32:30.532Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "64165578-b2dc-49eb-8d4c-181144392069",
+    "endsAt": "2026-08-17T04:42:47.158Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 9,
+    "startedAt": "2026-08-17T04:39:47.158Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ba9baf07-ef66-49d1-89d2-514e46535833",
+    "endsAt": "2026-08-17T04:50:09.172Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T04:42:51.172Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "c4a01fbb-6d89-42cd-89e8-343c3d0e898e",
+    "endsAt": "2026-08-17T04:57:43.124Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T04:50:17.124Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "01c0db54-2e44-4f97-b69e-1b8951429e9e",
+    "endsAt": "2026-08-17T04:40:22.135Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 13,
+    "startedAt": "2026-08-17T04:37:02.135Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "25f0f19d-6e29-4197-bb5f-f81be87302cf",
+    "endsAt": "2026-08-17T05:02:11.444Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 13,
+    "startedAt": "2026-08-17T04:58:51.444Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "ee907ba7-78aa-432f-be8e-162ee32ef6b6",
+    "endsAt": "2026-08-17T05:05:15.923Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T04:57:49.923Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "dd362bfa-ae23-42cd-9808-4654e2f590f6",
+    "endsAt": "2026-08-17T05:06:20.762Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 4,
+    "startedAt": "2026-08-17T05:04:50.762Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "cfea7279-4b8d-4349-aee9-f5558ec34712",
+    "endsAt": "2026-08-17T03:40:45.488Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 21,
+    "startedAt": "2026-08-17T03:39:50.488Z",
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "5690b712-a886-4e73-9dbd-873f958caa8a",
+    "endsAt": "2026-08-17T05:12:43.638Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T05:05:25.638Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "9c117c5d-144b-4a6a-90b1-b93bacced331",
+    "endsAt": "2026-08-17T05:17:13.123Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 24,
+    "startedAt": "2026-08-17T05:15:38.123Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "5d55b6a4-832d-4d65-8f4e-4680666f63ca",
+    "endsAt": "2026-08-17T05:23:53.895Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -802411764,
+    "startedAt": "2026-08-17T05:17:19.895Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "f282610c-56e9-4ca7-b3c9-12d90d695041",
+    "endsAt": "2026-08-17T05:31:19.449Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T05:24:01.449Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "8b6458b6-1089-44d1-b784-0f6d3f04c7f4",
+    "endsAt": "2026-08-17T05:38:49.569Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T05:31:31.569Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ba928fdf-b343-4e4e-b3c4-c2dade3d1c4e",
+    "endsAt": "2026-08-17T05:48:38.519Z",
+    "claimed": false,
+    "missionId": -1435928498,
+    "startedAt": "2026-08-17T05:44:04.519Z",
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "e234b616-4d15-4fd3-bbfb-72d1ba4657f8",
+    "endsAt": "2026-08-17T05:46:17.533Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T05:38:59.533Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6978c32c-7076-46a2-be76-dee6bed16a9f",
+    "endsAt": "2026-08-17T05:53:58.356Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T05:46:32.356Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "9afada1d-5e10-42a1-85b6-6981ac8d0ab0",
+    "endsAt": "2026-08-17T05:57:01.448Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 9,
+    "startedAt": "2026-08-17T05:54:01.448Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "c3944ac7-a565-46f6-9082-7408da3d465d",
+    "endsAt": "2026-08-17T06:04:21.951Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T05:57:07.951Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "819392a8-27e3-4191-b8e2-71f6696ae3a0",
+    "endsAt": "2026-08-17T06:11:49.603Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T06:04:31.603Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "66c210bc-e176-40c8-b0a9-74831458db03",
+    "endsAt": "2026-08-17T06:19:26.346Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T06:12:00.346Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6cab516f-dd5d-4236-8d7b-f89f6685a35e",
+    "endsAt": "2026-08-17T06:27:02.335Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T06:19:44.335Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2a7fe06c-4047-4a29-a17e-dca82a8a9da3",
+    "endsAt": "2026-08-17T06:33:41.532Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -835967002,
+    "startedAt": "2026-08-17T06:27:11.532Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "5f7c1b25-bada-45ee-bfd8-05dbcb80eba0",
+    "endsAt": "2026-08-17T06:41:21.234Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T06:33:55.234Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "95b80ab4-9046-483b-b6db-b708ecf0dace",
+    "endsAt": "2026-08-17T06:48:55.222Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T06:41:37.222Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "192a1b5b-4b91-486a-8e55-f3d25e710be1",
+    "endsAt": "2026-08-17T06:56:28.577Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T06:49:02.577Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6a0cdcd6-64fb-448e-ad52-b9cd48380015",
+    "endsAt": "2026-08-17T06:59:51.984Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1988664623,
+    "startedAt": "2026-08-17T06:56:33.984Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "3b770fe8-14dc-463c-a911-df9ec192c586",
+    "endsAt": "2026-08-17T07:07:19.402Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T07:00:01.402Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ba48e70f-4c59-43d5-96dc-26211c7fd55e",
+    "endsAt": "2026-08-17T07:14:48.579Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T07:07:34.579Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "b59587cc-be23-47cc-bee2-198227a795c4",
+    "endsAt": "2026-08-17T07:22:16.960Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T07:14:58.960Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ed1d96b0-c49b-4300-9fa0-6a8a5d045110",
+    "endsAt": "2026-08-17T07:22:52.509Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 1,
+    "startedAt": "2026-08-17T07:22:22.509Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ffb466fb-0a1c-441e-b169-4cab64cd437c",
+    "endsAt": "2026-08-17T07:31:13.875Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1742146497,
+    "startedAt": "2026-08-17T07:24:03.875Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "216ca390-06c1-4ccb-a706-5ce00b8c7697",
+    "endsAt": "2026-08-17T07:38:38.898Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T07:31:24.898Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1a45010e-7ae4-4be4-b25b-0c5c08016df2",
+    "endsAt": "2026-08-17T07:46:12.974Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T07:38:54.974Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2e708d19-476a-4d44-9c65-d9c763822a19",
+    "endsAt": "2026-08-17T07:53:41.463Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T07:46:23.463Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "a5983145-5a95-47d5-b76a-f3c1ade53abb",
+    "endsAt": "2026-08-17T07:57:43.767Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -204974395,
+    "startedAt": "2026-08-17T07:53:45.767Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1d72b1c9-3a55-4b87-9aea-37cdb3223dce",
+    "endsAt": "2026-08-17T08:05:18.392Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T07:57:52.392Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "4bf7a90b-e12c-406f-ae56-a05067083e12",
+    "endsAt": "2026-08-17T08:12:37.383Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T08:05:23.383Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ec13ae73-6360-4d4a-8a95-d7d2341d456a",
+    "endsAt": "2026-08-17T08:19:59.280Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T08:12:45.280Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "d27fa6bd-a85f-4e2e-aa0f-85932d362ef3",
+    "endsAt": "2026-08-17T08:24:40.701Z",
+    "claimed": false,
+    "missionId": 26,
+    "startedAt": "2026-08-17T08:23:30.701Z",
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "f1c96b88-5360-4337-b060-d99b9b468727",
+    "endsAt": "2026-08-17T08:27:32.052Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T08:20:14.052Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "b7b7a8ac-274f-4433-9d92-b80cf0fe6f83",
+    "endsAt": "2026-08-17T08:29:36.350Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 8,
+    "startedAt": "2026-08-17T08:27:36.350Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "41544751-2bd8-466e-b861-1b09180a9b4e",
+    "endsAt": "2026-08-17T08:37:01.029Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T08:29:43.029Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "53a8fc48-ff8f-4712-8dc9-b09e41b5b0fc",
+    "endsAt": "2026-08-17T08:44:36.670Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T08:37:10.670Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6e2c51b0-bf80-45ac-9d1b-e8ac9a75b1c6",
+    "endsAt": "2026-08-17T08:52:01.101Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T08:44:43.101Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6f4e1aa7-2997-421b-90e6-3998c9e4e434",
+    "endsAt": "2026-08-17T08:59:28.082Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T08:52:10.082Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "b80d80a5-a318-40f2-aaf1-f0984db007a1",
+    "endsAt": "2026-08-17T09:07:06.880Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T08:59:40.880Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "f333ace8-21c2-4cd2-a733-5626d5222762",
+    "endsAt": "2026-08-17T09:10:27.406Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1988664623,
+    "startedAt": "2026-08-17T09:07:09.406Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "bd51b463-a9d3-4a9c-9eb9-4aca4d929367",
+    "endsAt": "2026-08-17T09:17:44.905Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T09:10:30.905Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "cfb6b473-d607-417e-83fa-2edd1e75f350",
+    "endsAt": "2026-08-17T09:25:06.555Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T09:17:52.555Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "e8b22682-9b69-47fc-8b73-84b253496747",
+    "endsAt": "2026-08-17T09:32:46.131Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T09:25:20.131Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2ca80fc5-b886-4c3d-9b29-9c0edce68dbe",
+    "endsAt": "2026-08-17T09:40:25.814Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T09:32:59.814Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2988d346-d128-45ee-8115-ef51944f684e",
+    "endsAt": "2026-08-17T09:41:31.294Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 3,
+    "startedAt": "2026-08-17T09:40:31.294Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "41093001-e2e9-43e9-8ab2-fbc46f948a79",
+    "endsAt": "2026-08-17T09:48:43.362Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -768856526,
+    "startedAt": "2026-08-17T09:42:05.362Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "98415fc5-6ca6-42da-ba1d-60fb813bea54",
+    "endsAt": "2026-08-17T09:56:09.806Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T09:48:51.806Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "523d8754-3feb-48b6-ae3a-0d562c33939c",
+    "endsAt": "2026-08-17T10:03:33.840Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T09:56:19.840Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "92dfa753-3672-43f6-bfa6-d6c6bf348ace",
+    "endsAt": "2026-08-17T10:11:11.033Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T10:03:45.033Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "8c225953-f68b-489f-95be-2660ef36e056",
+    "endsAt": "2026-08-17T10:18:40.023Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T10:11:22.023Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2eb6922f-c4cb-40da-9123-54e6906354ec",
+    "endsAt": "2026-08-17T10:22:03.325Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 13,
+    "startedAt": "2026-08-17T10:18:43.325Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "db64321d-250e-482b-b56a-4bec80da4150",
+    "endsAt": "2026-08-17T10:29:26.273Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T10:22:08.273Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "3e4d9ef3-d4ef-4d01-82dd-ac054a9e3218",
+    "endsAt": "2026-08-17T10:36:50.393Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T10:29:36.393Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1a3ee638-0d67-46f4-9e11-bc7059032e72",
+    "endsAt": "2026-08-17T10:44:25.268Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T10:36:59.268Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "4eb58523-a3b8-4135-889c-da6aed225191",
+    "endsAt": "2026-08-17T10:51:53.602Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T10:44:39.602Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "02e661a5-41b8-4f73-9310-4d38fca738c6",
+    "endsAt": "2026-08-17T10:59:30.848Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T10:52:04.848Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "631af544-64d9-420f-bc98-26e102483d78",
+    "endsAt": "2026-08-17T11:03:36.457Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 15,
+    "startedAt": "2026-08-17T10:59:36.457Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "772b82dc-2bf2-4f12-a543-9b0a45ecf497",
+    "endsAt": "2026-08-17T11:10:56.469Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T11:03:42.469Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "b38f4668-17a9-46a6-9e51-24aff505726e",
+    "endsAt": "2026-08-17T11:18:22.089Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T11:11:08.089Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "c0b99a07-a21a-4d48-b7a7-31079fa7be2e",
+    "endsAt": "2026-08-17T11:25:45.215Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T11:18:31.215Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "240df6df-7430-45f3-abc6-d93798571fbf",
+    "endsAt": "2026-08-17T11:33:17.088Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T11:25:59.088Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "8753078e-7a65-42b1-ae26-1b47e11c2c21",
+    "endsAt": "2026-08-17T11:34:53.012Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 4,
+    "startedAt": "2026-08-17T11:33:23.012Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "83ca60d0-03cd-4cb1-86b9-29c70041fd3e",
+    "endsAt": "2026-08-17T11:41:39.554Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -768856526,
+    "startedAt": "2026-08-17T11:35:01.554Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "aaaf99a8-6d0a-40a6-ae73-26286ffa3e30",
+    "endsAt": "2026-08-17T11:49:05.300Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T11:41:47.300Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "045800d6-f650-43ce-a651-40a5b0589134",
+    "endsAt": "2026-08-17T11:56:29.460Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T11:49:15.460Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "b3746b5a-b465-4771-ab85-422b64018795",
+    "endsAt": "2026-08-17T12:03:56.727Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T11:56:38.727Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "3883e63d-9273-49f3-96b8-20e706630ba1",
+    "endsAt": "2026-08-17T12:11:34.522Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T12:04:08.522Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "62e6e5cf-bb3e-44b5-ba2e-2ef84f462bcf",
+    "endsAt": "2026-08-17T12:14:09.601Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 11,
+    "startedAt": "2026-08-17T12:11:39.601Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "162daf3c-63aa-4adc-bf71-2463209fb442",
+    "endsAt": "2026-08-17T12:21:31.379Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T12:14:13.379Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "231e9d62-1324-4e0a-bdf1-8616373f3847",
+    "endsAt": "2026-08-17T12:28:50.991Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T12:21:36.991Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "311447be-edb1-473a-a292-48c8426efc84",
+    "endsAt": "2026-08-17T12:36:22.747Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T12:28:56.747Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "a3ba20de-86e4-42a8-af14-da6f85208caa",
+    "endsAt": "2026-08-17T12:43:47.373Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T12:36:33.373Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "fd3ca12f-f904-4f12-aac7-d1944b8e8dce",
+    "endsAt": "2026-08-17T12:51:20.721Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T12:43:54.721Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "599b7816-3a41-48a8-b5f0-7d987f1f747b",
+    "endsAt": "2026-08-17T12:55:27.217Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 15,
+    "startedAt": "2026-08-17T12:51:27.217Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "d8144eb1-df28-464e-a0ef-63d90d1746f4",
+    "endsAt": "2026-08-17T13:02:52.848Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T12:55:34.848Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "497e3730-e2ce-49eb-85c8-a223f09b5112",
+    "endsAt": "2026-08-17T13:10:16.463Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T13:03:02.463Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "a70d18a4-9fc7-45b1-8b51-d40042663263",
+    "endsAt": "2026-08-17T13:17:40.993Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T13:10:22.993Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "d271d6fb-929f-4608-bb72-84b81145a0be",
+    "endsAt": "2026-08-17T13:25:14.152Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T13:17:48.152Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "29f0c0e8-683e-4d3f-a46a-2b12da926c1f",
+    "endsAt": "2026-08-17T13:26:23.143Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 6,
+    "startedAt": "2026-08-17T13:25:23.143Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "628bcb34-4748-474c-9bde-fb13749f5191",
+    "endsAt": "2026-08-17T13:33:31.279Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -768856526,
+    "startedAt": "2026-08-17T13:26:53.279Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "8a0cd938-b1db-4b82-b858-cf08cfb9ac4d",
+    "endsAt": "2026-08-17T13:40:54.894Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T13:33:36.894Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6e2b32cf-10ac-4d20-b860-5cad909b0beb",
+    "endsAt": "2026-08-17T13:48:18.025Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T13:41:04.025Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "adf86506-1ddf-475e-8e61-2602a7dbb5c4",
+    "endsAt": "2026-08-17T13:55:47.875Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T13:48:29.875Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "e007e204-08be-42db-9326-3021615f0834",
+    "endsAt": "2026-08-17T14:03:15.501Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T13:55:57.501Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2441d557-4ec4-44f3-b7b7-157ff024c5f6",
+    "endsAt": "2026-08-17T14:05:50.942Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 11,
+    "startedAt": "2026-08-17T14:03:20.942Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "9f421f79-e824-42aa-885b-1d5f938e286d",
+    "endsAt": "2026-08-17T14:13:13.831Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T14:05:55.831Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "8dd8aebf-47a0-4372-bf75-c578186ed1f8",
+    "endsAt": "2026-08-17T14:20:34.534Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T14:13:20.534Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6cb6656f-a214-49cd-bbef-531af09c7f09",
+    "endsAt": "2026-08-17T14:27:59.178Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T14:20:45.178Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "087d9c05-54b4-4991-b721-07b45be83108",
+    "endsAt": "2026-08-17T14:35:28.019Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T14:28:10.019Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ef1bd4a0-11f1-403c-8b4b-db9265e421dd",
+    "endsAt": "2026-08-17T14:42:59.660Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T14:35:41.660Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "0fe1da23-4f25-48f2-8745-e991418831d6",
+    "endsAt": "2026-08-17T14:47:05.544Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 15,
+    "startedAt": "2026-08-17T14:43:05.544Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "87038bb4-161d-4120-ada5-e6a4a6cf35be",
+    "endsAt": "2026-08-17T14:54:29.737Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T14:47:11.737Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "513a4f00-ce83-4167-a810-bda977332f12",
+    "endsAt": "2026-08-17T15:02:02.216Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T14:54:36.216Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6d468404-079d-4dd9-9ccf-873f9f39acbf",
+    "endsAt": "2026-08-17T15:09:27.792Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T15:02:09.792Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6dcc8a08-9a01-4d12-8eca-fbfc8562db58",
+    "endsAt": "2026-08-17T15:17:01.699Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T15:09:43.699Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1a52fefd-bccb-4930-89f7-9bfc4db92818",
+    "endsAt": "2026-08-17T15:18:35.905Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 4,
+    "startedAt": "2026-08-17T15:17:05.905Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6366494a-267a-4c0a-afb6-0ff8e3d69f05",
+    "endsAt": "2026-08-17T15:25:29.842Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -819189383,
+    "startedAt": "2026-08-17T15:18:43.842Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "3679fb5c-00e9-46dd-953a-7e409f4231fe",
+    "endsAt": "2026-08-17T15:33:00.521Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T15:25:34.521Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "b19a4e4c-8c44-4d72-a544-eb480cf81a86",
+    "endsAt": "2026-08-17T15:40:27.068Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T15:33:09.068Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "588fb5f3-a9d9-4e7f-92d4-4b280136fe11",
+    "endsAt": "2026-08-17T15:47:55.386Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T15:40:37.386Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "3a588f88-fff0-4585-b491-46c520c5bf75",
+    "endsAt": "2026-08-17T15:55:15.315Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T15:48:01.315Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "8639da14-47b5-40ae-8715-779ece8ad39c",
+    "endsAt": "2026-08-17T15:57:51.530Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 11,
+    "startedAt": "2026-08-17T15:55:21.530Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "239cc9da-fdb7-40c6-b936-34e01874c820",
+    "endsAt": "2026-08-17T16:05:15.383Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T15:57:57.383Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2cad128e-c1ce-4f39-878c-a0ee589c60fd",
+    "endsAt": "2026-08-17T16:12:38.123Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T16:05:24.123Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "f2e032dc-f6f5-475c-9f98-cd4463098f53",
+    "endsAt": "2026-08-17T16:20:02.565Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T16:12:44.565Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "02432294-a45c-4498-a723-b64ab2837f58",
+    "endsAt": "2026-08-17T16:27:31.210Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T16:20:13.210Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ff30d0ae-207c-4bbb-9a3a-6088d717bf0a",
+    "endsAt": "2026-08-17T16:34:55.822Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T16:27:37.822Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6805293d-c21e-453d-83bb-ed348ebc25ed",
+    "endsAt": "2026-08-17T16:42:19.858Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T16:35:01.858Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "5f02e205-4278-4bae-b94a-c1ade5372d87",
+    "endsAt": "2026-08-17T16:49:42.345Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T16:42:24.345Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ad03faa0-c532-4f6f-97df-b2b862a8b446",
+    "endsAt": "2026-08-17T16:57:12.746Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T16:49:46.746Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "a1e6acfd-13e5-4f88-96e7-f171efff90be",
+    "endsAt": "2026-08-17T17:04:34.140Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T16:57:16.140Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "9ea4aeb0-d018-4377-ba22-39644703d3cc",
+    "endsAt": "2026-08-17T17:12:05.719Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T17:04:39.719Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "5fab79b5-b0b4-48a3-8f48-0f3f5d3b7e72",
+    "endsAt": "2026-08-17T17:19:27.335Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T17:12:09.335Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "814fe2fe-599d-4387-9b8e-1c760f265582",
+    "endsAt": "2026-08-17T17:26:58.096Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T17:19:32.096Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1ed99efb-61a0-4d8b-b3da-665dde57d656",
+    "endsAt": "2026-08-17T17:34:19.976Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T17:27:01.976Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "846107eb-b580-44b0-bb25-fa34cd949e3e",
+    "endsAt": "2026-08-17T17:41:41.518Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T17:34:23.518Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "662db99c-f60b-4cf8-b72f-91df8e6eeb1d",
+    "endsAt": "2026-08-17T17:48:58.827Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T17:41:44.827Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "4d125e58-a88a-418c-b231-b5901bc9552e",
+    "endsAt": "2026-08-17T17:56:20.240Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T17:49:02.240Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ae8a8af0-b7cf-4263-a3d2-370d86fc2e87",
+    "endsAt": "2026-08-17T18:03:51.218Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T17:56:25.218Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "8800ca35-e4fd-4e4d-bf81-5c189a362a23",
+    "endsAt": "2026-08-17T18:11:14.650Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T18:03:56.650Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "f56f0150-c47b-4206-8f18-e46c519e6b1c",
+    "endsAt": "2026-08-17T18:18:33.315Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T18:11:19.315Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "597d89a1-37ea-4d1c-be9c-bf6c57497d54",
+    "endsAt": "2026-08-17T18:25:50.193Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T18:18:36.193Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "68bd5917-4ac7-4bd7-a5d3-16149502cab2",
+    "endsAt": "2026-08-17T18:33:11.889Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T18:25:53.889Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "4510390f-b849-4ea1-ab58-a47c4f72466e",
+    "endsAt": "2026-08-17T18:40:32.910Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T18:33:18.910Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "4cc60e24-8742-4b6a-b9df-2846d402e70d",
+    "endsAt": "2026-08-17T18:47:52.294Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T18:40:38.294Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "61469b12-ff77-4192-a2ca-ddaae52ab01d",
+    "endsAt": "2026-08-17T18:55:13.743Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T18:47:55.743Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "96ecdb7e-616c-46b5-8c59-03de8a778986",
+    "endsAt": "2026-08-17T19:02:35.439Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T18:55:17.439Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "3b203bb4-6f3e-412f-bf77-5ec7cabb2d34",
+    "endsAt": "2026-08-17T19:09:52.581Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T19:02:38.581Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "4315ad30-8aa5-4411-85fd-3960347a66cc",
+    "endsAt": "2026-08-17T19:17:18.358Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T19:10:00.358Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "69032c5a-d782-4a78-a8aa-63c05e9aa93e",
+    "endsAt": "2026-08-17T19:24:50.223Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T19:17:24.223Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "b2cb8d3b-2c5f-43c8-aa20-c300d335df92",
+    "endsAt": "2026-08-17T19:32:19.707Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T19:24:53.707Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "a023329a-78df-47ed-93b3-44eead240ffa",
+    "endsAt": "2026-08-17T19:39:39.029Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T19:32:25.029Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "c6a8ae14-d1b8-4ef7-80d8-e2d2e0d4bc2f",
+    "endsAt": "2026-08-17T19:47:00.287Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T19:39:42.287Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "c9137ef6-5917-4b79-8525-348020a36670",
+    "endsAt": "2026-08-17T19:54:31.444Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T19:47:05.444Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "83ef7254-7453-4b62-829a-3ac1d72f0e94",
+    "endsAt": "2026-08-17T20:01:53.815Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T19:54:35.815Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ff34427c-6886-49fb-9106-97e406f91d0b",
+    "endsAt": "2026-08-17T20:09:26.141Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T20:02:00.141Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "efb69065-112a-43f8-9e6f-ab63bfd06f99",
+    "endsAt": "2026-08-17T20:16:48.178Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T20:09:30.178Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "59a7b85b-7f60-40bf-b288-718da790ff23",
+    "endsAt": "2026-08-17T20:24:10.120Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T20:16:52.120Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6cc30c7e-b904-4344-85a1-0141f0658f3a",
+    "endsAt": "2026-08-17T20:31:27.794Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T20:24:13.794Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2ccd2f66-ad84-4d33-a62c-f6ebfcea453b",
+    "endsAt": "2026-08-17T20:38:50.929Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T20:31:32.929Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2f116817-edce-4ef1-b7df-dec0fd459b74",
+    "endsAt": "2026-08-17T20:46:21.437Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T20:38:55.437Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1f40a7c8-5482-4762-9735-423a0b3dd212",
+    "endsAt": "2026-08-17T20:53:41.088Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T20:46:27.088Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "feef5c09-e64a-45d2-b09b-7ffd37325ea0",
+    "endsAt": "2026-08-17T21:00:58.003Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T20:53:44.003Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "a6a9ac2f-b899-4d9c-a47b-e49ef7a8df2c",
+    "endsAt": "2026-08-17T21:08:28.872Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T21:01:02.872Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "0a978bf5-f7c4-46b8-ab6a-03dfb784b180",
+    "endsAt": "2026-08-17T21:15:52.364Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T21:08:34.364Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "96eb4643-46e8-4710-ad8b-a209112a4e33",
+    "endsAt": "2026-08-17T21:17:58.047Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 8,
+    "startedAt": "2026-08-17T21:15:58.047Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ca6335c0-b316-4c91-8c81-d05969d67d0e",
+    "endsAt": "2026-08-17T21:25:20.752Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T21:18:02.752Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "36f2c68a-5d74-4825-802a-b1afd96accd0",
+    "endsAt": "2026-08-17T21:26:28.459Z",
+    "claimed": false,
+    "missionId": 7,
+    "startedAt": "2026-08-17T21:25:43.459Z",
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "5e1b36b7-6ab5-4235-ade8-56119baa90af",
+    "endsAt": "2026-08-17T21:32:44.369Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T21:25:26.369Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "86b93f70-7bdb-4fbb-bd28-1b714bafac2f",
+    "endsAt": "2026-08-17T21:40:11.447Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T21:32:53.447Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "29a1393f-5e88-4156-8a32-bd5c152aba57",
+    "endsAt": "2026-08-17T03:56:03.837Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T03:48:45.837Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "d6b572f5-8e47-4711-82e4-aacae6175dfc",
+    "endsAt": "2026-08-17T21:47:37.890Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T21:40:19.890Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "28dfce0f-9c2a-49c4-b7f3-e47b97506087",
+    "endsAt": "2026-08-17T21:55:06.849Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T21:47:48.849Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "e3005070-6cb9-4a0a-b741-1edac4e05b56",
+    "endsAt": "2026-08-17T22:10:04.892Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T22:02:38.892Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "c7986867-cbe0-42b2-9009-9bacfb5d7de5",
+    "endsAt": "2026-08-17T22:02:35.595Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T21:55:09.595Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "a97e94a7-38ca-47d8-bdac-98e80e281176",
+    "endsAt": "2026-08-17T22:17:23.254Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T22:10:09.254Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "b29bd15f-fe0c-43e3-9cb2-83f345ae9dba",
+    "endsAt": "2026-08-17T22:24:44.388Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T22:17:26.388Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "de02f302-e3c0-4af6-87b8-047315c05f95",
+    "endsAt": "2026-08-17T22:32:08.137Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T22:24:50.137Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "aa583516-38c5-4800-9ef6-e4d58b3e6928",
+    "endsAt": "2026-08-17T22:39:27.584Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T22:32:13.584Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "c54dbcb2-48cb-494f-bd95-c0e3d8f7d74c",
+    "endsAt": "2026-08-17T22:42:03.729Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 11,
+    "startedAt": "2026-08-17T22:39:33.729Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "150f479c-c7a4-45c2-a877-8083c0e8edc8",
+    "endsAt": "2026-08-17T22:49:25.504Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T22:42:07.504Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "664d596d-2666-45f2-8749-33799f2c756a",
+    "endsAt": "2026-08-17T22:56:49.910Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T22:49:31.910Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ab9f9e8b-3693-489e-bf26-acdd7fcba0fe",
+    "endsAt": "2026-08-17T23:04:21.082Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T22:57:03.082Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ef91842d-38a6-417a-8fbb-26eb4e08e993",
+    "endsAt": "2026-08-17T23:11:51.491Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T23:04:33.491Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ee56b75d-1f85-4375-80a9-f44d1b8311fe",
+    "endsAt": "2026-08-17T23:19:20.740Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T23:12:02.740Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "9347a1cd-2c78-4fca-a9db-05f8089ac5c4",
+    "endsAt": "2026-08-17T23:26:51.928Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T23:19:25.928Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1cca996e-508f-4352-8bae-62bd63d52548",
+    "endsAt": "2026-08-17T23:34:13.235Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T23:26:55.235Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "c3db95d3-dc47-435f-afc1-2239d424e22b",
+    "endsAt": "2026-08-17T23:41:35.791Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T23:34:17.791Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "65fdb407-d5e8-4524-bf93-eff1b59d3d8b",
+    "endsAt": "2026-08-17T23:48:55.906Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-17T23:41:41.906Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "8deaaeca-00f2-4324-8feb-52c7b9f2b7c3",
+    "endsAt": "2026-08-17T23:52:02.795Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 9,
+    "startedAt": "2026-08-17T23:49:02.795Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "5dec26e8-eb95-4f56-9318-b9232a62bf4e",
+    "endsAt": "2026-08-17T23:59:32.278Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T23:52:14.278Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "3c91fe9d-b782-4d13-8ca7-a05775e011a3",
+    "endsAt": "2026-08-18T00:07:09.026Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-17T23:59:43.026Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "e4f45f21-10f7-4565-8cf3-9a881ab2674f",
+    "endsAt": "2026-08-18T00:14:44.544Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-18T00:07:18.544Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "91707a97-bc65-4afd-af37-3585388c7f31",
+    "endsAt": "2026-08-18T00:22:12.442Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T00:14:54.442Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "4d2ad01d-ad06-458e-9dd8-1759773247d9",
+    "endsAt": "2026-08-18T00:29:33.425Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-18T00:22:19.425Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "785f2e1d-423d-48db-b373-0b65ecf67aa8",
+    "endsAt": "2026-08-18T00:36:54.511Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T00:29:36.511Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1ca57a0e-2860-4aae-b468-f705a8f58c0a",
+    "endsAt": "2026-08-18T00:44:12.668Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-18T00:36:58.668Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "83ad2d33-d142-495e-9630-969bfc906351",
+    "endsAt": "2026-08-18T00:51:33.550Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T00:44:15.550Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "0ac2a2fe-7cb2-4eec-9e41-2fb08e2c134e",
+    "endsAt": "2026-08-18T00:59:03.951Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-18T00:51:37.951Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "742f5871-5998-4a6f-bb91-7025484e995d",
+    "endsAt": "2026-08-18T01:06:25.897Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T00:59:07.897Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "7cb11cbc-acf2-4eef-8469-a5bd9dddd172",
+    "endsAt": "2026-08-18T01:13:44.001Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-18T01:06:30.001Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "fc821b54-f077-446c-bd1b-1fea40de1af5",
+    "endsAt": "2026-08-18T01:21:03.689Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T01:13:45.689Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "fadbd34d-08b9-487d-948a-a57f4c8c7bd3",
+    "endsAt": "2026-08-18T01:28:21.383Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-18T01:21:07.383Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "7fad7da9-70fd-4ba4-a3e2-ad99c0fa3d62",
+    "endsAt": "2026-08-17T21:52:23.114Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-17T21:45:05.114Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "4edbb7e0-74ca-44f8-b2a5-8119a22780e5",
+    "endsAt": "2026-08-18T01:35:43.126Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T01:28:25.126Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "9a058b00-bbf9-4dba-8d77-a1144499efc9",
+    "endsAt": "2026-08-18T01:43:00.054Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-18T01:35:46.054Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "01cbad01-f1d1-4317-b981-af3be35c0bf7",
+    "endsAt": "2026-08-18T01:47:03.417Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": 15,
+    "startedAt": "2026-08-18T01:43:03.417Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "bb9e2f4d-164e-4ad8-9bd1-dcbaa4aec272",
+    "endsAt": "2026-08-18T01:46:20.900Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T01:39:02.900Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "85b27b32-15ca-4972-bce5-6bfd8d283c3f",
+    "endsAt": "2026-08-18T01:54:26.642Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T01:47:08.642Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "9322e3e4-c50a-474e-909e-7ba83aef19ce",
+    "endsAt": "2026-08-18T01:57:08.134Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-18T01:49:54.134Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "17370931-3ba3-4755-a992-9750b777684e",
+    "endsAt": "2026-08-18T02:01:51.628Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T01:54:33.628Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "12861396-ca82-4456-836d-8e61d26da64d",
+    "endsAt": "2026-08-18T02:09:15.032Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T02:01:57.032Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1ce3ec75-521b-4269-a3de-726ce426f5eb",
+    "endsAt": "2026-08-18T02:16:52.385Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T02:09:34.385Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "fdc3b4c9-1abf-4137-91d6-f45c21bab8af",
+    "endsAt": "2026-08-18T02:24:21.913Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-18T02:16:55.913Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2b406595-6bc0-4171-8dc4-2ff5b6046faf",
+    "endsAt": "2026-08-18T02:31:37.864Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-18T02:24:23.864Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "c32a31db-d730-4192-ae5c-9cbf1527ffb6",
+    "endsAt": "2026-08-18T02:38:54.860Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-18T02:31:40.860Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2862f32a-6cb2-4de1-9cab-debd30999e6a",
+    "endsAt": "2026-08-18T02:46:16.093Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T02:38:58.093Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2f33f2ec-9c0a-4a38-ae22-208d17145bab",
+    "endsAt": "2026-08-18T02:53:38.730Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T02:46:20.730Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "91492f02-3677-4820-b7f6-a6bc46902d04",
+    "endsAt": "2026-08-18T03:00:54.439Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-18T02:53:40.439Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "fa5d9743-4f9a-43cd-8bf1-214734abfb6e",
+    "endsAt": "2026-08-18T03:08:17.073Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T03:00:59.073Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "424d1f96-5fed-4ecc-8832-0da284911632",
+    "endsAt": "2026-08-18T03:15:32.548Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1708591259,
+    "startedAt": "2026-08-18T03:08:18.548Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "8c32260b-cb47-4db3-977b-f3948db167e0",
+    "endsAt": "2026-08-18T03:22:51.964Z",
+    "claimed": false,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T03:15:33.964Z",
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "3a67f11b-319b-41e3-9938-b24a39b18fd6",
+    "endsAt": "2026-08-18T02:06:19.610Z",
+    "claimed": true,
+    "completed": true,
+    "missionId": -1691813640,
+    "startedAt": "2026-08-18T01:58:53.610Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "e338d81f-cc87-47f4-aa1f-1f591528079f",
+    "endsAt": "2026-08-18T11:38:49.379Z",
+    "claimed": false,
+    "missionId": -1809256973,
+    "startedAt": "2026-08-18T11:31:31.379Z",
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  }
+]

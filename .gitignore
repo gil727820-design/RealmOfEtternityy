@@ -14,6 +14,7 @@
 .env.*
 !.env.example
 .env.local
+settings.local.json
 
 # Logs do dev server / npm
 *.log
@@ -41,8 +42,12 @@ _typecheck.txt
 /public/uploads/proofs/
 /public/uploads/donate/
 
-# Banco de dados SQLite local
-# ⚠️ Removido o bloqueio para enviar o banco
-# Se quiser ignorar apenas backups, mantenha:
+# Banco de dados SQLite local (legado — migrado para JSON em data/*.json)
+/data/*.db
+/data/*.db-shm
+/data/*.db-wal
+/data/*.tmp
+
+# Backups
 /backups/
     

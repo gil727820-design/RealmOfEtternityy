@@ -1,0 +1,155 @@
+[
+  {
+    "id": "250f0c22-58c5-46e7-b76d-6ae1dc1813d3",
+    "role": "player",
+    "banned": false,
+    "locale": "pt-BR",
+    "deleted": false,
+    "password": "$2b$10$9GVDdi.lSULkEyc4ztCqeezSC3wX1c2masroDcJwfRcn2pjwXBtb6",
+    "username": "wellytonbr",
+    "createdAt": "2026-08-16T22:26:18.169Z",
+    "lastLogin": "2026-08-17T01:18:07.964Z"
+  },
+  {
+    "id": "9a0d3ebe-ab2d-4d6b-8632-9fb46abdc813",
+    "role": "player",
+    "banned": false,
+    "locale": "pt-BR",
+    "deleted": false,
+    "password": "$2b$10$/CGMc2hulOTGKEUKva9kN.GEaPrOCx/x64tzFDfv6wvQD45bk/HgK",
+    "username": "joao15181999",
+    "createdAt": "2026-08-16T21:29:54.485Z",
+    "lastLogin": "2026-08-16T21:29:54.779Z"
+  },
+  {
+    "id": "72b4af6c-2bcf-4f4b-87c7-4d5eae75ce28",
+    "role": "player",
+    "banned": false,
+    "locale": "pt-BR",
+    "deleted": false,
+    "password": "$2b$10$7jvkBPZqMsH0.FsnMNmbMOCbDm7I9KAv6jDWXy9QUDHwVN3U8mI/u",
+    "username": "lyiu",
+    "createdAt": "2026-08-16T21:19:42.332Z",
+    "lastLogin": "2026-08-17T16:25:10.988Z"
+  },
+  {
+    "id": "763f9dd1-383e-443f-866c-3acfce61383e",
+    "role": "player",
+    "banned": false,
+    "locale": "pt-BR",
+    "deleted": false,
+    "password": "$2b$10$BSoDyPVdDZECLYWfsYuv1ue.GWkSTlxsZ2qounIX6swzEW.K9paNm",
+    "username": "immortal",
+    "createdAt": "2026-08-16T21:10:01.019Z",
+    "lastLogin": "2026-08-16T21:23:44.752Z"
+  },
+  {
+    "id": "5ecb336b-a83e-4e13-83f6-7b11f53121c8",
+    "role": "player",
+    "banned": false,
+    "locale": "pt-BR",
+    "deleted": false,
+    "password": "$2b$10$7RwyS/asHTRvIUngHlAm3OVglLpVQxecG.gQjqX5aO.zSxPNypId.",
+    "username": "spreas",
+    "createdAt": "2026-08-16T21:54:08.875Z",
+    "lastLogin": "2026-08-18T19:57:23.580Z"
+  },
+  {
+    "id": "384e8daf-f4fb-4760-b14b-3539fe74fbd2",
+    "role": "player",
+    "banned": false,
+    "locale": "pt-BR",
+    "deleted": false,
+    "password": "$2b$10$dF90rX8hIKAigrVDeGrLM.p6WcmzqyU6TcXeM.0luGFHfPCLKEAxq",
+    "username": "larcal",
+    "createdAt": "2026-08-16T21:43:25.400Z",
+    "lastLogin": "2026-08-16T21:43:25.758Z"
+  },
+  {
+    "id": "9b979ad9-ffc2-4856-8cfc-51903ca590ad",
+    "role": "player",
+    "banned": false,
+    "locale": "pt-BR",
+    "deleted": false,
+    "password": "$2b$10$7Q7tHatADQdOwQeiBhrvtOp9Y2sD9OSILoAobdyAoDXN0U..liCvW",
+    "username": "pereiradev",
+    "createdAt": "2026-08-16T21:25:22.813Z",
+    "lastLogin": "2026-08-29T02:30:15.615Z"
+  },
+  {
+    "id": "eed421f6-73c5-4295-a30c-b22a74fae2b4",
+    "createdAt": "2026-08-23T03:09:10.649Z",
+    "username": "testador_hermes",
+    "password": "$2b$10$LJlShLPwqJ791ba/qlb4uOqA.nhAuMrNRQZL0V/uFvxpcA.VJeJaK",
+    "role": "player",
+    "locale": "pt-BR",
+    "banned": false,
+    "deleted": false,
+    "lastLogin": "2026-08-23T03:18:32.197Z"
+  },
+  {
+    "id": "6ebd833f-20e0-4f78-90cd-103fef39f92c",
+    "passwordHash": "",
+    "createdAt": "2026-08-29T11:24:53.595Z"
+  },
+  {
+    "id": "d9ca3508-6163-4c07-8a13-b52956584c2b",
+    "passwordHash": "",
+    "createdAt": "2026-08-29T11:24:53.601Z"
+  },
+  {
+    "id": "b4a78489-03e3-47a7-ae48-46f19b8185a5",
+    "passwordHash": "",
+    "createdAt": "2026-08-29T11:24:53.601Z"
+  },
+  {
+    "id": "572bc693-455c-4a75-adeb-58c3552065b9",
+    "passwordHash": "",
+    "createdAt": "2026-08-29T11:24:53.601Z"
+  },
+  {
+    "id": "0b402d04-4ce5-453f-a8ae-c424b8dcfb98",
+    "passwordHash": "",
+    "createdAt": "2026-08-29T11:24:53.601Z"
+  },
+  {
+    "id": "329e9ebc-9fe6-4154-9c95-8777cd37a16c",
+    "passwordHash": "",
+    "createdAt": "2026-08-29T11:24:53.601Z"
+  },
+  {
+    "id": "be7c5fbe-52aa-4f8b-b469-5d72da86bfea",
+    "passwordHash": "",
+    "createdAt": "2026-08-29T11:24:53.601Z"
+  },
+  {
+    "id": "0c9243e7-a73d-4a42-b912-9f1592490e1d",
+    "passwordHash": "",
+    "createdAt": "2026-08-29T11:24:53.601Z"
+  },
+  {
+    "id": "61573e5a-6b43-4a34-a041-a03b909f3af4",
+    "passwordHash": "",
+    "createdAt": "2026-08-29T11:24:53.601Z"
+  },
+  {
+    "id": "35331ade-2573-4473-9372-b1f00e5be017",
+    "passwordHash": "",
+    "createdAt": "2026-08-29T11:24:53.601Z"
+  },
+  {
+    "id": "79a8db55-2b1c-465a-8135-2f344cdf6c44",
+    "passwordHash": "",
+    "createdAt": "2026-08-29T11:24:53.602Z"
+  },
+  {
+    "id": "f05bc54f-9f8d-43d6-96b7-6da5469ab6a6",
+    "passwordHash": "",
+    "createdAt": "2026-08-29T11:24:53.602Z"
+  },
+  {
+    "id": "7f43a102-28fc-43ac-af3e-7aac5583b8b3",
+    "passwordHash": "",
+    "createdAt": "2026-08-29T11:24:53.602Z"
+  }
+]

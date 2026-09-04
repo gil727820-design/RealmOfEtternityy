@@ -1,0 +1,1106 @@
+[
+  {
+    "id": "59258a28-456a-49e0-8ac6-520b05530f87",
+    "name": "Sistema",
+    "text": "IMMORTAL entrou na guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:14:04.033Z",
+    "characterId": "system"
+  },
+  {
+    "id": "0fa28e91-c6c4-4ec9-9749-5c5905fa394a",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:14:10.276Z",
+    "characterId": "system"
+  },
+  {
+    "id": "e89a40b8-0d4f-4b55-b013-5dabecb3c110",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:14:13.473Z",
+    "characterId": "system"
+  },
+  {
+    "id": "144b264a-32b8-4971-ae05-0324e48174c0",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:14:16.039Z",
+    "characterId": "system"
+  },
+  {
+    "id": "a87ce117-3c05-49e8-895f-9b6b41731d42",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:14:18.398Z",
+    "characterId": "system"
+  },
+  {
+    "id": "a6b34fb3-4477-40e2-8608-b3d39d1e720b",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:14:20.661Z",
+    "characterId": "system"
+  },
+  {
+    "id": "f838ed8c-6778-489b-af1c-fb7d22f8a077",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:14:23.079Z",
+    "characterId": "system"
+  },
+  {
+    "id": "9c542a15-092b-451e-af82-b192553a143a",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:14:41.545Z",
+    "characterId": "system"
+  },
+  {
+    "id": "0c081992-486f-4aa9-9816-a254a1fdadd4",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:14:44.090Z",
+    "characterId": "system"
+  },
+  {
+    "id": "56bae9de-9274-4e01-ad5b-f0775cc0e5a4",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:14:46.675Z",
+    "characterId": "system"
+  },
+  {
+    "id": "ddd13e2c-e43f-40fc-b513-c2a4b4a46fb1",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:14:49.181Z",
+    "characterId": "system"
+  },
+  {
+    "id": "0fee09f4-19b1-4f72-b7e4-4736f44da6a3",
+    "name": "Sistema",
+    "text": "Spreas entrou na guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:14:56.856Z",
+    "characterId": "system"
+  },
+  {
+    "id": "a3e39e22-aa20-4b17-b0f5-9604f6fe1688",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.barracks para nível 1!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:26:47.457Z",
+    "characterId": "system"
+  },
+  {
+    "id": "dd4f928c-b479-480b-aaba-8bf6b9981683",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.library para nível 1!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:26:52.111Z",
+    "characterId": "system"
+  },
+  {
+    "id": "0bf859d2-ecfd-4e80-a047-81d3ebd3ef80",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.treasury para nível 1!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:26:53.977Z",
+    "characterId": "system"
+  },
+  {
+    "id": "2a88c746-6eac-4411-8801-23e0ca34a593",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.portal para nível 1!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:26:55.592Z",
+    "characterId": "system"
+  },
+  {
+    "id": "1553b35d-290b-449d-9e3a-9d04a5f44e2a",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.library para nível 2!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:26:59.853Z",
+    "characterId": "system"
+  },
+  {
+    "id": "19f33f88-c64b-4f26-b8de-806258b981bb",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.library para nível 3!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:27:01.520Z",
+    "characterId": "system"
+  },
+  {
+    "id": "36afb0eb-655f-49f3-951c-de25619c7e87",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.smithy para nível 1!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:27:04.825Z",
+    "characterId": "system"
+  },
+  {
+    "id": "8d0dfa62-de23-42fe-ba9b-871d61636395",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.smithy para nível 2!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:27:08.125Z",
+    "characterId": "system"
+  },
+  {
+    "id": "58729a47-9fea-462e-ad7f-91c08fad1fb2",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.barracks para nível 2!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:27:11.084Z",
+    "characterId": "system"
+  },
+  {
+    "id": "9a54ee2d-3c22-4b83-a436-a7122588fa31",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.barracks para nível 3!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:27:17.078Z",
+    "characterId": "system"
+  },
+  {
+    "id": "9c8705bb-eef9-48b5-9544-5f246d3d86fa",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.treasury para nível 2!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:27:24.079Z",
+    "characterId": "system"
+  },
+  {
+    "id": "3e5874f6-7085-4742-95b0-8ac929d1037a",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.smithy para nível 3!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-16T23:27:30.680Z",
+    "characterId": "system"
+  },
+  {
+    "id": "8a2e41b5-0d08-4cc0-b1e0-4545af0dafc6",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:06:15.685Z",
+    "characterId": "system"
+  },
+  {
+    "id": "0e388276-e23b-4a91-befb-b0d674d4c5f2",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:06:18.983Z",
+    "characterId": "system"
+  },
+  {
+    "id": "0e9ebc1a-91f7-4f01-94e2-a0a44771bbdd",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:06:21.896Z",
+    "characterId": "system"
+  },
+  {
+    "id": "26613dc3-83bc-44d6-b10a-4e952ca3e489",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.treasury para nível 3!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:07:16.180Z",
+    "characterId": "system"
+  },
+  {
+    "id": "ef304e84-808b-466a-bf95-6f4b6219ad92",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:10:33.296Z",
+    "characterId": "system"
+  },
+  {
+    "id": "90d4b904-b2c7-4ad0-9c39-d5d2a57e96f3",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:10:36.069Z",
+    "characterId": "system"
+  },
+  {
+    "id": "336f4ddd-f1f4-4233-8550-d0d5bfac3c83",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:07:20.839Z",
+    "characterId": "system"
+  },
+  {
+    "id": "87cb2f94-fd8e-4dd7-850c-1e5a5db1de68",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:07:23.276Z",
+    "characterId": "system"
+  },
+  {
+    "id": "fbdd5b1c-8623-4651-87ca-858c4b081212",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:07:25.982Z",
+    "characterId": "system"
+  },
+  {
+    "id": "bb90c28c-2a7c-4fab-a7c4-cfe4e816bb8c",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:07:29.097Z",
+    "characterId": "system"
+  },
+  {
+    "id": "7f43450d-edb7-42e9-850e-55b9b1f14d36",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:07:31.394Z",
+    "characterId": "system"
+  },
+  {
+    "id": "b02ae357-319b-4bf8-a02b-c4cca1199965",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:07:33.888Z",
+    "characterId": "system"
+  },
+  {
+    "id": "76c49597-cdaa-4c0a-867c-0f50d560c9ce",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.library para nível 4!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:10:12.683Z",
+    "characterId": "system"
+  },
+  {
+    "id": "5a56152e-1164-4b03-8b27-751a30a1836e",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.library para nível 5!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:10:15.095Z",
+    "characterId": "system"
+  },
+  {
+    "id": "ea745f23-b02c-4a37-a06b-4879da297739",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.treasury para nível 4!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:10:27.369Z",
+    "characterId": "system"
+  },
+  {
+    "id": "cb276b5e-6d1c-4e74-aede-3d3fd932a2a3",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.barracks para nível 4!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:10:42.266Z",
+    "characterId": "system"
+  },
+  {
+    "id": "cc136995-1711-442a-9a80-c4f8e71163bc",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:02.988Z",
+    "characterId": "system"
+  },
+  {
+    "id": "344ec034-5236-4b9f-b541-9024b1a8906b",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:05.397Z",
+    "characterId": "system"
+  },
+  {
+    "id": "62f1b165-4d27-4f18-bb65-e9735cc76480",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:07.723Z",
+    "characterId": "system"
+  },
+  {
+    "id": "0eca72f8-98e1-46e4-a8fa-0fc14e1a1c7d",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:10.442Z",
+    "characterId": "system"
+  },
+  {
+    "id": "f60dc8ac-c185-48d2-8f72-329bde471ea8",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:12.740Z",
+    "characterId": "system"
+  },
+  {
+    "id": "b3832af2-0270-4be4-98d8-12b79d52fb0b",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:15.162Z",
+    "characterId": "system"
+  },
+  {
+    "id": "8b969774-5b37-4ddb-8c80-a6f01bc33fbc",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:17.523Z",
+    "characterId": "system"
+  },
+  {
+    "id": "126f2c27-3bf8-49cb-8b5f-cb04fc5442ed",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:20.183Z",
+    "characterId": "system"
+  },
+  {
+    "id": "7bd21632-ff28-49da-b148-10e7b76ff527",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:22.391Z",
+    "characterId": "system"
+  },
+  {
+    "id": "cb00b1e0-1994-45da-b34c-acbef2a598a9",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:24.628Z",
+    "characterId": "system"
+  },
+  {
+    "id": "6f5aad00-3c4f-4748-af47-76da0d720382",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:27.305Z",
+    "characterId": "system"
+  },
+  {
+    "id": "9f3469c8-391f-49c3-b57c-4e5cccf6689e",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:29.660Z",
+    "characterId": "system"
+  },
+  {
+    "id": "68c65583-b903-44b0-b4af-6b6eb38aa534",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:31.788Z",
+    "characterId": "system"
+  },
+  {
+    "id": "c322737d-a41e-4d76-af24-c7a2eb6f4986",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:34.274Z",
+    "characterId": "system"
+  },
+  {
+    "id": "177dc04f-b349-4b75-bf7d-9e2b38016401",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:36.645Z",
+    "characterId": "system"
+  },
+  {
+    "id": "5272b622-22dd-4a2d-bb6b-5d6c5da4ff1d",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:38.822Z",
+    "characterId": "system"
+  },
+  {
+    "id": "fcd5015a-c3b7-47ca-b519-ec1efdc59890",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:41.435Z",
+    "characterId": "system"
+  },
+  {
+    "id": "5e01dae7-e728-4d90-b4ed-bf9fa9ac4ac1",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:24:43.873Z",
+    "characterId": "system"
+  },
+  {
+    "id": "5bb214f4-71f5-4c67-9aed-4df78c9187d7",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.treasury para nível 7!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:33:29.220Z",
+    "characterId": "system"
+  },
+  {
+    "id": "563953ff-572b-472e-a6df-d70ae3ffdc90",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:33:46.575Z",
+    "characterId": "system"
+  },
+  {
+    "id": "2cd43ec3-2af2-4c1f-8d6e-1421e0417690",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:33:48.840Z",
+    "characterId": "system"
+  },
+  {
+    "id": "db3e2a98-1c72-439c-83fb-6af80d87ad12",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:33:16.021Z",
+    "characterId": "system"
+  },
+  {
+    "id": "b268a8bf-6c1a-4281-86eb-435841fefd66",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:33:19.564Z",
+    "characterId": "system"
+  },
+  {
+    "id": "fca95b3e-329e-46e2-b987-8d24999e6889",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.treasury para nível 5!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:33:24.838Z",
+    "characterId": "system"
+  },
+  {
+    "id": "94f27367-300b-47d5-b8eb-a4b1d6a80487",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.treasury para nível 6!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:33:27.047Z",
+    "characterId": "system"
+  },
+  {
+    "id": "4b5cdc70-8f61-4750-b386-2205cb487bbe",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:33:38.424Z",
+    "characterId": "system"
+  },
+  {
+    "id": "123fd879-747b-4972-808b-ce12972c5d68",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:33:41.137Z",
+    "characterId": "system"
+  },
+  {
+    "id": "78ef83bc-0027-4152-8ab5-8c9510241537",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:33:43.912Z",
+    "characterId": "system"
+  },
+  {
+    "id": "c0170c8c-2f6e-43c5-b266-7cc2f5b09dc6",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:33:54.127Z",
+    "characterId": "system"
+  },
+  {
+    "id": "23d1b413-a0e5-4ff8-9ec8-ab518b7959a0",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:33:56.569Z",
+    "characterId": "system"
+  },
+  {
+    "id": "f6e8d49d-9595-45db-beae-0b676632d1b9",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:33:59.811Z",
+    "characterId": "system"
+  },
+  {
+    "id": "5aad9cb1-c1bf-49d0-95cf-d197f253efd4",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.library para nível 6!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:05.129Z",
+    "characterId": "system"
+  },
+  {
+    "id": "e636e5c2-643a-4419-a586-78554cae0cf0",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.smithy para nível 4!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:10.172Z",
+    "characterId": "system"
+  },
+  {
+    "id": "d922047c-3034-439c-b185-b264e911026c",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.smithy para nível 5!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:12.400Z",
+    "characterId": "system"
+  },
+  {
+    "id": "189dcefd-5765-4245-87f5-48ab9365b53c",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:15.786Z",
+    "characterId": "system"
+  },
+  {
+    "id": "36bbaf87-8eae-4368-bb8e-5c12933c8bc4",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:18.281Z",
+    "characterId": "system"
+  },
+  {
+    "id": "ba0f95c6-12e8-44ba-9086-870619dab805",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:21.140Z",
+    "characterId": "system"
+  },
+  {
+    "id": "6c96e091-4f09-4d5c-a6b6-940311d17417",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:24.633Z",
+    "characterId": "system"
+  },
+  {
+    "id": "7b58685d-9d92-4e0c-a35a-99a28d56317a",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:27.125Z",
+    "characterId": "system"
+  },
+  {
+    "id": "4822471c-a8a1-483a-a3ce-cbeb83905f8c",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:29.430Z",
+    "characterId": "system"
+  },
+  {
+    "id": "ed324abc-6829-4f5a-9b86-425fc53af7c3",
+    "name": "Sistema",
+    "text": "Spreas doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:32.057Z",
+    "characterId": "system"
+  },
+  {
+    "id": "24a1b9fa-7752-4656-867b-109dc2a9eff3",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:33.082Z",
+    "characterId": "system"
+  },
+  {
+    "id": "32ed0838-c0eb-4b11-88d0-aa6b6f12d9b1",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:35.849Z",
+    "characterId": "system"
+  },
+  {
+    "id": "8ac4f914-b038-408a-a218-8ae2ce9d0c0b",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:38.492Z",
+    "characterId": "system"
+  },
+  {
+    "id": "a0ff96ad-6485-470a-94d7-f011eb03fcb7",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.barracks para nível 5!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:44.193Z",
+    "characterId": "system"
+  },
+  {
+    "id": "3cf22110-9a7b-427f-9c2e-c41b43884e22",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.smithy para nível 6!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:34:48.687Z",
+    "characterId": "system"
+  },
+  {
+    "id": "df4aa86a-dc7c-4f61-9cbb-d1dcf5a5e6b7",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:35:03.747Z",
+    "characterId": "system"
+  },
+  {
+    "id": "b94af086-5e14-4faf-994f-1bf598711673",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:35:11.524Z",
+    "characterId": "system"
+  },
+  {
+    "id": "25df4685-d18f-4cee-9cb7-0689535d2b15",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:35:17.892Z",
+    "characterId": "system"
+  },
+  {
+    "id": "60745f87-48c4-4267-b07c-8ceaccf93ca0",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:35:30.843Z",
+    "characterId": "system"
+  },
+  {
+    "id": "f6e4f285-9db6-49d6-8a54-0b1006a26c85",
+    "name": "Sistema",
+    "text": "Spreas doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:35:33.393Z",
+    "characterId": "system"
+  },
+  {
+    "id": "02be9d21-557c-49aa-b654-337138f55351",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.smithy para nível 7!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:35:33.496Z",
+    "characterId": "system"
+  },
+  {
+    "id": "a7f0fe57-c40a-464c-be3e-26ed7918356e",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:35:24.336Z",
+    "characterId": "system"
+  },
+  {
+    "id": "882ccb40-2f34-4977-891c-e94f84432c2e",
+    "name": "Sistema",
+    "text": "Spreas doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:35:24.387Z",
+    "characterId": "system"
+  },
+  {
+    "id": "2bd2fe18-14d6-4746-849b-be8ea93dffa2",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:35:27.725Z",
+    "characterId": "system"
+  },
+  {
+    "id": "cc28cd98-d36f-4a0b-8d22-9a02d1787c8c",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:36:40.594Z",
+    "characterId": "system"
+  },
+  {
+    "id": "46d02347-54e6-4903-b13d-50eb59d03adc",
+    "name": "Sistema",
+    "text": "IMMORTAL doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T00:36:43.106Z",
+    "characterId": "system"
+  },
+  {
+    "id": "6c346b1b-1380-435e-bd1b-a5cc0dc194a4",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.smithy para nível 7!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:12:45.329Z",
+    "characterId": "system"
+  },
+  {
+    "id": "430a2ecf-c84d-4ad1-852e-772d5f8bf9e7",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:12:54.835Z",
+    "characterId": "system"
+  },
+  {
+    "id": "094b3774-15ea-4bb1-baf2-4542a9adde1a",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:12:57.243Z",
+    "characterId": "system"
+  },
+  {
+    "id": "7eff1de2-1005-4423-96a5-a52d511b1a46",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:12:59.647Z",
+    "characterId": "system"
+  },
+  {
+    "id": "2e3cd232-6993-4480-bfb3-a30ff9ae229a",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:13:02.480Z",
+    "characterId": "system"
+  },
+  {
+    "id": "d9a043bc-d08e-4cf7-8a52-38781767c612",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:13:06.164Z",
+    "characterId": "system"
+  },
+  {
+    "id": "1d64adad-fe4e-4668-a645-b738397c90f0",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:13:08.290Z",
+    "characterId": "system"
+  },
+  {
+    "id": "4a41106a-894f-47d6-b7d1-f17f9902adfd",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.library para nível 7!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:13:13.370Z",
+    "characterId": "system"
+  },
+  {
+    "id": "55203a65-4cae-49e1-834f-76eb58cc3116",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:13:16.834Z",
+    "characterId": "system"
+  },
+  {
+    "id": "444fa899-2ab9-41c7-b69c-6ab26604149f",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:13:32.818Z",
+    "characterId": "system"
+  },
+  {
+    "id": "62142ad0-10f4-4a7a-b5d0-c6800dc3cb0f",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:13:35.053Z",
+    "characterId": "system"
+  },
+  {
+    "id": "77681f87-8df9-44bf-aa3a-05a2b8009a81",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:13:37.189Z",
+    "characterId": "system"
+  },
+  {
+    "id": "7fbe9850-330b-4b31-9706-2ce3bb439c88",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:13:39.427Z",
+    "characterId": "system"
+  },
+  {
+    "id": "5ff15a6c-7bd7-4ace-b643-2326bcf4680b",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:13:41.832Z",
+    "characterId": "system"
+  },
+  {
+    "id": "b78c088a-5676-45d9-b72d-936d468df952",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:30:43.630Z",
+    "characterId": "system"
+  },
+  {
+    "id": "2c140e75-d9cd-4ea7-9f7d-02bd46f890e8",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.barracks para nível 6!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:30:45.171Z",
+    "characterId": "system"
+  },
+  {
+    "id": "5b439ed4-2386-4125-9b1d-a7554fbbb687",
+    "name": "Sistema",
+    "text": "Lyiu entrou na guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:31:07.714Z",
+    "characterId": "system"
+  },
+  {
+    "id": "3e3bee11-aa2f-400f-9326-035310943733",
+    "name": "Sistema",
+    "text": "PudinZero doou 10000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:31:32.716Z",
+    "characterId": "system"
+  },
+  {
+    "id": "9cdc5b41-c1b5-427b-8e43-18e9967c3360",
+    "name": "Sistema",
+    "text": "PudinZero doou 100000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:53:28.591Z",
+    "characterId": "system"
+  },
+  {
+    "id": "d159f1e0-dc6a-4861-b785-4ab6225f062c",
+    "name": "Sistema",
+    "text": "PudinZero doou 1000000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:53:48.478Z",
+    "characterId": "system"
+  },
+  {
+    "id": "a5170589-b784-4af8-a6d1-24f66545ec1f",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.barracks para nível 7!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:53:52.133Z",
+    "characterId": "system"
+  },
+  {
+    "id": "d2a47a89-b4b0-4c82-9521-d43ee392d0a2",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.barracks para nível 8!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:53:53.669Z",
+    "characterId": "system"
+  },
+  {
+    "id": "5d592e24-5788-44cf-9820-b916e7755191",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.barracks para nível 9!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:53:55.082Z",
+    "characterId": "system"
+  },
+  {
+    "id": "9b6b6b80-4e10-41ec-9731-3ad76ae05c60",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.barracks para nível 10!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:53:56.613Z",
+    "characterId": "system"
+  },
+  {
+    "id": "a18afc73-7d20-4c0b-9cfc-d94cbaa0849a",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.smithy para nível 8!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:53:59.698Z",
+    "characterId": "system"
+  },
+  {
+    "id": "d63391a0-137f-4d6c-b250-0005aa06889d",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.library para nível 9!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:54:22.314Z",
+    "characterId": "system"
+  },
+  {
+    "id": "1ce89386-f734-43c0-bf9b-c6671917ae0d",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.library para nível 10!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:54:24.339Z",
+    "characterId": "system"
+  },
+  {
+    "id": "d32a492a-91db-4502-8624-854de0d84d35",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.treasury para nível 8!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:54:28.002Z",
+    "characterId": "system"
+  },
+  {
+    "id": "60b4686e-2092-4880-b08b-d407d8caa5b8",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.treasury para nível 9!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:54:29.487Z",
+    "characterId": "system"
+  },
+  {
+    "id": "c9a75dbb-dd8c-4904-ac8f-db1f6a36b7d8",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.treasury para nível 10!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:54:30.900Z",
+    "characterId": "system"
+  },
+  {
+    "id": "c68d17cd-4571-40ca-9f23-511a08b682c6",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.portal para nível 4!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:54:35.136Z",
+    "characterId": "system"
+  },
+  {
+    "id": "a95d61a3-044d-49aa-89d5-9f05ada6ec24",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.portal para nível 5!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:54:36.669Z",
+    "characterId": "system"
+  },
+  {
+    "id": "88180c75-0705-4d75-91b2-35d8180739fa",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.smithy para nível 9!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:54:01.466Z",
+    "characterId": "system"
+  },
+  {
+    "id": "64117677-309a-4a61-9542-cbcb72fcc27d",
+    "name": "Sistema",
+    "text": "PudinZero doou 5000000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:54:14.678Z",
+    "characterId": "system"
+  },
+  {
+    "id": "63da5141-fd66-4694-a278-0da9293536b7",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.smithy para nível 10!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:54:19.037Z",
+    "characterId": "system"
+  },
+  {
+    "id": "5b8c02ab-5f0b-486d-9990-8e20b51a0309",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.library para nível 8!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:54:20.632Z",
+    "characterId": "system"
+  },
+  {
+    "id": "a01bf5e5-e65c-4d47-b0f4-3c27caf0ad99",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.portal para nível 2!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:54:32.460Z",
+    "characterId": "system"
+  },
+  {
+    "id": "b760e05c-9564-4d16-b7b4-e911fb375764",
+    "name": "Sistema",
+    "text": "PudinZero melhorou guild.up.portal para nível 3!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T01:54:33.730Z",
+    "characterId": "system"
+  },
+  {
+    "id": "d3ae6dd4-4eb8-4ab6-8da5-0ca121e65a4f",
+    "name": "Sistema",
+    "text": "Lyiu doou 100000 de ouro para o banco da guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T02:22:40.596Z",
+    "characterId": "system"
+  },
+  {
+    "id": "c2152866-9f31-49c2-ba23-b12f7cc8e981",
+    "name": "Sistema",
+    "text": "🐲 O BOSS DE GUILDA FOI DERROTADO! Todos os membros receberam recompensas +200.000 🪙 no banco da guilda!",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T03:13:06.700Z",
+    "characterId": "system"
+  },
+  {
+    "id": "6c27800a-72d5-4169-bfe0-153b87ba0d1c",
+    "name": "Sistema",
+    "text": "Heathcliff entrou na guilda.",
+    "guildId": "1786921897874_3121",
+    "createdAt": "2026-08-17T03:15:01.014Z",
+    "characterId": "system"
+  }
+]

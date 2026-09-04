@@ -1,0 +1,866 @@
+[
+  {
+    "id": -1988664623,
+    "icon": "🐫",
+    "title": {
+      "en": "Fix the Caravans",
+      "es": "Reparar las Caravanas",
+      "pt-BR": "Consertar as Caravanas"
+    },
+    "region": "scorching_desert",
+    "nameKey": "mission.gen.scorching_desert.4",
+    "minLevel": 42,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 2,
+    "energyCost": 16,
+    "goldReward": 345,
+    "durationSec": 198
+  },
+  {
+    "id": -1955109385,
+    "icon": "🦂",
+    "title": {
+      "en": "Hunt the Scorpions",
+      "es": "Cazar Escorpiones",
+      "pt-BR": "Caçar os Escorpiões"
+    },
+    "region": "scorching_desert",
+    "nameKey": "mission.gen.scorching_desert.2",
+    "minLevel": 41,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 2,
+    "energyCost": 15,
+    "goldReward": 340,
+    "durationSec": 194
+  },
+  {
+    "id": -1938331766,
+    "icon": "✨",
+    "title": {
+      "en": "Collect Rare Sand",
+      "es": "Recolectar Arena Rara",
+      "pt-BR": "Coletar Areia Rara"
+    },
+    "region": "scorching_desert",
+    "nameKey": "mission.gen.scorching_desert.3",
+    "minLevel": 41,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 2,
+    "energyCost": 15,
+    "goldReward": 340,
+    "durationSec": 206
+  },
+  {
+    "id": -1921554147,
+    "icon": "🏜️",
+    "title": {
+      "en": "Dig Out the Oasis",
+      "es": "Excavar el Oasis",
+      "pt-BR": "Escavar o Oásis"
+    },
+    "region": "scorching_desert",
+    "nameKey": "mission.gen.scorching_desert.0",
+    "minLevel": 40,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 2,
+    "energyCost": 15,
+    "goldReward": 330,
+    "durationSec": 190
+  },
+  {
+    "id": -1904776528,
+    "icon": "🐪",
+    "title": {
+      "en": "Rescue the Travelers",
+      "es": "Rescatar a los Viajeros",
+      "pt-BR": "Resgatar os Viajantes"
+    },
+    "region": "scorching_desert",
+    "nameKey": "mission.gen.scorching_desert.1",
+    "minLevel": 40,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 2,
+    "energyCost": 15,
+    "goldReward": 330,
+    "durationSec": 202
+  },
+  {
+    "id": -1809256973,
+    "icon": "🔱",
+    "title": {
+      "en": "Guard the Relics",
+      "es": "Proteger las Reliquias",
+      "pt-BR": "Proteger as Relíquias"
+    },
+    "region": "celestial_temple",
+    "nameKey": "mission.gen.celestial_temple.4",
+    "minLevel": 102,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 825,
+    "durationSec": 438
+  },
+  {
+    "id": -1742146497,
+    "icon": "⛪",
+    "title": {
+      "en": "Pray at the Altars",
+      "es": "Orar en los Altares",
+      "pt-BR": "Orar nos Altares"
+    },
+    "region": "celestial_temple",
+    "nameKey": "mission.gen.celestial_temple.0",
+    "minLevel": 100,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 810,
+    "durationSec": 430
+  },
+  {
+    "id": -1725368878,
+    "icon": "🏮",
+    "title": {
+      "en": "Light the Braziers",
+      "es": "Encender los Braseros",
+      "pt-BR": "Acender os Braseiros"
+    },
+    "region": "celestial_temple",
+    "nameKey": "mission.gen.celestial_temple.1",
+    "minLevel": 100,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 810,
+    "durationSec": 442
+  },
+  {
+    "id": -1708591259,
+    "icon": "🧘",
+    "title": {
+      "en": "Meditate in Peace",
+      "es": "Meditar en Paz",
+      "pt-BR": "Meditar em Paz"
+    },
+    "region": "celestial_temple",
+    "nameKey": "mission.gen.celestial_temple.2",
+    "minLevel": 101,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 820,
+    "durationSec": 434
+  },
+  {
+    "id": -1691813640,
+    "icon": "✨",
+    "title": {
+      "en": "Collect Celestial Light",
+      "es": "Recolectar Luz Celestial",
+      "pt-BR": "Coletar Luz Celestial"
+    },
+    "region": "celestial_temple",
+    "nameKey": "mission.gen.celestial_temple.3",
+    "minLevel": 101,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 820,
+    "durationSec": 446
+  },
+  {
+    "id": -1452706117,
+    "icon": "🦀",
+    "title": {
+      "en": "Hunt the Crabs",
+      "es": "Cazar Cangrejos",
+      "pt-BR": "Caçar os Caranguejos"
+    },
+    "region": "lost_islands",
+    "nameKey": "mission.gen.lost_islands.3",
+    "minLevel": 61,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 21,
+    "goldReward": 500,
+    "durationSec": 286
+  },
+  {
+    "id": -1435928498,
+    "icon": "🦪",
+    "title": {
+      "en": "Gather Pearls",
+      "es": "Recolectar Perlas",
+      "pt-BR": "Coletar Pérolas"
+    },
+    "region": "lost_islands",
+    "nameKey": "mission.gen.lost_islands.2",
+    "minLevel": 61,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 21,
+    "goldReward": 500,
+    "durationSec": 274
+  },
+  {
+    "id": -1419150879,
+    "icon": "⚓",
+    "title": {
+      "en": "Rescue the Sailors",
+      "es": "Rescatar a los Marineros",
+      "pt-BR": "Resgatar os Marinheiros"
+    },
+    "region": "lost_islands",
+    "nameKey": "mission.gen.lost_islands.1",
+    "minLevel": 60,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 21,
+    "goldReward": 490,
+    "durationSec": 282
+  },
+  {
+    "id": -1402373260,
+    "icon": "🗺️",
+    "title": {
+      "en": "Chart New Routes",
+      "es": "Trazar Nuevas Rutas",
+      "pt-BR": "Traçar Novas Rotas"
+    },
+    "region": "lost_islands",
+    "nameKey": "mission.gen.lost_islands.0",
+    "minLevel": 60,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 21,
+    "goldReward": 490,
+    "durationSec": 270
+  },
+  {
+    "id": -1335262784,
+    "icon": "🛶",
+    "title": {
+      "en": "Repair the Boats",
+      "es": "Reparar los Barcos",
+      "pt-BR": "Reparar os Barcos"
+    },
+    "region": "lost_islands",
+    "nameKey": "mission.gen.lost_islands.4",
+    "minLevel": 62,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 22,
+    "goldReward": 505,
+    "durationSec": 278
+  },
+  {
+    "id": -1167255063,
+    "icon": "🌋",
+    "title": {
+      "en": "Clear the Lava",
+      "es": "Limpiar la Lava",
+      "pt-BR": "Limpar a Lava"
+    },
+    "region": "dragon_world",
+    "nameKey": "mission.gen.dragon_world.4",
+    "minLevel": 77,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 625,
+    "durationSec": 338
+  },
+  {
+    "id": -1133699825,
+    "icon": "🕊️",
+    "title": {
+      "en": "Study the Dragons' Flight",
+      "es": "Estudiar el Vuelo de los Dragones",
+      "pt-BR": "Estudar o Voo dos Dragões"
+    },
+    "region": "dragon_world",
+    "nameKey": "mission.gen.dragon_world.2",
+    "minLevel": 76,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 620,
+    "durationSec": 334
+  },
+  {
+    "id": -1116922206,
+    "icon": "🐲",
+    "title": {
+      "en": "Calm the Dragons",
+      "es": "Calmar a los Dragones",
+      "pt-BR": "Acalmar os Dragões"
+    },
+    "region": "dragon_world",
+    "nameKey": "mission.gen.dragon_world.3",
+    "minLevel": 76,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 620,
+    "durationSec": 346
+  },
+  {
+    "id": -1100144587,
+    "icon": "🐉",
+    "title": {
+      "en": "Collect Dragon Scales",
+      "es": "Recolectar Escamas de Dragón",
+      "pt-BR": "Coletar Escamas de Dragão"
+    },
+    "region": "dragon_world",
+    "nameKey": "mission.gen.dragon_world.0",
+    "minLevel": 75,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 610,
+    "durationSec": 330
+  },
+  {
+    "id": -1083366968,
+    "icon": "🥚",
+    "title": {
+      "en": "Guard the Nests",
+      "es": "Proteger los Nidos",
+      "pt-BR": "Proteger os Ninhos"
+    },
+    "region": "dragon_world",
+    "nameKey": "mission.gen.dragon_world.1",
+    "minLevel": 75,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 610,
+    "durationSec": 342
+  },
+  {
+    "id": -852744621,
+    "icon": "🧿",
+    "title": {
+      "en": "Break the Curses",
+      "es": "Romper las Maldiciones",
+      "pt-BR": "Quebrar as Maldições"
+    },
+    "region": "demon_realm",
+    "nameKey": "mission.gen.demon_realm.1",
+    "minLevel": 90,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 730,
+    "durationSec": 402
+  },
+  {
+    "id": -835967002,
+    "icon": "🔮",
+    "title": {
+      "en": "Purify the Ground",
+      "es": "Purificar el Suelo",
+      "pt-BR": "Purificar o Chão"
+    },
+    "region": "demon_realm",
+    "nameKey": "mission.gen.demon_realm.0",
+    "minLevel": 90,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 730,
+    "durationSec": 390
+  },
+  {
+    "id": -819189383,
+    "icon": "🕯️",
+    "title": {
+      "en": "Stop the Rituals",
+      "es": "Detener los Rituales",
+      "pt-BR": "Apagar os Rituais"
+    },
+    "region": "demon_realm",
+    "nameKey": "mission.gen.demon_realm.3",
+    "minLevel": 91,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 740,
+    "durationSec": 406
+  },
+  {
+    "id": -802411764,
+    "icon": "👻",
+    "title": {
+      "en": "Banish the Lost Souls",
+      "es": "Desterrar las Almas Perdidas",
+      "pt-BR": "Banir as Almas Perdidas"
+    },
+    "region": "demon_realm",
+    "nameKey": "mission.gen.demon_realm.2",
+    "minLevel": 91,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 740,
+    "durationSec": 394
+  },
+  {
+    "id": -768856526,
+    "icon": "🌀",
+    "title": {
+      "en": "Seal the Portals",
+      "es": "Sellar los Portales",
+      "pt-BR": "Selar os Portais"
+    },
+    "region": "demon_realm",
+    "nameKey": "mission.gen.demon_realm.4",
+    "minLevel": 92,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 25,
+    "goldReward": 745,
+    "durationSec": 398
+  },
+  {
+    "id": -305640109,
+    "icon": "📜",
+    "title": {
+      "en": "Deliver the Messages",
+      "es": "Entregar los Mensajes",
+      "pt-BR": "Entregar as Mensagens"
+    },
+    "region": "imperial_castle",
+    "nameKey": "mission.gen.imperial_castle.2",
+    "minLevel": 51,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 18,
+    "goldReward": 420,
+    "durationSec": 234
+  },
+  {
+    "id": -288862490,
+    "icon": "🗡️",
+    "title": {
+      "en": "Train the Soldiers",
+      "es": "Entrenar a los Soldados",
+      "pt-BR": "Treinar os Soldados"
+    },
+    "region": "imperial_castle",
+    "nameKey": "mission.gen.imperial_castle.3",
+    "minLevel": 51,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 18,
+    "goldReward": 420,
+    "durationSec": 246
+  },
+  {
+    "id": -272084871,
+    "icon": "🛡️",
+    "title": {
+      "en": "Guard the Walls",
+      "es": "Guardar las Murallas",
+      "pt-BR": "Guardar as Muralhas"
+    },
+    "region": "imperial_castle",
+    "nameKey": "mission.gen.imperial_castle.0",
+    "minLevel": 50,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 18,
+    "goldReward": 410,
+    "durationSec": 230
+  },
+  {
+    "id": -255307252,
+    "icon": "⚔️",
+    "title": {
+      "en": "Polish the Armor",
+      "es": "Pulir las Armaduras",
+      "pt-BR": "Polir as Armaduras"
+    },
+    "region": "imperial_castle",
+    "nameKey": "mission.gen.imperial_castle.1",
+    "minLevel": 50,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 18,
+    "goldReward": 410,
+    "durationSec": 242
+  },
+  {
+    "id": -204974395,
+    "icon": "🏰",
+    "title": {
+      "en": "Inspect the Towers",
+      "es": "Inspeccionar las Torres",
+      "pt-BR": "Inspecionar as Torres"
+    },
+    "region": "imperial_castle",
+    "nameKey": "mission.gen.imperial_castle.4",
+    "minLevel": 52,
+    "xpReward": 0,
+    "generated": true,
+    "difficulty": 3,
+    "energyCost": 19,
+    "goldReward": 425,
+    "durationSec": 238
+  },
+  {
+    "id": 1,
+    "icon": "🏘️",
+    "region": "starter_village",
+    "nameKey": "mission.patrol_village",
+    "minLevel": 1,
+    "xpReward": 30,
+    "difficulty": 1,
+    "energyCost": 5,
+    "goldReward": 20,
+    "durationSec": 30
+  },
+  {
+    "id": 2,
+    "icon": "🟢",
+    "region": "starter_village",
+    "nameKey": "mission.kill_slimes",
+    "minLevel": 1,
+    "xpReward": 50,
+    "difficulty": 1,
+    "energyCost": 8,
+    "goldReward": 35,
+    "durationSec": 45
+  },
+  {
+    "id": 3,
+    "icon": "🌿",
+    "region": "starter_village",
+    "nameKey": "mission.gather_herbs",
+    "minLevel": 2,
+    "xpReward": 60,
+    "difficulty": 1,
+    "energyCost": 8,
+    "goldReward": 40,
+    "durationSec": 60
+  },
+  {
+    "id": 4,
+    "icon": "🧑‍🤝‍🧑",
+    "region": "starter_village",
+    "nameKey": "mission.escort_merchant",
+    "minLevel": 3,
+    "xpReward": 100,
+    "difficulty": 2,
+    "energyCost": 12,
+    "goldReward": 70,
+    "durationSec": 90
+  },
+  {
+    "id": 5,
+    "icon": "📨",
+    "region": "starter_village",
+    "nameKey": "mission.deliver_letter",
+    "minLevel": 1,
+    "xpReward": 20,
+    "difficulty": 1,
+    "energyCost": 3,
+    "goldReward": 15,
+    "durationSec": 20
+  },
+  {
+    "id": 6,
+    "icon": "🐺",
+    "region": "forgotten_forest",
+    "nameKey": "mission.hunt_wolves",
+    "minLevel": 5,
+    "xpReward": 80,
+    "difficulty": 2,
+    "energyCost": 10,
+    "goldReward": 55,
+    "durationSec": 60
+  },
+  {
+    "id": 7,
+    "icon": "🌲",
+    "region": "forgotten_forest",
+    "nameKey": "mission.scout_forest",
+    "minLevel": 5,
+    "xpReward": 65,
+    "difficulty": 2,
+    "energyCost": 8,
+    "goldReward": 45,
+    "durationSec": 45
+  },
+  {
+    "id": 8,
+    "icon": "🏛️",
+    "region": "ancient_ruins",
+    "nameKey": "mission.explore_ruins",
+    "minLevel": 10,
+    "xpReward": 150,
+    "difficulty": 3,
+    "energyCost": 15,
+    "goldReward": 100,
+    "durationSec": 120
+  },
+  {
+    "id": 9,
+    "icon": "🏺",
+    "region": "ancient_ruins",
+    "nameKey": "mission.seek_artifact",
+    "minLevel": 12,
+    "xpReward": 250,
+    "difficulty": 4,
+    "energyCost": 20,
+    "goldReward": 180,
+    "durationSec": 180
+  },
+  {
+    "id": 10,
+    "icon": "⛏️",
+    "region": "deep_mines",
+    "nameKey": "mission.mine_ore",
+    "minLevel": 15,
+    "xpReward": 120,
+    "difficulty": 3,
+    "energyCost": 12,
+    "goldReward": 90,
+    "durationSec": 90
+  },
+  {
+    "id": 11,
+    "icon": "🕳️",
+    "region": "deep_mines",
+    "nameKey": "mission.clear_cave",
+    "minLevel": 16,
+    "xpReward": 200,
+    "difficulty": 4,
+    "energyCost": 18,
+    "goldReward": 150,
+    "durationSec": 150
+  },
+  {
+    "id": 12,
+    "icon": "💀",
+    "region": "dark_swamp",
+    "nameKey": "mission.fight_undead",
+    "minLevel": 20,
+    "xpReward": 180,
+    "difficulty": 4,
+    "energyCost": 15,
+    "goldReward": 130,
+    "durationSec": 120
+  },
+  {
+    "id": 13,
+    "icon": "🐊",
+    "region": "dark_swamp",
+    "nameKey": "mission.tame_beast",
+    "minLevel": 22,
+    "xpReward": 300,
+    "difficulty": 5,
+    "energyCost": 22,
+    "goldReward": 220,
+    "durationSec": 200
+  },
+  {
+    "id": 14,
+    "icon": "🗡️",
+    "region": "forgotten_forest",
+    "nameKey": "mission.defeat_bandit",
+    "minLevel": 7,
+    "xpReward": 100,
+    "difficulty": 3,
+    "energyCost": 12,
+    "goldReward": 80,
+    "durationSec": 80
+  },
+  {
+    "id": 15,
+    "icon": "🏔️",
+    "region": "frozen_mountains",
+    "nameKey": "mission.defend_wall",
+    "minLevel": 30,
+    "xpReward": 400,
+    "difficulty": 6,
+    "energyCost": 25,
+    "goldReward": 300,
+    "durationSec": 240
+  },
+  {
+    "id": 16,
+    "icon": "🎣",
+    "region": "starter_village",
+    "nameKey": "mission.fish_river",
+    "minLevel": 1,
+    "xpReward": 30,
+    "difficulty": 1,
+    "energyCost": 5,
+    "goldReward": 22,
+    "durationSec": 35
+  },
+  {
+    "id": 17,
+    "icon": "🌾",
+    "region": "starter_village",
+    "nameKey": "mission.help_farmer",
+    "minLevel": 1,
+    "xpReward": 35,
+    "difficulty": 1,
+    "energyCost": 6,
+    "goldReward": 25,
+    "durationSec": 40
+  },
+  {
+    "id": 18,
+    "icon": "🍎",
+    "region": "starter_village",
+    "nameKey": "mission.collect_fruits",
+    "minLevel": 1,
+    "xpReward": 25,
+    "difficulty": 1,
+    "energyCost": 4,
+    "goldReward": 18,
+    "durationSec": 30
+  },
+  {
+    "id": 19,
+    "icon": "🕯️",
+    "region": "starter_village",
+    "nameKey": "mission.light_torches",
+    "minLevel": 1,
+    "xpReward": 25,
+    "difficulty": 1,
+    "energyCost": 4,
+    "goldReward": 16,
+    "durationSec": 25
+  },
+  {
+    "id": 20,
+    "icon": "🪵",
+    "region": "starter_village",
+    "nameKey": "mission.collect_wood",
+    "minLevel": 1,
+    "xpReward": 45,
+    "difficulty": 1,
+    "energyCost": 7,
+    "goldReward": 32,
+    "durationSec": 50
+  },
+  {
+    "id": 21,
+    "icon": "🐔",
+    "region": "starter_village",
+    "nameKey": "mission.catch_chickens",
+    "minLevel": 1,
+    "xpReward": 45,
+    "difficulty": 1,
+    "energyCost": 7,
+    "goldReward": 34,
+    "durationSec": 55
+  },
+  {
+    "id": 22,
+    "icon": "🪣",
+    "region": "starter_village",
+    "nameKey": "mission.clean_well",
+    "minLevel": 2,
+    "xpReward": 65,
+    "difficulty": 2,
+    "energyCost": 9,
+    "goldReward": 45,
+    "durationSec": 70
+  },
+  {
+    "id": 23,
+    "icon": "🌉",
+    "region": "starter_village",
+    "nameKey": "mission.fix_bridge",
+    "minLevel": 2,
+    "xpReward": 85,
+    "difficulty": 2,
+    "energyCost": 11,
+    "goldReward": 60,
+    "durationSec": 85
+  },
+  {
+    "id": 24,
+    "icon": "⛲",
+    "region": "starter_village",
+    "nameKey": "mission.guard_fountain",
+    "minLevel": 3,
+    "xpReward": 110,
+    "difficulty": 2,
+    "energyCost": 12,
+    "goldReward": 75,
+    "durationSec": 95
+  },
+  {
+    "id": 25,
+    "icon": "⚒️",
+    "region": "starter_village",
+    "nameKey": "mission.help_blacksmith",
+    "minLevel": 3,
+    "xpReward": 120,
+    "difficulty": 3,
+    "energyCost": 14,
+    "goldReward": 85,
+    "durationSec": 110
+  },
+  {
+    "id": 26,
+    "icon": "🏕️",
+    "region": "forgotten_forest",
+    "nameKey": "mission.clean_camp",
+    "minLevel": 5,
+    "xpReward": 90,
+    "difficulty": 2,
+    "energyCost": 10,
+    "goldReward": 60,
+    "durationSec": 70
+  },
+  {
+    "id": 27,
+    "icon": "🍄",
+    "region": "forgotten_forest",
+    "nameKey": "mission.gather_mushrooms",
+    "minLevel": 5,
+    "xpReward": 75,
+    "difficulty": 2,
+    "energyCost": 8,
+    "goldReward": 50,
+    "durationSec": 50
+  }
+]

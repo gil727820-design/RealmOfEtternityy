@@ -1,115 +1,80 @@
 import { v4 as uuidv4 } from "uuid";
-import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import {
-  users, characters, itemTemplates, inventoryItems, missionTemplates,
-  activeMissions, afkRewards, battles, guilds, guildInvites, guildChats,
-  mailbox, excludedUsers, regionAudio, serverSettings, codes,
-  marketplace, adminLogs,
-} from "./schema";
+import * as store from "./jsonStore";
 import { skinById } from "@/game/skins";
 import { CLASS_BASE_STATS } from "@/game/constants";
 
 /*
- * Repositório Postgres (Supabase) — substituiu o antigo jsonDb.
- * Cada "coleção" do jsonDb virou uma tabela com coluna `data jsonb`.
- * As assinaturas e formatos de retorno são IDÊNTICOS ao anterior,
- * então as rotas não precisaram mudar de lógica.
+ * Repositório JSON puro — persistência em arquivos data/*.json (um por coleção).
+ * Substituiu o SQLite (better-sqlite3 + drizzle-orm).
  *
- * Característica importante do jsonDb mantida aqui: objetos são lidos/gravados
- * INTEIROS (campos dinâmicos como talents, skins, missionBatch etc. são preservados).
+ * As assinaturas e formatos de retorno são IDÊNTICOS aos anteriores: nenhuma
+ * rota/handler precisou mudar. Cada arquivo JSON é um array de documentos
+ * INTEIROS (campos dinâmicos como talents, skins, missionBatch etc. preservados).
+ *
+ * Trilha em memória: dados vivem em data/<coleção>.json, carregados uma vez no
+ * boot e salvos a cada escrita (ataômica: temp + rename). Zero locks de banco,
+ * zero WAL, zero arquivos efêmeros no git.
  */
 
-type Table = any;
+type Collection = store.CollectionName;
 
-/* ─── Helpers internos (SQLite: data é TEXT, precisa de parse/stringify) ─── */
+/* ─── Helpers internos ─── */
 
-function parseData<T = any>(row: any): T {
-  if (!row) return row as T;
-  const raw = row.data ?? row;
-  if (raw && typeof raw === "string") {
-    try { return JSON.parse(raw) as T; } catch { return raw as T; }
-  }
-  return raw as T;
+function rowsOf(col: Collection): any[] {
+  return store.allOf(col);
 }
 
-async function rowsOf(table: Table): Promise<any[]> {
-  const rows = await db.select().from(table);
-  return (rows as any[]).map((r) => parseData(r));
+function getRec(col: Collection, idVal: string | number, idCol = "id"): any | null {
+  return store.findIn(col, (r) => r != null && String(r[idCol]) === String(idVal)) ?? null;
 }
 
-async function getRec(table: Table, idVal: string | number, idCol = "id"): Promise<any | null> {
-  const rows = await db
-    .select()
-    .from(table)
-    .where(eq((table as any)[idCol], idVal))
-    .limit(1);
-  const row = (rows as any[])[0];
-  return row ? parseData(row) : null;
+function insertRec(col: Collection, rec: any): any {
+  return store.insertRecord(col, rec);
 }
 
-async function insertRec(
-  table: Table,
-  rec: any,
-  keyCols: [string, string][] = [],
-  idCol = "id"
-): Promise<any> {
-  const serialized = typeof rec === "string" ? rec : JSON.stringify(rec);
-  const values: any = { data: serialized };
-  if (idCol === "id" && rec.id !== undefined) values.id = String(rec.id);
-  for (const [col, key] of keyCols) {
-    if (rec[key] !== undefined) values[col] = rec[key];
-  }
-  await db.insert(table).values(values);
-  return rec;
-}
-
-async function updateRec(
-  table: Table,
+function updateRec(
+  col: Collection,
   idVal: string | number,
   patch: any,
-  keyCols: [string, string][] = [],
   idCol = "id"
-): Promise<any | null> {
-  const existing = await getRec(table, idVal, idCol);
+): any | null {
+  const existing = getRec(col, idVal, idCol);
   if (!existing) return null;
   const merged = { ...existing, ...patch };
-  const serialized = JSON.stringify(merged);
-  const set: any = { data: serialized };
-  for (const [col, key] of keyCols) {
-    if (merged[key] !== undefined) set[col] = merged[key];
-  }
-  await db.update(table).set(set).where(eq((table as any)[idCol], idVal));
+  store.updateRecord(col, (r) => r != null && String(r[idCol]) === String(idVal), merged);
   return merged;
 }
 
-async function deleteRec(table: Table, idVal: string | number, idCol = "id"): Promise<void> {
-  await db.delete(table).where(eq((table as any)[idCol], idVal));
+function deleteRec(col: Collection, idVal: string | number, idCol = "id"): void {
+  store.deleteRecord(col, (r) => r != null && String(r[idCol]) === String(idVal));
+}
+
+function replaceCollection(col: Collection, items: any[]): void {
+  store.replaceCollection(col, items);
 }
 
 /* ─── Users ─── */
 
 export async function findUserByUsername(username: string) {
-  const all = await rowsOf(users);
-  return all.find((u: any) => u.username === username) ?? null;
+  return store.findIn("users", (u) => u.username === username) ?? null;
 }
 
 export async function findUserById(id: string) {
-  return getRec(users, id);
+  return getRec("users", id);
 }
 
 export async function insertUser(user: any) {
   const rec = { id: uuidv4(), createdAt: new Date().toISOString(), ...user };
-  await insertRec(users, rec, [["username", "username"]]);
+  insertRec("users", rec);
   return rec;
 }
 
 export async function updateUser(id: string, patch: any) {
-  return updateRec(users, id, patch, [["username", "username"]]);
+  return updateRec("users", id, patch);
 }
 
 export async function listUsers(search = "", limit = 50) {
-  const all = await rowsOf(users);
+  const all = rowsOf("users");
   const src = all.filter((u: any) => !search || (u.username || "").includes(search));
   return src
     .slice(0, limit)
@@ -162,44 +127,44 @@ function normalizeCharacter(c: any): any {
 }
 
 export async function findCharacterByName(name: string) {
-  const all = await rowsOf(characters);
-  return normalizeCharacter(all.find((c: any) => c.name === name) ?? null);
+  return normalizeCharacter(store.findIn("characters", (c: any) => c.name === name) ?? null);
 }
 
 export async function findCharacterByUserId(userId: string) {
-  const all = await rowsOf(characters);
-  return normalizeCharacter(all.find((c: any) => c.userId === userId) ?? null);
+  return normalizeCharacter(
+    store.findIn("characters", (c: any) => c.userId === userId) ?? null
+  );
 }
 
 export async function findCharacterById(id: string) {
-  return normalizeCharacter(await getRec(characters, id));
+  return normalizeCharacter(await getRec("characters", id));
 }
 
 export async function getCharactersByUserId(userId: string) {
-  const all = await rowsOf(characters);
+  const all = rowsOf("characters");
   return all.filter((c: any) => c.userId === userId);
 }
 
 export async function insertCharacter(char: any) {
   const rec = { id: uuidv4(), ...char };
-  await insertRec(characters, rec, [["userId", "userId"], ["name", "name"]]);
+  insertRec("characters", rec);
   return rec;
 }
 
 export async function updateCharacter(id: string, patch: any) {
-  return updateRec(characters, id, patch, [["userId", "userId"], ["name", "name"]]);
+  return updateRec("characters", id, patch);
 }
 
 export async function deleteCharacter(id: string) {
-  await deleteRec(characters, id);
+  deleteRec("characters", id);
 }
 
 export async function deleteCharacterById(id: string) {
-  await deleteRec(characters, id);
+  deleteRec("characters", id);
 }
 
 export async function listCharacters(search = "", limit = 50) {
-  const all = await rowsOf(characters);
+  const all = rowsOf("characters");
   const src = all.filter((c: any) => !search || (c.name || "").includes(search));
   return src
     .slice(0, limit)
@@ -212,7 +177,7 @@ export async function listCharacters(search = "", limit = 50) {
  * contar contas com vários personagens (alts) mais de uma vez.
  */
 export async function countRecentlyActive(minutes = 3) {
-  const all = await rowsOf(characters);
+  const all = rowsOf("characters");
   const cutoff = Date.now() - Math.max(1, minutes) * 60 * 1000;
   const seen = new Set<string>();
   for (const c of all) {
@@ -229,7 +194,7 @@ export async function countRecentlyActive(minutes = 3) {
 
 export async function insertInventoryItem(item: any) {
   const rec = { id: uuidv4(), ...item };
-  await insertRec(inventoryItems, rec, [["characterId", "characterId"]]);
+  insertRec("inventoryItems", rec);
   return rec;
 }
 
@@ -245,11 +210,11 @@ export async function grantItem(
   quantity = 1,
   equipped = false
 ) {
-  const templates = await rowsOf(itemTemplates);
+  const templates = rowsOf("itemTemplates");
   const template = templates.find((t: any) => t.id === templateId) ?? null;
   if (!template) return null;
 
-  const items = await rowsOf(inventoryItems);
+  const items = rowsOf("inventoryItems");
   const stack = Math.max(1, Math.floor(quantity || 1));
 
   if (isStackableTemplate(template) && !equipped) {
@@ -257,9 +222,9 @@ export async function grantItem(
       (i: any) => i.characterId === characterId && i.templateId === templateId && !i.equipped
     );
     if (existing) {
-      const merged = await updateRec(inventoryItems, existing.id, {
+      const merged = await updateRec("inventoryItems", existing.id, {
         quantity: (existing.quantity || 1) + stack,
-      }, [["characterId", "characterId"]]);
+      });
       return { item: merged, template, merged: true };
     }
   }
@@ -272,11 +237,11 @@ export async function grantItem(
     quantity: stack,
     obtainedAt: new Date().toISOString(),
   };
-  await insertRec(inventoryItems, rec, [["characterId", "characterId"]]);
+  insertRec("inventoryItems", rec);
   // COLEÇÃO/CODEX: registra itens de equipamento obtidos (idempotente, barato).
   if (template?.slot && template?.type !== "consumable" && template?.stackable !== true) {
     try {
-      const char = await getRec(characters, characterId);
+      const char = await getRec("characters", characterId);
       const coll = char?.collection;
       const unlocked = Array.isArray(coll?.unlocked) ? coll.unlocked : [];
       const tid = Math.floor(Number(template.id));
@@ -290,10 +255,10 @@ export async function grantItem(
 }
 
 export async function getInventoryForCharacter(characterId: string) {
-  const items = (await rowsOf(inventoryItems))
+  const items = rowsOf("inventoryItems")
     .filter((i: any) => i.characterId === characterId)
     .sort((a: any, b: any) => (b.obtainedAt || "").localeCompare(a.obtainedAt || ""));
-  const templates = await rowsOf(itemTemplates);
+  const templates = rowsOf("itemTemplates");
 
   return items.map((it: any) => {
     const template = templates.find((t: any) => t.id === it.templateId) ?? null;
@@ -309,9 +274,9 @@ export async function getInventoryForCharacter(characterId: string) {
 }
 
 export async function getInventoryItemById(id: string) {
-  const it = await getRec(inventoryItems, id);
+  const it = await getRec("inventoryItems", id);
   if (!it) return null;
-  const templates = await rowsOf(itemTemplates);
+  const templates = rowsOf("itemTemplates");
   const template = templates.find((t: any) => t.id === it.templateId) ?? null;
   const quantity = it.quantity || 1;
   return {
@@ -324,54 +289,53 @@ export async function getInventoryItemById(id: string) {
 }
 
 export async function updateInventoryItem(id: string, patch: any) {
-  return updateRec(inventoryItems, id, patch, [["characterId", "characterId"]]);
+  return updateRec("inventoryItems", id, patch);
 }
 
 export async function removeInventoryItem(id: string) {
-  const existing = await getRec(inventoryItems, id);
+  const existing = await getRec("inventoryItems", id);
   if (!existing) return false;
-  await deleteRec(inventoryItems, id);
+  deleteRec("inventoryItems", id);
   return true;
 }
 
 /** Remove `amount` unidades de um stack; apaga a linha se chegar a zero. */
 export async function decrementInventoryItem(id: string, amount = 1) {
-  const existing = await getRec(inventoryItems, id);
+  const existing = await getRec("inventoryItems", id);
   if (!existing) return null;
   const current = existing.quantity || 1;
   const delta = Math.max(1, Math.floor(amount || 1));
   if (current <= delta) {
-    await deleteRec(inventoryItems, id);
+    deleteRec("inventoryItems", id);
     return null;
   }
-  return updateRec(inventoryItems, id, { quantity: current - delta }, [["characterId", "characterId"]]);
+  return updateRec("inventoryItems", id, { quantity: current - delta });
 }
 
 export async function getAllItemTemplates() {
-  return rowsOf(itemTemplates);
+  return rowsOf("itemTemplates");
 }
 
 export async function getItemTemplateById(id: number) {
-  return getRec(itemTemplates, id);
+  return getRec("itemTemplates", id);
 }
 
 export async function getItemTemplateByNameKey(nameKey: string) {
-  const all = await rowsOf(itemTemplates);
-  return all.find((t: any) => t.nameKey === nameKey) ?? null;
+  return store.findIn("itemTemplates", (t: any) => t.nameKey === nameKey) ?? null;
 }
 
 export async function getItemTemplatesByMaxLevel(maxLevel: number) {
-  const all = await rowsOf(itemTemplates);
+  const all = rowsOf("itemTemplates");
   return all.filter((t: any) => (t.minLevel || 1) <= maxLevel);
 }
 
 export async function insertItemTemplates(items: any[]) {
-  const existing = await rowsOf(itemTemplates);
+  const existing = rowsOf("itemTemplates");
   const startId = existing.length > 0 ? Math.max(...existing.map((t: any) => t.id)) + 1 : 1;
   let nextId = startId;
   for (const it of items) {
     const record = { id: nextId++, ...it };
-    await insertRec(itemTemplates, record, [["nameKey", "nameKey"]]);
+    insertRec("itemTemplates", record);
   }
   return items.length;
 }
@@ -379,16 +343,16 @@ export async function insertItemTemplates(items: any[]) {
 /* ─── Missions ─── */
 
 export async function getMissionTemplates() {
-  return rowsOf(missionTemplates);
+  return rowsOf("missionTemplates");
 }
 
 export async function insertMissionTemplates(missions: any[]) {
-  const existing = await rowsOf(missionTemplates);
+  const existing = rowsOf("missionTemplates");
   const startId = existing.length > 0 ? Math.max(...existing.map((m: any) => m.id || 0)) + 1 : 1;
   let nextId = startId;
   for (const m of missions) {
     const record = { id: nextId++, ...m };
-    await insertRec(missionTemplates, record);
+    insertRec("missionTemplates", record);
   }
   return missions.length;
 }
@@ -396,45 +360,43 @@ export async function insertMissionTemplates(missions: any[]) {
 export async function upsertMissionTemplates(missions: any[]) {
   for (const m of missions) {
     const id = Number(m.id);
-    const existing = await getRec(missionTemplates, id);
+    const existing = getRec("missionTemplates", id);
     if (!existing) {
-      await insertRec(missionTemplates, { id, ...m });
+      insertRec("missionTemplates", { id, ...m });
     }
   }
   return missions.length;
 }
 
-
 export async function getMissionTemplateById(id: number) {
-  return getRec(missionTemplates, id);
+  return getRec("missionTemplates", id);
 }
 
 /* ─── Active missions ─── */
 
 export async function findActiveMissionByCharacterId(characterId: string) {
-  const all = await rowsOf(activeMissions);
-  return all.find((a: any) => a.characterId === characterId && !a.claimed) ?? null;
+  return store.findIn("activeMissions", (a: any) => a.characterId === characterId && !a.claimed) ?? null;
 }
 
 export async function insertActiveMission(active: any) {
   const rec = { id: uuidv4(), ...active };
-  await insertRec(activeMissions, rec, [["characterId", "characterId"]]);
+  insertRec("activeMissions", rec);
   return rec;
 }
 
 export async function getActiveMissionById(id: string) {
-  return getRec(activeMissions, id);
+  return getRec("activeMissions", id);
 }
 
 export async function updateActiveMission(id: string, patch: any) {
-  return updateRec(activeMissions, id, patch, [["characterId", "characterId"]]);
+  return updateRec("activeMissions", id, patch);
 }
 
 /* ─── AFK ─── */
 
 export async function insertAfkReward(reward: any) {
   const rec = { id: uuidv4(), ...reward };
-  await insertRec(afkRewards, rec);
+  insertRec("afkRewards", rec);
   return rec;
 }
 
@@ -442,12 +404,12 @@ export async function insertAfkReward(reward: any) {
 
 export async function insertBattle(battle: any) {
   const rec = { id: uuidv4(), foughtAt: new Date().toISOString(), ...battle };
-  await insertRec(battles, rec, [["characterId", "characterId"]]);
+  insertRec("battles", rec);
   return rec;
 }
 
 export async function getBattlesByCharacterId(characterId: string, limit = 50) {
-  return (await rowsOf(battles))
+  return rowsOf("battles")
     .filter((b: any) => b.characterId === characterId)
     .sort((a: any, b: any) => (b.foughtAt || "").localeCompare(a.foughtAt || ""))
     .slice(0, limit);
@@ -456,32 +418,31 @@ export async function getBattlesByCharacterId(characterId: string, limit = 50) {
 /* ─── Guilds ─── */
 
 export async function listGuilds(limit = 50) {
-  return (await rowsOf(guilds)).slice(0, limit);
+  return rowsOf("guilds").slice(0, limit);
 }
 
 export async function insertGuild(guild: any) {
   const rec = { id: `${Date.now()}_${Math.floor(Math.random() * 10000)}`, ...guild };
-  await insertRec(guilds, rec);
+  insertRec("guilds", rec);
   return rec;
 }
 
 export async function findGuildById(id: string) {
-  return getRec(guilds, id);
+  return getRec("guilds", id);
 }
 
 export async function updateGuild(id: string, patch: any) {
-  return updateRec(guilds, id, patch);
+  return updateRec("guilds", id, patch);
 }
 
 export async function deleteGuild(id: string) {
-  await deleteRec(guilds, id);
+  deleteRec("guilds", id);
 }
 
 /** Busca a guilda da qual um personagem é membro (via characterId). */
 export async function findGuildByMemberId(characterId: string) {
-  const all = await rowsOf(guilds);
   return (
-    all.find((g: any) => {
+    store.findIn("guilds", (g: any) => {
       const members = Array.isArray(g.members) ? g.members : [];
       return members.some((m: any) => m.id === characterId);
     }) ?? null
@@ -492,55 +453,48 @@ export async function findGuildByMemberId(characterId: string) {
 
 export async function insertGuildInvite(invite: any) {
   const rec = { id: uuidv4(), createdAt: new Date().toISOString(), ...invite };
-  await insertRec(guildInvites, rec, [
-    ["targetCharacterId", "targetCharacterId"],
-    ["guildId", "guildId"],
-  ]);
+  insertRec("guildInvites", rec);
   return rec;
 }
 
 export async function getGuildInviteById(id: string) {
-  return getRec(guildInvites, id);
+  return getRec("guildInvites", id);
 }
 
 /** Convites AINDA pendentes recebidos por um personagem. */
 export async function getPendingInvitesForCharacter(characterId: string) {
-  return (await rowsOf(guildInvites))
+  return rowsOf("guildInvites")
     .filter((i: any) => i.targetCharacterId === characterId && !i.status)
     .sort((a: any, b: any) => (b.createdAt || "").localeCompare(a.createdAt || ""));
 }
 
 /** Convites pendentes enviados a uma guilda (para o líder aprovar). */
 export async function getPendingInvitesForGuild(guildId: string) {
-  return (await rowsOf(guildInvites))
+  return rowsOf("guildInvites")
     .filter((i: any) => i.guildId === guildId && !i.status)
     .sort((a: any, b: any) => (b.createdAt || "").localeCompare(a.createdAt || ""));
 }
 
 export async function updateGuildInvite(id: string, patch: any) {
-  return updateRec(guildInvites, id, patch, [
-    ["targetCharacterId", "targetCharacterId"],
-    ["guildId", "guildId"],
-  ]);
+  return updateRec("guildInvites", id, patch);
 }
 
 export async function hasPendingGuildInvite(characterId: string, guildId: string) {
-  const all = await rowsOf(guildInvites);
-  return all.some(
-    (i: any) => i.targetCharacterId === characterId && i.guildId === guildId && !i.status
-  );
+  return store
+    .allOf("guildInvites")
+    .some((i: any) => i.targetCharacterId === characterId && i.guildId === guildId && !i.status);
 }
 
 /* ─── Guildas v2: chat (polling ~4s) ─── */
 
 export async function insertGuildChatMessage(msg: any) {
   const rec = { id: uuidv4(), createdAt: new Date().toISOString(), ...msg };
-  await insertRec(guildChats, rec, [["guildId", "guildId"]]);
+  insertRec("guildChats", rec);
   return rec;
 }
 
 export async function getGuildChatMessages(guildId: string, limit = 50) {
-  return (await rowsOf(guildChats))
+  return rowsOf("guildChats")
     .filter((m: any) => m.guildId === guildId)
     .sort((a: any, b: any) => (a.createdAt || "").localeCompare(b.createdAt || ""))
     .slice(-limit);
@@ -606,7 +560,7 @@ async function pushMail(
     claimed: false,
     ...mail,
   };
-  await insertRec(mailbox, rec, [["characterId", "characterId"]]);
+  insertRec("mailbox", rec);
   return rec;
 }
 
@@ -618,7 +572,7 @@ export async function sendMail(
   from = "Administração",
   note = ""
 ): Promise<MailRecord | null> {
-  const templates = await rowsOf(itemTemplates);
+  const templates = rowsOf("itemTemplates");
   const template = templates.find((t: any) => t.id === Number(templateId));
   if (!template) return null;
   return pushMail(characterId, {
@@ -669,10 +623,10 @@ export async function sendResourceMail(
 
 /** Lista o correio de um personagem (mais recente primeiro), com template/item/skin unidos. */
 export async function getMailsForCharacter(characterId: string) {
-  const mails = (await rowsOf(mailbox))
+  const mails = rowsOf("mailbox")
     .filter((m: any) => m.characterId === characterId)
     .sort((a: any, b: any) => (b.createdAt || "").localeCompare(a.createdAt || ""));
-  const templates = await rowsOf(itemTemplates);
+  const templates = rowsOf("itemTemplates");
   return mails.map((m: any) => {
     const kind = m.kind || "item";
     const template =
@@ -683,13 +637,14 @@ export async function getMailsForCharacter(characterId: string) {
 }
 
 export async function getMailById(id: string) {
-  return (await getRec(mailbox, id)) as MailRecord | null;
+  return (await getRec("mailbox", id)) as MailRecord | null;
 }
 
 /** Quantidade de mensagens não resgatadas do personagem. */
 export async function countUnclaimedMails(characterId: string): Promise<number> {
-  const all = await rowsOf(mailbox);
-  return all.filter((m: any) => m.characterId === characterId && !m.claimed).length;
+  return store
+    .allOf("mailbox")
+    .filter((m: any) => m.characterId === characterId && !m.claimed).length;
 }
 
 /** Resgata o correio → entrega o conteúdo (item/skin/recurso) e marca como resgatado. */
@@ -722,14 +677,14 @@ export async function claimMail(mailId: string): Promise<MailRecord | null> {
     return null;
   }
 
-  return updateRec(mailbox, mailId, { claimed: true, claimedAt: new Date().toISOString() }, [
-    ["characterId", "characterId"],
-  ]) as Promise<MailRecord | null>;
+  return updateRec("mailbox", mailId, { claimed: true, claimedAt: new Date().toISOString() }) as Promise<MailRecord | null>;
 }
 
 /** Resgata todo o correio pendente do personagem. Retorna quantos foram resgatados. */
 export async function claimAllMails(characterId: string): Promise<number> {
-  const pending = (await rowsOf(mailbox)).filter((m: any) => m.characterId === characterId && !m.claimed);
+  const pending = store
+    .allOf("mailbox")
+    .filter((m: any) => m.characterId === characterId && !m.claimed);
   let claimed = 0;
   for (const m of pending) {
     const done = await claimMail(m.id);
@@ -741,19 +696,19 @@ export async function claimAllMails(characterId: string): Promise<number> {
 /* ─── Admin: contas excluídas / recuperação / exclusão permanente ─── */
 
 export async function deleteUser(id: string) {
-  const old = await getRec(users, id);
-  await deleteRec(users, id);
+  const old = await getRec("users", id);
+  deleteRec("users", id);
   return old;
 }
 
 export async function listExcludedUsers() {
-  return (await rowsOf(excludedUsers))
+  return rowsOf("excludedUsers")
     .slice()
     .sort((a: any, b: any) => (b.excludedAt || "").localeCompare(a.excludedAt || ""));
 }
 
 export async function getExcludedUserById(id: string) {
-  return getRec(excludedUsers, id, "userId");
+  return getRec("excludedUsers", id, "userId");
 }
 
 /** Move a conta para a lista de excluídos e marca o registro como deletado. */
@@ -769,11 +724,11 @@ export async function excludeUser(userId: string, reason = "") {
     excludedAt: now,
     characterNames: chars.map((c: any) => c.name),
   };
-  const existing = await getRec(excludedUsers, userId, "userId");
+  const existing = await getRec("excludedUsers", userId, "userId");
   if (existing) {
-    await updateRec(excludedUsers, userId, { ...snapshot }, [["userId", "userId"]], "userId");
+    await updateRec("excludedUsers", userId, { ...snapshot }, "userId");
   } else {
-    await insertRec(excludedUsers, snapshot, [["userId", "userId"]], "userId");
+    insertRec("excludedUsers", snapshot);
   }
   await updateUser(userId, {
     deleted: true,
@@ -788,22 +743,22 @@ export async function excludeUser(userId: string, reason = "") {
 
 /** Restaura uma conta excluída (remove da lista e libera o login). */
 export async function restoreUser(userId: string) {
-  await deleteRec(excludedUsers, userId, "userId");
+  deleteRec("excludedUsers", userId, "userId");
   const user = await updateUser(userId, { deleted: false, deletedAt: null, deletedReason: null });
   return user;
 }
 
 /** Exclusão permanente: remove da lista de excluídos E apaga conta/personagem/inventário. */
 export async function hardDeleteUser(userId: string) {
-  await deleteRec(excludedUsers, userId, "userId");
+  deleteRec("excludedUsers", userId, "userId");
   const user = await deleteUser(userId);
   const chars = await getCharactersByUserId(userId);
   const charIds = chars.map((c: any) => c.id);
   for (const cid of charIds) {
-    await deleteRec(characters, cid);
-    const invItems = (await rowsOf(inventoryItems)).filter((i: any) => i.characterId === cid);
+    deleteRec("characters", cid);
+    const invItems = rowsOf("inventoryItems").filter((i: any) => i.characterId === cid);
     for (const item of invItems) {
-      await deleteRec(inventoryItems, item.id);
+      deleteRec("inventoryItems", item.id);
     }
   }
   return { user, deletedCharacters: charIds.length };
@@ -823,11 +778,11 @@ export async function resetUserPassword(userId: string, plain: string) {
 /* ─── Admin: música por ilha ─── */
 
 export async function listRegionAudio() {
-  return rowsOf(regionAudio);
+  return rowsOf("regionAudio");
 }
 
 export async function getRegionAudioByRegion(regionId: string) {
-  return getRec(regionAudio, regionId, "regionId");
+  return getRec("regionAudio", regionId, "regionId");
 }
 
 /** Salva (ou atualiza) o registro de música de uma ilha. */
@@ -835,21 +790,21 @@ export async function upsertRegionAudio(
   regionId: string,
   patch: Partial<{ fileName: string; url: string; uploadedAt: string; by: string }>
 ) {
-  const existing = await getRec(regionAudio, regionId, "regionId");
+  const existing = await getRec("regionAudio", regionId, "regionId");
   const rec = { regionId, ...patch };
   if (existing) {
-    await updateRec(regionAudio, regionId, { ...patch }, [["regionId", "regionId"]], "regionId");
+    await updateRec("regionAudio", regionId, { ...patch }, "regionId");
   } else {
-    await insertRec(regionAudio, rec, [["regionId", "regionId"]], "regionId");
+    insertRec("regionAudio", rec);
   }
   return rec;
 }
 
 /** Remove o registro de áudio de uma ilha. */
 export async function removeRegionAudio(regionId: string) {
-  const existing = await getRec(regionAudio, regionId, "regionId");
+  const existing = await getRec("regionAudio", regionId, "regionId");
   if (!existing) return false;
-  await deleteRec(regionAudio, regionId, "regionId");
+  deleteRec("regionAudio", regionId, "regionId");
   return true;
 }
 
@@ -857,20 +812,20 @@ export async function removeRegionAudio(regionId: string) {
 
 /** Lê as configurações globais do servidor (anúncio, manutenção...). */
 export async function getServerSettings(): Promise<any> {
-  const all = await rowsOf(serverSettings);
+  const all = rowsOf("serverSettings");
   return all.find((s: any) => s.key === "core") ?? {};
 }
 
 /** Atualiza (upsert) as configurações globais do servidor. */
 export async function updateServerSettings(patch: any) {
-  const existing = await getRec(serverSettings, "core", "key");
+  const existing = await getRec("serverSettings", "core", "key");
   if (existing) {
     const merged = { ...existing, ...patch };
-    await updateRec(serverSettings, "core", merged, [["key", "key"]], "key");
+    await updateRec("serverSettings", "core", merged, "key");
     return merged;
   }
   const rec = { key: "core", ...patch };
-  await insertRec(serverSettings, rec, [["key", "key"]], "key");
+  insertRec("serverSettings", rec);
   return rec;
 }
 
@@ -891,7 +846,7 @@ export async function addAdminLog(kind: string, entry: Record<string, unknown>) 
     ...entry,
   };
   try {
-    await insertRec(adminLogs, full, [["kind", "kind"]]);
+    insertRec("adminLogs", full);
   } catch (e) {
     // Log nunca deve derrubar a ação do jogador — se falhar, apenas avisa.
     console.error("[adminLog] falha ao gravar log:", e);
@@ -902,7 +857,7 @@ export async function addAdminLog(kind: string, entry: Record<string, unknown>) 
 /** Lista logs administrativos, do mais recente para o mais antigo. Aceita
  * filtro por `kind` (ex.: "hitkill") e/ou por `source` (ex.: "world-boss"). */
 export async function listAdminLogs(kind?: string, limit = 100, sourceArg?: string) {
-  const all = await rowsOf(adminLogs);
+  const all = rowsOf("adminLogs");
   let filtered = kind ? all.filter((l: any) => String(l.kind) === String(kind)) : all;
   if (sourceArg) filtered = filtered.filter((l: any) => String(l.source) === String(sourceArg));
   return filtered
@@ -912,13 +867,13 @@ export async function listAdminLogs(kind?: string, limit = 100, sourceArg?: stri
 
 /** Apaga logs administrativos (todos ou de um tipo específico). */
 export async function clearAdminLogs(kind?: string) {
-  const all = await rowsOf(adminLogs);
+  const all = rowsOf("adminLogs");
   const target = kind
     ? all.filter((l: any) => String(l.kind) === String(kind))
     : all;
   for (const rec of target) {
     try {
-      await deleteRec(adminLogs, rec.id);
+      deleteRec("adminLogs", rec.id);
     } catch { /* ignora */ }
   }
   return target.length;
@@ -926,13 +881,13 @@ export async function clearAdminLogs(kind?: string) {
 
 /** Apaga logs administrativos por origem (ex.: todos os "world-boss"). */
 export async function clearAdminLogsBySource(kind: string | undefined, source: string) {
-  const all = await rowsOf(adminLogs);
+  const all = rowsOf("adminLogs");
   const target = all.filter(
     (l: any) => String(l.source) === String(source) && (!kind || String(l.kind) === String(kind))
   );
   for (const rec of target) {
     try {
-      await deleteRec(adminLogs, rec.id);
+      deleteRec("adminLogs", rec.id);
     } catch { /* ignora */ }
   }
   return target.length;
@@ -941,31 +896,32 @@ export async function clearAdminLogsBySource(kind: string | undefined, source: s
 /* ─── Códigos de resgate ─── */
 
 export async function listCodes() {
-  const all = await rowsOf(codes);
+  const all = rowsOf("codes");
   return all.sort((a: any, b: any) => (b.createdAt || "").localeCompare(a.createdAt || ""));
 }
 
 export async function findCodeByCodeValue(code: string) {
-  const all = await rowsOf(codes);
-  return all.find((c: any) => String(c.code).toUpperCase() === String(code).toUpperCase()) ?? null;
+  return store
+    .allOf("codes")
+    .find((c: any) => String(c.code).toUpperCase() === String(code).toUpperCase()) ?? null;
 }
 
 export async function createCode(rec: any) {
   const full = { id: uuidv4(), createdAt: new Date().toISOString(), ...rec };
-  await insertRec(codes, full, [["code", "code"]]);
+  insertRec("codes", full);
   return full;
 }
 
 export async function deleteCode(id: string) {
-  const existing = await getRec(codes, id);
+  const existing = await getRec("codes", id);
   if (!existing) return false;
-  await deleteRec(codes, id);
+  deleteRec("codes", id);
   return true;
 }
 
 /** Atualiza as `data` de um código (ex.: marcar `redeemedBy` após resgate). */
 export async function updateCode(id: string, patch: any) {
-  return updateRec(codes, id, patch, [["code", "code"]]);
+  return updateRec("codes", id, patch);
 }
 
 /* ─── Compras PIX (diamantes) — comprovantes aguardando aprovação ─── */
@@ -1066,16 +1022,14 @@ export async function decrementWorldBossHp(damage: number) {
   const delta = Math.max(1, Math.floor(damage));
   const newHp = Math.max(0, currentHp - delta);
 
-  event.bossHp = newHp;
-  await updateServerSettings({ worldBossEvent: event });
-  return event;
+  const changed = await updateServerSettings({ worldBossEvent: { ...event, bossHp: newHp } });
+  return changed?.worldBossEvent ?? null;
 }
 
 /* ─── Mercado entre jogadores (anúncios + trocas) ─── */
 
 // UUID "fantasma" (não pertence a nenhum personagem real): guarda os itens
-// que estão ANUNCIADOS no mercado enquanto ninguém compra. A coluna
-// character_id é uuid no Postgres, então precisa ser um UUID válido.
+// que estão ANUNCIADOS no mercado enquanto ninguém compra.
 export const MARKET_SYSTEM_ID = "00000000-0000-0000-0000-00000000dead";
 
 /** Insere um registro no marketplace (anúncio, proposta de troca, anúncio de troca ou sala). */
@@ -1092,32 +1046,32 @@ export async function insertMarketRec(
     status: "active",
     ...rec,
   };
-  await insertRec(marketplace, full, [["characterId", "characterId"], ["kind", "kind"]]);
+  insertRec("marketplace", full);
   return full;
 }
 
 export async function getMarketRecById(id: string) {
-  return getRec(marketplace, id);
+  return getRec("marketplace", id);
 }
 
 export async function updateMarketRec(id: string, patch: any) {
-  return updateRec(marketplace, id, patch, [["characterId", "characterId"], ["kind", "kind"]]);
+  return updateRec("marketplace", id, patch);
 }
 
 export async function deleteMarketRec(id: string) {
-  const existing = await getRec(marketplace, id);
+  const existing = await getRec("marketplace", id);
   if (!existing) return false;
-  await deleteRec(marketplace, id);
+  deleteRec("marketplace", id);
   return true;
 }
 
 /** Anúncios ATIVOS (à venda) com dados do vendedor + template do item. */
 export async function listActiveListings(limit = 300) {
-  const all = (await rowsOf(marketplace)).filter(
+  const all = rowsOf("marketplace").filter(
     (m: any) => m.kind === "listing" && m.status === "active"
   );
-  const templates = await rowsOf(itemTemplates);
-  const chars = await rowsOf(characters);
+  const templates = rowsOf("itemTemplates");
+  const chars = rowsOf("characters");
   return all
     .sort((a: any, b: any) => (b.createdAt || "").localeCompare(a.createdAt || ""))
     .slice(0, limit)
@@ -1131,17 +1085,17 @@ export async function listActiveListings(limit = 300) {
 
 /** Anúncios de um personagem (todos os estados). */
 export async function getListingsByCharacter(characterId: string) {
-  return (await rowsOf(marketplace))
+  return rowsOf("marketplace")
     .filter((m: any) => m.kind === "listing" && m.sellerId === characterId)
     .sort((a: any, b: any) => (b.createdAt || "").localeCompare(a.createdAt || ""));
 }
 
 /** Lista itens de um characterId que estão marcados como listados. */
 export async function getListedItemsByCharacter(characterId: string) {
-  const items = (await rowsOf(inventoryItems)).filter(
+  const items = rowsOf("inventoryItems").filter(
     (i: any) => i.characterId === characterId && i.listed === true
   );
-  const templates = await rowsOf(itemTemplates);
+  const templates = rowsOf("itemTemplates");
   return items.map((it: any) => {
     const template = templates.find((t: any) => t.id === it.templateId) ?? null;
     return { item: it, template, quantity: it.quantity || 1 };
@@ -1165,9 +1119,9 @@ function expandItems(items: any[], templates: any[]): any[] {
 
 /** Lista os anúncios de troca ATIVOS (com dados do dono + templates). */
 export async function listTradeAds(limit = 100) {
-  const all = await rowsOf(marketplace);
-  const templates = await rowsOf(itemTemplates);
-  const chars = await rowsOf(characters);
+  const all = rowsOf("marketplace");
+  const templates = rowsOf("itemTemplates");
+  const chars = rowsOf("characters");
   return all
     .filter(isTradeAd)
     .sort((a: any, b: any) => (b.createdAt || "").localeCompare(a.createdAt || ""))
@@ -1184,16 +1138,15 @@ export async function listTradeAds(limit = 100) {
 
 /** Anúncios de troca de um personagem (ativos). */
 export async function getTradeAdsByCharacter(characterId: string) {
-  const all = await rowsOf(marketplace);
-  return all.filter((m: any) => isTradeAd(m) && m.posterId === characterId);
+  return rowsOf("marketplace").filter((m: any) => isTradeAd(m) && m.posterId === characterId);
 }
 
 /** Busca um registro do marketplace (anúncio ou sala) com templates. */
 export async function getMarketRecExpanded(id: string) {
-  const m = await getRec(marketplace, id);
+  const m = await getRec("marketplace", id);
   if (!m) return null;
-  const templates = await rowsOf(itemTemplates);
-  const chars = await rowsOf(characters);
+  const templates = rowsOf("itemTemplates");
+  const chars = rowsOf("characters");
   const poster = chars.find((c: any) => c.id === m.posterId) ?? null;
   return {
     record: m,
@@ -1204,9 +1157,9 @@ export async function getMarketRecExpanded(id: string) {
 
 /** Sessões de troca ativas que envolvem um personagem (perspectiva dele). */
 export async function getSessionsByCharacter(characterId: string) {
-  const all = await rowsOf(marketplace);
-  const templates = await rowsOf(itemTemplates);
-  const chars = await rowsOf(characters);
+  const all = rowsOf("marketplace");
+  const templates = rowsOf("itemTemplates");
+  const chars = rowsOf("characters");
   return all
     .filter(
       (m: any) =>
@@ -1241,22 +1194,22 @@ export async function getSessionsByCharacter(characterId: string) {
  * usados etc.) é zerado.
  */
 export async function resetGameData() {
-  for (const table of [
-    users,
-    characters,
-    inventoryItems,
-    activeMissions,
-    afkRewards,
-    battles,
-    guilds,
-    guildInvites,
-    guildChats,
-    mailbox,
-    excludedUsers,
-    codes,
-    marketplace,
-  ]) {
-    await db.delete(table);
+  for (const col of [
+    "users",
+    "characters",
+    "inventoryItems",
+    "activeMissions",
+    "afkRewards",
+    "battles",
+    "guilds",
+    "guildInvites",
+    "guildChats",
+    "mailbox",
+    "excludedUsers",
+    "codes",
+    "marketplace",
+  ] as Collection[]) {
+    replaceCollection(col, []);
   }
   return true;
 }
@@ -1267,26 +1220,26 @@ export async function resetGameData() {
  * guildas, correio e códigos também são limpos.
  */
 export async function resetCharacterData() {
-  // 1. Limpa tabelas dependentes de personagens
-  for (const table of [
-    inventoryItems,
-    activeMissions,
-    afkRewards,
-    battles,
-    guildInvites,
-    guildChats,
-    mailbox,
-    marketplace,
-  ]) {
-    await db.delete(table);
+  // 1. Limpa coleções dependentes de personagens
+  for (const col of [
+    "inventoryItems",
+    "activeMissions",
+    "afkRewards",
+    "battles",
+    "guildInvites",
+    "guildChats",
+    "mailbox",
+    "marketplace",
+  ] as Collection[]) {
+    replaceCollection(col, []);
   }
   // 2. Limpa guildas (precisa limpar member references)
-  await db.delete(guilds);
+  replaceCollection("guilds", []);
   // 3. Reseta todos os personagens mantendo conta e nome
-  const all = await rowsOf(characters);
+  const all = rowsOf("characters");
   for (const c of all) {
     const base = CLASS_BASE_STATS[(c.classType as keyof typeof CLASS_BASE_STATS) ?? "warrior"] ?? CLASS_BASE_STATS.warrior;
-    await updateRec(characters, c.id, {
+    await updateRec("characters", c.id, {
       level: 1,
       xp: 0,
       xpToNext: 120,
@@ -1345,7 +1298,7 @@ export async function resetCharacterData() {
       // Timestamps
       afkSince: new Date().toISOString(),
       lastActivity: new Date().toISOString(),
-    }, [["userId", "userId"], ["name", "name"]]);
+    });
   }
   return true;
 }

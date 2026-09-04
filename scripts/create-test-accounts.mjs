@@ -1,11 +1,16 @@
 /**
  * 🧪 Script de teste: cria contas para cada classe do jogo
+ * Persistência JSON (data/users.json + data/characters.json)
  * Roda: node scripts/create-test-accounts.mjs
  */
-import Database from "better-sqlite3";
+import "dotenv/config";
 import { randomUUID } from "crypto";
+import { readFileSync, writeFileSync, existsSync } from "fs";
+import path from "path";
 
-const db = new Database("data/game.db");
+const DATA_DIR = process.env.DATA_DIR || process.env.DATABASE_DIR || path.join(process.cwd(), "data");
+const USERS_FILE = path.join(DATA_DIR, "users.json");
+const CHARS_FILE = path.join(DATA_DIR, "characters.json");
 
 const CLASSES = [
   "warrior", "paladin", "berserker", "mage", "necromancer",
@@ -29,122 +34,134 @@ const CLASS_BASE_STATS = {
   archer:      { hp: 80,  attack: 14, defense: 5,  speed: 8, mana: 30, critical: 11 },
 };
 
-const insertUser = db.prepare("INSERT INTO users (id, data) VALUES (?, ?)");
-const insertChar = db.prepare("INSERT INTO characters (id, user_id, name, data) VALUES (?, ?, ?, ?)");
-
-const createTest = db.transaction(() => {
-  let count = 0;
-  
-  for (const cls of CLASSES) {
-    const userId = randomUUID();
-    const charId = randomUUID();
-    const stats = CLASS_BASE_STATS[cls];
-    
-    // Criar usuário
-    insertUser.run(userId, JSON.stringify({
-      id: userId,
-      passwordHash: "",
-      createdAt: new Date().toISOString(),
-    }));
-    
-    // Criar personagem level 50 com ouro e cristais para testar tudo
-    const charData = {
-      id: charId,
-      userId,
-      name: `Test_${cls}`,
-      classType: cls,
-      sex: "male",
-      level: 50,
-      xp: 0,
-      xpToNext: 11700,
-      hp: stats.hp,
-      maxHp: stats.hp,
-      mana: stats.mana,
-      maxMana: stats.mana,
-      attack: stats.attack + 50,
-      defense: stats.defense + 30,
-      speed: stats.speed + 10,
-      critical: stats.critical + 15,
-      dodge: 5,
-      precision: 5,
-      energy: 100,
-      maxEnergy: 100,
-      gold: 100000,
-      diamonds: 50,
-      crystals: 100,
-      towerCoins: 500,
-      towerFloor: 50,
-      pvpCoins: 200,
-      pvpRating: 1000,
-      pvpLeague: "gold",
-      prestige: 0,
-      skillPoints: 16,
-      unspentStatPoints: 0,
-      skills: {},
-      talents: {},
-      collection: {},
-      bestiary: {},
-      achievements: [],
-      titles: [],
-      activeTitle: null,
-      activeRelicId: null,
-      activePetId: null,
-      pets: [],
-      skins: [],
-      equippedSkin: null,
-      currentRegion: "starter_village",
-      lastActivity: new Date().toISOString(),
-      lastEnergyAt: new Date().toISOString(),
-      afkSince: null,
-      miniBossKilledAt: 0,
-      regionBossKills: {},
-      dungeonStats: { cleared: 0 },
-      dungeonActive: null,
-      dungeonDifficulty: "normal",
-      dailyMissions: {},
-      weeklyMissions: {},
-      missionBatch: 0,
-      pendingEvent: null,
-      dailyLogin: { day: 0, lastClaim: null },
-      vipLevel: 0,
-      vipTier: null,
-      vipUntil: null,
-      seasonPoints: 0,
-      seasonId: null,
-      pvpDailyCount: 0,
-      pvpDailyDate: null,
-      boosts: {},
-      pityCounters: {},
-      collectionBonus: 0,
-      guildId: null,
-      guildRank: null,
-      guildCoins: 0,
-      guildBuffs: {},
-      ascension: 0,
-      prestige: 0,
-      bestiaryCount: 0,
-      collectionCount: 0,
-      dungeonCleared: 0,
-      ascensionCount: 0,
-      regionBossKills: {},
-      miniBossKilledAt: 0,
-      lastEvent: null,
-      avatarId: null,
-      eyeColor: null,
-      hairColor: null,
-    };
-    
-    insertChar.run(charId, userId, `Test_${cls}`, JSON.stringify(charData));
-    count++;
-    console.log(`✅ Criado: Test_${cls} (Lv.50, 100K gold, 50 diamantes)`);
+const read = (file) => {
+  if (!existsSync(file)) return [];
+  try {
+    const arr = JSON.parse(readFileSync(file, "utf8"));
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
   }
-  
-  return count;
-});
+};
 
-const total = createTest();
-console.log(`\n🧪 ${total} contas de teste criadas!`);
-console.log(`📋 Login: qualquer username + senha vazia`);
-console.log(`⚡ Cada conta tem: Lv.50, 100K gold, 50 diamantes, 100 cristais`);
+let users = read(USERS_FILE);
+let chars = read(CHARS_FILE);
 
-db.close();
+const takenNames = new Set([...users.map((u) => String(u.username || "")), ...chars.map((c) => String(c.name || ""))]);
+
+let count = 0;
+for (const cls of CLASSES) {
+  const name = `Test_${cls}`;
+  if (takenNames.has(name)) {
+    console.log(`↷ ${name} já existe — pulando.`);
+    continue;
+  }
+  const userId = randomUUID();
+  const charId = randomUUID();
+  const stats = CLASS_BASE_STATS[cls];
+
+  users.push({
+    id: userId,
+    username: name,
+    password: "", // login: usuário Test_<classe> + senha vazia
+    role: "player",
+    banned: false,
+    deleted: false,
+    createdAt: new Date().toISOString(),
+    lastLogin: null,
+  });
+
+  chars.push({
+    id: charId,
+    userId,
+    name,
+    classType: cls,
+    sex: "male",
+    level: 50,
+    xp: 0,
+    xpToNext: 11700,
+    hp: stats.hp,
+    maxHp: stats.hp,
+    mana: stats.mana,
+    maxMana: stats.mana,
+    attack: stats.attack + 50,
+    defense: stats.defense + 30,
+    speed: stats.speed + 10,
+    critical: stats.critical + 15,
+    dodge: 5,
+    precision: 5,
+    resistance: 5,
+    energy: 100,
+    maxEnergy: 100,
+    gold: 100000,
+    diamonds: 50,
+    crystals: 100,
+    towerCoins: 500,
+    towerFloor: 50,
+    pvpCoins: 200,
+    pvpRating: 1000,
+    pvpLeague: "gold",
+    prestige: 0,
+    skillPoints: 16,
+    unspentStatPoints: 0,
+    skills: {},
+    talents: {},
+    collection: { unlocked: [], claimed: [] },
+    bestiary: {},
+    achievements: [],
+    titles: [],
+    activeTitle: null,
+    activeRelicId: null,
+    activePetId: null,
+    pets: {},
+    skins: [],
+    equippedSkin: null,
+    currentRegion: "starter_village",
+    createdAt: new Date().toISOString(),
+    lastActivity: new Date().toISOString(),
+    lastEnergyAt: new Date().toISOString(),
+    afkSince: null,
+    miniBossKilledAt: 0,
+    regionBossKills: {},
+    dungeonStats: { cleared: 0 },
+    dungeonActive: null,
+    dungeonDifficulty: "normal",
+    dailyMissions: {},
+    weeklyMissions: {},
+    missionBatch: 0,
+    pendingEvent: null,
+    dailyLogin: { day: 0, lastClaim: null },
+    vipLevel: 0,
+    vipTier: null,
+    vipUntil: null,
+    seasonPoints: 0,
+    seasonId: null,
+    pvpDailyCount: 0,
+    pvpDailyDate: null,
+    boosts: {},
+    pityCounters: {},
+    collectionBonus: 0,
+    guildId: null,
+    guildRank: null,
+    guildCoins: 0,
+    guildBuffs: {},
+    ascension: 0,
+    bestiaryCount: 0,
+    collectionCount: 0,
+    dungeonCleared: 0,
+    ascensionCount: 0,
+    lastEvent: null,
+    avatarId: 1,
+    eyeColor: "#2E86AB",
+    hairColor: "#8B4513",
+    xpToNextOfLevel: 11700,
+  });
+  count++;
+  console.log(`✅ Criado: Test_${cls} (Lv.50, 100K gold, 50 diamantes)`);
+}
+
+writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), "utf8");
+writeFileSync(CHARS_FILE, JSON.stringify(chars, null, 2), "utf8");
+
+console.log(`\n🧪 ${count} contas de teste criadas!`);
+console.log(`📋 Login: usuário Test_<classe> + senha vazia`);

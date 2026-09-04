@@ -27,16 +27,15 @@ async function test(name, fn) {
   }
 }
 
-import Database from "better-sqlite3";
 import jwt from "jsonwebtoken";
+import { readFileSync } from "fs";
 
-const db = new Database("data/game.db");
-const chars = db.prepare("SELECT id, data FROM characters WHERE data LIKE '%Test_%' LIMIT 1").all();
-db.close();
+const chars = JSON.parse(readFileSync("data/characters.json", "utf8") || "[]")
+  .filter((c) => String(c.name || "").startsWith("Test_"));
 
 if (!chars.length) { console.log("❌ Rode create-test-accounts.mjs primeiro"); process.exit(1); }
 
-const char = JSON.parse(chars[0].data);
+const char = chars[0];
 const CID = char.id;
 
 // Gerar token JWT válido

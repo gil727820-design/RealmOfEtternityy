@@ -1,0 +1,474 @@
+[
+  {
+    "id": "6bd0fa1c-d8aa-43fe-89a4-2a6433f41b60",
+    "duration": 2033,
+    "xpEarned": 891,
+    "claimedAt": "2026-08-16T21:44:59.594Z",
+    "goldEarned": 330,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "7cbe0af1-b7ba-42e5-aebb-1566f9539405",
+    "duration": 68,
+    "xpEarned": 1,
+    "claimedAt": "2026-08-16T21:55:48.095Z",
+    "goldEarned": 0,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "8983619e-6eb7-40e1-9fbf-2d19015c32fb",
+    "duration": 1249,
+    "xpEarned": 4938,
+    "claimedAt": "2026-08-16T22:05:52.626Z",
+    "goldEarned": 1005,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "2f01b9a1-2c7a-407c-95f6-bd7042c3820e",
+    "duration": 1489,
+    "xpEarned": 216,
+    "claimedAt": "2026-08-16T22:08:36.566Z",
+    "goldEarned": 96,
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "bebbabb0-fe20-4010-8436-cd5e51fccaf1",
+    "duration": 8851,
+    "xpEarned": 294,
+    "claimedAt": "2026-08-16T23:47:38.804Z",
+    "goldEarned": 147,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "763971d4-cad1-44ec-8892-82c8fe5145ef",
+    "duration": 6167,
+    "xpEarned": 373078,
+    "claimedAt": "2026-08-16T23:48:43.195Z",
+    "goldEarned": 79945,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "2d5f91f1-b7e5-46a6-9115-5eb487a5e454",
+    "duration": 1948,
+    "xpEarned": 1536,
+    "claimedAt": "2026-08-17T00:20:13.065Z",
+    "goldEarned": 560,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "80541684-dce7-4224-8846-38e3afa933e2",
+    "duration": 9338,
+    "xpEarned": 14159,
+    "claimedAt": "2026-08-17T00:31:28.989Z",
+    "goldEarned": 6770,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "8da45f50-2ea1-497b-b567-89d960daa44b",
+    "duration": 9259,
+    "xpEarned": 777037,
+    "claimedAt": "2026-08-17T01:00:54.991Z",
+    "goldEarned": 178251,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "43b80d89-4917-4c7c-8768-61c5863216b4",
+    "duration": 2868,
+    "xpEarned": 143016,
+    "claimedAt": "2026-08-17T01:08:10.836Z",
+    "goldEarned": 29486,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "c4b186af-ae95-4190-b75a-2b7e67bf347a",
+    "duration": 717,
+    "xpEarned": 49107,
+    "claimedAt": "2026-08-17T01:20:16.694Z",
+    "goldEarned": 10025,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ba44e5e2-7351-4f7d-9060-8e38fbcd1343",
+    "duration": 3794,
+    "xpEarned": 79876,
+    "claimedAt": "2026-08-17T02:04:12.302Z",
+    "goldEarned": 35516,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "87f24013-985c-4cba-83b7-e5d36eb1eb7d",
+    "duration": 3594,
+    "xpEarned": 55684,
+    "claimedAt": "2026-08-17T02:20:16.771Z",
+    "goldEarned": 12272,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "3d5810ab-be02-4004-a33e-09a9634387d6",
+    "duration": 9800,
+    "xpEarned": 964320,
+    "claimedAt": "2026-08-17T02:32:07.005Z",
+    "goldEarned": 406064,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "a91965ad-e494-482e-b2ef-229b0396b975",
+    "duration": 3620,
+    "xpEarned": 368894,
+    "claimedAt": "2026-08-17T03:04:34.527Z",
+    "goldEarned": 163497,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "706370d0-626e-4b9e-b92e-6d277c8cea1b",
+    "duration": 20070,
+    "xpEarned": 2004,
+    "claimedAt": "2026-08-17T03:09:39.950Z",
+    "goldEarned": 835,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "1ff4ab97-8225-48d1-bc9c-036a9ce7f416",
+    "duration": 6290,
+    "xpEarned": 247059,
+    "claimedAt": "2026-08-17T04:05:28.707Z",
+    "goldEarned": 49686,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "0a675fea-3d9f-47f6-a5bd-f451456f5c9f",
+    "duration": 4326,
+    "xpEarned": 5702,
+    "claimedAt": "2026-08-17T04:21:48.962Z",
+    "goldEarned": 2376,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "5dd382cd-4246-4f34-8a03-4b0560d96369",
+    "duration": 680,
+    "xpEarned": 943,
+    "claimedAt": "2026-08-17T04:33:11.595Z",
+    "goldEarned": 393,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "b25e1322-3256-42f9-b14d-638588465701",
+    "duration": 1517,
+    "xpEarned": 2640,
+    "claimedAt": "2026-08-17T04:58:31.353Z",
+    "goldEarned": 1100,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "bcb2a2b7-f3b6-49ac-afbc-50a226818fe0",
+    "duration": 3516,
+    "xpEarned": 231944,
+    "claimedAt": "2026-08-17T05:04:38.819Z",
+    "goldEarned": 88870,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "ff60e607-f803-4087-9d6c-be8a0ab3c1ed",
+    "duration": 3365,
+    "xpEarned": 26001,
+    "claimedAt": "2026-08-17T05:54:37.955Z",
+    "goldEarned": 5390,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "7bffd314-3e22-463e-bee2-db56f283fba1",
+    "duration": 3595,
+    "xpEarned": 333487,
+    "claimedAt": "2026-08-17T06:04:42.146Z",
+    "goldEarned": 64715,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "db6483c3-9d88-4495-be05-dc09870abc82",
+    "duration": 3597,
+    "xpEarned": 305913,
+    "claimedAt": "2026-08-17T07:04:50.076Z",
+    "goldEarned": 59737,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "9c8d6e4b-e629-4325-bda5-0016cfca0472",
+    "duration": 3592,
+    "xpEarned": 154257,
+    "claimedAt": "2026-08-17T08:04:50.640Z",
+    "goldEarned": 60135,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "71bfcbc4-510c-49d6-b9b2-233dd260a372",
+    "duration": 36902,
+    "xpEarned": 6457,
+    "claimedAt": "2026-08-17T08:23:40.930Z",
+    "goldEarned": 3075,
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "49436fc2-4e5c-423e-b628-c83294891d3c",
+    "duration": 3590,
+    "xpEarned": 91045,
+    "claimedAt": "2026-08-17T09:04:48.287Z",
+    "goldEarned": 36838,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "90651816-caeb-4f73-8368-51c47a2a5981",
+    "duration": 3593,
+    "xpEarned": 232036,
+    "claimedAt": "2026-08-17T10:04:58.972Z",
+    "goldEarned": 88809,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "d9e34299-450f-4897-afe7-8e10f0ec1c5b",
+    "duration": 25287,
+    "xpEarned": 2789458,
+    "claimedAt": "2026-08-17T10:06:04.185Z",
+    "goldEarned": 1238925,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "f2adf132-a10a-47fa-bfd8-a2c9f0533e50",
+    "duration": 3590,
+    "xpEarned": 121220,
+    "claimedAt": "2026-08-17T11:04:59.723Z",
+    "goldEarned": 47989,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "64167b10-61e3-4272-9e26-c1b3aee68b9f",
+    "duration": 3607,
+    "xpEarned": 348398,
+    "claimedAt": "2026-08-17T12:05:13.727Z",
+    "goldEarned": 134055,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "285f0c9a-ae67-456d-81a7-59ac2d535f17",
+    "duration": 24598,
+    "xpEarned": 223915,
+    "claimedAt": "2026-08-17T12:44:39.261Z",
+    "goldEarned": 94479,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "57ecb2ae-2a90-4290-a593-b7610d00f852",
+    "duration": 1000,
+    "xpEarned": 11586,
+    "claimedAt": "2026-08-17T13:01:22.777Z",
+    "goldEarned": 4796,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "d65f28de-cddd-43d7-ab57-104822664c31",
+    "duration": 3596,
+    "xpEarned": 165182,
+    "claimedAt": "2026-08-17T13:05:17.986Z",
+    "goldEarned": 64118,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "95a920cd-43b8-45b8-8382-1e71171959d8",
+    "duration": 3107,
+    "xpEarned": 35696,
+    "claimedAt": "2026-08-17T13:53:12.239Z",
+    "goldEarned": 14726,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "ae332d9f-859d-43fe-ac5b-b564e20d6491",
+    "duration": 3595,
+    "xpEarned": 108214,
+    "claimedAt": "2026-08-17T14:05:19.193Z",
+    "goldEarned": 43210,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "f4a4a7be-99dd-4de8-8fc1-316ee31c1912",
+    "duration": 3150,
+    "xpEarned": 419491,
+    "claimedAt": "2026-08-17T14:45:44.708Z",
+    "goldEarned": 81458,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "d69afab9-f9f2-45f2-b731-663366ea3691",
+    "duration": 3606,
+    "xpEarned": 222477,
+    "claimedAt": "2026-08-17T15:05:30.388Z",
+    "goldEarned": 85252,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "3515ff4b-e7f3-42f4-8708-2e4c81737d2e",
+    "duration": 4764,
+    "xpEarned": 72141,
+    "claimedAt": "2026-08-17T16:05:11.393Z",
+    "goldEarned": 30553,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "f845aa60-aabe-47e1-9d7c-4efb9be0b482",
+    "duration": 3594,
+    "xpEarned": 145807,
+    "claimedAt": "2026-08-17T16:05:32.682Z",
+    "goldEarned": 57746,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "290a6bbd-3502-4496-9059-4e6148097854",
+    "duration": 3593,
+    "xpEarned": 365163,
+    "claimedAt": "2026-08-17T17:05:33.191Z",
+    "goldEarned": 141577,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "0577ddf6-f87a-4461-9a4c-9821a6f9fec7",
+    "duration": 3598,
+    "xpEarned": 365163,
+    "claimedAt": "2026-08-17T18:05:34.650Z",
+    "goldEarned": 141577,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6f23d4c5-635a-41cf-8e46-f7fcd68b36bc",
+    "duration": 3599,
+    "xpEarned": 298840,
+    "claimedAt": "2026-08-17T19:05:37.375Z",
+    "goldEarned": 114297,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2d03e5e2-8677-4327-8e1d-872fdef3c4de",
+    "duration": 43200,
+    "xpEarned": 226512,
+    "claimedAt": "2026-08-17T19:08:27.567Z",
+    "goldEarned": 111672,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "d1fc26de-9833-48cb-8373-2e63f1e9b659",
+    "duration": 3597,
+    "xpEarned": 365163,
+    "claimedAt": "2026-08-17T20:05:38.836Z",
+    "goldEarned": 141577,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "0517867d-5f30-4345-930e-047395bfa56b",
+    "duration": 3597,
+    "xpEarned": 298840,
+    "claimedAt": "2026-08-17T21:05:39.628Z",
+    "goldEarned": 114297,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "c1dab02c-1850-495e-bcf9-56105eaa44c4",
+    "duration": 3594,
+    "xpEarned": 366195,
+    "claimedAt": "2026-08-17T22:05:39.859Z",
+    "goldEarned": 141976,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "0784ec69-6b38-4bcf-afd1-6ddae3f8a205",
+    "duration": 43200,
+    "xpEarned": 4373562,
+    "claimedAt": "2026-08-17T22:22:18.624Z",
+    "goldEarned": 1843899,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "6e305605-27b0-41f7-9fb6-f8d6d90fc4b0",
+    "duration": 3600,
+    "xpEarned": 254304,
+    "claimedAt": "2026-08-17T23:05:43.602Z",
+    "goldEarned": 98010,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "97170c07-babd-45ac-a1ae-fb882e269ab6",
+    "duration": 3595,
+    "xpEarned": 228646,
+    "claimedAt": "2026-08-18T00:05:46.488Z",
+    "goldEarned": 90402,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "140ca47f-1bc0-4e5f-a366-c5d43bee53d5",
+    "duration": 3589,
+    "xpEarned": 300130,
+    "claimedAt": "2026-08-18T01:05:43.656Z",
+    "goldEarned": 114895,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "a81c7029-db64-4083-82b5-e34ee204fa4d",
+    "duration": 43200,
+    "xpEarned": 2124491,
+    "claimedAt": "2026-08-18T01:32:40.048Z",
+    "goldEarned": 992992,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "adad5791-06b2-4852-be7b-412f88b6a252",
+    "duration": 3604,
+    "xpEarned": 492862,
+    "claimedAt": "2026-08-18T02:05:53.253Z",
+    "goldEarned": 95580,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "9b5d2630-9f56-4a38-b2c1-deb4db4b3aa6",
+    "duration": 28617,
+    "xpEarned": 7696,
+    "claimedAt": "2026-08-18T03:05:26.619Z",
+    "goldEarned": 3665,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "2d20d4bb-93ba-4c3e-a74d-043e34f9092f",
+    "duration": 3584,
+    "xpEarned": 763359,
+    "claimedAt": "2026-08-18T03:05:49.983Z",
+    "goldEarned": 148348,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "d3f00cad-aeb7-4b3b-977d-49418f5f900d",
+    "duration": 43200,
+    "xpEarned": 3945925,
+    "claimedAt": "2026-08-18T14:46:26.611Z",
+    "goldEarned": 1644135,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "9275c1ed-ade7-4297-9368-b3b57cb83d8b",
+    "duration": 43200,
+    "xpEarned": 507276,
+    "claimedAt": "2026-08-18T21:14:05.430Z",
+    "goldEarned": 236808,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "c6c5dfb4-acbe-49a0-a8a8-6dd545b0c963",
+    "characterId": "22faae2b-715a-470d-bef1-b5ae5833cfb1",
+    "goldEarned": 22,
+    "xpEarned": 66,
+    "duration": 1349,
+    "claimedAt": "2026-08-23T03:32:20.877Z"
+  },
+  {
+    "id": "51687b5a-42f1-4002-81c2-1d007bf0bf42",
+    "characterId": "87a2435d-0adb-4902-a204-fa4a938023b7",
+    "goldEarned": 16200,
+    "xpEarned": 36720,
+    "duration": 43200,
+    "claimedAt": "2026-08-29T01:23:04.579Z"
+  }
+]

@@ -1,0 +1,4027 @@
+[
+  {
+    "id": "cfb550b9-6379-4117-823b-691695ee5b49",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T01:51:55.494Z",
+    "templateId": 1057,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "86249447-16ef-4d13-9d6e-e6242f3778ac",
+    "equipped": false,
+    "quantity": 2,
+    "obtainedAt": "2026-08-16T23:01:56.134Z",
+    "templateId": 54,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "9598fe46-b67b-42f7-82c4-e4bd9f20c273",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:25.430Z",
+    "templateId": 1079,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "fe004692-e501-459b-98d9-96e4bae4e4e5",
+    "enchant": "boss_5",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T01:40:30.095Z",
+    "templateId": 1245,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "9fabd0a0-152c-44d7-b9b3-b9f278917700",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T01:52:35.370Z",
+    "templateId": 1057,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "6cd99fd9-d91d-4c41-95eb-6c19185f8dd3",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:27.226Z",
+    "templateId": 1130,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "29dad1c7-f57f-47f7-b842-cd80b9669d9c",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:45:35.491Z",
+    "templateId": 52,
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "448bb255-d5f8-4650-8d74-ff3f82c65adb",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:25.217Z",
+    "templateId": 1003,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "dee40012-d4f8-4b16-a9d4-18a1f6a47bb7",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:45:21.038Z",
+    "templateId": 6002,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "65b5b90c-deb3-4848-8127-413c5699b462",
+    "listed": false,
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:25.641Z",
+    "templateId": 1164,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "703d350c-a934-460b-bf15-9cb2afb94001",
+    "enchant": "boss_4",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:00:30.558Z",
+    "templateId": 40,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "6f019ee2-a8a5-47ac-ab91-7beba1d723cf",
+    "enchant": "ass_8",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:27.125Z",
+    "templateId": 1262,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964",
+    "enhanceLevel": 11
+  },
+  {
+    "id": "d78a9be0-2a59-432d-8e80-058db6ab13a7",
+    "equipped": false,
+    "quantity": 44,
+    "obtainedAt": "2026-08-16T21:35:29.619Z",
+    "templateId": 5000,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "bc9f510d-62ce-429a-af9a-537627bad5ea",
+    "listed": false,
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:32.830Z",
+    "templateId": 1184,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "e2b69b14-2d02-4754-9d22-3c109c0294be",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T00:48:57.976Z",
+    "templateId": 5013,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "d12f7a9f-b828-4b98-9aaa-ca70638a6225",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:46:18.098Z",
+    "templateId": 6003,
+    "characterId": "87a2435d-0adb-4902-a204-fa4a938023b7"
+  },
+  {
+    "id": "1317d3cd-eebb-4f3a-b215-73052c245e99",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:46:18.206Z",
+    "templateId": 6012,
+    "characterId": "87a2435d-0adb-4902-a204-fa4a938023b7"
+  },
+  {
+    "id": "d1273c61-b651-4d89-a8d4-f18086660c2f",
+    "enchant": "boss_3",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:32.904Z",
+    "templateId": 1059,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964",
+    "enhanceLevel": 10
+  },
+  {
+    "id": "286782e3-164e-49b3-89a4-fb99e7e993c9",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:32:10.463Z",
+    "templateId": 1060,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "e46cc6de-c2af-4b7b-b5e6-9f03063dfac7",
+    "equipped": false,
+    "quantity": 2,
+    "obtainedAt": "2026-08-16T21:36:26.985Z",
+    "templateId": 52,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "ae782802-850d-4e89-83bb-c6d2312096cd",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:25.324Z",
+    "templateId": 1021,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "841493ed-9e2b-497a-88d2-5b6cf045c195",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:34:33.988Z",
+    "templateId": 1079,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "29f771dd-babf-490c-a58c-47e9aa2116c1",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:34:34.061Z",
+    "templateId": 1130,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "f6fd5fa9-ab3b-4ba5-9f7a-411eac97466c",
+    "enchant": "ass_11",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:32.756Z",
+    "templateId": 1183,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964",
+    "enhanceLevel": 13
+  },
+  {
+    "id": "38d92754-d810-420d-94b6-7cd7a056755b",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:33.051Z",
+    "templateId": 6002,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "b88f6b28-1ce1-4b54-bf9a-3ef125764b03",
+    "listed": true,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:32:10.355Z",
+    "templateId": 1144,
+    "characterId": "00000000-0000-0000-0000-00000000dead"
+  },
+  {
+    "id": "50e926b0-a9f0-4d2d-96df-93149057b3ab",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:46:18.313Z",
+    "templateId": 6012,
+    "characterId": "87a2435d-0adb-4902-a204-fa4a938023b7"
+  },
+  {
+    "id": "f3d624c1-cca0-40ce-b157-d72b8fa720e6",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:46:18.387Z",
+    "templateId": 31,
+    "characterId": "87a2435d-0adb-4902-a204-fa4a938023b7",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "e97406b6-6b65-4735-91d4-7b5b50cd6316",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:46:18.494Z",
+    "templateId": 6011,
+    "characterId": "87a2435d-0adb-4902-a204-fa4a938023b7"
+  },
+  {
+    "id": "075dc63b-f99d-4aa6-8d54-298d45cd63c1",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T01:52:17.171Z",
+    "templateId": 1106,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "e9a95062-3e66-4090-8822-207097b62629",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:46:53.983Z",
+    "templateId": 1014,
+    "characterId": "87a2435d-0adb-4902-a204-fa4a938023b7"
+  },
+  {
+    "id": "bddf5da1-0dbd-43c8-993e-d0c6a0a6c12f",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:46:54.087Z",
+    "templateId": 6005,
+    "characterId": "87a2435d-0adb-4902-a204-fa4a938023b7"
+  },
+  {
+    "id": "1e1af248-baff-4083-9297-da61eca034e4",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:46:54.197Z",
+    "templateId": 6007,
+    "characterId": "87a2435d-0adb-4902-a204-fa4a938023b7"
+  },
+  {
+    "id": "eb9c3de2-4383-44d3-9a6d-641d0fa27a7d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:46:54.303Z",
+    "templateId": 1035,
+    "characterId": "87a2435d-0adb-4902-a204-fa4a938023b7"
+  },
+  {
+    "id": "6bfd5d5a-bed8-4a85-8c0a-65d201c6b32d",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:49:41.012Z",
+    "templateId": 1181,
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "0871feca-6de7-4f7c-95e5-d66d0d233e74",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:49:40.910Z",
+    "templateId": 1251,
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "f97ccb6b-0dc7-4493-be39-d284f81c4dfe",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:46:20.189Z",
+    "templateId": 1200,
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "03acd972-ead5-4a77-bc60-b5fd38318762",
+    "equipped": false,
+    "quantity": 10,
+    "obtainedAt": "2026-08-16T21:58:19.480Z",
+    "templateId": 5006,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "8d06e7ca-ee4e-42ac-85bc-031b69a0ff0d",
+    "equipped": false,
+    "quantity": 20,
+    "obtainedAt": "2026-08-16T21:58:00.071Z",
+    "templateId": 5003,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "03d9f1ef-cf42-49c7-9cbd-1516840a6d69",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:30.852Z",
+    "templateId": 1084,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "73b0379c-dc48-4626-ac0c-d5b673bbb0cb",
+    "equipped": false,
+    "quantity": 7,
+    "obtainedAt": "2026-08-16T21:57:54.985Z",
+    "templateId": 5004,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "e1c83677-b8b9-429b-b4bb-b170a29e7419",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:31.059Z",
+    "templateId": 1119,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "9070fa7c-3cf0-4121-93b3-1a63678682c1",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:37.593Z",
+    "templateId": 6002,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "c9e2056a-12a2-45dc-971a-2919d550e175",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:47:48.443Z",
+    "templateId": 43,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "552250e0-af84-4872-b550-99f60d5563d4",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:37.775Z",
+    "templateId": 1263,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "a96a0fa6-bebe-4265-9dd2-132763ecef4b",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:37.885Z",
+    "templateId": 1099,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "555302ce-924e-43ca-b999-a250235722bc",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:59:48.213Z",
+    "templateId": 1231,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "bb25d1b6-fd85-4e49-94be-e72d158c0d40",
+    "equipped": false,
+    "quantity": 21,
+    "obtainedAt": "2026-08-16T21:56:20.802Z",
+    "templateId": 5002,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "05df6898-a762-4734-9569-1045a49d5544",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:59:59.712Z",
+    "templateId": 1257,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "f00aca99-1657-4326-869b-556879aac021",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:59:54.417Z",
+    "templateId": 1171,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "a56f1eab-b1c8-47f4-a31d-abecaaeb04b9",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:30.749Z",
+    "templateId": 1062,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "78db708c-96e4-444a-9034-f12f1959c274",
+    "listed": false,
+    "enchant": "boss_5",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:31.161Z",
+    "templateId": 46,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 8
+  },
+  {
+    "id": "01ac1be9-3867-46f0-a3bb-7e0507b3fb99",
+    "listed": false,
+    "enchant": "nec_6",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:58.253Z",
+    "templateId": 1162,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "c9e07022-665d-4957-87ad-084784b9ee58",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:43.345Z",
+    "templateId": 1130,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "3b8d545a-bc1a-4d05-a33e-f8c67add69a3",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:43.629Z",
+    "templateId": 1143,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "0db6519f-da77-4c0b-b68d-f94f86e55eba",
+    "listed": false,
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:43.449Z",
+    "templateId": 1184,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 12
+  },
+  {
+    "id": "716a1633-90a0-45c7-9448-35c63614fb6a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:48.285Z",
+    "templateId": 1079,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "023aa309-bba9-4415-844b-6ab2c047ea53",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:48.542Z",
+    "templateId": 1130,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "5067b50d-c256-4994-9e0b-d30cddf8875f",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:53.066Z",
+    "templateId": 1119,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "f135f525-afbb-4108-af70-3699af25beca",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:53.137Z",
+    "templateId": 1199,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "b728566e-46cb-4e2a-9878-3d4e117e898e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:53.245Z",
+    "templateId": 1000,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "b6d467d5-c12b-47b8-916a-05e58a30e597",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:58.151Z",
+    "templateId": 1163,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "9d06406c-05ba-4c85-8f93-31001c87ec8c",
+    "listed": true,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:43.735Z",
+    "templateId": 1082,
+    "characterId": "00000000-0000-0000-0000-00000000dead"
+  },
+  {
+    "id": "ec093c13-e78b-4390-80d2-a2defc963a65",
+    "listed": true,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:53.459Z",
+    "templateId": 1064,
+    "characterId": "00000000-0000-0000-0000-00000000dead"
+  },
+  {
+    "id": "58bedadb-140b-4278-976c-36dfbe488e4b",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:58.374Z",
+    "templateId": 1082,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "2e65f301-f6fd-440c-bfa4-08da95b3af74",
+    "enchant": "boss_3",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:00:51.810Z",
+    "templateId": 1141,
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "a452e329-4883-49c5-a37c-0998dae08a04",
+    "equipped": false,
+    "quantity": 2,
+    "obtainedAt": "2026-08-17T05:31:16.369Z",
+    "templateId": 52,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "c75d25dd-354e-40fc-90c6-5010d0dba3ea",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:07:37.307Z",
+    "templateId": 5000,
+    "characterId": "b36b1f0a-f86e-4f18-b3ef-36ca8f058f12"
+  },
+  {
+    "id": "57e60ced-f299-4a57-b3cf-354ed564ccaf",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:00:13.611Z",
+    "templateId": 1247,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "83c24d7a-6424-4239-a718-df833e7b30b6",
+    "equipped": false,
+    "quantity": 6,
+    "obtainedAt": "2026-08-16T22:07:51.781Z",
+    "templateId": 5009,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "198c1c8d-20c3-434d-8013-419a0543bf94",
+    "enchant": "ass_15",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:58.083Z",
+    "templateId": 1142,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964",
+    "enhanceLevel": 14
+  },
+  {
+    "id": "e66383bc-e3cf-44e0-884f-c4049ca95477",
+    "enchant": "ass_14",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T21:59:43.713Z",
+    "templateId": 1211,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964",
+    "enhanceLevel": 5
+  },
+  {
+    "id": "0239be4b-33e1-47a4-acfa-76a931d4361d",
+    "listed": true,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:43.555Z",
+    "templateId": 1003,
+    "characterId": "00000000-0000-0000-0000-00000000dead"
+  },
+  {
+    "id": "76468600-1cdd-4b8d-becb-8e69dab26b32",
+    "listed": false,
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:48.177Z",
+    "templateId": 1246,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 12
+  },
+  {
+    "id": "38e9d44e-8d2b-43e2-9294-a5f0a3ad585a",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:53.351Z",
+    "templateId": 1187,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "a5026d10-c207-4eba-b48d-8ec65980243b",
+    "equipped": false,
+    "quantity": 7,
+    "obtainedAt": "2026-08-16T22:06:52.484Z",
+    "templateId": 5007,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "6870a0ce-2f60-445b-b23d-482cdfb3f60b",
+    "equipped": false,
+    "quantity": 3,
+    "obtainedAt": "2026-08-17T01:51:07.215Z",
+    "templateId": 55,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "7a99f8f8-209f-4cba-9bcc-1d0a9bc51924",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:03.254Z",
+    "templateId": 1099,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "066c2f39-b325-4925-8c06-4e06665c0e37",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:03.325Z",
+    "templateId": 1136,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "ee7d5a16-6540-45c6-be5b-ee38a8346ce7",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T01:58:46.008Z",
+    "templateId": 1216,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "c7a39902-c6ac-4366-8901-567cca122e2d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:03.432Z",
+    "templateId": 1130,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "166ffd1c-9e30-4b70-8bc1-6f76fc835f96",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:03.503Z",
+    "templateId": 1059,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "42521c06-9827-47f1-b092-abc53a1d8e86",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:07.740Z",
+    "templateId": 1059,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "e449bd7d-a431-4d68-adbd-277a4bda5cff",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:07.920Z",
+    "templateId": 1131,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "dbc5ae89-9d67-4cd8-883f-43dd8cc17db8",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:08.026Z",
+    "templateId": 1000,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "de5308a6-fc1d-4278-b157-132493fc6e5e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:13.616Z",
+    "templateId": 1150,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "82053084-ea97-403b-890e-d42709eed24e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:13.687Z",
+    "templateId": 6010,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "84eaf9d2-01f4-4c28-8dc8-c69b0b870d6a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T02:16:16.608Z",
+    "templateId": 1043,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "d9ce2659-cce9-4b29-8a00-89eb94b4607b",
+    "equipped": false,
+    "quantity": 13,
+    "obtainedAt": "2026-08-16T22:17:33.421Z",
+    "templateId": 5008,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "3556ea92-e5e0-4e10-9a7d-4f31b1877947",
+    "equipped": false,
+    "quantity": 3,
+    "obtainedAt": "2026-08-17T05:48:42.541Z",
+    "templateId": 5009,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "ffa1f956-7f06-455f-9f18-9d22f0cc21bd",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:19.641Z",
+    "templateId": 1079,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "c5057413-0ecc-44dd-a1c9-f912857ade07",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:19.574Z",
+    "templateId": 1021,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "62ae2939-026c-4d28-883d-e85505e7a417",
+    "enchant": "ass_6",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:07.812Z",
+    "templateId": 1252,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964",
+    "enhanceLevel": 13
+  },
+  {
+    "id": "08d25df5-bade-402b-baef-2dd5194fbf84",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:18:37.707Z",
+    "templateId": 1150,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "b153a205-38cc-470e-92fd-5ee6535f0877",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T02:16:18.369Z",
+    "templateId": 1063,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "dedc18d4-effc-4483-b229-8a703a76ae21",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:26.892Z",
+    "templateId": 1010,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "135e5a13-b97d-45ba-a0f1-ee7051d0290c",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:18:18.836Z",
+    "templateId": 1196,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "dddc10aa-5f6b-4fb7-9ab0-3020014ad4ac",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T23:30:17.190Z",
+    "templateId": 1139,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "9ee10ceb-835c-404e-aa8b-5fff0e719493",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T23:30:17.273Z",
+    "templateId": 1011,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "335b83f8-5a87-40e2-b516-d6455872b321",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:34:34.239Z",
+    "templateId": 1119,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "6453f185-b3ab-4c20-a80e-eed01eaa87a6",
+    "enchant": "ass_14",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:08.098Z",
+    "templateId": 1223,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964",
+    "enhanceLevel": 5
+  },
+  {
+    "id": "9ff78235-f3e3-4d17-b07d-06d385aef44f",
+    "listed": false,
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:19.301Z",
+    "templateId": 1143,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 12
+  },
+  {
+    "id": "679aa929-2d12-43f5-bff8-6147f2469b99",
+    "listed": false,
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:34:41.148Z",
+    "templateId": 1224,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 12
+  },
+  {
+    "id": "22f6a876-cbad-4156-8b39-90177289c015",
+    "equipped": false,
+    "quantity": 8,
+    "obtainedAt": "2026-08-17T00:43:41.031Z",
+    "templateId": 5010,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "974f0f24-4ee5-4338-bace-131b8a9d6edb",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T23:30:17.361Z",
+    "templateId": 1062,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "4a28663a-e76c-4ef3-ae61-8f6a7ad8224a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:31:17.822Z",
+    "templateId": 1212,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "1db036ee-f156-436f-ad2d-98359cf9c6a6",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:31:40.817Z",
+    "templateId": 1153,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "8a246c1e-aea3-4218-abad-927c9ddbe732",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T01:56:03.009Z",
+    "templateId": 6012,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "d17059e2-8a2b-44cd-8d23-9b1801cb3e4c",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T23:30:17.549Z",
+    "templateId": 1194,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "fcfb3736-0fa2-4c13-a8e5-028fdbcd87e0",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:44:04.637Z",
+    "templateId": 1153,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "fa01fc3e-65d9-40e2-b97e-03e613cea9a7",
+    "equipped": false,
+    "quantity": 3,
+    "obtainedAt": "2026-08-16T23:02:43.504Z",
+    "templateId": 51,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "e0ceff68-31bc-43df-9aa4-5484cb85d704",
+    "equipped": false,
+    "quantity": 2,
+    "obtainedAt": "2026-08-17T05:39:32.951Z",
+    "templateId": 5011,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "c1e341f1-123a-44b0-ba80-5b649f3bc842",
+    "equipped": false,
+    "quantity": 16,
+    "obtainedAt": "2026-08-16T23:05:29.683Z",
+    "templateId": 56,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "3a68d22f-182f-474a-8b9c-503c3d939a9b",
+    "equipped": false,
+    "quantity": 15,
+    "obtainedAt": "2026-08-16T23:00:27.457Z",
+    "templateId": 5005,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "030c9009-cfb9-42f9-b842-840d7ae25624",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T23:30:17.436Z",
+    "templateId": 1199,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "1ba4bda9-14bc-48f7-800d-b820e72b4793",
+    "equipped": false,
+    "quantity": 15,
+    "obtainedAt": "2026-08-16T23:04:53.630Z",
+    "templateId": 54,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "d2cbe6b3-22e4-4812-ad95-84e69bdfdfc4",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T23:30:17.662Z",
+    "templateId": 1062,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "4c27fad4-2058-4d1f-a5ea-8173ca5acd2e",
+    "equipped": false,
+    "quantity": 12,
+    "obtainedAt": "2026-08-16T23:04:59.659Z",
+    "templateId": 53,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "7159403d-d938-4006-ad42-c6adb5c62b63",
+    "equipped": false,
+    "quantity": 2,
+    "obtainedAt": "2026-08-16T22:44:19.791Z",
+    "templateId": 53,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "0d68366f-b0b9-42f8-af1c-787d83af6372",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T02:16:20.483Z",
+    "templateId": 1146,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "40d928e1-dacd-4d5b-9172-03343e9a4751",
+    "enchant": "ass_12",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:19.369Z",
+    "templateId": 1243,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964",
+    "enhanceLevel": 12
+  },
+  {
+    "id": "c36c29be-d1f5-447f-b4e5-f274bab445c0",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T23:30:17.736Z",
+    "templateId": 1010,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "8b06103d-2a4b-4e25-9c30-b2b2d722a193",
+    "listed": false,
+    "enchant": "boss_1",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:34:41.258Z",
+    "templateId": 1059,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "a33d0428-7601-459e-ae3d-0254cafa6060",
+    "equipped": false,
+    "quantity": 3,
+    "obtainedAt": "2026-08-16T22:44:17.736Z",
+    "templateId": 5010,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "3d57e7ea-3571-4f68-b647-57bb3b56a7aa",
+    "listed": false,
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:34:41.480Z",
+    "templateId": 1245,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "55a35619-f4db-46fc-a623-5bd7283f846a",
+    "enchant": "nec_5",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:32:00.430Z",
+    "templateId": 1262,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "0221b931-7deb-4924-b0f4-d00fc8eb723d",
+    "listed": false,
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:34:34.133Z",
+    "templateId": 1145,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "aa5e6dda-939e-431b-b6f7-42ff880ad0de",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:32:10.645Z",
+    "templateId": 49,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "6d0086cc-21a1-4cbc-ba3a-fe09a01d8802",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:32:10.754Z",
+    "templateId": 1147,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "3fe67baf-797e-4042-a221-64172a897400",
+    "enchant": "ass_5",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:19.473Z",
+    "templateId": 6012,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964",
+    "enhanceLevel": 13
+  },
+  {
+    "id": "4e095904-1a3b-4ab4-8de3-546e76698d01",
+    "equipped": false,
+    "quantity": 49,
+    "obtainedAt": "2026-08-16T23:38:39.756Z",
+    "templateId": 5002,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "b404ee36-555a-4659-88a1-5b6d882e5246",
+    "equipped": false,
+    "quantity": 8,
+    "obtainedAt": "2026-08-17T01:59:03.426Z",
+    "templateId": 5013,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "fc26d099-ee80-4a92-938a-4c8c41c2fd01",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:32:10.572Z",
+    "templateId": 1242,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "c5db0c9c-9383-4af6-9a6d-939b25a0aee9",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:19:57.000Z",
+    "templateId": 1267,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "1c04284a-53f8-4397-938a-3a1b268b1eb3",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:19:45.242Z",
+    "templateId": 1231,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "54326d8b-8a0c-4dd7-9220-c6ae7259943c",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T02:16:25.030Z",
+    "templateId": 1167,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "876687ba-30f3-47c6-b88f-b633c21dc930",
+    "enchant": "boss_6",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T01:56:02.847Z",
+    "templateId": 1024,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "1cba8578-4c4d-4a31-b9a4-2d44e2dd3d50",
+    "enchant": "boss_5",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T01:54:21.282Z",
+    "templateId": 1242,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "80264521-1809-48a6-b0a0-c22952a48178",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:20:25.025Z",
+    "templateId": 1055,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "f69f83c8-cbab-4bbf-b1b4-833e280f597b",
+    "equipped": false,
+    "quantity": 4,
+    "obtainedAt": "2026-08-17T00:25:48.661Z",
+    "templateId": 50,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "aba85022-db25-4914-a16e-eb79f18de22d",
+    "equipped": false,
+    "quantity": 2,
+    "obtainedAt": "2026-08-16T23:25:33.725Z",
+    "templateId": 56,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "d86516a3-6d81-4e3e-9052-c253e3bcb065",
+    "equipped": false,
+    "quantity": 3,
+    "obtainedAt": "2026-08-17T02:53:24.239Z",
+    "templateId": 5013,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "e80fcbba-3207-44ef-95b2-b86a3a400a42",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:35:18.353Z",
+    "templateId": 1241,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "51b84f3d-b8bc-454a-b46c-73c01410c51a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:24:59.875Z",
+    "templateId": 31,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "747bf658-6a6f-4ab4-92ab-08a564960417",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:25:02.139Z",
+    "templateId": 1240,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "f8d4a436-dd8b-4c26-950c-8c55a25fcbee",
+    "equipped": false,
+    "quantity": 2,
+    "obtainedAt": "2026-08-17T02:02:48.206Z",
+    "templateId": 50,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "79b1eb60-1fde-4603-bfff-06f5238ceb75",
+    "enchant": "ass_6",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:32.978Z",
+    "templateId": 1162,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964",
+    "enhanceLevel": 14
+  },
+  {
+    "id": "c726834d-d01a-425c-a60f-5b17372adf0f",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:35:14.105Z",
+    "templateId": 32,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "079a500d-baa0-4e8e-8721-adf9bb2611e6",
+    "equipped": false,
+    "quantity": 4,
+    "obtainedAt": "2026-08-17T02:41:36.030Z",
+    "templateId": 5011,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "8e2a7617-6a18-444b-9232-1e00eb7138f0",
+    "equipped": false,
+    "quantity": 4,
+    "obtainedAt": "2026-08-16T23:38:24.991Z",
+    "templateId": 55,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "6de1bcae-98a9-49ed-8d7d-0d155d74dae6",
+    "equipped": false,
+    "quantity": 2,
+    "obtainedAt": "2026-08-17T02:02:43.205Z",
+    "templateId": 51,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "1fa60a8c-34b8-42c7-9613-ece32662066a",
+    "listed": false,
+    "enchant": "ass_12",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:13.797Z",
+    "templateId": 1183,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "0066df32-6c14-41d6-bf05-286cdaaaaba8",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T23:30:17.847Z",
+    "templateId": 1230,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "97de2b72-685d-4e9c-86e8-987620119b7f",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T23:30:17.920Z",
+    "templateId": 1259,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "ca0edaf7-6b3d-4f00-9410-31989d916995",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T23:30:18.030Z",
+    "templateId": 1007,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "509e939a-2e7f-4ac1-bfd4-344e7bbe279d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T00:23:03.345Z",
+    "templateId": 5012,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "24b0d407-b24c-4f05-a974-93ab3e49b5b9",
+    "equipped": false,
+    "quantity": 140,
+    "obtainedAt": "2026-08-17T00:32:23.340Z",
+    "templateId": 5006,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "a1ab9c80-c59e-41d5-87d7-3fe9f905a153",
+    "equipped": false,
+    "quantity": 38,
+    "obtainedAt": "2026-08-16T21:36:33.064Z",
+    "templateId": 5001,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "a5e91584-774b-45aa-9508-d49091aa5235",
+    "equipped": false,
+    "quantity": 72,
+    "obtainedAt": "2026-08-17T02:39:57.086Z",
+    "templateId": 5008,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "a8c45904-1135-4b96-bbaa-e935eec94312",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:13.508Z",
+    "templateId": 1080,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "fb540ac7-b19c-45c7-b868-d656a237d28b",
+    "listed": false,
+    "enchant": "boss_3",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:34:41.333Z",
+    "templateId": 1131,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "e2eeb259-f3ea-4f8b-b590-b2d3b9bddba2",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:58:11.247Z",
+    "templateId": 6011,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "506e969f-7b94-4671-95ae-25c53aa3411a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:55:50.987Z",
+    "templateId": 1156,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "4946031c-cbe3-4948-ae6a-d7770da4f26e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:55:51.098Z",
+    "templateId": 1175,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "d55766bb-4898-4a25-93e5-99957ba941fa",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:04.236Z",
+    "templateId": 1031,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "240acac7-da74-41a2-87a0-0044deb2d042",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:04.347Z",
+    "templateId": 6003,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "f6395e22-2f0a-4658-999c-4599ce78fa43",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:04.421Z",
+    "templateId": 1033,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "f47c22c9-d054-4ac7-9c57-8a5505653ad8",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:08.926Z",
+    "templateId": 1107,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "8ac5aa45-09f5-4997-96fb-5810448f3908",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:12.693Z",
+    "templateId": 1210,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "f4a0d270-3011-4cf5-828d-0f6db7af2b93",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:12.797Z",
+    "templateId": 41,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "3beabef6-3b45-4446-83ba-5b514faa50c3",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:12.865Z",
+    "templateId": 1088,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "52a8e190-d494-4b4d-af4b-75cef9dc7497",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:16.627Z",
+    "templateId": 34,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "8655fe55-c036-40da-a5bf-fc0922033e1a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:16.730Z",
+    "templateId": 39,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "4eeb712b-48e7-4b08-9ef0-835e0b228d38",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:20.486Z",
+    "templateId": 1238,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "85602e87-37d3-4ba7-b9b2-2dcb4c5629da",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:20.589Z",
+    "templateId": 1136,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "5e5c3b78-1e06-44c7-a19a-2b2d371ee83e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:24.223Z",
+    "templateId": 6002,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "c7297f7d-60da-4714-9084-7bbcab5a5f0c",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:24.325Z",
+    "templateId": 1030,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "79bea6c6-44cc-4a3a-94dd-81ca1c122402",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:24.393Z",
+    "templateId": 1231,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "13a4efb2-9567-468a-a5d4-43bd6e44ba23",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:29.128Z",
+    "templateId": 1116,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "62732eda-256a-422e-8a3d-dea8bf18a00d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:29.196Z",
+    "templateId": 1125,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "b5bbbdb5-64d2-4e10-af74-5af9761ccffe",
+    "listed": false,
+    "enchant": "boss_1",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:30.499Z",
+    "templateId": 49,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "17846bbb-ef8a-4449-a182-191f1560b28b",
+    "equipped": false,
+    "quantity": 2,
+    "obtainedAt": "2026-08-17T02:54:52.495Z",
+    "templateId": 56,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "11d27083-19fd-4073-95bd-055c82d62dfc",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:55:58.177Z",
+    "templateId": 41,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "5bf6be8d-9ce5-4379-a894-a4b0933d99c7",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:08.743Z",
+    "templateId": 1220,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "2082a384-5029-4c5e-81a5-08f735560875",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T00:50:39.783Z",
+    "templateId": 1073,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "1ad56d4c-1b45-4ee7-b1ce-8614ae17ba81",
+    "equipped": false,
+    "quantity": 30,
+    "obtainedAt": "2026-08-16T23:46:59.041Z",
+    "templateId": 5005,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "08073dea-508a-4f91-9a06-fd3358acb50e",
+    "equipped": false,
+    "quantity": 46,
+    "obtainedAt": "2026-08-16T23:39:28.439Z",
+    "templateId": 5003,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "56e06b38-20be-4d3c-ad69-7717d18c14aa",
+    "equipped": false,
+    "quantity": 14,
+    "obtainedAt": "2026-08-17T01:04:48.484Z",
+    "templateId": 5007,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "02eabb8d-b971-4ad3-b606-f7dee93e4a55",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T02:31:40.406Z",
+    "templateId": 1012,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "420bfba1-f225-4f9e-95c4-2ba2a10c31db",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:08.818Z",
+    "templateId": 1012,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "e6231368-0d75-4ff2-a62d-36dd088bc494",
+    "equipped": false,
+    "quantity": 72,
+    "obtainedAt": "2026-08-16T23:39:38.589Z",
+    "templateId": 5001,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "e12aae7c-9ca5-4cb2-bbd8-a8df533913f5",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:40:36.518Z",
+    "templateId": 6006,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "8c9323b3-a507-46b2-8d04-61ad2770f532",
+    "equipped": false,
+    "quantity": 38,
+    "obtainedAt": "2026-08-16T23:42:51.639Z",
+    "templateId": 51,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "a3fad7b2-eb28-43f0-b5b7-78208249ee1f",
+    "equipped": false,
+    "quantity": 25,
+    "obtainedAt": "2026-08-16T23:44:13.489Z",
+    "templateId": 5006,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "0e4883e1-40f7-4a6c-b08f-1524e8b95b89",
+    "equipped": false,
+    "quantity": 84,
+    "obtainedAt": "2026-08-16T23:38:44.266Z",
+    "templateId": 5000,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "d44d4541-e5ac-4128-a11a-634b8b9ad2a1",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:55:58.000Z",
+    "templateId": 1232,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "500517f5-b42a-4173-954e-17e6c4fb5f67",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:16.835Z",
+    "templateId": 1092,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "aacea39f-f2ed-4ab7-8a0e-0d6133792e23",
+    "equipped": false,
+    "quantity": 270,
+    "obtainedAt": "2026-08-17T00:33:10.034Z",
+    "templateId": 5005,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "0514738e-d1b7-4959-bb6e-0cfebb6b4df7",
+    "equipped": false,
+    "quantity": 2,
+    "obtainedAt": "2026-08-17T00:40:41.226Z",
+    "templateId": 5012,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "fb69e591-b71f-44bf-9d4e-38f3dec4e53b",
+    "equipped": false,
+    "quantity": 11,
+    "obtainedAt": "2026-08-16T23:40:37.153Z",
+    "templateId": 55,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "79faa752-faa5-46b3-99b1-7d1b51fe871a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:55:58.106Z",
+    "templateId": 1136,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "09f4d4be-a7f4-480a-a3b1-cc30e92153b0",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:51:11.807Z",
+    "templateId": 1208,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "309ec64c-3748-496b-b784-b6f5cff5f238",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:49:08.531Z",
+    "templateId": 6003,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "d209f25d-c9a2-4d29-8458-8f1f4134ba5c",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:20.657Z",
+    "templateId": 41,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "52a26a02-383d-4acc-92f6-3cf3a4a51a0f",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T00:55:10.977Z",
+    "templateId": 1012,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "cf148d9f-a197-4c2c-92a0-040cfd2b40c7",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:32.708Z",
+    "templateId": 1235,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "19173747-5a18-4760-8a73-e995fa3bf532",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:32.812Z",
+    "templateId": 1233,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "9ef08894-aacd-4857-8539-7d1cd4fc9a13",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:32.882Z",
+    "templateId": 1051,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "24f8e279-2763-4f56-a546-99b2df8d9b14",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T00:52:36.536Z",
+    "templateId": 1077,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "dc70d9e7-adae-4c6e-91c5-05ded761ae1d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:49:21.934Z",
+    "templateId": 6006,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "5f49559a-5d46-46cc-b0f5-0c9b3d51cbf8",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:44.703Z",
+    "templateId": 36,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "8e30c18e-9641-49d3-a8f5-2d9a5f24b836",
+    "equipped": false,
+    "quantity": 95,
+    "obtainedAt": "2026-08-19T00:01:52.685Z",
+    "templateId": 5002,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "8cd05046-5baa-482b-8b54-077e43256a8c",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:44.775Z",
+    "templateId": 1150,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "16de8921-100b-461e-859c-f8f8aa1ce69a",
+    "listed": false,
+    "enchant": "ass_10",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:34:33.915Z",
+    "templateId": 1252,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "7c345ad0-fee5-405d-861a-73e25e7b777b",
+    "equipped": false,
+    "quantity": 74,
+    "obtainedAt": "2026-08-17T03:30:25.290Z",
+    "templateId": 5000,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "18e8fa84-7c01-49a8-8070-5790a403ed28",
+    "equipped": false,
+    "quantity": 6,
+    "obtainedAt": "2026-08-17T00:53:47.682Z",
+    "templateId": 5008,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "be9e5085-627b-4eea-b038-a19296509505",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:44.846Z",
+    "templateId": 1171,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "f608f488-4144-4962-ac11-68191988e4f5",
+    "listed": true,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:26:27.728Z",
+    "templateId": 1002,
+    "characterId": "00000000-0000-0000-0000-00000000dead"
+  },
+  {
+    "id": "fdcd4c1c-f777-4192-9188-82bbb08a5632",
+    "equipped": false,
+    "quantity": 100,
+    "obtainedAt": "2026-08-19T00:01:13.649Z",
+    "templateId": 5000,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "0b869729-e73e-4324-ae35-d598eafd81a5",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T02:33:27.719Z",
+    "templateId": 1028,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "cfa3e70c-ffa3-4f87-8919-06ea9a936a8b",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:48.130Z",
+    "templateId": 1106,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "fda89f1b-3487-4b59-9c22-69efc83d2fd5",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:48.198Z",
+    "templateId": 40,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "06f85204-d508-4232-8557-84114b4286a1",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T02:49:09.126Z",
+    "templateId": 1016,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "6e28bfd6-cdc7-48e3-b25f-698fb99daf56",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:29.262Z",
+    "templateId": 1234,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "8e0e9cd5-443d-46aa-bab1-0d00742ef73a",
+    "equipped": false,
+    "quantity": 40,
+    "obtainedAt": "2026-08-19T00:01:43.702Z",
+    "templateId": 5004,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "389479a9-c226-4fc6-b27e-b4b858b258b7",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:54.659Z",
+    "templateId": 1048,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "4c7ace84-d72a-4062-9ed1-6858d24f6a40",
+    "equipped": false,
+    "quantity": 34,
+    "obtainedAt": "2026-08-17T00:41:00.455Z",
+    "templateId": 55,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "39997f02-5c85-4ef0-97b6-5a775a55ecd8",
+    "listed": false,
+    "enchant": "nec_11",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:58.443Z",
+    "templateId": 1183,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "efacdf0d-518c-4f54-9250-38a426b2722d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:37.262Z",
+    "templateId": 1014,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "dc7949ac-1fdf-477b-98f2-64dc8b5ff710",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:54.839Z",
+    "templateId": 1194,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "0d372e59-0132-4223-91a4-14a0ba148859",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:57.850Z",
+    "templateId": 6005,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "1b02b98f-23c7-4279-bfdb-7b3c855b89f2",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:26:27.835Z",
+    "templateId": 1133,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "e4ea071e-d3bc-49fe-8475-53e9a4a2137a",
+    "listed": false,
+    "enchant": "ass_6",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:37.666Z",
+    "templateId": 1142,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "167c62ca-2199-475f-b22d-6723b6019f1b",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:26:28.049Z",
+    "templateId": 1186,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "de061627-f43a-44c5-8b91-a0f79219365a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T03:38:55.346Z",
+    "templateId": 1218,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "9fed61fc-9379-4ffd-9fb6-8c3fa80deabb",
+    "listed": false,
+    "enchant": "ass_4",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:22.509Z",
+    "templateId": 1244,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "54555e22-a3a1-4abc-a8c6-9a9a48065676",
+    "listed": false,
+    "enchant": "ass_7",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:22.898Z",
+    "templateId": 1202,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "f37403f8-e232-4ef5-9d5c-59ac7a7a838e",
+    "listed": false,
+    "enchant": "ass_10",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:30.424Z",
+    "templateId": 1163,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "21ff4669-a56e-4cb8-9b07-f7345a282593",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:37.157Z",
+    "templateId": 1071,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "6fc1ec9f-a95e-402d-9a8d-fd171adb7fec",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:22.615Z",
+    "templateId": 1103,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "eb169b44-836b-45eb-94e7-ad7c349d92f8",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:22.721Z",
+    "templateId": 1262,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "d701881f-d2f5-404d-b4c2-294ed873156f",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:22.792Z",
+    "templateId": 1093,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "a019c28d-90a7-4585-b56d-493b36c41b95",
+    "listed": false,
+    "enchant": "boss_3",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:44.713Z",
+    "templateId": 1059,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "1766c220-ea0d-4d6f-9634-c8145402e424",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:30.612Z",
+    "templateId": 1099,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "92bb6a52-bd41-4095-b95d-0130445838f7",
+    "equipped": false,
+    "quantity": 120,
+    "obtainedAt": "2026-08-19T00:00:52.550Z",
+    "templateId": 5001,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "2290f41f-38b5-4a93-9216-f644a1c29c84",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:30.799Z",
+    "templateId": 1262,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "be208c8e-ef41-42f9-8ae5-2f25103d7af7",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:37.142Z",
+    "templateId": 1247,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "0df12931-43dd-48ae-8ec2-0104f1795205",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:37.215Z",
+    "templateId": 41,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "70d1e92b-fd33-402b-a0e1-e1d2e51c8bc4",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:37.328Z",
+    "templateId": 1039,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "8066d185-e481-4f63-9895-5719e6348823",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:44.508Z",
+    "templateId": 1130,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "2283a4b5-2ee1-4c9c-a763-58a9ac899a2b",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:37.366Z",
+    "templateId": 1230,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "ea936d77-2148-4080-a326-996477b1d1ec",
+    "equipped": false,
+    "quantity": 15,
+    "obtainedAt": "2026-08-16T23:52:24.087Z",
+    "templateId": 51,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "c6c5708a-769b-4736-b11e-d7f3a3d0c4e5",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:50.914Z",
+    "templateId": 1081,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "27fc7aeb-7a6a-4095-9cb6-da9509d61a2d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:50.984Z",
+    "templateId": 48,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "48dd26fa-ff24-4966-b9c9-905827bea556",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T02:37:54.587Z",
+    "templateId": 1053,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "d42e6531-e20d-4172-bcdc-ebf9f527454d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:41.243Z",
+    "templateId": 1068,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "07079b7d-8811-4181-90a2-8449c1da2829",
+    "listed": false,
+    "enchant": "ass_12",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:37.401Z",
+    "templateId": 1222,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "8ce89a2f-5e63-4a22-afc6-9a3f0747937d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:41.315Z",
+    "templateId": 1086,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "17df681a-d514-46a8-9a09-8deb43b3401f",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:44.577Z",
+    "templateId": 1263,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "387539f7-8b2f-4651-a0bc-c0269262bdc1",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:51.195Z",
+    "templateId": 1071,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "64a9d9dd-838d-4eac-a84c-b083104110d9",
+    "equipped": false,
+    "quantity": 12,
+    "obtainedAt": "2026-08-17T00:44:05.501Z",
+    "templateId": 5009,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "66d94d4e-d922-4d22-b0ff-0ee1c6f3f60b",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:57.388Z",
+    "templateId": 1061,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "33690984-9eaa-4bed-8e69-cb1986dcec0d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:57.493Z",
+    "templateId": 1062,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "83be9494-d5e1-4c10-860b-378ea8d249c2",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:57.669Z",
+    "templateId": 1102,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "c65579bc-d146-4685-9c02-49b8db197962",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:57.564Z",
+    "templateId": 1205,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "230bdd78-f3af-48b7-ae86-2d2b61559fe7",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T02:49:31.145Z",
+    "templateId": 1124,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2c0892e1-7683-4a38-a98d-438c97e3d709",
+    "listed": true,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:32:00.507Z",
+    "templateId": 1021,
+    "characterId": "00000000-0000-0000-0000-00000000dead"
+  },
+  {
+    "id": "a94a1475-c595-45ba-a4b7-74b88358ed72",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:54:13.388Z",
+    "templateId": 6007,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "1a658770-6b81-4162-89ea-7c00c47813b4",
+    "equipped": false,
+    "quantity": 10,
+    "obtainedAt": "2026-08-17T00:41:36.287Z",
+    "templateId": 5011,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "b5e64cf8-2aac-416d-8e4f-6ef5773ce39c",
+    "equipped": false,
+    "quantity": 40,
+    "obtainedAt": "2026-08-19T00:07:54.402Z",
+    "templateId": 5005,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "0e4b9e69-8b06-4d73-8fac-60140937cd39",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:54:13.591Z",
+    "templateId": 6010,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "7a7c5edc-8578-4821-8c40-a9007055b2ba",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:41.386Z",
+    "templateId": 1199,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "4dabe8c5-dfba-494d-863e-90088bb56386",
+    "enchant": "nec_14",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:29:11.326Z",
+    "templateId": 1252,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "d40a84ea-030c-4970-9791-dc0b5ce26eb8",
+    "listed": true,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T00:25:51.015Z",
+    "templateId": 1267,
+    "characterId": "00000000-0000-0000-0000-00000000dead"
+  },
+  {
+    "id": "9d50f48b-55da-42ee-a4fc-4676ce88ea82",
+    "equipped": false,
+    "quantity": 3,
+    "obtainedAt": "2026-08-19T00:08:42.489Z",
+    "templateId": 5010,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "addc03a1-a66c-406d-93b9-01926b7ce589",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:54:00.256Z",
+    "templateId": 1027,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "13ead317-4ce9-4826-9975-680977de8243",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:48.028Z",
+    "templateId": 1029,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "b8947b9f-3553-45b3-aa1a-3bbe2f772116",
+    "listed": true,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:54:41.235Z",
+    "templateId": 1135,
+    "characterId": "00000000-0000-0000-0000-00000000dead"
+  },
+  {
+    "id": "b2a4c735-d64e-4534-817f-cc005475308d",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:54:13.288Z",
+    "templateId": 6011,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "6bff4f84-a07c-4763-a126-54968b434ccc",
+    "enchant": "ass_12",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:51.124Z",
+    "templateId": 1202,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "a53df11d-180b-4fd5-bfd2-457c3d364e87",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:51.427Z",
+    "templateId": 1249,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "7951b185-c9e3-4491-9bbf-3d32a951fffb",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:51.535Z",
+    "templateId": 6003,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "66662801-812a-4b75-b9a4-383f8dec96f6",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:51.608Z",
+    "templateId": 1092,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "069ee4da-d1ac-46cf-9c58-6367dc61ebe6",
+    "listed": true,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:32:00.623Z",
+    "templateId": 47,
+    "characterId": "00000000-0000-0000-0000-00000000dead"
+  },
+  {
+    "id": "a58a4bb5-c880-4aa5-b651-4641f61b4564",
+    "equipped": false,
+    "quantity": 28,
+    "obtainedAt": "2026-08-19T00:08:45.533Z",
+    "templateId": 5007,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "ddaa0609-789b-4602-a2d8-b1b4977934a0",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:59.963Z",
+    "templateId": 6010,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "eabf5536-d316-4c44-b5b4-782dcde88a29",
+    "enchant": "nec_3",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:29:11.447Z",
+    "templateId": 1242,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "dbf20969-bc36-4327-9e77-bc6ff3631e1a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T00:28:15.200Z",
+    "templateId": 1019,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "fce18d15-eae7-49ed-abaa-e11d42bfd075",
+    "equipped": false,
+    "quantity": 2,
+    "obtainedAt": "2026-08-17T00:42:47.032Z",
+    "templateId": 5009,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "5911c2a3-be46-4f77-943f-823ff77b6ef7",
+    "equipped": false,
+    "quantity": 4,
+    "obtainedAt": "2026-08-17T00:43:07.131Z",
+    "templateId": 5012,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "a8b69ef6-1406-4d48-8ead-533a075b17a7",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:29:21.390Z",
+    "templateId": 1022,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "c2d26b0b-2330-41c2-8da3-a747bc6fad70",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:25.536Z",
+    "templateId": 1147,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "68635bec-b0bc-46e8-b176-3fc1d5b1b1ae",
+    "equipped": false,
+    "quantity": 30,
+    "obtainedAt": "2026-08-16T23:55:40.984Z",
+    "templateId": 5004,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "70f8d18c-128a-402e-9d47-9b982a4e1a20",
+    "enchant": "nec_10",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:29:21.618Z",
+    "templateId": 1202,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "805bfcfd-5d71-4a0c-8ead-44220f1a4850",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T01:38:20.159Z",
+    "templateId": 53,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "e1bcc78e-9af4-4346-9d41-1a45e4eb0c79",
+    "equipped": false,
+    "quantity": 751,
+    "obtainedAt": "2026-08-17T00:09:28.123Z",
+    "templateId": 5000,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "b3f79909-aaf4-4c3a-9bd6-032db038e253",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:29:21.159Z",
+    "templateId": 1062,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "0a55b332-4ad8-4c38-ac2b-d0062617ce6e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:54.764Z",
+    "templateId": 1068,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "5dcb23f0-b438-4c9b-bb85-c6351dddda6b",
+    "equipped": false,
+    "quantity": 5,
+    "obtainedAt": "2026-08-17T01:38:45.752Z",
+    "templateId": 52,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "58450eb5-7713-4505-8528-a4af100aa9d7",
+    "enchant": "ass_14",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:44.644Z",
+    "templateId": 1222,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964",
+    "enhanceLevel": 14
+  },
+  {
+    "id": "7328424c-2ba9-4fa2-be6c-35ad5401bff8",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T01:00:23.252Z",
+    "templateId": 42,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "d5f787ae-c210-446a-a878-0d3ce9899936",
+    "equipped": false,
+    "quantity": 367,
+    "obtainedAt": "2026-08-17T00:11:12.107Z",
+    "templateId": 5003,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1c02dfc7-e60f-4511-a016-04354d144965",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:29:11.814Z",
+    "templateId": 1000,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "72f5e44f-8967-4f06-844a-c8ab83ac7252",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T00:26:42.584Z",
+    "templateId": 1058,
+    "characterId": "e5325623-11ed-4166-bd33-128d3cea3964"
+  },
+  {
+    "id": "c7d41e60-3c0d-4963-a86b-79c15133bfb6",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:29:21.504Z",
+    "templateId": 1262,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "4961b55e-1ae2-415d-af92-ded5b1ffcd5c",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T00:14:36.856Z",
+    "templateId": 1261,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "f9a81c4b-bef9-4d95-91e6-1ca7d0b0f9f1",
+    "equipped": false,
+    "quantity": 139,
+    "obtainedAt": "2026-08-17T00:36:46.945Z",
+    "templateId": 5007,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "30170550-4e5a-4ce3-bb1f-0f321ee5e27d",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:29:11.695Z",
+    "templateId": 1131,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "729c3d9a-dbc8-4e7f-ac3c-582ced0d210f",
+    "equipped": false,
+    "quantity": 32,
+    "obtainedAt": "2026-08-17T00:47:43.671Z",
+    "templateId": 5010,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "77bfdca7-b649-4ed2-b078-e5d2f81b1afd",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:00.931Z",
+    "templateId": 1152,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "bd45c3b3-2b57-459c-bae7-274fe4ef9171",
+    "listed": true,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:29:21.274Z",
+    "templateId": 42,
+    "characterId": "00000000-0000-0000-0000-00000000dead"
+  },
+  {
+    "id": "7071ed83-565c-4233-bde1-adcbe4a617ad",
+    "equipped": false,
+    "quantity": 667,
+    "obtainedAt": "2026-08-17T00:13:09.155Z",
+    "templateId": 5001,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "5baef908-ef82-4c50-9e1b-16842b2976e8",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:57.923Z",
+    "templateId": 1030,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "3d3991c2-0497-49b1-8c4a-699e513e357e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:56:57.996Z",
+    "templateId": 1010,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "e37212ae-58a7-40ee-bf65-591c5e53e49d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:01.008Z",
+    "templateId": 1213,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "2fd2d9f3-c10a-4c08-a5a9-0a81a7b17b89",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:01.085Z",
+    "templateId": 1075,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "b4ca5dfc-afa5-4840-9c08-8cbc394b87a7",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:04.828Z",
+    "templateId": 1257,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "ae995661-9deb-4bf0-89c4-bc8cff91018f",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:04.899Z",
+    "templateId": 1048,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "08354092-0c48-4859-a004-e61eebbdd353",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:04.971Z",
+    "templateId": 1036,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "b40a3f67-9915-4e31-866b-63a1c5817ee9",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:10.430Z",
+    "templateId": 1086,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "e46e0019-7c50-4168-9818-4b7e5ed31c91",
+    "enchant": "nec_8",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:32:00.738Z",
+    "templateId": 1142,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "e9e3332c-80e0-483b-aa8a-60e9db14f1d1",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:10.513Z",
+    "templateId": 1201,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "3c20dbc3-d46b-4a27-a1ff-db82a23e3e83",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:10.625Z",
+    "templateId": 1036,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "109cc7e7-3789-4153-b2e3-d3ed9871da4d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:14.115Z",
+    "templateId": 1088,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "168f51cd-f73f-4e2e-8eaf-5c9ef6ca9b01",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:14.190Z",
+    "templateId": 1229,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "7fb80141-5a44-4751-8910-4fe092e73570",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:14.265Z",
+    "templateId": 1136,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "2b2a2960-3b2e-4bfa-bf90-4e143f1977a5",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T02:54:16.906Z",
+    "templateId": 1108,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1cb9f379-623b-46b6-bf2c-6210e28f840b",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T02:58:15.691Z",
+    "templateId": 1179,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "4bb4e0c4-e6d0-4f1a-b74a-9bf417437f78",
+    "equipped": false,
+    "quantity": 473,
+    "obtainedAt": "2026-08-17T00:11:13.771Z",
+    "templateId": 5002,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "1d53e01f-1494-40b0-9070-2f4aefa031e4",
+    "equipped": false,
+    "quantity": 14,
+    "obtainedAt": "2026-08-19T00:15:27.951Z",
+    "templateId": 5008,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "c333c32c-8340-47f1-a5a3-3c47614eb801",
+    "equipped": false,
+    "quantity": 69,
+    "obtainedAt": "2026-08-19T00:08:00.381Z",
+    "templateId": 5003,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "c8d77cbe-5f30-484d-9141-860d31859684",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:07.607Z",
+    "templateId": 1150,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "d3bc08b5-3f40-49e1-b210-8ed307cf6327",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:08.828Z",
+    "templateId": 1248,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "b9e5af88-da8b-4ef5-b700-722d5320354e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:08.944Z",
+    "templateId": 1054,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "cf7b0eb4-7719-4822-ad49-c8e68a3c3f2f",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:09.057Z",
+    "templateId": 1087,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "6b16b701-d8a6-4359-bc1c-172a83295084",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:32:26.993Z",
+    "templateId": 1144,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "f6382372-517b-414d-bf42-448148cab767",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T03:06:20.390Z",
+    "templateId": 36,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "3454d001-7149-4149-a574-ca238642235e",
+    "enchant": "nec_15",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:26:27.942Z",
+    "templateId": 1222,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "9a7eff8d-6275-4868-9102-819e086019f5",
+    "equipped": false,
+    "quantity": 31,
+    "obtainedAt": "2026-08-17T04:11:36.470Z",
+    "templateId": 54,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "9911b999-14e9-48df-a37f-f461fb26e6aa",
+    "equipped": false,
+    "quantity": 27,
+    "obtainedAt": "2026-08-19T00:21:46.443Z",
+    "templateId": 5006,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "0d33b733-f385-46c7-8d5f-486626d5e566",
+    "equipped": false,
+    "quantity": 17,
+    "obtainedAt": "2026-08-17T04:24:19.499Z",
+    "templateId": 53,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "4ff7b560-f128-4a13-bf63-9b575ae05ec2",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:07.452Z",
+    "templateId": 1046,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "b2c69b9e-16f1-4189-ba1f-f3a33ea5a4bd",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:07.535Z",
+    "templateId": 1136,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "fb6171af-324a-44d7-8f39-f69e5aa4eda8",
+    "equipped": false,
+    "quantity": 52,
+    "obtainedAt": "2026-08-17T01:15:22.836Z",
+    "templateId": 5009,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "748ee418-0a74-49b7-84ee-0da1f50187da",
+    "equipped": false,
+    "quantity": 26,
+    "obtainedAt": "2026-08-17T04:27:25.818Z",
+    "templateId": 5004,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "464d6dc2-7730-4dae-9da1-c4c835a4515c",
+    "equipped": false,
+    "quantity": 34,
+    "obtainedAt": "2026-08-17T04:27:43.425Z",
+    "templateId": 5002,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "54b758d6-aa2a-4a81-8f67-614d8a470fbe",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T04:31:23.043Z",
+    "templateId": 54,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "a48c5ff7-45b8-4df2-8180-4e6d89d565e9",
+    "equipped": false,
+    "quantity": 8,
+    "obtainedAt": "2026-08-18T23:59:58.904Z",
+    "templateId": 5011,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "31c5048b-3bea-4ed2-9e05-299c7c0ae544",
+    "listed": true,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T10:10:46.106Z",
+    "templateId": 1064,
+    "characterId": "00000000-0000-0000-0000-00000000dead"
+  },
+  {
+    "id": "d76f57aa-abc2-4486-8241-a945155e9dac",
+    "equipped": false,
+    "quantity": 57,
+    "obtainedAt": "2026-08-17T04:27:23.583Z",
+    "templateId": 5001,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "e3c15b63-28f1-4d36-b35a-5aa731e2dec5",
+    "equipped": false,
+    "quantity": 21,
+    "obtainedAt": "2026-08-17T04:27:10.577Z",
+    "templateId": 5005,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "304f0595-e3b1-40e4-be66-c8544a32dc95",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:35.086Z",
+    "templateId": 1054,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "181a402e-8df3-485c-87c0-b74d5199eb34",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T00:42:44.677Z",
+    "templateId": 1085,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "c6d95d78-5068-4485-810d-d3b45f365478",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:36.478Z",
+    "templateId": 1008,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "286c7ab4-f864-48a4-8a05-e6095b91a320",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:36.555Z",
+    "templateId": 1257,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "11ab6dea-8fd4-479a-97e1-84f21ef1880e",
+    "equipped": false,
+    "quantity": 27,
+    "obtainedAt": "2026-08-17T04:27:20.772Z",
+    "templateId": 5003,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "0eae2285-2b3f-4066-a4a4-933890374363",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:36.630Z",
+    "templateId": 1067,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "3f1718b3-7a71-4e83-b3af-7c47a731b3f0",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:17.072Z",
+    "templateId": 1172,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "32997bc5-e3d7-45c2-be86-51407fc81a49",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:17.146Z",
+    "templateId": 1067,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "73af74a5-953d-4878-b7a0-0f1416ecf7bd",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:17.220Z",
+    "templateId": 1231,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "02799ee3-2796-46bb-8bed-b5ed164f44d4",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:20.484Z",
+    "templateId": 1058,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "646b760e-c502-46d2-ad4b-8352d44ef904",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:20.559Z",
+    "templateId": 1010,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "d826731c-3e58-43c4-be75-5db117a401ea",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:20.666Z",
+    "templateId": 1173,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "437064a2-923e-40e4-a92c-02d5e563957d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:23.959Z",
+    "templateId": 1092,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "0319bae9-9e97-4c37-95e3-4eaa3f71e11b",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:24.034Z",
+    "templateId": 1231,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "6496b4ba-4291-4797-b895-41e0f35e414f",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:24.109Z",
+    "templateId": 1111,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "51784b8b-faba-4751-9c88-9579e978703a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:29.695Z",
+    "templateId": 41,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "c1b81d66-f115-4f9d-8610-605502de8280",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:29.770Z",
+    "templateId": 1258,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "9d1023a3-67d2-44bb-b5ef-4b8ced5eacf4",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:31.418Z",
+    "templateId": 1007,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "ca71459f-ae04-4236-bf5b-956b68f11745",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:31.496Z",
+    "templateId": 1179,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "425ff0b1-8e7e-401f-8211-1edb2565da10",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:31.609Z",
+    "templateId": 1094,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "e6a3bd9a-33e7-41e6-83a3-7d2041ff3423",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:33.170Z",
+    "templateId": 1047,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "8f23a121-8251-48a7-a6c0-5e048000216e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:33.248Z",
+    "templateId": 1214,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "38d7db96-2806-4e56-8779-849b787ce92b",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:33.363Z",
+    "templateId": 1216,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "571489c2-5994-436d-86e6-17cc104c4229",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:34.933Z",
+    "templateId": 6006,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "7c9b8d14-a3eb-4fc2-a596-8d24be77f446",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:35.011Z",
+    "templateId": 6002,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "fdbd760c-7788-46f5-8624-84c16b2e84be",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:38.369Z",
+    "templateId": 1233,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "5712e725-732b-4a8a-9827-383cbc0f3b00",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:29:11.565Z",
+    "templateId": 1255,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "07a6c1fd-ba92-4bcd-95f7-4670b7ebee76",
+    "listed": false,
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T02:26:28.157Z",
+    "templateId": 1202,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 13
+  },
+  {
+    "id": "c48a04b0-8118-4008-a8aa-03fe866c6f0c",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:25.995Z",
+    "templateId": 1007,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "35a2a3d7-ce18-4bd0-8c64-c765b615c354",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:26.070Z",
+    "templateId": 1154,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "f76d7291-1277-4d43-bd17-9be73e36d411",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:26.146Z",
+    "templateId": 1209,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "773f4a0c-9ba2-4e7b-ad43-e92137696167",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:27.943Z",
+    "templateId": 1066,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "a16df8b1-02c6-4221-bcee-f1dcee513485",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:28.056Z",
+    "templateId": 1106,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "8727a978-4167-42ba-9205-a2e916d1875f",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:28.132Z",
+    "templateId": 1233,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "32c76678-8bf4-4a14-829f-d803997f16a8",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:29.582Z",
+    "templateId": 1090,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "3af8cd7a-c58f-4048-99fd-82e32ebd6c9a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:38.171Z",
+    "templateId": 1233,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "34850ce3-2a74-4483-bb2a-35df942c9112",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:57:38.240Z",
+    "templateId": 1108,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "49813124-3ad6-4589-9856-40e415781a7b",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:48.431Z",
+    "templateId": 1039,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "8b2ba5c6-976c-4fc5-9cf6-dc313fa276fa",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T06:00:55.690Z",
+    "templateId": 38,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "b2b1cdba-bd54-4265-8c21-008089c4fe22",
+    "equipped": false,
+    "quantity": 14,
+    "obtainedAt": "2026-08-17T04:36:08.117Z",
+    "templateId": 5006,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "a41ab56f-8a5b-4dcb-83b9-025a3f0362f1",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T04:38:31.512Z",
+    "templateId": 1231,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 1
+  },
+  {
+    "id": "cf180e54-a660-4bf5-abdd-30ab0ca2ea44",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T00:40:12.560Z",
+    "templateId": 1258,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "8c924448-0b9c-4585-939c-7b261876fe2e",
+    "equipped": false,
+    "quantity": 9,
+    "obtainedAt": "2026-08-19T00:46:23.962Z",
+    "templateId": 5009,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "46368dfb-0c77-4db7-a515-9d59fd6528b5",
+    "equipped": false,
+    "quantity": 27,
+    "obtainedAt": "2026-08-17T07:22:09.400Z",
+    "templateId": 50,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "2afc538e-6b01-427f-8f29-13930fde3e6c",
+    "equipped": false,
+    "quantity": 30,
+    "obtainedAt": "2026-08-17T01:40:55.628Z",
+    "templateId": 52,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "46d525c2-2954-4ab0-8ea6-593898177bc1",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T13:08:40.320Z",
+    "templateId": 1067,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "fad6853a-c7ee-45ac-8789-594bbd78e586",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:55:50.876Z",
+    "templateId": 1247,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "3c05ed7c-eae1-4cf0-a897-9191eaddcaa3",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T13:08:40.389Z",
+    "templateId": 6010,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "7ef40d49-632f-4107-b19c-42e255be13cb",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T13:08:40.509Z",
+    "templateId": 45,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "3f9113f5-aa6e-4be0-8e27-a23769c77fbf",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T13:08:40.617Z",
+    "templateId": 1249,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "6971cfd9-b882-4364-add8-50cad2669cf5",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T13:08:40.686Z",
+    "templateId": 1239,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "6b857c8b-7196-4dab-a38c-d85c45720fc7",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:54:13.662Z",
+    "templateId": 1135,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "6e11a13f-0fd7-45dd-ae23-7a370c6303e0",
+    "listed": false,
+    "enchant": "nec_8",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:30.954Z",
+    "templateId": 1146,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 6
+  },
+  {
+    "id": "d7b31dd1-c093-45d8-b5ae-705ae5daf09e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T03:21:30.528Z",
+    "templateId": 37,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "e1c01cd1-2bc8-43cb-b935-dd26741167df",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T01:22:55.196Z",
+    "templateId": 37,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "9db3dfc4-06e3-403e-9fd3-70dae3d4e1cb",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T01:26:01.427Z",
+    "templateId": 1019,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "5acfe62d-60a3-4076-850c-ec16c6f993b1",
+    "equipped": false,
+    "quantity": 12,
+    "obtainedAt": "2026-08-16T22:45:35.355Z",
+    "templateId": 50,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "a495dfe1-f8fc-4107-b374-06bd45f54799",
+    "equipped": false,
+    "quantity": 3,
+    "obtainedAt": "2026-08-19T01:22:55.308Z",
+    "templateId": 5012,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "eb4b5ac0-90f3-4e8f-bdb3-bafd6fabd9ef",
+    "equipped": false,
+    "quantity": 3,
+    "obtainedAt": "2026-08-19T01:24:55.370Z",
+    "templateId": 5013,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "ce2f20ad-8c45-4840-a336-1f3d6975aeca",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:13:45.909Z",
+    "templateId": 1206,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "bcafd7fb-69c3-43b0-b83a-7cae2b1f575c",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T04:38:59.824Z",
+    "templateId": 1172,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 1
+  },
+  {
+    "id": "cda7553f-9aba-403e-8de8-471cd21f1591",
+    "equipped": false,
+    "quantity": 5,
+    "obtainedAt": "2026-08-17T05:12:07.403Z",
+    "templateId": 5010,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "74457edf-9635-4f54-a676-e73128dad14f",
+    "enchant": "boss_1",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:13:46.089Z",
+    "templateId": 1101,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 14
+  },
+  {
+    "id": "fef9b242-984c-4061-b39e-9b6b3a2139d7",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:14:02.085Z",
+    "templateId": 6011,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 13
+  },
+  {
+    "id": "79c27033-e072-4797-9048-fe4968f664da",
+    "equipped": false,
+    "quantity": 13,
+    "obtainedAt": "2026-08-17T05:03:13.451Z",
+    "templateId": 5007,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "a12e708f-54ba-4d18-b228-ffc327cf22ad",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T13:08:40.756Z",
+    "templateId": 1158,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "1ec1da70-9f09-4294-9803-5e9c06ee8452",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T13:08:40.830Z",
+    "templateId": 1030,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "ef4b10e9-4fef-4620-8847-d65b7e7584be",
+    "equipped": false,
+    "quantity": 7,
+    "obtainedAt": "2026-08-17T05:06:59.009Z",
+    "templateId": 5008,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "b333362a-9aaf-4e51-9911-a0ca36d93a56",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T01:28:04.593Z",
+    "templateId": 44,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "6905b4bc-8c34-4337-92b6-dfd4402d0398",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T01:30:22.808Z",
+    "templateId": 1176,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "93db8146-9179-4643-a93d-1f73e44957ba",
+    "listed": false,
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:54:13.490Z",
+    "templateId": 1169,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 12
+  },
+  {
+    "id": "1968a9bb-1090-483b-997d-c8220c976d9e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T06:22:35.836Z",
+    "templateId": 1075,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "b8a48454-36b1-4a0f-98aa-ddf1c27fae7e",
+    "equipped": false,
+    "quantity": 2,
+    "obtainedAt": "2026-08-17T06:21:44.131Z",
+    "templateId": 5013,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "daf61dd2-8944-474c-9a1b-94dd21a0064e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T06:20:54.684Z",
+    "templateId": 5012,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "e5129590-f184-4646-a921-b123d3a37fd7",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T01:51:09.864Z",
+    "templateId": 1180,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "dbbff073-2c24-42e6-9c9d-58808f64c06e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:15:25.294Z",
+    "templateId": 1257,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "4f952468-b1a6-44db-be60-4c8974440f9b",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:14:41.867Z",
+    "templateId": 1151,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "440eb119-8b4d-42fe-a9dc-f9fc74bc10df",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:15:25.469Z",
+    "templateId": 1196,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "e0d6b00d-0b12-4e84-b655-1efd64e05054",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T06:22:22.093Z",
+    "templateId": 1235,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "430dd217-15e1-4215-a012-0e27487244b4",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T01:51:45.952Z",
+    "templateId": 1220,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "d4229277-f6f6-40d1-81f1-8b17303ed6be",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T01:52:28.015Z",
+    "templateId": 1128,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "758596c2-1d16-452e-9260-cec8276c0aff",
+    "equipped": false,
+    "quantity": 28,
+    "obtainedAt": "2026-08-17T04:33:32.072Z",
+    "templateId": 56,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "3463e369-dea7-41ec-9e82-61c1f87b4f44",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T01:52:30.945Z",
+    "templateId": 1235,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "5f54702a-c2b0-4fb6-b387-16484f35b87c",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T05:13:45.800Z",
+    "templateId": 1265,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 14
+  },
+  {
+    "id": "406a912e-847a-474e-90c9-cb12b347acb3",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T13:57:54.882Z",
+    "templateId": 1123,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "aebfaa8e-859d-40d0-bd15-219719035111",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T13:57:54.998Z",
+    "templateId": 56,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "f54c8848-a374-43de-88db-3a65a5ca6b4a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T13:58:01.977Z",
+    "templateId": 55,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "64a4418f-f293-4aa1-954b-26d971b6e1bd",
+    "listed": false,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T23:53:51.054Z",
+    "templateId": 1146,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "a35ea216-50e0-44e8-bcd9-3ca5aa9e604c",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T13:58:04.118Z",
+    "templateId": 1141,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "d7a126f9-f53c-46a7-95ff-48bde18df2ae",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T10:19:54.494Z",
+    "templateId": 1047,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "c17d4c3d-489f-441e-9a7d-2da5da1dcf74",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T14:00:56.422Z",
+    "templateId": 1219,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "4989c81a-3709-4880-9812-8863095ce566",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T10:19:54.601Z",
+    "templateId": 1244,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "7f6c2b2b-0933-4244-b654-1bdfeeb01cfd",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T10:19:54.706Z",
+    "templateId": 1167,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "40a37016-1f56-4c49-927d-8db7d498712f",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T10:19:54.813Z",
+    "templateId": 1110,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "0ae24f5a-4494-4ec0-8110-319b42efda61",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T10:19:54.883Z",
+    "templateId": 6000,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "2bac0b44-a558-45b9-b32f-f37adbf080d1",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T10:19:54.990Z",
+    "templateId": 1271,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "60b38f3d-c66e-4cb4-a52f-3f430b96c8aa",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T10:19:55.097Z",
+    "templateId": 1033,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "778b9b1c-f612-4173-a845-b854bd9ee8fa",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T10:19:55.166Z",
+    "templateId": 1201,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "1ccfbdcb-0d2c-4243-9973-b3ae77cfd45b",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T10:19:55.236Z",
+    "templateId": 1037,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "fe6d5eed-d9f2-4767-abc1-59fa97645b62",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T10:19:55.347Z",
+    "templateId": 6005,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "2940bba4-31e8-453b-95fd-ad5d37ae114a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T02:09:10.111Z",
+    "templateId": 33,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "46d37c86-1db7-46b4-98d0-305e888a84ef",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T02:16:34.603Z",
+    "templateId": 1019,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "24621c2c-3117-4f70-a52e-dab0d6fd57f0",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T02:17:55.831Z",
+    "templateId": 1161,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "6a9dab1d-5aa9-4e73-9b3c-c4cb7fa4497f",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T02:18:13.730Z",
+    "templateId": 1038,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "39c798a2-a6f3-439a-841c-9a717206be79",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T14:07:07.463Z",
+    "templateId": 1089,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "3bc7fc91-6deb-4f38-974e-485ac494cd5a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T15:09:22.967Z",
+    "templateId": 1236,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "0bc46e4d-d7be-4225-bad1-6bb26ddb1f54",
+    "listed": false,
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-16T22:31:37.996Z",
+    "templateId": 1254,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c",
+    "enhanceLevel": 12
+  },
+  {
+    "id": "a32a4dd1-4bfb-4c0a-a93b-2e6943d6a36e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T02:25:16.707Z",
+    "templateId": 1077,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "44354271-5ee9-438b-a93c-c4e6455e7b2e",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T02:25:46.749Z",
+    "templateId": 1112,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "5abdeda7-f4ac-43d2-81e6-80797713909b",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T02:26:31.792Z",
+    "templateId": 1088,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "f62e4665-7a36-4be1-bdc8-7c221216d6ec",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T02:34:41.315Z",
+    "templateId": 1026,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "44b9c698-8ab5-40b5-9219-85c2070c42f9",
+    "equipped": false,
+    "quantity": 9,
+    "obtainedAt": "2026-08-16T23:17:51.317Z",
+    "templateId": 52,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "b9e768df-2eca-4a7d-81e2-c7c83c427b4d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T02:38:38.655Z",
+    "templateId": 1116,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "93770b62-8900-4c4b-b088-3e1097b3e104",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T02:42:47.962Z",
+    "templateId": 1056,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "5da8dc6b-862b-489c-b123-06ccd1a17866",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T02:44:09.061Z",
+    "templateId": 1160,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "38486f12-677a-448d-99b3-e87fdd4de1f5",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T02:44:12.020Z",
+    "templateId": 6008,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "6d97f034-7179-4720-a476-c90a5dcfcc8c",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T02:47:00.399Z",
+    "templateId": 1251,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "829a6270-cd1f-41e8-b4ea-7787e5819585",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T16:08:16.590Z",
+    "templateId": 1234,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "3fc90a25-9c91-4c67-9fdd-b2f8687499df",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T16:12:17.611Z",
+    "templateId": 1267,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "e8f11aa3-7d70-4b8a-8b1f-507b81c45ce4",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T16:12:33.400Z",
+    "templateId": 1192,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "d5cb6e0a-e824-458c-8ca2-65932efc193a",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-17T16:20:44.786Z",
+    "templateId": 50,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "037944a4-36a6-4c69-999b-1ff6230a9471",
+    "equipped": false,
+    "quantity": 2,
+    "obtainedAt": "2026-08-17T16:22:12.151Z",
+    "templateId": 53,
+    "characterId": "ade6beee-ea3d-4f6d-8ff8-776fc2101b2c"
+  },
+  {
+    "id": "d1b9d7c0-0e55-4ad4-8a94-aab369c8fbb0",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T03:02:58.484Z",
+    "templateId": 1108,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "98a290fa-88e8-41ae-aa98-ce068c25748d",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-19T03:14:26.285Z",
+    "templateId": 1200,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "da5ed1a2-5188-41d6-bc12-20eaf788a759",
+    "equipped": false,
+    "quantity": 261,
+    "obtainedAt": "2026-08-17T00:21:07.490Z",
+    "templateId": 5004,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6"
+  },
+  {
+    "id": "70937a32-d9ef-4225-b2e7-57fd520142b4",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T00:29:32.266Z",
+    "templateId": 6007,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "5ae93ef7-b9da-42c8-8747-bf6b22dbb793",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T00:30:44.265Z",
+    "templateId": 1210,
+    "characterId": "0f3b1c7b-d90c-4099-a051-88b86e5e892c"
+  },
+  {
+    "id": "01eafc92-7163-4275-bfc7-a492a0387360",
+    "enchant": "ass_14",
+    "equipped": true,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T01:41:07.134Z",
+    "templateId": 1262,
+    "characterId": "467e9fe3-9c8c-4fe7-a4a1-409e1d4e8ee6",
+    "enhanceLevel": 15
+  },
+  {
+    "id": "e2f2ae10-8ace-4052-b253-f48885703ad6",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T01:26:17.015Z",
+    "templateId": 54,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "718ccda9-4fb0-4c42-b581-0b06d9010076",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T01:26:50.706Z",
+    "templateId": 1267,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "8d2904b2-7dfb-45d6-baa9-265ac1e88564",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T01:26:50.849Z",
+    "templateId": 1006,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "f0c166ea-5a10-4755-8d94-22367e01ac06",
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-18T01:26:50.953Z",
+    "templateId": 1003,
+    "characterId": "49577826-4946-4da0-b3b0-036eb8fea11f"
+  },
+  {
+    "id": "6c64a851-4df0-43f5-80cd-8bc93894c43c",
+    "characterId": "22faae2b-715a-470d-bef1-b5ae5833cfb1",
+    "templateId": 50,
+    "equipped": false,
+    "quantity": 1,
+    "obtainedAt": "2026-08-23T03:10:08.840Z"
+  },
+  {
+    "id": "361cec72-48e9-4cba-acce-efcb6206e59e",
+    "characterId": "22faae2b-715a-470d-bef1-b5ae5833cfb1",
+    "templateId": 5000,
+    "equipped": false,
+    "quantity": 2,
+    "obtainedAt": "2026-08-23T03:31:36.039Z"
+  }
+]

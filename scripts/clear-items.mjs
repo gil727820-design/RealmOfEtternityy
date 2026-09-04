@@ -1,7 +1,7 @@
 /*
  * Apaga TODOS os itens do jogo:
- *   1. inventory_items  -> itens no inventário de todas as contas
- *   2. item_templates   -> definições de item (loja/forja/drops ficam vazios)
+ *   1. inventoryItems.json -> itens no inventário de todas as contas
+ *   2. itemTemplates.json  -> definições de item (loja/forja/drops ficam vazios)
  *
  * O seed (/api/seed) NÃO recria templates de item: ele só semeia missões.
  * Drops em missões/AFK/masmorra/torre também param (todos esperam templates).
@@ -9,35 +9,34 @@
  * Uso:  node scripts/clear-items.mjs
  */
 import "dotenv/config";
-import fs from "fs";
+import { writeFileSync, existsSync } from "fs";
 import path from "path";
-import Database from "better-sqlite3";
 
-const DB_DIR = process.env.DATABASE_DIR || path.join(process.cwd(), "data");
-const DB_PATH = process.env.DATABASE_PATH || path.join(DB_DIR, "game.db");
+const DATA_DIR = process.env.DATA_DIR || process.env.DATABASE_DIR || path.join(process.cwd(), "data");
+const INV_FILE = path.join(DATA_DIR, "inventoryItems.json");
+const TPL_FILE = path.join(DATA_DIR, "itemTemplates.json");
 
-if (!fs.existsSync(DB_PATH)) {
-  console.error("✖ Banco não encontrado. Execute `node scripts/migrate.mjs` primeiro.");
-  process.exit(1);
-}
-
-const db = new Database(DB_PATH);
+const count = (file) => {
+  if (!existsSync(file)) return 0;
+  try {
+    const arr = JSON.parse(require("fs").readFileSync(file, "utf8"));
+    return Array.isArray(arr) ? arr.length : 0;
+  } catch {
+    return 0;
+  }
+};
 
 try {
-  const inv = db.prepare("SELECT count(*) as c FROM inventory_items").get();
-  const tpl = db.prepare("SELECT count(*) as c FROM item_templates").get();
-  console.log(`Antes: ${inv.c} itens no inventário, ${tpl.c} templates.`);
+  const invBefore = count(INV_FILE);
+  const tplBefore = count(TPL_FILE);
+  console.log(`Antes: ${invBefore} itens no inventário, ${tplBefore} templates.`);
 
-  db.prepare("DELETE FROM inventory_items").run();
-  db.prepare("DELETE FROM item_templates").run();
+  writeFileSync(INV_FILE, "[]\n", "utf8");
+  writeFileSync(TPL_FILE, "[]\n", "utf8");
 
-  const invAfter = db.prepare("SELECT count(*) as c FROM inventory_items").get();
-  const tplAfter = db.prepare("SELECT count(*) as c FROM item_templates").get();
-  console.log(`Depois: ${invAfter.c} itens no inventário, ${tplAfter.c} templates.`);
+  console.log("Depois: 0 itens no inventário, 0 templates.");
   console.log("✔ Todos os itens foram removidos.");
 } catch (e) {
   console.error("✖ Falha ao limpar itens:", e.message);
   process.exitCode = 1;
-} finally {
-  db.close();
 }

@@ -9,58 +9,37 @@
  *    nunca foi o problema — o hash bcrypt é mantido intacto).
  */
 import "dotenv/config";
-import fs from "fs";
+import { readFileSync, writeFileSync, existsSync } from "fs";
 import path from "path";
-import Database from "better-sqlite3";
 
-const DB_DIR = process.env.DATABASE_DIR || path.join(process.cwd(), "data");
-const DB_PATH = process.env.DATABASE_PATH || path.join(DB_DIR, "game.db");
+const DATA_DIR = process.env.DATA_DIR || process.env.DATABASE_DIR || path.join(process.cwd(), "data");
+const USERS_FILE = path.join(DATA_DIR, "users.json");
 
-if (!fs.existsSync(DB_PATH)) {
-  console.error("✖ Banco não encontrado. Execute `node scripts/migrate.mjs` primeiro.");
+if (!existsSync(USERS_FILE)) {
+  console.error("✖ users.json não encontrado. Execute `node scripts/setup-data.mjs` primeiro.");
   process.exit(1);
 }
 
-const db = new Database(DB_PATH);
-
 function main() {
-  const rows = db.prepare("SELECT id, data FROM users").all();
+  const users = JSON.parse(readFileSync(USERS_FILE, "utf8") || "[]");
+
   let cleaned = 0;
-  let hadPassword = 0;
-
-  const update = db.prepare("UPDATE users SET data = ? WHERE id = ?");
-
-  const tx = db.transaction(() => {
-    for (const row of rows) {
-      const data = JSON.parse(row.data);
-      let changed = false;
-
-      if (typeof data.passwordPlain === "string" && data.passwordPlain !== "") {
-        delete data.passwordPlain;
-        changed = true;
-        cleaned++;
-      }
-
-      if (typeof data.passwordPlain === "string") {
-        delete data.passwordPlain;
-        changed = true;
-      }
-
-      if (changed) {
-        update.run(JSON.stringify(data), row.id);
-      }
-
-      if (typeof data.password === "string" && data.password.startsWith("$2")) {
-        hadPassword++;
-      }
+  for (const u of users) {
+    if ("passwordPlain" in u) {
+      delete u.passwordPlain;
+      cleaned++;
     }
-  });
-  tx();
+  }
+
+  const bcryptHashed = users.filter(
+    (u) => typeof u.password === "string" && u.password.startsWith("$2")
+  ).length;
+
+  writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), "utf8");
 
   console.log(`✔ ${cleaned} usuário(s) tiveram o passwordPlain removido.`);
-  console.log(`✔ ${hadPassword} usuário(s) com hash bcrypt mantido (login intacto).`);
+  console.log(`✔ ${bcryptHashed} usuário(s) com hash bcrypt mantido (login intacto).`);
   console.log("  Pronto. O painel admin agora só redefine senha via hash.");
-  db.close();
 }
 
 try {
@@ -68,5 +47,4 @@ try {
 } catch (e) {
   console.error("✖ Falha na limpeza:", e.message);
   process.exitCode = 1;
-  db.close();
 }
