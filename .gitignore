@@ -9,11 +9,12 @@
 /build
 /dist
 
-# Arquivos de ambiente / segredos
-.env
-.env.*
-!.env.example
+# Arquivos de ambiente
+# ⚠️ repo privado + Vercel: o .env fica VERSIONADO (contém DATA_DIR, ADMIN_KEY, SESSION_SECRET)
+# Só overrides locais / backups ficam fora do git:
 .env.local
+.env.*.local
+.env.bak*
 settings.local.json
 
 # Logs do dev server / npm
