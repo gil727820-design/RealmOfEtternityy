@@ -28,7 +28,7 @@ export default function RandomEventModal() {
   const load = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/random-event?characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/game?action=random-event&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       setEvent(d.event ?? null);
     } catch { /* ignore */ }

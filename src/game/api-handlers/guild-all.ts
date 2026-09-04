@@ -32,6 +32,16 @@ async function memberSnapshot(char: any, rank: string) {
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const characterId = url.searchParams.get("characterId");
+  const action = url.searchParams.get("action") || "";
+
+  // Encaminha sub-sistemas de guilda que têm GET próprio (chat, skills,
+  // loja da guilda, boss da guilda e guerra) no mesmo lugar que o POST.
+  if (action === "chat") { const mod = await import("@/game/api-handlers/guild-chat"); return mod.GET(req); }
+  if (action === "skills") { const mod = await import("@/game/api-handlers/guild-skills"); return mod.GET(req); }
+  if (action === "shop") { const mod = await import("@/game/api-handlers/guild-shop"); return mod.GET(req); }
+  if (action === "guild_boss") { const mod = await import("@/game/api-handlers/guild-boss"); return mod.GET(req); }
+  if (action === "guild_war") { const mod = await import("@/game/api-handlers/guild-war"); return mod.GET(req); }
+
   const guilds = await jsonDb.listGuilds(100);
 
   if (!characterId) {

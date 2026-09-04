@@ -4,7 +4,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const url = new URL(req.url);
-    const action = String(body?.action || url.searchParams.get("action") || "");
+    const action = String(url.searchParams.get("action") || body?.action || "");
     const handlers: Record<string, () => Promise<any>> = {
       "ghost-shop":    () => import("@/game/api-handlers/ghost-shop"),
       "ghost-buy":     () => import("@/game/api-handlers/ghost-shop-buy"),
@@ -31,6 +31,7 @@ export async function GET(req: NextRequest) {
     const action = url.searchParams.get("action") || "";
     const handlers: Record<string, () => Promise<any>> = {
       "ghost-shop": () => import("@/game/api-handlers/ghost-shop"),
+      "skin-shop":  () => import("@/game/api-handlers/skin-shop"),
       "market":     () => import("@/game/api-handlers/market"),
     };
     if (!handlers[action]) {

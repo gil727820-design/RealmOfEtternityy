@@ -30,7 +30,7 @@ export default function WorldExplorationPanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/world-exploration?characterId=${characterId}`);
+      const res = await fetch(`/api/game?action=world-exploration&characterId=${characterId}`);
       const data = await res.json();
       setStats(data);
     } catch { /* ignore */ }

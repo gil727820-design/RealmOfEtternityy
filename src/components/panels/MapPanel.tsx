@@ -32,7 +32,7 @@ export default function MapPanel() {
   const loadBoss = async () => {
     if (!characterId) return;
     try {
-      const r = await fetch(`/api/region-boss?characterId=${characterId}`);
+      const r = await fetch(`/api/game?action=region-boss&characterId=${characterId}`);
       const d = await r.json();
       if (r.ok) setBossStatus(d);
     } catch {

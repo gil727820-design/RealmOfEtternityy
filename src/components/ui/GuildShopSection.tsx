@@ -31,7 +31,7 @@ export default function GuildShopSection({ characterId, guildId, guildLevel, not
   const loadShop = useCallback(async () => {
     if (!characterId) return;
     try {
-      const res = await fetch(`/api/game/shop?characterId=${encodeURIComponent(characterId)}`);
+      const res = await fetch(`/api/game?action=shop&characterId=${encodeURIComponent(characterId)}`);
       const d = await res.json();
       if (!d.error) {
         setItems(d.items || []);

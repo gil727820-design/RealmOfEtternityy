@@ -4,7 +4,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const url = new URL(req.url);
-    const action = String(body?.action || url.searchParams.get("action") || "");
+    const action = String(url.searchParams.get("action") || body?.action || "");
     const handlers: Record<string, () => Promise<any>> = {
       "mailbox-send":     () => import("@/game/api-handlers/mailbox"),
       "trade-ads-chat":   () => import("@/game/api-handlers/trade-ads-chat"),
@@ -32,7 +32,10 @@ export async function GET(req: NextRequest) {
     const url = new URL(req.url);
     const action = url.searchParams.get("action") || "";
     const handlers: Record<string, () => Promise<any>> = {
+      "mailbox-send":    () => import("@/game/api-handlers/mailbox"),
       "trade-ads":      () => import("@/game/api-handlers/trade-ads"),
+      "trade-ads-chat": () => import("@/game/api-handlers/trade-ads-chat"),
+      "trade-chat":     () => import("@/game/api-handlers/trade-session-chat"),
       "trade-sessions": () => import("@/game/api-handlers/trade-session-sessions"),
     };
     if (!handlers[action]) {

@@ -46,7 +46,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const action = String(body?.action || "");
+    const url = new URL(req.url);
+    // Aceita action tanto na URL quanto no corpo (o frontend usa ?action=...);
+    // a URL tem precedência para nunca colidir com sub-comandos no body.
+    const action = String(url.searchParams.get("action") || body?.action || "");
 
     // ── CREATE ──
     if (action === "create") {

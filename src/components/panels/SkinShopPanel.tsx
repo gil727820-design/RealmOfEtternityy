@@ -55,7 +55,7 @@ export default function SkinShopPanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/skin-shop?characterId=${characterId}`);
+      const res = await fetch(`/api/shop?action=skin-shop&characterId=${characterId}`);
       const data = await res.json();
       setItems(data.items ?? []);
     } catch { /* ignore */ }

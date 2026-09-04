@@ -21,7 +21,7 @@ export default function SurvivalArenaPanel() {
     if (!characterId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/survival-arena?characterId=${characterId}`);
+      const res = await fetch(`/api/game?action=survival-arena&characterId=${characterId}`);
       const data = await res.json();
       setStats(data);
     } catch { /* ignore */ }

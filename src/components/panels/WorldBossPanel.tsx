@@ -99,7 +99,7 @@ export default function WorldBossPanel() {
   const load = useCallback(async () => {
     if (!character) return;
     try {
-      const res = await fetch(`/api/world-boss?characterId=${encodeURIComponent(String(character.id))}`);
+      const res = await fetch(`/api/game?action=world-boss&characterId=${encodeURIComponent(String(character.id))}`);
       if (!res.ok) return;
       const d = await res.json();
       setData(d);
